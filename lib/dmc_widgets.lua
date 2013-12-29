@@ -99,4 +99,16 @@ end
 
 
 
+--===================================================================--
+-- newTableView widget
+--===================================================================--
+
+function Widget.newTableView( options )
+	local theme = nil
+	local _library = require( PATH .. '.' .. 'widget_tableview' )
+	return _library:new( options, theme )
+end
+
+
+
 return Widget
