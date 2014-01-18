@@ -68,6 +68,12 @@ if false == pcall( function() require( "dmc_library_boot" ) end ) then
 	}
 end
 
+dmc_lib_data = _G.__dmc_library
+dmc_lib_func = dmc_lib_data.func
+dmc_lib_info = dmc_lib_data.dmc_library
+dmc_lib_location = dmc_lib_info.location
+
+
 
 
 --===================================================================--
@@ -84,6 +90,18 @@ local Widget = {}
 
 local args = { ... }
 local PATH = args[1]
+
+
+
+--===================================================================--
+-- newSlideView widget
+--===================================================================--
+
+function Widget.newSlideView( options )
+	local theme = nil
+	local _library = require( PATH .. '.' .. 'widget_slideview' )
+	return _library:new( options, theme )
+end
 
 
 
