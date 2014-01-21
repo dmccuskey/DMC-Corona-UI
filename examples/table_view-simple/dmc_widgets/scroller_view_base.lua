@@ -380,7 +380,7 @@ end
 
 
 function ScrollerBase:takeFocus( event )
-	print( "ScrollerBase:takeFocus" )
+	-- print( "ScrollerBase:takeFocus" )
 
 	display.getCurrentStage():setFocus( nil )
 
@@ -758,7 +758,7 @@ function ScrollerBase:_checkScrollBounds()
 	local v_calc = self._height - self._bg.height
 	local h_calc = self._width - self._bg.width
 
-	print( "scr.y, ", scr.y , v_calc )
+	-- print( "scr.y, ", scr.y , v_calc )
 
 	if self._h_scroll_enabled then
 		if scr.x > 0 then
@@ -1113,7 +1113,6 @@ function ScrollerBase:touch( event )
 
 		--== Calculate motion multiplier
 
-		print( self._h_scroll_limit, self._v_scroll_limit )
 		-- horizonal
 		s = 0
 		if self._h_scroll_limit == self.HIT_TOP_LIMIT then
