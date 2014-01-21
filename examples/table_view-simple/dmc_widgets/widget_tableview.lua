@@ -381,7 +381,7 @@ end
 -- we scroll to closest slide
 --
 function TableView:do_state_restore( params )
-	print( "TableView:do_state_restore" )
+	-- print( "TableView:do_state_restore" )
 
 	params = params or {}
 	local evt_start = params.event
@@ -404,10 +404,9 @@ function TableView:do_state_restore( params )
 
 	delta = -dist
 
-	print( limit )
 
 	local enterFrameFunc = function( e )
-		print( "TableView: enterFrameFunc: do_state_restore" )
+		-- print( "TableView: enterFrameFunc: do_state_restore" )
 
 		local evt_frame = self._event_tmp
 
@@ -470,7 +469,7 @@ end
 -- we constrain its motion away from limit
 --
 function TableView:do_state_restraint( params )
-	print( "TableView:do_state_restraint" )
+	-- print( "TableView:do_state_restraint" )
 
 	params = params or {}
 	local evt_start = params.event
@@ -486,7 +485,7 @@ function TableView:do_state_restraint( params )
 
 
 	local enterFrameFunc = function( e )
-		print( "TableView: enterFrameFunc: do_state_restraint" )
+		-- print( "TableView: enterFrameFunc: do_state_restraint" )
 
 		local evt_frame = self._event_tmp
 		local limit = self._v_scroll_limit
