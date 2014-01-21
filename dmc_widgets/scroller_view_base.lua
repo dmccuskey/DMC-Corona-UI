@@ -201,6 +201,7 @@ function ScrollerBase:_init( params )
 
 	self._transition = nil -- handle of active transition
 
+	self._is_rendered = true
 
 	--== Display Groups ==--
 
@@ -313,9 +314,9 @@ function ScrollerBase:_undoCreateView()
 	o:removeSelf()
 	self._primer = nil
 
-	o = self._dg
+	o = self._dg_scroller
 	o:removeSelf()
-	self._dg = nil
+	self._dg_scroller = nil
 
 	--==--
 	self:superCall( "_undoCreateView" )
@@ -325,7 +326,7 @@ end
 -- _initComplete()
 --
 function ScrollerBase:_initComplete()
-	--print( "ScrollerBase:_initComplete" )
+	-- print( "ScrollerBase:_initComplete" )
 	self:superCall( "_initComplete" )
 	--==--
 
@@ -339,14 +340,17 @@ function ScrollerBase:_initComplete()
 	self._dg_scroller:addEventListener( "touch", self )
 
 
+	self._is_rendered = true
+
 	self:setState( self.STATE_CREATE )
 	self:gotoState( self.STATE_AT_REST )
-
 
 end
 
 function ScrollerBase:_undoInitComplete()
-	--print( "ScrollerBase:_undoInitComplete" )
+	-- print( "ScrollerBase:_undoInitComplete" )
+
+	self._is_rendered = false
 
 	--==--
 	self:superCall( "_undoInitComplete" )
@@ -376,14 +380,14 @@ end
 
 
 function ScrollerBase:takeFocus( event )
-	print( "ScrollerBase:takeFocus" )
+	-- print( "ScrollerBase:takeFocus" )
 
 	display.getCurrentStage():setFocus( nil )
 
 	event.phase = 'began'
 	event.target = self._dg_scroller
 
-	self._dg_scroller_f( event )
+	self:touch( event )
 
 end
 
@@ -751,12 +755,15 @@ function ScrollerBase:_checkScrollBounds()
 	-- print( 'ScrollerBase:_checkScrollBounds' )
 
 	local scr = self._dg_scroller
-	-- print( "scr.y, ", scr.y , (self._height - self._total_item_dimension) )
+	local v_calc = self._height - self._bg.height
+	local h_calc = self._width - self._bg.width
+
+	-- print( "scr.y, ", scr.y , v_calc )
 
 	if self._h_scroll_enabled then
 		if scr.x > 0 then
 			self._h_scroll_limit = ScrollerBase.HIT_TOP_LIMIT
-		elseif scr.x <  self._width - self._total_item_dimension then
+		elseif scr.x <  h_calc then
 			self._h_scroll_limit = ScrollerBase.HIT_BOTTOM_LIMIT
 		else
 			self._h_scroll_limit = nil
@@ -766,7 +773,7 @@ function ScrollerBase:_checkScrollBounds()
 	if self._v_scroll_enabled then
 		if scr.y > 0 then
 			self._v_scroll_limit = ScrollerBase.HIT_TOP_LIMIT
-		elseif scr.y <  self._height - self._total_item_dimension - scr._y_offset then
+		elseif scr.y < v_calc then
 			self._v_scroll_limit = ScrollerBase.HIT_BOTTOM_LIMIT
 		else
 			self._v_scroll_limit = nil
@@ -1019,7 +1026,7 @@ function ScrollerBase:enterFrame( event )
 
 	local f = self._enterFrameIterator
 
-	if not f then
+	if not f or not self._is_rendered then
 		Runtime:removeEventListener( 'enterFrame', self )
 	else
 		f( event )
@@ -1038,8 +1045,12 @@ function ScrollerBase:touch( event )
 	-- print( "ScrollerBase:touch", event.phase )
 
 	local phase = event.phase
-	local x_delta, y_delta
+
 	local LIMIT = 200
+
+	local background = self._bg
+
+	local x_delta, y_delta
 
 	table.insert( self._touch_evt_stack, event )
 
@@ -1107,7 +1118,7 @@ function ScrollerBase:touch( event )
 		if self._h_scroll_limit == self.HIT_TOP_LIMIT then
 			s = scr.x
 		elseif self._h_scroll_limit == self.HIT_BOTTOM_LIMIT then
-			s = ( self._width - self._total_item_dimension ) - scr.x
+			s = ( self._width - background.width ) - scr.x
 		end
 		h_mult = 1 - (s/LIMIT)
 
@@ -1116,7 +1127,7 @@ function ScrollerBase:touch( event )
 		if self._v_scroll_limit == self.HIT_TOP_LIMIT then
 			s = scr.y
 		elseif self._v_scroll_limit == self.HIT_BOTTOM_LIMIT then
-			s = ( self._height - self._total_item_dimension ) - scr.y
+			s = ( self._height - background.height ) - scr.y
 		end
 		v_mult = 1 - (s/LIMIT)
 

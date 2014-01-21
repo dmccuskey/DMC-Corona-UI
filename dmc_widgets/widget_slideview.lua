@@ -278,18 +278,21 @@ function SlideView:_updateDimensions( item_info, item_data )
 
 	-- print( 'item insert', item_data.xMin, item_data.xMax )
 
-
-	-- adjust background height
-
 	total_dim = total_dim + item_data.width
+	self._total_item_dimension = total_dim
+
+
+	-- adjust background width
+
+	if total_dim < self._width then
+		total_dim = self._width
+	end
 
 	o = self._bg
 	x, y = o.x, o.y -- temp
 	o.width = total_dim
 	o.anchorX, o.anchorY = 0,0
 	o.x, o.y = x, y
-
-	self._total_item_dimension = total_dim
 
 end
 
@@ -680,6 +683,7 @@ function SlideView:do_state_restore( params )
 
 	local limit = self._h_scroll_limit
 	local scr = self._dg_scroller
+	local background = self._bg
 
 	local pos = scr.x
 	local dist, delta
@@ -687,7 +691,7 @@ function SlideView:do_state_restore( params )
 	if limit == self.HIT_TOP_LIMIT then
 		dist = scr.x
 	else
-		dist = pos - ( self._width - self._total_item_dimension )
+		dist = pos - ( self._width - background.width )
 	end
 
 	delta = -dist
