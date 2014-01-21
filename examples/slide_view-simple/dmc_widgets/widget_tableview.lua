@@ -213,7 +213,7 @@ TableView.insertRow = ScrollerViewBase.insertItem
 -- calculate vertical direction
 --
 function TableView:_updateDimensions( item_info, item_data )
-	-- print( "TableView:_updateDimensions", item_info )
+	print( "TableView:_updateDimensions", item_info )
 
 	local total_dim = self._total_item_dimension
 

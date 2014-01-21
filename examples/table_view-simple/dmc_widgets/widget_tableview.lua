@@ -232,18 +232,22 @@ function TableView:_updateDimensions( item_info, item_data )
 
 	-- print( 'item insert', item_data.yMin, item_data.yMax )
 
+	total_dim = total_dim + item_data.height
+
+	self._total_item_dimension = total_dim
+
 
 	-- adjust background height
 
-	total_dim = total_dim + item_data.height
+	if total_dim < self._height then
+		total_dim = self._height
+	end
 
 	o = self._bg
 	x, y = o.x, o.y -- temp
 	o.height = total_dim
 	o.anchorX, o.anchorY = 0,0
 	o.x, o.y = x, y
-
-	self._total_item_dimension = total_dim
 
 end
 
@@ -377,7 +381,7 @@ end
 -- we scroll to closest slide
 --
 function TableView:do_state_restore( params )
-	-- print( "TableView:do_state_restore" )
+	print( "TableView:do_state_restore" )
 
 	params = params or {}
 	local evt_start = params.event
@@ -387,6 +391,7 @@ function TableView:do_state_restore( params )
 
 	local limit = self._v_scroll_limit
 	local scr = self._dg_scroller
+	local background = self._bg
 
 	local pos = scr.y
 	local dist, delta
@@ -394,14 +399,15 @@ function TableView:do_state_restore( params )
 	if limit == self.HIT_TOP_LIMIT then
 		dist = scr.y
 	else
-		dist = pos - ( self._height - self._total_item_dimension )
+		dist = pos - ( self._height - background.height )
 	end
 
 	delta = -dist
 
+	print( limit )
 
 	local enterFrameFunc = function( e )
-		-- print( "TableView: enterFrameFunc: do_state_restore" )
+		print( "TableView: enterFrameFunc: do_state_restore" )
 
 		local evt_frame = self._event_tmp
 
@@ -464,7 +470,7 @@ end
 -- we constrain its motion away from limit
 --
 function TableView:do_state_restraint( params )
-	-- print( "TableView:do_state_restraint" )
+	print( "TableView:do_state_restraint" )
 
 	params = params or {}
 	local evt_start = params.event
@@ -480,7 +486,7 @@ function TableView:do_state_restraint( params )
 
 
 	local enterFrameFunc = function( e )
-		-- print( "TableView: enterFrameFunc: do_state_restraint" )
+		print( "TableView: enterFrameFunc: do_state_restraint" )
 
 		local evt_frame = self._event_tmp
 		local limit = self._v_scroll_limit

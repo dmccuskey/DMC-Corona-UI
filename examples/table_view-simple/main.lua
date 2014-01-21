@@ -97,7 +97,7 @@ o.x, o.y = OFFSET*0.5, OFFSET*0.5
 
 -- create rows
 
-for i = 1, 50 do
+for i = 1, 5 do
 
 	local p = {
 		isCategory = false,

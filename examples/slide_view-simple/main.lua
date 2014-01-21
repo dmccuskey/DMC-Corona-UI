@@ -94,7 +94,7 @@ o.x, o.y = OFFSET*0.5, OFFSET*0.5
 
 -- create slides
 
-for i = 1, 5 do
+for i = 1, 1 do
 
 	local p = {
 		height = 300,
