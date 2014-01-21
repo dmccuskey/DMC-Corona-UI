@@ -47,19 +47,18 @@ dmc_lib_func = dmc_lib_data.func
 
 
 --====================================================================--
+-- DMC Widgets Setup
+--====================================================================--
+
+local dmc_widget_data, dmc_widget_func
+dmc_widget_data = _G.__dmc_widget
+dmc_widget_func = dmc_widget_data.func
+
+
+
+--====================================================================--
 -- DMC Widgets : newSlideView
 --====================================================================--
-
-local args = { ... }
-local PATH = args[1]
-
-
-
---====================================================================--
--- Module Support
---====================================================================--
-
-
 
 
 
@@ -71,18 +70,9 @@ local Utils = require( dmc_lib_func.find('dmc_utils') )
 local Objects = require( dmc_lib_func.find('dmc_objects') )
 local States = require( dmc_lib_func.find('dmc_states') )
 
+local ScrollerViewBase = require( dmc_widget_func.find( 'scroller_view_base' ) )
+local easingx = require( dmc_widget_func.find( 'easingx' ) )
 
---== Find Local Path
-
-local PATH_PARTS =  Utils.split( PATH, '%.' )
-if #PATH_PARTS > 0 then table.remove( PATH_PARTS, #PATH_PARTS ) end
-PATH = table.concat( PATH_PARTS, '.' )
-if PATH ~= '' then PATH = PATH .. '.' end
-
-
---== View Components
-
-local ScrollerViewBase = require( PATH .. 'scroller_view_base' )
 
 
 --====================================================================--
@@ -102,21 +92,8 @@ local CoronaBase = Objects.CoronaBase
 local SlideView = inheritsFrom( ScrollerViewBase )
 SlideView.NAME = "Slide View Widget Class"
 
-States.mixin( SlideView )
-
 
 --== Class Constants
-
--- pixel amount to edges of SlideView in which rows are de-/rendered
-SlideView.DEFAULT_RENDER_MARGIN = display.contentWidth
-SlideView.DEFAULT_FRICTION = 0.92
-SlideView.DEFAULT_MASS = 10
-
-SlideView.MARGIN = 20
-SlideView.RADIUS = 5
-
-SlideView.HIT_TOP_LIMIT = "top_limit_hit"
-SlideView.HIT_BOTTOM_LIMIT = "bottom_limit_hit"
 
 
 --== State Constants
@@ -129,12 +106,11 @@ SlideView.HIT_BOTTOM_LIMIT = "bottom_limit_hit"
 SlideView.STATE_MOVE_TO_NEAREST_SLIDE = "move_to_nearest_slide"
 SlideView.STATE_MOVE_TO_NEXT_SLIDE = "move_to_next_slide"
 
+SlideView.STATE_MOVE_TO_NEAREST_SLIDE_TRANS_TIME = 250
+SlideView.STATE_MOVE_TO_NEXT_SLIDE_TRANS_TIME = 250
+
 
 --== Event Constants
-
-SlideView.EVENT = "slide_view_event"
-
-SlideView.SLIDE_RENDER = "slide_render_event"
 
 
 
@@ -195,8 +171,8 @@ function SlideView:_init( params )
 	-- self._category_view = nil
 	-- self._inactive_dots = {}
 
-	self._horizontal_scroll_enabled = true
-	self._vertical_scroll_enabled = false
+	self._h_scroll_enabled = true
+	self._v_scroll_enabled = false
 
 end
 
@@ -269,7 +245,14 @@ end
 
 
 
+-- set method on our object, make lookup faster
 SlideView.insertSlide = ScrollerViewBase.insertItem
+
+
+
+
+--====================================================================--
+--== Private Methods
 
 
 
@@ -311,6 +294,31 @@ function SlideView:_updateDimensions( item_info, item_data )
 end
 
 
+
+function SlideView:_isBounded( scroller, item )
+	-- print( "SlideView:_isBounded", scroller, item )
+
+	local result = false
+
+	if item.xMin < scroller.xMin and scroller.xMin < item.xMax then
+		-- cut on top
+		result = true
+	elseif item.xMin < scroller.xMax and scroller.xMax < item.xMax then
+		-- cut on bottom
+		result = true
+	elseif item.xMin > scroller.xMin and item.xMax < scroller.xMax  then
+		-- fully in view
+		result = true
+	elseif item.xMin < scroller.xMin and scroller.xMax < item.xMax then
+		-- extends over view
+		result = true
+	end
+
+	return result
+end
+
+
+
 function SlideView:_findClosestSlide()
 	-- print( "SlideView:_findClosestSlide" )
 
@@ -332,6 +340,7 @@ function SlideView:_findClosestSlide()
 
 	return item, (item.xMin + scr.x), idx
 end
+
 
 
 function SlideView:_findNextSlide()
@@ -357,30 +366,6 @@ function SlideView:_findNextSlide()
 	-- print( close.index, idx, item )
 	return item, (item.xMin + scr.x)
 end
-
-
-
---====================================================================--
---== Private Methods
-
-
-
-
-function SlideView:_isBounded( scroller, item )
-	print( "SlideView:_isBounded", scroller, item )
-
-	local b = {
-		view=1.0,  -- if item is in the view rectangle, percentage offset from center
-		widget=true -- if item is in widget render rectangle
-	}
-
-	print( scroller.xMin, item.xMin, item.xMax, scroller.xMax )
-	return ( scroller.xMin <= item.xMin and item.xMax < scroller.xMax )
-end
-
-
--- set method on our object, make lookup faster
-SlideView.enterFrame = ScrollerViewBase.enterFrame
 
 
 
@@ -425,8 +410,8 @@ end
 
 --[[
 -- from parent
-	function SlideView:state_touch( next_state, params )
-	end
+function SlideView:do_state_touch( next_state, params )
+end
 --]]
 
 function SlideView:state_touch( next_state, params )
@@ -459,36 +444,54 @@ function SlideView:do_move_to_nearest_slide( params )
 	-- print( "SlideView:do_move_to_nearest_slide" )
 
 	params = params or {}
-	local evt_tmp = params.event
+	local evt_start = params.event
 
-	local TIME = self.TRANSITION_TIME *0.5
+	local TIME = self.STATE_MOVE_TO_NEAREST_SLIDE_TRANS_TIME
+	local ease_f = easingx.easeOut
 
 	local scr = self._dg_scroller
 	local pos = scr.x
 
 	local item, dist = self:_findClosestSlide()
 
-	-- print( dist, scr.x )
+	local delta = -dist
+
 
 	local enterFrameFunc = function( e )
-		-- print( "enterFrameFunc: move to nearest slide" )
+		-- print( "SlideView: enterFrameFunc: do_move_to_nearest_slide" )
 
-		local delta_time = e.time - evt_tmp.time
+		local evt_frame = self._event_tmp
 
-		if delta_time < TIME then
-			scr.x = pos - ( delta_time/TIME ) * dist
+		local start_time_delta = e.time - evt_start.time -- total
+
+		local x_delta
+
+		--== Calculation
+
+		x_delta = ease_f( start_time_delta, TIME, pos, delta )
+
+
+		--== Action
+
+		if start_time_delta < TIME then
+			scr.x = x_delta
+
 		else
 			-- final state
-			scr.x = pos - dist
+			scr.x = pos + delta
 			self:gotoState( self.STATE_AT_REST )
+
 		end
 	end
+
+	-- start animation
 
 	if self._enterFrameIterator == nil then
 		Runtime:addEventListener( 'enterFrame', self )
 	end
 	self._enterFrameIterator = enterFrameFunc
 
+	-- set current state
 	self:setState( self.STATE_MOVE_TO_NEAREST_SLIDE )
 end
 
@@ -516,36 +519,54 @@ function SlideView:do_move_to_next_slide( params )
 	-- print( "SlideView:do_move_to_next_slide" )
 
 	params = params or {}
+	local evt_start = params.event
 
-	local TIME = self.TRANSITION_TIME *0.5
-	local evt_tmp = params.event
+	local TIME = self.STATE_MOVE_TO_NEXT_SLIDE_TRANS_TIME
+	local ease_f = easingx.easeOut
 
 	local scr = self._dg_scroller
 	local pos = scr.x
 
 	local item, dist = self:_findNextSlide()
 
-	-- print( dist, scr.x )
+	local delta = -dist
+
 
 	local enterFrameFunc = function( e )
-		-- print( "enterFrameFunc: move to next slide" )
+		-- print( "SlideView: enterFrameFunc: do_move_to_next_slide" )
 
-		local delta_time = e.time - evt_tmp.time
+		local evt_frame = self._event_tmp
 
-		if delta_time < TIME then
-			scr.x = pos - ( delta_time/TIME ) * dist
+		local start_time_delta = e.time - evt_start.time -- total
+
+		local x_delta
+
+		--== Calculation
+
+		x_delta = ease_f( start_time_delta, TIME, pos, delta )
+
+
+		--== Action
+
+		if start_time_delta < TIME then
+			scr.x = x_delta
+
 		else
 			-- final state
-			scr.x = pos - dist
+			scr.x = pos + delta
 			self:gotoState( self.STATE_AT_REST )
+
 		end
 	end
+
+	-- start animation
 
 	if self._enterFrameIterator == nil then
 		Runtime:addEventListener( 'enterFrame', self )
 	end
 	self._enterFrameIterator = enterFrameFunc
 
+	-- set current state
 	self:setState( self.STATE_MOVE_TO_NEXT_SLIDE )
 end
 
@@ -573,48 +594,40 @@ function SlideView:do_state_restraint( params )
 	-- print( "SlideView:do_state_restraint" )
 
 	params = params or {}
-	local evt_tmp = params.event
+	local evt_start = params.event
 
-	local M, F = self._mass, self._friction
-	local k = self._spring
+	local TIME = self.STATE_RESTRAINT_TRANS_TIME
+	local ease_f = easingx.easeOut
 
 	local v = self._h_velocity
 	local scr = self._dg_scroller
-	local pos = scr.x
+
+	local velocity = v.value * v.vector
+	local v_delta = -velocity
+
 
 	local enterFrameFunc = function( e )
-		-- print( "enterFrameFunc: restraint movement" )
+		-- print( "SlideView: enterFrameFunc: do_state_restraint" )
 
-		local delta_time = e.time - evt_tmp.time
+		local evt_frame = self._event_tmp
+		local limit = self._v_scroll_limit
 
-		local V, x_delta
-		local s
+		local start_time_delta = e.time - evt_start.time -- total
+		local frame_time_delta = e.time - evt_frame.time
+
+		local x_delta
+
 
 		--== Calculation
 
-		-- adjust for friction
-		-- F=ma, v=Fmt
-		V = F * M * (delta_time/1000)
-		v.value = v.value - V
+		v.value = ease_f( start_time_delta, TIME, velocity, v_delta )
+		x_delta = v.value * frame_time_delta
 
-		-- adjust for spring resistance
-		-- .5 * k * s^2
-		-- print ( math.pow( scr.x, 2 ) * 5 )
-		if self._h_scroll_limit == self.HIT_TOP_LIMIT then
-			s = scr.x
-		else
-			s = ( self._width - self._total_item_dimension ) - scr.x
-		end
-		V = 0.5 * k * math.pow( s, 2 )
-		v.value = v.value - V
-
-		-- calculate value
-		x_delta = v.value * delta_time
 
 		--== Action
 
-		if v.value > 0 then
-			scr.x = scr.x + ( x_delta * v.vector )
+		if start_time_delta < TIME then
+			scr.x = scr.x + x_delta
 
 		else
 			-- final state
@@ -623,11 +636,14 @@ function SlideView:do_state_restraint( params )
 		end
 	end
 
+	-- start animation
+
 	if self._enterFrameIterator == nil then
 		Runtime:addEventListener( 'enterFrame', self )
 	end
 	self._enterFrameIterator = enterFrameFunc
 
+	-- set current state
 	self:setState( self.STATE_RESTRAINT )
 end
 
@@ -657,46 +673,62 @@ function SlideView:do_state_restore( params )
 	-- print( "SlideView:do_state_restore" )
 
 	params = params or {}
-	local evt_tmp = params.event
+	local evt_start = params.event
 
-	local TIME = self.TRANSITION_TIME
+	local TIME = self.STATE_RESTORE_TRANS_TIME
+	local ease_f = easingx.easeOut
 
 	local limit = self._h_scroll_limit
 	local scr = self._dg_scroller
-	local pos = scr.x
 
-	local dist
+	local pos = scr.x
+	local dist, delta
+
 	if limit == self.HIT_TOP_LIMIT then
-		-- positive value
 		dist = scr.x
 	else
-		-- negative value
 		dist = pos - ( self._width - self._total_item_dimension )
 	end
 
-	-- print( limit, dist, pos )
+	delta = -dist
+
 
 	local enterFrameFunc = function( e )
-		-- print( "enterFrameFunc: restore movement" )
+		-- print( "SlideView: enterFrameFunc: do_state_restore" )
 
-		local delta_time = e.time - evt_tmp.time
+		local evt_frame = self._event_tmp
 
-		--== Calculation / Action
+		local start_time_delta = e.time - evt_start.time -- total
 
-		if delta_time < TIME then
-			scr.x = pos - ( delta_time/TIME ) * dist
+		local x_delta
+
+
+		--== Calculation
+
+		x_delta = ease_f( start_time_delta, TIME, pos, delta )
+
+
+		--== Action
+
+		if start_time_delta < TIME then
+			scr.x = x_delta
+
 		else
 			-- final state
-			scr.x = pos - dist
+			scr.x = pos + delta
 			self:gotoState( self.STATE_AT_REST )
+
 		end
 	end
+
+	-- start animation
 
 	if self._enterFrameIterator == nil then
 		Runtime:addEventListener( 'enterFrame', self )
 	end
 	self._enterFrameIterator = enterFrameFunc
 
+	-- set current state
 	self:setState( self.STATE_RESTORE )
 end
 
@@ -723,12 +755,10 @@ end
 
 
 
+-- set method on our object, make lookup faster
+SlideView.enterFrame = ScrollerViewBase.enterFrame
+
 
 
 
 return SlideView
-
-
-
-
-

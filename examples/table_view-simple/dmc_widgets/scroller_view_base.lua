@@ -391,6 +391,10 @@ end
 function ScrollerBase:insertItem( item_info  )
 	-- print( "ScrollerBase:insertSlide", item_info )
 
+	if item_info == nil then
+		error( "ERROR:: ScrollerBase : missing item info in insertItem()", 2 )
+	end
+
 	local o
 	local x,y
 

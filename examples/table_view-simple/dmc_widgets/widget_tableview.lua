@@ -94,15 +94,6 @@ TableView.NAME = "Table View Widget Class"
 
 --== Class Constants
 
--- pixel amount to edges of tableView in which rows are de-/rendered
--- TableView.DEFAULT_RENDER_MARGIN = 100
--- TableView.DEFAULT_FRICTION = 0.92
--- TableView.DEFAULT_MASS = 10
--- TableView.MARGIN = 20
-
--- distance for table to take over touch event
--- TableView.X_TOUCH_LIMIT = 10
--- TableView.Y_TOUCH_LIMIT = 10
 
 
 --== Event Constants
@@ -203,7 +194,6 @@ end
 
 
 
-
 --====================================================================--
 --== Public Methods
 
@@ -211,6 +201,12 @@ end
 
 -- set method on our object, make lookup faster
 TableView.insertRow = ScrollerViewBase.insertItem
+
+
+
+
+--====================================================================--
+--== Private Methods
 
 
 
@@ -253,15 +249,6 @@ end
 
 
 
---====================================================================--
---== Private Methods
-
-
--- set method on our object, make lookup faster
-TableView.enterFrame = ScrollerViewBase.enterFrame
-
-
-
 function TableView:_isBounded( scroller, item )
 	-- print( "TableView:_isBounded", scroller, item )
 
@@ -292,9 +279,9 @@ end
 --== START: TABLEVIEW STATE MACHINE
 
 
+
 -- set method on our object, make lookup faster
 TableView._getNextState = ScrollerViewBase._getNextState
-
 
 
 
@@ -402,33 +389,30 @@ function TableView:do_state_restore( params )
 	local scr = self._dg_scroller
 
 	local pos = scr.y
-	local dist
+	local dist, delta
 
 	if limit == self.HIT_TOP_LIMIT then
-		-- negative value
-		dist = -scr.y
+		dist = scr.y
 	else
-		-- positive value
-		-- eg, -707 - -746
-		dist = ( self._height - self._total_item_dimension ) - pos
+		dist = pos - ( self._height - self._total_item_dimension )
 	end
+
+	delta = -dist
 
 
 	local enterFrameFunc = function( e )
 		-- print( "TableView: enterFrameFunc: do_state_restore" )
 
 		local evt_frame = self._event_tmp
-		local limit = self._v_scroll_limit
 
 		local start_time_delta = e.time - evt_start.time -- total
-		local frame_time_delta = e.time - evt_frame.time
 
 		local y_delta
 
 
 		--== Calculation
 
-		y_delta = ease_f( start_time_delta, TIME, pos, dist )
+		y_delta = ease_f( start_time_delta, TIME, pos, delta )
 
 
 		--== Action
@@ -438,7 +422,7 @@ function TableView:do_state_restore( params )
 
 		else
 			-- final state
-			scr.y = pos + dist
+			scr.y = pos + delta
 			self:gotoState( self.STATE_AT_REST )
 
 		end
@@ -558,7 +542,9 @@ end
 --== Event Handlers
 
 
--- none
+
+-- set method on our object, make lookup faster
+TableView.enterFrame = ScrollerViewBase.enterFrame
 
 
 
