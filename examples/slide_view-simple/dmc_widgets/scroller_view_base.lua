@@ -201,6 +201,7 @@ function ScrollerBase:_init( params )
 
 	self._transition = nil -- handle of active transition
 
+	self._is_rendered = true
 
 	--== Display Groups ==--
 
@@ -305,7 +306,7 @@ function ScrollerBase:_createView()
 end
 
 function ScrollerBase:_undoCreateView()
-	-- print( "ScrollerBase:_undoCreateView" )
+	print( "ScrollerBase:_undoCreateView" )
 
 	local o
 
@@ -313,9 +314,9 @@ function ScrollerBase:_undoCreateView()
 	o:removeSelf()
 	self._primer = nil
 
-	o = self._dg
+	o = self._dg_scroller
 	o:removeSelf()
-	self._dg = nil
+	self._dg_scroller = nil
 
 	--==--
 	self:superCall( "_undoCreateView" )
@@ -325,7 +326,7 @@ end
 -- _initComplete()
 --
 function ScrollerBase:_initComplete()
-	--print( "ScrollerBase:_initComplete" )
+	-- print( "ScrollerBase:_initComplete" )
 	self:superCall( "_initComplete" )
 	--==--
 
@@ -339,14 +340,17 @@ function ScrollerBase:_initComplete()
 	self._dg_scroller:addEventListener( "touch", self )
 
 
+	self._is_rendered = true
+
 	self:setState( self.STATE_CREATE )
 	self:gotoState( self.STATE_AT_REST )
-
 
 end
 
 function ScrollerBase:_undoInitComplete()
-	--print( "ScrollerBase:_undoInitComplete" )
+	-- print( "ScrollerBase:_undoInitComplete" )
+
+	self._is_rendered = false
 
 	--==--
 	self:superCall( "_undoInitComplete" )
@@ -383,7 +387,7 @@ function ScrollerBase:takeFocus( event )
 	event.phase = 'began'
 	event.target = self._dg_scroller
 
-	self._dg_scroller_f( event )
+	self:touch( event )
 
 end
 
@@ -460,7 +464,6 @@ function ScrollerBase:_contentBounds()
 
 	-- print( self._primer.y, self._primer.height )
 	local o = self._primer
-
 
 	-- print( scr_x_offset )
 	-- print( o.x, o.width )
@@ -1019,7 +1022,7 @@ function ScrollerBase:enterFrame( event )
 
 	local f = self._enterFrameIterator
 
-	if not f then
+	if not f or not self._is_rendered then
 		Runtime:removeEventListener( 'enterFrame', self )
 	else
 		f( event )
