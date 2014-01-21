@@ -367,9 +367,14 @@ end
 
 
 function SlideView:_isBounded( scroller, item )
-	-- print( "SlideView:_isBounded", scroller, item )
+	print( "SlideView:_isBounded", scroller, item )
 
-	-- print( scroller.xMin, item.xMin, item.xMax, scroller.xMax )
+	local b = {
+		view=1.0,  -- if item is in the view rectangle, percentage offset from center
+		widget=true -- if item is in widget render rectangle
+	}
+
+	print( scroller.xMin, item.xMin, item.xMax, scroller.xMax )
 	return ( scroller.xMin <= item.xMin and item.xMax < scroller.xMax )
 end
 
@@ -479,8 +484,10 @@ function SlideView:do_move_to_nearest_slide( params )
 		end
 	end
 
+	if self._enterFrameIterator == nil then
+		Runtime:addEventListener( 'enterFrame', self )
+	end
 	self._enterFrameIterator = enterFrameFunc
-	Runtime:addEventListener( 'enterFrame', self )
 
 	self:setState( self.STATE_MOVE_TO_NEAREST_SLIDE )
 end
@@ -534,8 +541,10 @@ function SlideView:do_move_to_next_slide( params )
 		end
 	end
 
+	if self._enterFrameIterator == nil then
+		Runtime:addEventListener( 'enterFrame', self )
+	end
 	self._enterFrameIterator = enterFrameFunc
-	Runtime:addEventListener( 'enterFrame', self )
 
 	self:setState( self.STATE_MOVE_TO_NEXT_SLIDE )
 end
@@ -614,8 +623,10 @@ function SlideView:do_state_restraint( params )
 		end
 	end
 
+	if self._enterFrameIterator == nil then
+		Runtime:addEventListener( 'enterFrame', self )
+	end
 	self._enterFrameIterator = enterFrameFunc
-	Runtime:addEventListener( 'enterFrame', self )
 
 	self:setState( self.STATE_RESTRAINT )
 end
@@ -681,8 +692,10 @@ function SlideView:do_state_restore( params )
 		end
 	end
 
+	if self._enterFrameIterator == nil then
+		Runtime:addEventListener( 'enterFrame', self )
+	end
 	self._enterFrameIterator = enterFrameFunc
-	Runtime:addEventListener( 'enterFrame', self )
 
 	self:setState( self.STATE_RESTORE )
 end

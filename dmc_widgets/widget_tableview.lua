@@ -47,6 +47,16 @@ dmc_lib_func = dmc_lib_data.func
 
 
 --====================================================================--
+-- DMC Widgets Setup
+--====================================================================--
+
+local dmc_widget_data, dmc_widget_func
+dmc_widget_data = _G.__dmc_widget
+dmc_widget_func = dmc_widget_data.func
+
+
+
+--====================================================================--
 -- DMC Widgets : newTableView
 --====================================================================--
 
@@ -58,6 +68,9 @@ dmc_lib_func = dmc_lib_data.func
 
 local Utils = require( dmc_lib_func.find('dmc_utils') )
 local Objects = require( dmc_lib_func.find('dmc_objects') )
+
+local ScrollerViewBase = require( dmc_widget_func.find( 'scroller_view_base' ) )
+local easingx = require( dmc_widget_func.find( 'easingx' ) )
 
 
 
@@ -75,90 +88,108 @@ local CoronaBase = Objects.CoronaBase
 -- Table View Widget Class
 --====================================================================--
 
-local TableView = inheritsFrom( CoronaBase )
-TableView.NAME = "View Pager Widget Class"
+local TableView = inheritsFrom( ScrollerViewBase )
+TableView.NAME = "Table View Widget Class"
+
 
 --== Class Constants
 
 -- pixel amount to edges of tableView in which rows are de-/rendered
-TableView.DEFAULT_RENDER_MARGIN = 100
-TableView.DEFAULT_FRICTION = 0.92
-TableView.DEFAULT_MASS = 10
+-- TableView.DEFAULT_RENDER_MARGIN = 100
+-- TableView.DEFAULT_FRICTION = 0.92
+-- TableView.DEFAULT_MASS = 10
+-- TableView.MARGIN = 20
 
-TableView.MARGIN = 20
-TableView.RADIUS = 5
-
-TableView.HIT_TOP_LIMIT = "top_limit_hit"
-TableView.HIT_BOTTOM_LIMIT = "bottom_limit_hit"
+-- distance for table to take over touch event
+-- TableView.X_TOUCH_LIMIT = 10
+-- TableView.Y_TOUCH_LIMIT = 10
 
 
 --== Event Constants
 
-TableView.EVENT = "table_view_event"
+-- STATE_CREATE = "state_create"
+-- STATE_AT_REST = "state_at_rest"
+-- STATE_TOUCH = "state_touch"
+-- STATE_RESTRAINT = "state_touch"
+-- STATE_RESTORE = "state_touch"
+TableView.STATE_SCROLL = "state_scroll"
 
-TableView.ROW_RENDER = "row_render_event"
+TableView.STATE_SCROLL_TRANS_TIME = 1000
 
 
 
+
+--====================================================================--
 --== Start: Setup DMC Objects
 
 
 function TableView:_init( params )
-	print( "TableView:_init" )
+	-- print( "TableView:_init" )
 	self:superCall( "_init", params )
 	--==--
 
+	--== Sanity Check ==--
+
 	params = params or { }
+
 
 	--== Create Properties ==--
 
-	self._width = params.width or display.contentWidth
-	self._height = params.height or display.contentHeight
+	-- self._width = params.width or display.contentWidth
+	-- self._height = params.height or display.contentHeight
 
-	self._current_category = nil
+	-- self._current_category = nil
 
-	self._total_row_height = 0
+	-- self._total_row_height = 0
 
-	self._event_tmp = nil
+	-- self._event_tmp = nil
 
-	self._scroll_limit = nil -- type of limit, HIT_TOP_LIMIT, HIT_BOTTOM_LIMIT
+	-- self._scroll_limit = nil -- type of limit, HIT_TOP_LIMIT, HIT_BOTTOM_LIMIT
 
-	self._velocity = { value=0, vector=1 }
+	-- self._velocity = { value=0, vector=1 }
 
-	self._transition = nil -- handle of active transition
+	-- self._transition = nil -- handle of active transition
+
 
 
 	--== Display Groups ==--
 
-	self._dg_scroller = nil  -- moveable item with rows
-	self._dg_gui = nil  -- fixed items over table (eg, scrollbar)
+	-- self._dg_scroller = nil  -- moveable item with rows
+	-- self._dg_scroller_f = nil  -- ref to touch callback
+
+	-- self._dg_gui = nil  -- fixed items over table (eg, scrollbar)
 
 
 	--== Object References ==--
 
-	self._primer = nil
+	-- self._primer = nil
 
-	self._bg = nil
+	-- self._bg = nil
 
-	--[[
-		array of row data
-	--]]
-	self._rows = nil
+	-- --[[
+	-- 	array of row data
+	-- 	this is all of the rows we know about
+	-- --]]
+	-- self._rows = nil
 
-	--[[
-		array of rendered row data
-	--]]
-	self._rendered_rows = nil
+	-- --[[
+	-- 	array of rendered row data
+	-- 	this is only list of visible *rendered* rows
+	-- --]]
+	-- self._rendered_rows = nil
 
-	self._categories = nil -- array of category data
+	-- self._categories = nil -- array of category data
 
-	self._category_view = nil
-	self._inactive_dots = {}
+	-- self._category_view = nil
+	-- self._inactive_dots = {}
+
+	self._h_scroll_enabled = false
+	self._v_scroll_enabled = true
 
 end
 
 function TableView:_undoInit()
-	print( "TableView:_undoInit" )
+	-- print( "TableView:_undoInit" )
 
 	--==--
 	self:superCall( "_undoInit" )
@@ -166,102 +197,8 @@ end
 
 
 
--- _createView()
---
-function TableView:_createView()
-	print( "TableView:_createView" )
-	self:superCall( "_createView" )
-	--==--
-
-	local W,H = self._width, self._height
-	local H_CENTER, V_CENTER = W*0.5, H*0.5
-
-	local o, dg, tmp  -- object, display group, tmp
-
-
-	-- primer
-
-	o = display.newRect( 0,0, self._width, self._height )
-	o:setFillColor( 0, 1, 1, 1 )
-	o.anchorX, o.anchorY = 0,0
-	o.x,o.y = 0, 0
-
-	self:insert( o )
-	self._primer = o
-
-	self.anchorX, self.anchorY = 0,0
-
-	o.x,o.y = 0, 0
-
-
-	-- container for rows/background
-
-	dg = display.newGroup()
-	self:insert( dg )
-	self._dg_scroller = dg
-
-	-- background
-	o = display.newRect( 0,0, self._width, self._height )
-	o:setFillColor( 0.5, 0.5, 0.5, 1 )
-
-	o.anchorX, o.anchorY = 0, 0
-	o.x,o.y = 0, 0
-
-	dg:insert( o )
-	self._bg = o
-
-	dg.anchorX, dg.anchorY = 0,0
-	dg.x, dg.y = 0, 0
-
-
-
-end
-
-function TableView:_undoCreateView()
-	print( "TableView:_undoCreateView" )
-
-	local o
-
-	o = self._primer
-	o:removeSelf()
-	self._primer = nil
-
-	o = self._dg
-	o:removeSelf()
-	self._dg = nil
-
-	--==--
-	self:superCall( "_undoCreateView" )
-end
-
-
--- _initComplete()
---
-function TableView:_initComplete()
-	--print( "TableView:_initComplete" )
-
-	local o, f
-	self._rows = {}
-	self._rendered_rows = {}
-
-
-	f = self:createCallback( self._touch_handler )
-	self._dg_scroller:addEventListener( "touch", f )
-
-
-	--==--
-	self:superCall( "_initComplete" )
-end
-
-function TableView:_undoInitComplete()
-	--print( "TableView:_undoInitComplete" )
-
-	--==--
-	self:superCall( "_undoInitComplete" )
-end
-
-
 --== END: Setup DMC Objects
+--====================================================================--
 
 
 
@@ -272,577 +209,347 @@ end
 
 
 
+-- set method on our object, make lookup faster
+TableView.insertRow = ScrollerViewBase.insertItem
 
-function TableView:insertRow( row_info )
-	-- print( "TableView:insertRow" )
+
+
+-- calculate vertical direction
+--
+function TableView:_updateDimensions( item_info, item_data )
+	-- print( "TableView:_updateDimensions", item_info )
+
+	local total_dim = self._total_item_dimension
 
 	local o
-	local x,y
-
-	local row_data = {
-		data = row_info,
-
-		xMin=0,
-		xMax=0,
-		width=0,
-
-		yMin=0,
-		yMax=0,
-		height=0,
-
-		isRendered=false,
-		index=0
-	}
-
-	-- use global row render functions if not local
-
-	if not row_info.onRowRender then row_info.onRowRender = self._onRowRender end
-	if not row_info.onRowUnrender then row_info.onRowUnrender = self._onRowUnrender end
+	local x, y
 
 
-	-- category setup
+	-- configure item data of new item element
 
-	if row_info.isCategory then
+	item_data.height = item_info.height
+	item_data.yMin = self._total_item_dimension
+	item_data.yMax = item_data.yMin + item_data.width
 
-		self._current_category = row_data
-		table.insert( self._categories, row_data )
+	table.insert( self._items, item_data )
+	item_data.index = #self._items
 
-	else
-
-		if self._current_category then
-			row_info._category = self._current_category
-		end
-
-	end
-
-	-- configure row data of new row element
-
-	row_data.height = row_info.height
-	row_data.yMin = self._total_row_height
-	row_data.yMax = row_data.yMin + row_data.height
-
-	table.insert( self._rows, row_data )
-	row_data.index = #self._rows
-
-	-- print( 'row insert', row_data.yMin, row_data.yMax )
+	-- print( 'item insert', item_data.yMin, item_data.yMax )
 
 
 	-- adjust background height
 
-	self._total_row_height = self._total_row_height + row_data.height
+	total_dim = total_dim + item_data.height
 
 	o = self._bg
-	x,y = o.x, o.y -- temp
-	o.height = self._total_row_height
+	x, y = o.x, o.y -- temp
+	o.height = total_dim
 	o.anchorX, o.anchorY = 0,0
 	o.x, o.y = x, y
 
-
-	-- update display with changes
-
-	self:_updateDisplay()
+	self._total_item_dimension = total_dim
 
 end
-
-
 
 
 
 --====================================================================--
 --== Private Methods
 
-function TableView:_contentBounds()
-	-- print( 'tableView:_contentBounds')
 
-	local W,H = self._width, self._height
-	local H_CENTER, V_CENTER = W*0.5, H*0.5
-
-	local bounds = self._primer.contentBounds
-	local x_offset = self._dg_scroller.x
-	local y_offset = self._dg_scroller.y
-
-	-- print( self._primer.y, self._primer.height )
-	local o = self._primer
-
-
-	-- print( y_offset )
-	-- print( bounds.xMin, bounds.xMax, bounds.yMin, bounds.yMax )
-	-- print( bounds.yMin, bounds.yMax )
-
-	local MARGIN = TableView.DEFAULT_RENDER_MARGIN
-
-	return {
-		xMin = bounds.xMin + x_offset - MARGIN,
-		xMax = bounds.xMax + x_offset + MARGIN,
-		yMin = o.y - y_offset - MARGIN,
-		yMax = o.y + o.height - y_offset + MARGIN,
-	}
-
-end
+-- set method on our object, make lookup faster
+TableView.enterFrame = ScrollerViewBase.enterFrame
 
 
 
+function TableView:_isBounded( scroller, item )
+	-- print( "TableView:_isBounded", scroller, item )
 
-function TableView:_updateDisplay()
-	-- print( "TableView:_updateDisplay" )
+	local result = false
 
-	local bounds = self:_contentBounds()
-
-	-- print( 'back >> ', bounds.yMin, bounds.yMax )
-
-	local bg_height = bounds.yMax - bounds.yMin
-
-	local min_visible_row, max_visible_row = nil, nil
-	local row
-
-	-- check if current rows are valid
-	-- print( 'checking valid rows', #self._rendered_rows )
-
-	if #self._rendered_rows > 0 then
-	for i = #self._rendered_rows, 1, -1 do
-		local data = self._rendered_rows[ i ]
-		local is_bounded = bounds.yMin <= data.yMin and data.yMax < bounds.yMax
-		-- print( i, 'rendered row', data.index, data.data.data, is_bounded )
-
-		if not is_bounded then self:_unRenderRow( data, { index=i } ) end
-
-	end
+	if item.yMin < scroller.yMin and scroller.yMin < item.yMax then
+		-- cut on top
+		result = true
+	elseif item.yMin < scroller.yMax and scroller.yMax < item.yMax then
+		-- cut on bottom
+		result = true
+	elseif item.yMin > scroller.yMin and item.yMax < scroller.yMax  then
+		-- fully in view
+		result = true
+	elseif item.yMin < scroller.yMin and scroller.yMax < item.yMax then
+		-- extends over view
+		result = true
 	end
 
-	-- print('after cull')
-	for i,v in ipairs( self._rendered_rows ) do
-		-- print( i, v.index )
-	end
-
-	-- if no rows are valid, find the top one
-	if #self._rendered_rows == 0 then
-		min_visible_row = nil
-		max_visible_row = self:_findFirstVisibleRow()
-
-		row = self:_renderRow( max_visible_row, { head=true } )
-
-	else
-
-		min_visible_row = self._rendered_rows[1]
-		max_visible_row = self._rendered_rows[ #self._rendered_rows ]
-
-		-- print( 'row', min_visible_row.index )
-		-- print( #self._rendered_rows, max_visible_row.index )
-
-	end
-
-	if min_visible_row then
-		-- search up until off screen
-
-		local row_data, index
-		index = min_visible_row.index - 1
-		-- print( 'searching up from index', index )
-		if index >= 1 then
-
-			for i = index, 1, -1 do
-				row_data = self._rows[ i ]
-				local is_bounded = bounds.yMin <= row_data.yMin and row_data.yMax < bounds.yMax
-
-				-- print( i, is_bounded, bounds.yMin, row_data.yMin, row_data.yMax, bounds.yMax )
-
-				if not is_bounded then
-					-- print( 'not bounded breaking' )
-					break
-				end
-
-				self:_renderRow( row_data, { head=true  }   )
-
-			end
-
-		end
-
-
-
-	end
-
-	if max_visible_row then
-		-- search down until off screen
-
-
-		local is_bounded
-		local row_data, index
-		index = max_visible_row.index + 1
-
-		-- print( 'searching down from index', index )
-
-		if index <= #self._rows then
-
-			for i = index, #self._rows do
-				row_data = self._rows[ i ]
-				if not row_data then print("no row data!!") ; break end
-				is_bounded = bounds.yMin <= row_data.yMin and row_data.yMax < bounds.yMax
-				-- print( i, is_bounded, bounds.yMin, row_data.yMin, row_data.yMax, bounds.yMax )
-
-				if not is_bounded then
-					-- print( 'not bounded breaking' )
-					break
-				end
-
-				self:_renderRow( row_data, { head=false } )
-
-			end  -- for
-		end -- if
-
-	end -- if max_visible_row
-
-
-end
-
-
-function TableView:_findFirstVisibleRow()
-	print( "TableView:_findFirstVisibleRow" )
-
-
-
-	return self._rows[1]
+	return result
 end
 
 
 
 
 
---[[
+--======================================================--
+--== START: TABLEVIEW STATE MACHINE
 
-un-/render row event
 
-
-local e = {}
-e.name = "tableView_rowRender"
-e.type = "unrender"
-e.parent = self	-- tableView that this row belongs to
-e.target = row
-e.row = row
-e.id = row.id
-e.view = row.view
-e.background = row.view.background
-e.line = row.view.line
-e.data = row.data
-e.phase = "unrender"		-- phases: unrender, render, press, release, swipeLeft, swipeRight
-e.index = row.index
+-- set method on our object, make lookup faster
+TableView._getNextState = ScrollerViewBase._getNextState
 
 
 
---]]
 
+-- when object has neither velocity nor limit
+-- we scroll to closest slide
+--
+function TableView:do_state_scroll( params )
+	-- print( "TableView:do_state_scroll" )
 
-function TableView:_renderRow( row_data, options )
-	-- print( "TableView:_renderRow", row_data, row_data.index )
+	params = params or {}
+	local evt_start = params.event
 
-	local row_info = row_data.data
+	local TIME = self.STATE_SCROLL_TRANS_TIME
+	local ease_f = easingx.easeOut
 
-	if row_data.view then print("already rendered") ; return end
-
-	local dg = self._dg_scroller
-	local view, bg, line
-
-	--== Create View Items
-
-	-- create view for this row
-	view = display.newGroup()
-	dg:insert( view )
-
-	-- create background
-	bg = display.newRect( 0, 0, self._width, row_info.height )
-	bg.anchorX, bg.anchorY = 0,0
-	bg:setFillColor( 1, 0, 0, 0.5 )
-	bg:setStrokeColor( 0, 0, 0, 0.5 )
-	bg.strokeWidth = 1
-	view:insert( bg )
-
-	-- create bottom-line
-
-
-	-- save items
-
-	row_data.view = view
-	row_data.background = bg
-
-
-	--== Render View
-
-	local e ={
-		name = TableView.EVENT,
-		type = TableView.ROW_RENDER,
-
-		parent = self,
-		target = row_info,
-		row = row_info,
-		view = view,
-		background = bg,
-		line = line,
-		data = row_info.data,
-		index = row_data.index,
-	}
-	row_info.onRowRender( e )
-
-
-	--== Update Row
-
-	-- print( 'render ', row_data.yMin, row_data.yMax )
-	view.x, view.y = row_data.xMin, row_data.yMin
-
-	local idx = 1
-	if options.head == false then idx = #self._rendered_rows+1 end
-
-	-- print( 'insert', #self._rendered_rows, idx )
-	table.insert( self._rendered_rows, idx, row_data )
-
-end
-
-
-
-function TableView:_unRenderRow( row_data, options )
-	-- print( "TableView:_unRenderRow", row_data.index )
-
-	-- Utils.print( row_data )
-
-	if not row_data.view then print("note rendered") ; return end
-
-
-	local row_info = row_data.data
-
-	local dg = self._dg_scroller
-	local view, bg, line
-
-	-- print( 'removing ', row_data.index )
-
-	--== Remove Rendered Item
-
-	view = row_data.view
-	bg = row_data.background
-
-
-	table.remove( self._rendered_rows, options.index )
-
-	local e ={
-		name = TableView.EVENT,
-		type = TableView.ROW_RENDER,
-
-		parent = self,
-		target = row_info,
-		row = row_info,
-		view = view,
-		background = bg,
-		line = line,
-		data = row_info.data,
-		index = row_data.index,
-	}
-	row_info.onRowUnrender( e )
-
-
-	bg = row_data.background
-	bg:removeSelf()
-	row_data.background = nil
-
-	view = row_data.view
-	view:removeSelf()
-	row_data.view = nil
-
-end
-
-
-function TableView:_checkScrollBounds()
-	-- print( 'tableView:_checkScrollBounds' )
-
+	local v = self._v_velocity
 	local scr = self._dg_scroller
-	-- print( "scr.y, ", scr.y , (self._height - self._total_row_height) )
-	if scr.y > 0 then
-		self._scroll_limit = TableView.HIT_TOP_LIMIT
-	elseif scr.y <  self._height - self._total_row_height then
-		self._scroll_limit = TableView.HIT_BOTTOM_LIMIT
-	else
-		self._scroll_limit = nil
-	end
-end
+
+	local velocity = v.value
+	local v_delta = -velocity
 
 
-function TableView:enterFrame( event )
-	-- print( 'TableView:enterFrame' )
+	local enterFrameFunc = function( e )
+		-- print( "TableView: enterFrameFunc: do_state_scroll" )
 
-	local M, V, F
-	M = 3
-	F = 0.871
+		local evt_frame = self._event_tmp
+		local limit = self._v_scroll_limit
 
-	local v = self._velocity
-	local scr = self._dg_scroller
-	local evt_tmp = self._event_tmp
-	local delta_time = event.time - evt_tmp.time
-	local y_delta
+		local start_time_delta = e.time - evt_start.time
+		local frame_time_delta = e.time - evt_frame.time
 
-	self:_checkScrollBounds()
+		local y_delta
 
 
-	if v.value <= 0 and not self._scroll_limit then
-		-- print( 'valiue < 0 not banded')
+		--== Calculation
 
-		v.value = 0
-		v.vector = 1
-		Runtime:removeEventListener( 'enterFrame', self )
+		v.value = ease_f( start_time_delta, TIME, velocity, v_delta )
+		y_delta = v.value * v.vector * frame_time_delta
 
 
-	elseif v.value <= 0 and self._scroll_limit then
-		-- print( 'valiue <= 0', self._scroll_limit)
+		--== Action
 
-		local f = function()
-			self:_checkScrollBounds()
-		end
+		if v.value > 0 and limit then
+			-- we hit edge while moving
+			self:gotoState( self.STATE_RESTRAINT, { event=e } )
 
-		if self._scroll_limit == TableView.HIT_TOP_LIMIT then
-			transition.to( scr, { y=0, time=500, onComplete=f })
+		elseif start_time_delta < TIME then
+			scr.y = scr.y + y_delta
+
 		else
-			transition.to( scr, { y=(self._height - self._total_row_height), time=500,  onComplete=f  })
+			v.value = 0
+			self:gotoState( self.STATE_AT_REST, { event=e } )
+
 		end
-
-		v.value = 0
-		v.vector = 1
-		Runtime:removeEventListener( 'enterFrame', self )
-
-
-	elseif v.value > 0 and not self._scroll_limit then
-		-- print( 'valiue > 0 not banded')
-
-		-- calculate velocity adjustment
-
-		-- adjust for friction
-		-- F=ma, v=Fmt
-		V = F * M * (delta_time/1000)
-		v.value = v.value - V
-
-		-- adjust for kinetic energy
-		-- .5 * m * v^2   or
-		-- v.value = v.value - 0
-
-		y_delta = v.value * delta_time
-		if y_delta > 100 then y_delta = 100 end -- clamp speed
-
-		scr.y = scr.y + ( y_delta * v.vector )
-
-		-- print( " value, vector, ", v.value, v.vector, scr.y, y_delta )
-
-
-	elseif v.value > 0 and self._scroll_limit then
-		-- print( 'valiue > 0', self._scroll_limit )
-
-		local f = function()
-			self:_checkScrollBounds()
-		end
-
-		if self._scroll_limit == TableView.HIT_TOP_LIMIT then
-			transition.to( scr, { y=0, time=500, onComplete=f })
-		else
-			transition.to( scr, { y=(self._height - self._total_row_height), time=500,  onComplete=f  })
-		end
-
-		v.value = 0
-		v.vector = 1
-		Runtime:removeEventListener( 'enterFrame', self )
-
 	end
 
+	-- start animation
 
-	self._event_tmp = event
-	self:_updateDisplay()
-
-end
-
-
-
-
-function TableView:_touch_handler( event )
-	-- print( "TableView:_touch_handler", event.phase )
-
-	local phase = event.phase
-	local y_delta = event.y - event.yStart
-
-
-
-	if phase == "began" then
-
-		-- stop any active movement
-
-		self._velocity = { value=0, vector=1 }
-		Runtime:removeEventListener( 'enterFrame', self )
-
-		-- save event for movement calculations
-		self._event_tmp = event
-
-		-- handle touch
-		display.getCurrentStage():setFocus( self._dg_scroller, event.id )
-
-	end
-
-
-	if phase == "moved" then
-		-- Utils.print( event )
-
-		local scr = self._dg_scroller
-		local v = self._velocity
-		local mult = 1
-		local d, t
-
-		self:_checkScrollBounds()
-		if self._scroll_limit then mult = 0.3 end
-
-
-		-- move scroller
-
-		y_delta = event.y - self._event_tmp.y
-		scr.y = scr.y + ( y_delta * mult )
-
-		self:_updateDisplay()
-
-
-		-- calculate velocity
-
-		d = event.y-self._event_tmp.y
-		t = (event.time-self._event_tmp.time)
-
-		v.value = math.abs( d/t )
-
-		v.vector = 1
-		if d < 0 then v.vector = -1 end
-
-		-- print( 'velocity: d, t, vect, val', d, t, v.vector, v.value )
-
-		-- save event for movement calculation
-
-		self._event_tmp = event
-	end
-
-
-	if "ended" == phase or "cancelled" == phase then
-
-		-- validate our location
-		self:_checkScrollBounds()
-
-		-- clean up
-		display.getCurrentStage():setFocus( nil, event.id )
-
-
-		-- add system time, we can re-use this event for Runtime
-		self._event_tmp = event
-		event.time = system.getTimer()
-
+	if self._enterFrameIterator == nil then
 		Runtime:addEventListener( 'enterFrame', self )
-
-
-		-- local v = self._velocity
-		-- print( 'velocity: d, t, vect, val', v.vector, v.value )
-		-- print( 'bounded ', self._scroll_limit )
-
 	end
+	self._enterFrameIterator = enterFrameFunc
 
-	return true
+
+	-- set current state
+	self:setState( self.STATE_SCROLL )
+end
+
+function TableView:state_scroll( next_state, params )
+	-- print( "TableView:state_scroll: >> ", next_state )
+
+	if next_state == self.STATE_TOUCH then
+		self:do_state_touch( params )
+
+	elseif next_state == self.STATE_AT_REST then
+		self:do_state_at_rest( params )
+
+	elseif next_state == self.STATE_RESTRAINT then
+		self:do_state_restraint( params )
+
+	else
+		print( "WARNING :: TableView:state_scroll > " .. tostring( next_state ) )
+	end
 
 end
 
 
 
+
+
+
+-- when object has neither velocity nor limit
+-- we scroll to closest slide
+--
+function TableView:do_state_restore( params )
+	-- print( "TableView:do_state_restore" )
+
+	params = params or {}
+	local evt_start = params.event
+
+	local TIME = self.STATE_RESTORE_TRANS_TIME
+	local ease_f = easingx.easeOut
+
+	local limit = self._v_scroll_limit
+	local scr = self._dg_scroller
+
+	local pos = scr.y
+	local dist
+
+	if limit == self.HIT_TOP_LIMIT then
+		-- negative value
+		dist = -scr.y
+	else
+		-- positive value
+		-- eg, -707 - -746
+		dist = ( self._height - self._total_item_dimension ) - pos
+	end
+
+
+	local enterFrameFunc = function( e )
+		-- print( "TableView: enterFrameFunc: do_state_restore" )
+
+		local evt_frame = self._event_tmp
+		local limit = self._v_scroll_limit
+
+		local start_time_delta = e.time - evt_start.time -- total
+		local frame_time_delta = e.time - evt_frame.time
+
+		local y_delta
+
+
+		--== Calculation
+
+		y_delta = ease_f( start_time_delta, TIME, pos, dist )
+
+
+		--== Action
+
+		if start_time_delta < TIME then
+			scr.y = y_delta
+
+		else
+			-- final state
+			scr.y = pos + dist
+			self:gotoState( self.STATE_AT_REST )
+
+		end
+	end
+
+	-- start animation
+
+	if self._enterFrameIterator == nil then
+		Runtime:addEventListener( 'enterFrame', self )
+	end
+	self._enterFrameIterator = enterFrameFunc
+
+	-- set current state
+	self:setState( self.STATE_RESTORE )
+end
+
+function TableView:state_restore( next_state, params )
+	-- print( "TableView:state_restore: >> ", next_state )
+
+	if next_state == self.STATE_TOUCH then
+		self:do_state_touch( params )
+
+	elseif next_state == self.STATE_AT_REST then
+		self:do_state_at_rest( params )
+
+	else
+		print( "WARNING :: TableView:state_restore > " .. tostring( next_state ) )
+	end
+
+end
+
+
+
+
+
+
+
+-- when object has velocity and hit limit
+-- we constrain its motion away from limit
+--
+function TableView:do_state_restraint( params )
+	-- print( "TableView:do_state_restraint" )
+
+	params = params or {}
+	local evt_start = params.event
+
+	local TIME = self.STATE_RESTRAINT_TRANS_TIME
+	local ease_f = easingx.easeOut
+
+	local v = self._v_velocity
+	local scr = self._dg_scroller
+
+	local velocity = v.value * v.vector
+	local v_delta = -velocity
+
+
+	local enterFrameFunc = function( e )
+		-- print( "TableView: enterFrameFunc: do_state_restraint" )
+
+		local evt_frame = self._event_tmp
+		local limit = self._v_scroll_limit
+
+		local start_time_delta = e.time - evt_start.time -- total
+		local frame_time_delta = e.time - evt_frame.time
+
+		local y_delta
+
+
+		--== Calculation
+
+		v.value = ease_f( start_time_delta, TIME, velocity, v_delta )
+		y_delta = v.value * frame_time_delta
+
+
+		--== Action
+
+		if start_time_delta < TIME then
+			scr.y = scr.y + y_delta
+
+		else
+			v.value = 0
+			self:gotoState( self.STATE_RESTORE, { event=e } )
+
+		end
+	end
+
+	-- start animation
+
+	if self._enterFrameIterator == nil then
+		Runtime:addEventListener( 'enterFrame', self )
+	end
+	self._enterFrameIterator = enterFrameFunc
+
+	-- set current state
+	self:setState( self.STATE_RESTRAINT )
+end
+
+function TableView:state_restraint( next_state, params )
+	-- print( "TableView:state_restraint: >> ", next_state )
+
+	if next_state == self.STATE_TOUCH then
+		self:do_state_touch( params )
+
+	elseif next_state == self.STATE_RESTORE then
+		self:do_state_restore( params )
+
+	else
+		print( "WARNING :: TableView:state_restraint > " .. tostring( next_state ) )
+	end
+
+end
 
 
 
@@ -851,33 +558,9 @@ end
 --== Event Handlers
 
 
-
-
-
--- _dispatchEvent
---
-function TableView:_dispatchEvent( e_type, data )
---print( "TableView:_dispatchEvent ", e_type )
-
-	params = params or {}
-
-	-- setup custom event
-	local e = {
-		name = TableView.EVENT,
-		type = e_type,
-		data = data
-	}
-
-	self:dispatchEvent( e )
-end
-
+-- none
 
 
 
 
 return TableView
-
-
-
-
-

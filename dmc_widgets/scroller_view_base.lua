@@ -44,14 +44,13 @@ dmc_lib_data = _G.__dmc_library
 dmc_lib_func = dmc_lib_data.func
 
 
-
 --====================================================================--
 -- Imports
 --====================================================================--
 
 local Utils = require( dmc_lib_func.find('dmc_utils') )
 local Objects = require( dmc_lib_func.find('dmc_objects') )
-
+local States = require( dmc_lib_func.find('dmc_states') )
 
 
 --====================================================================--
@@ -62,6 +61,51 @@ local Objects = require( dmc_lib_func.find('dmc_objects') )
 local inheritsFrom = Objects.inheritsFrom
 local CoronaBase = Objects.CoronaBase
 
+local LOCAL_DEBUG = false
+
+--====================================================================--
+-- Basic Scroller
+--====================================================================--
+
+--[[
+	need to create this small object so that we can
+	easily set x/y offset of the scroller
+	(thank you getters and setters !! =)
+--]]
+
+local BasicScroller = inheritsFrom( CoronaBase )
+
+function BasicScroller:_init( params )
+	-- print( "BasicScroller:_init" )
+	self:superCall( "_init", params )
+	--==--
+
+	params = params or {}
+
+	if params.x_offset == nil then params.x_offset = 0 end
+	if params.y_offset == nil then params.y_offset = 0 end
+
+	self._x_offset = params.x_offset
+	self._y_offset = params.y_offset
+
+end
+
+function BasicScroller.__setters:y( value )
+	-- print( "BasicScroller.__setters:y" )
+	self.view.y = ( value + self._y_offset )
+end
+function BasicScroller.__getters:y( value )
+	-- print( "BasicScroller.__getters:y" )
+	return ( self.view.y - self._y_offset )
+end
+function BasicScroller.__setters:x_offset( value )
+	-- print( "BasicScroller.__setters:x_offset" )
+	self._x_offset = value
+end
+function BasicScroller.__setters:y_offset( value )
+	-- print( "BasicScroller.__setters:y_offset" )
+	self._y_offset = value
+end
 
 
 --====================================================================--
@@ -71,22 +115,21 @@ local CoronaBase = Objects.CoronaBase
 local ScrollerBase = inheritsFrom( CoronaBase )
 ScrollerBase.NAME = "Scroller View Base Class"
 
+States.mixin( ScrollerBase )
+
 
 --== Class Constants
 
 -- pixel amount to edges of ScrollerBase in which rows are de-/rendered
 ScrollerBase.DEFAULT_RENDER_MARGIN = 100
-ScrollerBase.DEFAULT_FRICTION = 0.92
-ScrollerBase.DEFAULT_MASS = 10
-ScrollerBase.SPRING_CONST = 5
 
-ScrollerBase.MARGIN = 20
-
-ScrollerBase.TRANSITION_TIME = 350
-
-
+-- flags used when scroller hits top/bottom of scroll range
 ScrollerBase.HIT_TOP_LIMIT = "top_limit_hit"
 ScrollerBase.HIT_BOTTOM_LIMIT = "bottom_limit_hit"
+
+-- delta pixel amount before touch event is given up
+ScrollerBase.X_TOUCH_LIMIT = 10
+ScrollerBase.Y_TOUCH_LIMIT = 10
 
 
 --== State Constants
@@ -97,15 +140,22 @@ ScrollerBase.STATE_TOUCH = "state_touch"
 ScrollerBase.STATE_RESTRAINT = "state_restraint"
 ScrollerBase.STATE_RESTORE = "state_restore"
 
+ScrollerBase.STATE_RESTRAINT_TRANS_TIME = 100
+ScrollerBase.STATE_RESTORE_TRANS_TIME = 500
+
 
 --== Event Constants
 
-ScrollerBase.EVENT = "slide_view_event"
+ScrollerBase.EVENT = "scroller_view"
 
 ScrollerBase.SLIDE_RENDER = "slide_render_event"
+ScrollerBase.TAKE_FOCUS = "take_focus_event"
+ScrollerBase.ITEM_SELECTED = "item_selected"
 
 
 
+
+--====================================================================--
 --== Start: Setup DMC Objects
 
 
@@ -114,7 +164,15 @@ function ScrollerBase:_init( params )
 	self:superCall( "_init", params )
 	--==--
 
+	--== Sanity Check ==--
+
 	params = params or { }
+
+	if params.x_offset == nil then params.x_offset = 0 end
+	if params.y_offset == nil then params.y_offset = 0 end
+
+	self._params = params -- save for later
+
 
 	--== Create Properties ==--
 
@@ -130,14 +188,19 @@ function ScrollerBase:_init( params )
 	self._v_scroll_limit = nil -- type of limit, HIT_TOP_LIMIT, HIT_BOTTOM_LIMIT
 	self._h_scroll_limit = nil -- type of limit, HIT_TOP_LIMIT, HIT_BOTTOM_LIMIT
 
+	self._h_scroll_enabled = true
+	self._v_scroll_enabled = true
+
+	self._h_touch_limit = 10
+	self._h_touch_lock = false
+	self._v_touch_limit = 10
+	self._v_touch_lock = false
+
 	self._v_velocity = { value=0, vector=1 }
 	self._h_velocity = { value=0, vector=1 }
 
 	self._transition = nil -- handle of active transition
 
-	self._mass = params.mass or self.DEFAULT_MASS
-	self._friction = params.friction or self.DEFAULT_FRICTION
-	self._spring = params.spring_cons or self.SPRING_CONST
 
 	--== Display Groups ==--
 
@@ -152,22 +215,21 @@ function ScrollerBase:_init( params )
 	self._bg = nil
 
 	--[[
-		array of row data
+		array of item data objects
 	--]]
 	self._items = nil
 
 	--[[
-		array of rendered row data
+		array of rendered items
 	--]]
 	self._rendered_items = nil
 
+	-- used when calculating velocity
 	self._touch_evt_stack = nil
-
 
 	self._categories = nil -- array of category data
 
 	self._category_view = nil
-	self._inactive_dots = {}
 
 end
 
@@ -190,13 +252,16 @@ function ScrollerBase:_createView()
 	local W,H = self._width, self._height
 	local H_CENTER, V_CENTER = W*0.5, H*0.5
 
-	local o, dg, tmp  -- object, display group, tmp
+	local o, dg, tmp, p   -- object, display group, tmp
 
 
 	-- primer
 
 	o = display.newRect( 0,0, self._width, self._height )
-	o:setFillColor( 0, 1, 1, 1 )
+	o:setFillColor( 0, 0, 0, 0 )
+	if LOCAL_DEBUG then
+		o:setFillColor( 0, 1, 1, 1 )
+	end
 	o.anchorX, o.anchorY = 0, 0
 	o.x,o.y = 0, 0
 
@@ -210,13 +275,22 @@ function ScrollerBase:_createView()
 
 	-- container for scroll items/background
 
-	dg = display.newGroup()
-	self:insert( dg )
+	p = {
+		x_offset= self._params.x_offset,
+		y_offset = self._params.y_offset
+	}
+	dg = BasicScroller:new( p )
+	self:insert( dg.view )
 	self._dg_scroller = dg
 
+
 	-- background
-	o = display.newRect( 0,0, self._width, self._height )
-	o:setFillColor( 0.5, 0.5, 0.5, 1 )
+
+	o = display.newRect( 0, 0, self._width, self._height )
+	o:setFillColor( 0, 0, 0, 0 )
+	if LOCAL_DEBUG then
+		o:setFillColor( 1, 0.5, 0.5, 1 )
+	end
 	o.isVisible = true
 
 	o.anchorX, o.anchorY = 0, 0
@@ -252,6 +326,8 @@ end
 --
 function ScrollerBase:_initComplete()
 	--print( "ScrollerBase:_initComplete" )
+	self:superCall( "_initComplete" )
+	--==--
 
 	local o, f
 
@@ -260,12 +336,13 @@ function ScrollerBase:_initComplete()
 	self._rendered_items = {}
 	self._touch_evt_stack = {}
 
-	f = self:createCallback( self._touch_handler )
-	self._dg_scroller:addEventListener( "touch", f )
+	self._dg_scroller:addEventListener( "touch", self )
 
 
-	--==--
-	self:superCall( "_initComplete" )
+	self:setState( self.STATE_CREATE )
+	self:gotoState( self.STATE_AT_REST )
+
+
 end
 
 function ScrollerBase:_undoInitComplete()
@@ -286,6 +363,29 @@ end
 --== Public Methods
 
 
+
+
+function ScrollerBase:deleteAllItems()
+	print( "ScrollerBase:deleteAllItems" )
+
+	print( "IMPLMENT DELETE ALL ROWS" )
+
+end
+
+
+
+
+function ScrollerBase:takeFocus( event )
+	print( "ScrollerBase:takeFocus" )
+
+	display.getCurrentStage():setFocus( nil )
+
+	event.phase = 'began'
+	event.target = self._dg_scroller
+
+	self._dg_scroller_f( event )
+
+end
 
 
 function ScrollerBase:insertItem( item_info  )
@@ -489,7 +589,7 @@ end
 
 
 function ScrollerBase:_findFirstVisibleItem()
-	print( "ScrollerBase:_findFirstVisibleItem" )
+	-- print( "ScrollerBase:_findFirstVisibleItem" )
 
 	return self._items[1]
 end
@@ -531,6 +631,7 @@ function ScrollerBase:_renderItem( row_data, options )
 
 	local dg = self._dg_scroller
 	local view, bg, line
+	local f
 
 	--== Create View Items
 
@@ -538,13 +639,19 @@ function ScrollerBase:_renderItem( row_data, options )
 	view = display.newGroup()
 	dg:insert( view )
 
+
 	-- create background
 	bg = display.newRect( 0, 0, self._width, row_info.height )
 	bg.anchorX, bg.anchorY = 0,0
-	bg:setFillColor( 1, 0, 0, 0.5 )
+	bg:setFillColor( 1, 1, 0, 0.5 )
 	bg:setStrokeColor( 0, 0, 0, 0.5 )
 	bg.strokeWidth = 1
 	view:insert( bg )
+
+	bg._data = row_info
+
+	bg:addEventListener( 'touch', self )
+
 
 	-- create bottom-line
 
@@ -558,8 +665,8 @@ function ScrollerBase:_renderItem( row_data, options )
 	--== Render View
 
 	local e ={
-		name = ScrollerBase.EVENT,
-		type = ScrollerBase.ROW_RENDER,
+		name = self.EVENT,
+		type = self.ROW_RENDER,
 
 		parent = self,
 		target = row_info,
@@ -610,8 +717,8 @@ function ScrollerBase:_unRenderItem( item_data, options )
 	table.remove( self._rendered_items, options.index )
 
 	local e ={
-		name = ScrollerBase.EVENT,
-		type = ScrollerBase.ROW_RENDER,
+		name = self.EVENT,
+		type = self.ROW_RENDER,
 
 		parent = self,
 		target = row_info,
@@ -642,7 +749,7 @@ function ScrollerBase:_checkScrollBounds()
 	local scr = self._dg_scroller
 	-- print( "scr.y, ", scr.y , (self._height - self._total_item_dimension) )
 
-	if self._horizontal_scroll_enabled then
+	if self._h_scroll_enabled then
 		if scr.x > 0 then
 			self._h_scroll_limit = ScrollerBase.HIT_TOP_LIMIT
 		elseif scr.x <  self._width - self._total_item_dimension then
@@ -652,10 +759,10 @@ function ScrollerBase:_checkScrollBounds()
 		end
 	end
 
-	if self._vertical_scroll_enabled then
+	if self._v_scroll_enabled then
 		if scr.y > 0 then
 			self._v_scroll_limit = ScrollerBase.HIT_TOP_LIMIT
-		elseif scr.y <  self._height - self._total_item_dimension then
+		elseif scr.y <  self._height - self._total_item_dimension - scr._y_offset then
 			self._v_scroll_limit = ScrollerBase.HIT_BOTTOM_LIMIT
 		else
 			self._v_scroll_limit = nil
@@ -672,13 +779,39 @@ end
 --== START: SCROLLER BASE STATE MACHINE
 
 
-function ScrollerBase:_getNextState()
 
-	error( "override _getNextState" )
-	local state, params
+function ScrollerBase:_getNextState( params )
+	-- print( "ScrollerBase:_getNextState" )
 
-	return state, params
+	params = params or {}
+
+	local limit = self._v_scroll_limit
+	local v = self._v_velocity
+
+	local s, p -- state, params
+
+	if v.value <= 0 and not limit then
+		s = self.STATE_AT_REST
+		p = { event=params.event }
+
+	elseif v.value > 0 and not limit then
+		s = self.STATE_SCROLL
+		p = { event=params.event }
+
+	elseif v.value <= 0 and limit then
+		s = self.STATE_RESTORE
+		p = { event=params.event }
+
+	elseif v.value > 0 and limit then
+		s = self.STATE_RESTRAINT
+		p = { event=params.event }
+
+	end
+
+	return s, p
 end
+
+
 
 
 
@@ -835,17 +968,39 @@ function ScrollerBase:do_state_touch( params )
 		self._enterFrameIterator = enterFrameFunc2
 	end
 
+	if self._enterFrameIterator == nil then
+		Runtime:addEventListener( 'enterFrame', self )
+	end
 
 	self._enterFrameIterator = enterFrameFunc1
-	Runtime:addEventListener( 'enterFrame', self )
 
 	self:setState( self.STATE_TOUCH )
 end
 
+
 function ScrollerBase:state_touch( next_state, params )
-	print( "ScrollerBase:state_touch: >> ", next_state )
+	-- print( "ScrollerBase:state_touch: >> ", next_state )
+
+	if next_state == self.STATE_RESTORE then
+		self:do_state_restore( params )
+
+	elseif next_state == self.STATE_RESTRAINT then
+		self:do_state_restraint( params )
+
+	elseif next_state == self.STATE_AT_REST then
+		self:do_state_at_rest( params )
+
+	elseif next_state == self.STATE_SCROLL then
+		self:do_state_scroll( params )
+
+	else
+		print( "WARNING :: ScrollerBase:state_touch > " .. tostring( next_state ) )
+	end
 
 end
+
+
+
 
 
 --== END: SCROLLER BASE STATE MACHINE
@@ -866,6 +1021,7 @@ function ScrollerBase:enterFrame( event )
 		f( event )
 		self._event_tmp = event
 		self:_updateDisplay()
+		self:_checkScrollBounds()
 	end
 
 end
@@ -874,8 +1030,8 @@ end
 
 
 
-function ScrollerBase:_touch_handler( event )
-	-- print( "ScrollerBase:_touch_handler", event.phase )
+function ScrollerBase:touch( event )
+	-- print( "ScrollerBase:touch", event.phase )
 
 	local phase = event.phase
 	local x_delta, y_delta
@@ -885,6 +1041,12 @@ function ScrollerBase:_touch_handler( event )
 
 	if phase == "began" then
 
+		self._touch_target = event.target
+		local scr = self._dg_scroller
+
+		self._v_touch_lock = false
+		self._h_touch_lock = false
+
 		-- stop any active movement
 
 		self:gotoState( self.STATE_TOUCH )
@@ -893,7 +1055,7 @@ function ScrollerBase:_touch_handler( event )
 		self._tch_event_tmp = event
 
 		-- handle touch
-		display.getCurrentStage():setFocus( self._dg_scroller, event.id )
+		display.getCurrentStage():setFocus( scr.view, event.id )
 
 	end
 
@@ -906,9 +1068,37 @@ function ScrollerBase:_touch_handler( event )
 		local v_v = self._v_velocity
 		local h_mult, v_mult
 		local d, t, s
+		local x_delta, y_delta
+
+
+		--== Check to see if we need to reliquish the touch
+
+		x_delta = math.abs( event.xStart - event.x )
+		if not self._v_touch_lock and x_delta > self._h_touch_limit then
+			self._h_touch_lock = true
+		end
+		if not self._v_touch_lock and not self._h_scroll_enabled then
+			if x_delta > self._h_touch_limit then
+				self:_dispatchEvent( self.TAKE_FOCUS, event )
+			end
+		end
+
+		y_delta = math.abs( event.yStart - event.y )
+		if not self._h_touch_lock and y_delta > self._v_touch_limit then
+			self._v_touch_lock = true
+		end
+		if not self._h_touch_lock and not self._v_scroll_enabled then
+			if y_delta > self._v_touch_limit then
+				self:_dispatchEvent( self.TAKE_FOCUS, event )
+			end
+		end
 
 		self:_checkScrollBounds()
 
+
+		--== Calculate motion multiplier
+
+		-- horizonal
 		s = 0
 		if self._h_scroll_limit == self.HIT_TOP_LIMIT then
 			s = scr.x
@@ -917,26 +1107,30 @@ function ScrollerBase:_touch_handler( event )
 		end
 		h_mult = 1 - (s/LIMIT)
 
+		-- vertical
 		s = 0
 		if self._v_scroll_limit == self.HIT_TOP_LIMIT then
 			s = scr.y
 		elseif self._v_scroll_limit == self.HIT_BOTTOM_LIMIT then
 			s = ( self._height - self._total_item_dimension ) - scr.y
 		end
-		v_mult = 1 - (s/LIMIT )
+		v_mult = 1 - (s/LIMIT)
 
-		-- move scroller
 
-		if self._horizontal_scroll_enabled then
+		--== Move scroller
+
+		if self._h_scroll_enabled and not self._v_touch_lock then
 			x_delta = event.x - self._tch_event_tmp.x
 			scr.x = scr.x + ( x_delta * h_mult )
 		end
 
-		if self._vertical_scroll_enabled then
+		if self._v_scroll_enabled and not self._h_touch_lock then
 			y_delta = event.y - self._tch_event_tmp.y
 			scr.y = scr.y + ( y_delta * v_mult )
 		end
 
+
+		--== The Rest
 
 		self:_updateDisplay()
 
@@ -962,6 +1156,12 @@ function ScrollerBase:_touch_handler( event )
 		local next_state, next_params = self:_getNextState( { event=event } )
 		self:gotoState( next_state, next_params )
 
+		if not self._h_touch_lock and not self._v_touch_lock then
+			self:_dispatchEvent( self.ITEM_SELECTED, self._touch_target._data )
+		end
+
+		self._touch_target = nil
+
 	end
 
 	return true
@@ -971,102 +1171,14 @@ end
 
 
 
-
--- function  SlideView:_trans_not_v_not_l()
-
--- 	local v = self._h_velocity
-
--- 	local f = function( e )
--- 		-- print( "in _trans_not_v_not_l" )
-
--- 		v.value = 0
--- 		v.vector = 1
-
--- 		self._enterFrameIterator = nil
--- 	end
-
--- 	return f
-
--- end
-
-
--- function  SlideView:_trans_v_not_l()
--- 	-- print( "SlideView:_trans_v_not_l" )
-
--- 	local scr = self._dg_scroller
--- 	local v = self._h_velocity
--- 	local M, F = 3, 0.871
-
-
--- 	local f = function( e )
--- 		-- print( "in _trans_v_not_l" )
-
--- 		local evt_tmp = self._event_tmp
-
--- 		local delta_time = e.time - evt_tmp.time
-
--- 		local x_delta
-
--- 		-- adjust for friction
--- 		-- F=ma, v=Fmt
--- 		V = F * M * (delta_time/1000)
--- 		v.value = v.value - V
-
--- 		-- adjust for kinetic energy
--- 		-- .5 * m * v^2   or
--- 		-- v.value = v.value - 0
-
--- 		-- check if to switch to another
--- 		if v.value <= 0 or self._h_scroll_limit then
--- 			self:_getEnterFrameTransition( event )
-
--- 		else
--- 			x_delta = v.value * delta_time
--- 			if x_delta > 100 then x_delta = 100 end -- clamp speed
--- 			scr.x = scr.x + ( x_delta * v.vector )
-
--- 		end
-
--- 	end
-
--- 	return f
--- end
-
-
-
-
-
 --====================================================================--
 --== Event Handlers
 
 
 
-
-
--- _dispatchEvent
---
-function ScrollerBase:_dispatchEvent( e_type, data )
---print( "ScrollerBase:_dispatchEvent ", e_type )
-
-	params = params or {}
-
-	-- setup custom event
-	local e = {
-		name = ScrollerBase.EVENT,
-		type = e_type,
-		data = data
-	}
-
-	self:dispatchEvent( e )
-end
-
+ScrollerBase._dispatchEvent = CoronaBase._dispatchEvent
 
 
 
 
 return ScrollerBase
-
-
-
-
-
