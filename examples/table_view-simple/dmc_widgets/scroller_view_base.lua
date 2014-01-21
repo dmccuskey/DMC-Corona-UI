@@ -201,6 +201,7 @@ function ScrollerBase:_init( params )
 
 	self._transition = nil -- handle of active transition
 
+	self._is_rendered = true
 
 	--== Display Groups ==--
 
@@ -260,7 +261,7 @@ function ScrollerBase:_createView()
 	o = display.newRect( 0,0, self._width, self._height )
 	o:setFillColor( 0, 0, 0, 0 )
 	if LOCAL_DEBUG then
-		o:setFillColor( 0, 1, 1, 0 )
+		o:setFillColor( 0, 1, 1, 1 )
 	end
 	o.anchorX, o.anchorY = 0, 0
 	o.x,o.y = 0, 0
@@ -313,9 +314,9 @@ function ScrollerBase:_undoCreateView()
 	o:removeSelf()
 	self._primer = nil
 
-	o = self._dg
+	o = self._dg_scroller
 	o:removeSelf()
-	self._dg = nil
+	self._dg_scroller = nil
 
 	--==--
 	self:superCall( "_undoCreateView" )
@@ -325,7 +326,7 @@ end
 -- _initComplete()
 --
 function ScrollerBase:_initComplete()
-	--print( "ScrollerBase:_initComplete" )
+	-- print( "ScrollerBase:_initComplete" )
 	self:superCall( "_initComplete" )
 	--==--
 
@@ -339,14 +340,17 @@ function ScrollerBase:_initComplete()
 	self._dg_scroller:addEventListener( "touch", self )
 
 
+	self._is_rendered = true
+
 	self:setState( self.STATE_CREATE )
 	self:gotoState( self.STATE_AT_REST )
-
 
 end
 
 function ScrollerBase:_undoInitComplete()
-	--print( "ScrollerBase:_undoInitComplete" )
+	-- print( "ScrollerBase:_undoInitComplete" )
+
+	self._is_rendered = false
 
 	--==--
 	self:superCall( "_undoInitComplete" )
@@ -869,7 +873,7 @@ end
 
 
 function ScrollerBase:do_state_touch( params )
-	print( "ScrollerBase:do_state_touch" )
+	-- print( "ScrollerBase:do_state_touch" )
 
 	params = params or {}
 
@@ -1022,7 +1026,7 @@ function ScrollerBase:enterFrame( event )
 
 	local f = self._enterFrameIterator
 
-	if not f then
+	if not f or not self._is_rendered then
 		Runtime:removeEventListener( 'enterFrame', self )
 	else
 		f( event )
