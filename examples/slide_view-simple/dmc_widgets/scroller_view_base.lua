@@ -284,6 +284,8 @@ function ScrollerBase:_init( params )
 	--]]
 	self._rendered_items = nil
 
+	self._tmp_item = nil -- used when gotoItem
+
 	-- used when calculating velocity
 	self._touch_evt_stack = nil
 
@@ -427,6 +429,17 @@ end
 
 
 
+
+function ScrollerBase:gotoItem( item_data )
+	-- print( "ScrollerBase:gotoItem", item_data )
+
+	self._tmp_item = item_data
+
+	self:_updateDisplay()
+end
+
+
+
 function ScrollerBase:takeFocus( event )
 	-- print( "ScrollerBase:takeFocus" )
 
@@ -503,7 +516,7 @@ end
 
 
 function ScrollerBase:deleteItem( index  )
-	print( "ScrollerBase:deleteItem", index )
+	-- print( "ScrollerBase:deleteItem", index )
 
 	local items = self._item_data_recs
 	local item_data
@@ -557,7 +570,7 @@ end
 
 
 function ScrollerBase:_updateBackground()
-	print( "ScrollerBase:_updateBackground" )
+	-- print( "ScrollerBase:_updateBackground" )
 
 	local total_dim = self._total_item_dimension
 	local o = self._bg
@@ -621,9 +634,9 @@ function ScrollerBase:_updateDisplay()
 
 	if #items == 0 then return end
 
-	local bounds = self:_viewportBounds()
 	local bounded_f = self._isBounded
 	local rendered = self._rendered_items
+	local bounds = self:_viewportBounds()
 
 	-- print( 'back >> ', bounds.yMin, bounds.yMax )
 
@@ -654,18 +667,18 @@ function ScrollerBase:_updateDisplay()
 
 	-- if no rows are valid, find the top one
 	if #rendered == 0 then
-		min_visible_row = nil
-		max_visible_row = self:_findFirstVisibleItem()
+		min_visible_row = self:_findFirstVisibleItem()
+		max_visible_row = min_visible_row
 
-		row = self:_renderItem( max_visible_row, { head=true } )
+		row = self:_renderItem( min_visible_row, { head=true } )
 
 	else
 
 		min_visible_row = rendered[1]
 		max_visible_row = rendered[ #rendered ]
 
-		print( 'row', min_visible_row.index, min_visible_row.data.data )
-		print( #self._rendered_items, max_visible_row.index )
+		-- print( 'row', min_visible_row.index, min_visible_row.data.data )
+		-- print( #self._rendered_items, max_visible_row.index )
 
 	end
 
@@ -674,7 +687,7 @@ function ScrollerBase:_updateDisplay()
 
 		local item_data, index
 		index = min_visible_row.index - 1
-		print( 'searching up from index', index )
+		-- print( 'searching up from index', index )
 		if index >= 1 then
 
 			for i = index, 1, -1 do
@@ -730,7 +743,16 @@ end
 function ScrollerBase:_findFirstVisibleItem()
 	-- print( "ScrollerBase:_findFirstVisibleItem" )
 
-	return self._item_data_recs[1]
+	local item
+
+	if self._tmp_item then
+		item = self._tmp_item
+		self._tmp_item = nil
+	else
+		item = self._item_data_recs[1]
+	end
+
+	return item
 end
 
 
@@ -848,7 +870,7 @@ end
 
 
 function ScrollerBase:_unRenderItem( item_data, options )
-	print( "ScrollerBase:_unRenderItem", item_data.index )
+	-- print( "ScrollerBase:_unRenderItem", item_data.index )
 	options = options or {}
 	--==--
 
@@ -868,10 +890,10 @@ function ScrollerBase:_unRenderItem( item_data, options )
 
 	if index == nil then
 		for i,v in ipairs( rendered ) do
-			print(i,v)
+			-- print(i,v)
 			if item_data == v then
 				index = i
-				print( "breaking at ", index )
+				-- print( "breaking at ", index )
 				break
 			end
 		end

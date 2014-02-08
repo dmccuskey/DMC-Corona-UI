@@ -252,6 +252,8 @@ end
 
 
 -- set method on our object, make lookup faster
+
+
 SlideView.insertSlide = ScrollerViewBase.insertItem
 
 SlideView.deleteSlide = ScrollerViewBase.deleteItem
@@ -259,9 +261,18 @@ SlideView.deleteSlide = ScrollerViewBase.deleteItem
 SlideView.deleteAllSlides = ScrollerViewBase.deleteAllItems
 
 
+
 function SlideView:gotoSlide( index )
 	-- print( "SlideView:gotoSlide", index )
 
+	local scr = self._dg_scroller
+	local items = self._item_data_recs
+	local item_data
+
+	item_data = items[ index ]
+	scr.x = -item_data.xMin
+
+	ScrollerViewBase.gotoItem( self, item_data )
 end
 
 
@@ -273,14 +284,14 @@ end
 
 
 function SlideView:_reindexItems( index, record )
-	print( "SlideView:_reindexItems", index, record )
+	-- print( "SlideView:_reindexItems", index, record )
 
 	local items = self._item_data_recs
 	local item_data, view, w
 	w = record.width
 
 	for i=index,#items do
-		print(i)
+		-- print(i)
 		item_data = items[ i ]
 		item_data.xMin = item_data.xMin - w
 		item_data.xMax = item_data.xMax - w

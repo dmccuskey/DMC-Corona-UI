@@ -98,7 +98,7 @@ scroller.x, scroller.y = OFFSET*0.5, OFFSET*0.5
 
 -- create slides
 
-for i = 1, 5 do
+for i = 1, 200 do
 
 	local p = {
 		height = 300,
@@ -113,32 +113,44 @@ for i = 1, 5 do
 
 end
 
+-- f = function()
+-- 	print( "deleting slide" )
+-- 	scroller:deleteSlide( 1 )
+-- end
+-- timer.performWithDelay( 500, f )
+
+-- f = function()
+-- 	print( "deleting slide" )
+-- 	scroller:deleteSlide( 1 )
+-- end
+-- timer.performWithDelay( 1000, f )
+
+-- f = function()
+-- 	print( "deleting slide" )
+-- 	scroller:deleteSlide( 1 )
+-- end
+-- timer.performWithDelay( 1500, f )
+
+-- f = function()
+-- 	print( "deleting slide" )
+-- 	scroller:deleteSlide( 1 )
+-- end
+-- timer.performWithDelay( 2000, f )
+
+-- f = function()
+-- 	print( "deleting slide" )
+-- 	scroller:deleteSlide( 1 )
+-- end
+-- timer.performWithDelay( 2500, f )
+
 f = function()
-	print( "deleting slide" )
-	scroller:deleteSlide( 1 )
+	print( "goto slide" )
+	scroller:gotoSlide( 100 )
 end
 timer.performWithDelay( 500, f )
-
 f = function()
-	print( "deleting slide" )
-	scroller:deleteSlide( 1 )
-end
-timer.performWithDelay( 1000, f )
-
-f = function()
-	print( "deleting slide" )
-	scroller:deleteSlide( 1 )
+	print( "goto slide" )
+	scroller:gotoSlide( 10 )
 end
 timer.performWithDelay( 1500, f )
 
-f = function()
-	print( "deleting slide" )
-	scroller:deleteSlide( 1 )
-end
-timer.performWithDelay( 2000, f )
-
-f = function()
-	print( "deleting slide" )
-	scroller:deleteSlide( 1 )
-end
-timer.performWithDelay( 2500, f )
