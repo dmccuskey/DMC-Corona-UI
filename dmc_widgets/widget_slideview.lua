@@ -112,7 +112,10 @@ SlideView.STATE_MOVE_TO_NEXT_SLIDE_TRANS_TIME = 250
 
 --== Event Constants
 
+SlideView.SLIDE_IN_FOCUS = "slide_in_focus_event"
 
+SlideView.SLIDE_RENDER = ScrollerViewBase.ITEM_RENDER
+SlideView.SLIDE_UNRENDER = ScrollerViewBase.ITEM_UNRENDER
 
 --====================================================================--
 --== Start: Setup DMC Objects
@@ -120,10 +123,10 @@ SlideView.STATE_MOVE_TO_NEXT_SLIDE_TRANS_TIME = 250
 
 function SlideView:_init( params )
 	-- print( "SlideView:_init" )
+	params = params or { }
 	self:superCall( "_init", params )
 	--==--
 
-	params = params or { }
 
 	--== Create Properties ==--
 
@@ -156,10 +159,6 @@ function SlideView:_init( params )
 
 	-- self._bg = nil
 
-	-- --[[
-	-- 	array of row data
-	-- --]]
-	-- self._rows = nil
 
 	-- --[[
 	-- 	array of rendered row data
@@ -170,6 +169,9 @@ function SlideView:_init( params )
 
 	-- self._category_view = nil
 	-- self._inactive_dots = {}
+
+	self.index = -1 -- index of slide showing, or -1
+	self.slide = nil -- slide showing, or nil
 
 	self._h_scroll_enabled = true
 	self._v_scroll_enabled = false
@@ -215,8 +217,6 @@ function SlideView:_initComplete()
 	--print( "SlideView:_initComplete" )
 
 	local o, f
-	self._rows = {}
-	self._rendered_rows = {}
 
 
 	self:setState( self.STATE_CREATE )
@@ -246,7 +246,28 @@ end
 
 
 -- set method on our object, make lookup faster
+
+
 SlideView.insertSlide = ScrollerViewBase.insertItem
+
+SlideView.deleteSlide = ScrollerViewBase.deleteItem
+
+SlideView.deleteAllSlides = ScrollerViewBase.deleteAllItems
+
+
+
+function SlideView:gotoSlide( index )
+	-- print( "SlideView:gotoSlide", index )
+
+	local scr = self._dg_scroller
+	local items = self._item_data_recs
+	local item_data
+
+	item_data = items[ index ]
+	scr.x = -item_data.xMin
+
+	ScrollerViewBase.gotoItem( self, item_data )
+end
 
 
 
@@ -254,6 +275,40 @@ SlideView.insertSlide = ScrollerViewBase.insertItem
 --====================================================================--
 --== Private Methods
 
+
+
+function SlideView:_reindexItems( index, record )
+	-- print( "SlideView:_reindexItems", index, record )
+
+	local items = self._item_data_recs
+	local item_data, view, w
+	w = record.width
+
+	for i=index,#items do
+		-- print(i)
+		item_data = items[ i ]
+		item_data.xMin = item_data.xMin - w
+		item_data.xMax = item_data.xMax - w
+		item_data.index = i
+		view = item_data.view
+		if view then view.x, view.y = item_data.xMin, item_data.xMin end
+	end
+
+end
+
+function SlideView:_updateBackground()
+	local items = self._item_data_recs
+	local item
+
+	if #items == 0 then
+		self._total_item_dimension = 0
+	else
+		item = items[ #items ]
+		self._total_item_dimension = item.xMax
+	end
+
+	self:superCall( '_updateBackground' )
+end
 
 
 -- calculate horizontal direction
@@ -273,26 +328,13 @@ function SlideView:_updateDimensions( item_info, item_data )
 	item_data.xMin = self._total_item_dimension
 	item_data.xMax = item_data.xMin + item_data.width
 
-	table.insert( self._items, item_data )
-	item_data.index = #self._items
+	table.insert( self._item_data_recs, item_data )
+	item_data.index = #self._item_data_recs
 
 	-- print( 'item insert', item_data.xMin, item_data.xMax )
 
 	total_dim = total_dim + item_data.width
 	self._total_item_dimension = total_dim
-
-
-	-- adjust background width
-
-	if total_dim < self._width then
-		total_dim = self._width
-	end
-
-	o = self._bg
-	x, y = o.x, o.y -- temp
-	o.width = total_dim
-	o.anchorX, o.anchorY = 0,0
-	o.x, o.y = x, y
 
 end
 
@@ -327,7 +369,7 @@ function SlideView:_findClosestSlide()
 
 	local item, pos, idx  = nil, 999, 0
 	local rendered = self._rendered_items
-	local bounds = self:_contentBounds()
+	local bounds = self:_viewportBounds()
 	local scr = self._dg_scroller
 
 	for i,v in ipairs( rendered ) do
@@ -482,7 +524,7 @@ function SlideView:do_move_to_nearest_slide( params )
 		else
 			-- final state
 			scr.x = pos + delta
-			self:gotoState( self.STATE_AT_REST )
+			self:gotoState( self.STATE_AT_REST, item )
 
 		end
 	end
@@ -499,7 +541,7 @@ function SlideView:do_move_to_nearest_slide( params )
 end
 
 function SlideView:move_to_nearest_slide( next_state, params )
-	-- print( "SlideView:move_to_nearest_slide: >> ", next_state )
+	-- print( "SlideView:move_to_nearest_slide: >> ", next_state, params )
 
 	if next_state == self.STATE_TOUCH then
 		self:do_state_touch( params )
@@ -557,7 +599,7 @@ function SlideView:do_move_to_next_slide( params )
 		else
 			-- final state
 			scr.x = pos + delta
-			self:gotoState( self.STATE_AT_REST )
+			self:gotoState( self.STATE_AT_REST, item  )
 
 		end
 	end
@@ -687,11 +729,16 @@ function SlideView:do_state_restore( params )
 
 	local pos = scr.x
 	local dist, delta
+	local rendered, item
+
+	rendered = self._rendered_items
 
 	if limit == self.HIT_TOP_LIMIT then
 		dist = scr.x
+		item = rendered[ 1 ]
 	else
 		dist = pos - ( self._width - background.width )
+		item = rendered[ #rendered ]
 	end
 
 	delta = -dist
@@ -720,7 +767,7 @@ function SlideView:do_state_restore( params )
 		else
 			-- final state
 			scr.x = pos + delta
-			self:gotoState( self.STATE_AT_REST )
+			self:gotoState( self.STATE_AT_REST, item )
 
 		end
 	end
@@ -752,6 +799,31 @@ function SlideView:state_restore( next_state, params )
 end
 
 
+function SlideView:do_state_at_rest( slide )
+	-- print( "SlideView:do_state_at_rest: >> ", slide )
+
+	params = params or {}
+	-- TODO: figure out why this doesn't work
+	-- self:superCall( 'do_state_at_rest', params )
+	ScrollerViewBase.do_state_at_rest( self, params )
+	--==--
+	if not slide then
+		self.slide = nil
+		self.index = -1
+	else
+		self.slide = slide
+		self.index = slide.index
+		local data = {
+			index=slide.index,
+			slide=slide
+		}
+		self:_dispatchEvent( self.SLIDE_IN_FOCUS, data )
+	end
+
+end
+
+
+-- function SlideView:
 
 
 --====================================================================--
