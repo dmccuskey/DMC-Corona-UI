@@ -123,10 +123,10 @@ SlideView.SLIDE_UNRENDER = ScrollerViewBase.ITEM_UNRENDER
 
 function SlideView:_init( params )
 	-- print( "SlideView:_init" )
+	params = params or { }
 	self:superCall( "_init", params )
 	--==--
 
-	params = params or { }
 
 	--== Create Properties ==--
 
@@ -159,10 +159,6 @@ function SlideView:_init( params )
 
 	-- self._bg = nil
 
-	-- --[[
-	-- 	array of row data
-	-- --]]
-	-- self._rows = nil
 
 	-- --[[
 	-- 	array of rendered row data
@@ -221,8 +217,6 @@ function SlideView:_initComplete()
 	--print( "SlideView:_initComplete" )
 
 	local o, f
-	self._rows = {}
-	self._rendered_rows = {}
 
 
 	self:setState( self.STATE_CREATE )
