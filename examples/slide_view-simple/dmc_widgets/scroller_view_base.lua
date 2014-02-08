@@ -29,6 +29,60 @@ DEALINGS IN THE SOFTWARE.
 --]]
 
 
+
+--[[
+
+Item Info Record
+this is what is passed in by user onRender()
+
+{
+	onItemRender = <func>, (local/global)
+	onItemUnrender = <func>, (local/global)
+
+	height = <int>, (optional)
+	width = <int>, (optional)
+	onItemEvent = <func>, (optional)
+	bgColor = <table of colors>, (optional)
+	data = ?? anything user wants (optional)
+
+	isCategory = <bool>, (optional)
+
+}
+
+internal properties
+{
+	_category = <ref to category>
+}
+
+
+--]]
+
+
+
+--[[
+
+Item Data Record
+
+{
+	data = <item info rec>
+
+	xMin = <int>
+	xMax = <int>
+	width = <int>
+
+	yMin = <int>
+	yMax = <int>
+	height = <int>
+
+	index = <int> -- reference to index position in list
+
+	view = <display group>, main container of view, only avail if rendered
+	background = <new rect>, reference to background
+}
+--]]
+
+
+
 -- Semantic Versioning Specification: http://semver.org/
 
 local VERSION = "1.0.0"
@@ -61,7 +115,7 @@ local States = require( dmc_lib_func.find('dmc_states') )
 local inheritsFrom = Objects.inheritsFrom
 local CoronaBase = Objects.CoronaBase
 
-local LOCAL_DEBUG = false
+local LOCAL_DEBUG = true
 
 --====================================================================--
 -- Basic Scroller
@@ -116,7 +170,7 @@ local ScrollerBase = inheritsFrom( CoronaBase )
 ScrollerBase.NAME = "Scroller View Base Class"
 
 States.mixin( ScrollerBase )
-
+-- States.setDebug( true )
 
 --== Class Constants
 
@@ -148,7 +202,8 @@ ScrollerBase.STATE_RESTORE_TRANS_TIME = 500
 
 ScrollerBase.EVENT = "scroller_view"
 
-ScrollerBase.SLIDE_RENDER = "slide_render_event"
+ScrollerBase.ITEM_RENDER = "item_render_event"
+ScrollerBase.ITEM_UNRENDER = "item_unrender_event"
 ScrollerBase.TAKE_FOCUS = "take_focus_event"
 ScrollerBase.ITEM_SELECTED = "item_selected"
 
@@ -211,17 +266,21 @@ function ScrollerBase:_init( params )
 
 	--== Object References ==--
 
-	self._primer = nil
+	self._bg_viewport = nil
 
 	self._bg = nil
 
 	--[[
 		array of item data objects
+		this is all of the items which have been added to scroller
+		data is plain Lua object, added from onRender() (item_info rec)
 	--]]
-	self._items = nil
+	self._item_data_recs = nil
 
 	--[[
 		array of rendered items
+		this is list of item data objects which have rendered views
+		data is plain Lua object (item_data rec)
 	--]]
 	self._rendered_items = nil
 
@@ -256,7 +315,7 @@ function ScrollerBase:_createView()
 	local o, dg, tmp, p   -- object, display group, tmp
 
 
-	-- primer
+	-- viewport background
 
 	o = display.newRect( 0,0, self._width, self._height )
 	o:setFillColor( 0, 0, 0, 0 )
@@ -267,7 +326,7 @@ function ScrollerBase:_createView()
 	o.x,o.y = 0, 0
 
 	self:insert( o )
-	self._primer = o
+	self._bg_viewport = o
 
 	self.anchorX, self.anchorY = 0,0
 
@@ -284,22 +343,22 @@ function ScrollerBase:_createView()
 	self:insert( dg.view )
 	self._dg_scroller = dg
 
-
-	-- background
+	-- background -- background dimensions are that of all slides/viewport
 
 	o = display.newRect( 0, 0, self._width, self._height )
 	o:setFillColor( 0, 0, 0, 0 )
 	if LOCAL_DEBUG then
-		o:setFillColor( 1, 0.5, 0.5, 1 )
+		o:setFillColor( 1, 0, 0.5, 1 )
 	end
-	o.isVisible = true
 
+	-- top left anchor point
 	o.anchorX, o.anchorY = 0, 0
 	o.x,o.y = 0, 0
 
 	dg:insert( o )
 	self._bg = o
 
+	-- top left anchor point
 	dg.anchorX, dg.anchorY = 0,0
 	dg.x, dg.y = 0, 0
 
@@ -310,9 +369,9 @@ function ScrollerBase:_undoCreateView()
 
 	local o
 
-	o = self._primer
+	o = self._bg_viewport
 	o:removeSelf()
-	self._primer = nil
+	self._bg_viewport = nil
 
 	o = self._dg_scroller
 	o:removeSelf()
@@ -333,7 +392,7 @@ function ScrollerBase:_initComplete()
 	local o, f
 
 	-- setup containers
-	self._items = {}
+	self._item_data_recs = {}
 	self._rendered_items = {}
 	self._touch_evt_stack = {}
 
@@ -368,17 +427,6 @@ end
 
 
 
-
-function ScrollerBase:deleteAllItems()
-	print( "ScrollerBase:deleteAllItems" )
-
-	print( "IMPLMENT DELETE ALL ROWS" )
-
-end
-
-
-
-
 function ScrollerBase:takeFocus( event )
 	-- print( "ScrollerBase:takeFocus" )
 
@@ -390,6 +438,7 @@ function ScrollerBase:takeFocus( event )
 	self:touch( event )
 
 end
+
 
 
 function ScrollerBase:insertItem( item_info  )
@@ -425,6 +474,7 @@ function ScrollerBase:insertItem( item_info  )
 	if not item_info.onItemRender then item_info.onItemRender = self._onItemRender end
 	if not item_info.onItemUnrender then item_info.onItemUnrender = self._onItemUnrender end
 
+	if item_info.isCategory == nil then item_info.isCategory = false end
 
 	-- category setup
 
@@ -444,10 +494,59 @@ function ScrollerBase:insertItem( item_info  )
 	-- updates after change
 
 	self:_updateDimensions( item_info, item_data )
+
+	self:_updateBackground()
 	self:_updateDisplay()
 
 end
 
+
+
+function ScrollerBase:deleteItem( index  )
+	print( "ScrollerBase:deleteItem", index )
+
+	local items = self._item_data_recs
+	local item_data
+
+	-- get item data
+	item_data = table.remove( items, index )
+
+	-- unrender if necessary
+	if item_data.view then
+		self:_unRenderItem( item_data, { index=nil } )
+	end
+
+	self:_reindexItems( index, item_data )
+
+	self:_updateBackground()
+	self:_updateDisplay()
+
+end
+
+
+
+function ScrollerBase:deleteAllItems()
+	-- print( "ScrollerBase:deleteAllItems" )
+
+	local rendered = self._rendered_items
+
+	-- delete rendered items
+
+	if #rendered > 0 then
+		for i = #rendered, 1, -1 do
+			local item_data = rendered[ i ]
+			-- print( i, 'rendered row', item_data.index )
+			self:_unRenderItem( item_data, { index=i } )
+		end
+	end
+
+	self._item_data_recs = {}
+
+	self._total_item_dimension = 0
+
+	self:_updateBackground()
+
+end
 
 
 
@@ -455,40 +554,74 @@ end
 --====================================================================--
 --== Private Methods
 
-function ScrollerBase:_contentBounds()
-	-- print( 'ScrollerBase:_contentBounds')
 
-	local bounds = self._primer.contentBounds
+
+function ScrollerBase:_updateBackground()
+	print( "ScrollerBase:_updateBackground" )
+
+	local total_dim = self._total_item_dimension
+	local o = self._bg
+	local x, y
+
+	if total_dim < self._width then
+		total_dim = self._width
+	end
+
+	x, y = o.x, o.y -- temp
+	o.width = total_dim
+	o.anchorX, o.anchorY = 0,0
+	o.x, o.y = x, y
+
+end
+
+
+-- _viewportBounds()
+-- calculates "viewport" bounding box on entire scroll list
+-- based on scroll position and RENDER_MARGIN
+-- used to determine if a item should be rendered
+--  (xMin, xMax, yMin, yMax)
+--
+function ScrollerBase:_viewportBounds()
+	-- print( 'ScrollerBase:_viewportBounds')
+
+	local bounds = self._bg_viewport.contentBounds
 	local scr_x_offset = self._dg_scroller.x
 	local scr_y_offset = self._dg_scroller.y
 
-	-- print( self._primer.y, self._primer.height )
-	local o = self._primer
+	-- print( self._bg_viewport.y, self._bg_viewport.height )
+	local o = self._bg_viewport
 
 
-	-- print( scr_x_offset )
+	-- print( "scroll offsets", scr_x_offset, scr_y_offset )
 	-- print( o.x, o.width )
 	-- print( bounds.yMin, bounds.yMax )
 
 	local MARGIN = self.DEFAULT_RENDER_MARGIN
 
-	return {
+	local value =  {
 		xMin = o.x - scr_x_offset - MARGIN,
 		xMax = o.x + o.width - scr_x_offset + MARGIN,
 		yMin = o.y - scr_y_offset - MARGIN,
 		yMax = o.y + o.height - scr_y_offset + MARGIN,
 	}
+	-- print( value.xMin, value.xMax, value.yMin, value.yMax )
+	return value
 
 end
 
 
 
-
+-- _updateDisplay()
+-- checks current rendered items, re-/renders if necessary
+--
 function ScrollerBase:_updateDisplay()
 	-- print( "ScrollerBase:_updateDisplay" )
 
-	local bounds = self:_contentBounds()
+	local items = self._item_data_recs
 
+	if #items == 0 then return end
+
+	local bounds = self:_viewportBounds()
 	local bounded_f = self._isBounded
 	local rendered = self._rendered_items
 
@@ -498,7 +631,7 @@ function ScrollerBase:_updateDisplay()
 	local min_visible_row, max_visible_row = nil, nil
 	local row
 
-	-- check if current rows are valid
+	-- check if current list of rendered items are valid
 	-- print( 'checking valid rows', #self._rendered_items )
 
 	if #rendered > 0 then
@@ -531,35 +664,33 @@ function ScrollerBase:_updateDisplay()
 		min_visible_row = rendered[1]
 		max_visible_row = rendered[ #rendered ]
 
-		-- print( 'row', min_visible_row.index )
-		-- print( #self._rendered_items, max_visible_row.index )
+		print( 'row', min_visible_row.index, min_visible_row.data.data )
+		print( #self._rendered_items, max_visible_row.index )
 
 	end
 
 	if min_visible_row then
 		-- search up until off screen
 
-		local row_data, index
+		local item_data, index
 		index = min_visible_row.index - 1
-		-- print( 'searching up from index', index )
+		print( 'searching up from index', index )
 		if index >= 1 then
 
 			for i = index, 1, -1 do
-				row_data = self._items[ i ]
-				local is_bounded = bounded_f( self, bounds, row_data )
+				item_data = self._item_data_recs[ i ]
+				local is_bounded = bounded_f( self, bounds, item_data )
 
 				if not is_bounded then
 					-- print( 'not bounded breaking' )
 					break
 				end
 
-				self:_renderItem( row_data, { head=true  }   )
+				self:_renderItem( item_data, { head=true } )
 
 			end
 
 		end
-
-
 
 	end
 
@@ -568,24 +699,24 @@ function ScrollerBase:_updateDisplay()
 		-- search down until off screen
 
 		local is_bounded
-		local row_data, index
+		local item_data, index
 		index = max_visible_row.index + 1
 
 		-- print( 'searching down from index', index )
 
-		if index <= #self._items then
+		if index <= #self._item_data_recs then
 
-			for i = index, #self._items do
-				row_data = self._items[ i ]
-				if not row_data then print("no row data!!") ; break end
-				is_bounded = bounded_f( self, bounds, row_data )
+			for i = index, #self._item_data_recs do
+				item_data = self._item_data_recs[ i ]
+				if not item_data then print("no row data!!") ; break end
+				is_bounded = bounded_f( self, bounds, item_data )
 
 				if not is_bounded then
 					-- print( 'not bounded breaking' )
 					break
 				end
 
-				self:_renderItem( row_data, { head=false } )
+				self:_renderItem( item_data, { head=false } )
 
 			end  -- for
 		end -- if
@@ -599,7 +730,7 @@ end
 function ScrollerBase:_findFirstVisibleItem()
 	-- print( "ScrollerBase:_findFirstVisibleItem" )
 
-	return self._items[1]
+	return self._item_data_recs[1]
 end
 
 
@@ -630,117 +761,147 @@ e.index = row.index
 --]]
 
 
-function ScrollerBase:_renderItem( row_data, options )
-	-- print( "ScrollerBase:_renderItem", row_data, row_data.index )
+function ScrollerBase:_renderItem( item_data, options )
+	-- print( "ScrollerBase:_renderItem", item_data, item_data.index )
 
-	local row_info = row_data.data
+	local item_info = item_data.data
 
-	if row_data.view then print("already rendered") ; return end
+	if item_data.view then print("already rendered") ; return end
 
 	local dg = self._dg_scroller
 	local view, bg, line
-	local f
+
+
+	--== Setup
+
+	if item_info.hasBackground == nil then item_info.hasBackground = true end
+
 
 	--== Create View Items
 
-	-- create view for this row
+	-- create view for this item
 	view = display.newGroup()
+
 	dg:insert( view )
+	item_data.view = view
 
 
 	-- create background
-	bg = display.newRect( 0, 0, self._width, row_info.height )
+	bg = display.newRect( 0, 0, self._width, item_info.height )
 	bg.anchorX, bg.anchorY = 0,0
-	bg:setFillColor( 1, 1, 0, 0.5 )
-	bg:setStrokeColor( 0, 0, 0, 0.5 )
-	bg.strokeWidth = 1
+	bg.isVisible = item_info.hasBackground
+
+	-- set colors
+	if item_info.bgColor then
+		bg:setFillColor( unpack( item_info.bgColor ) )
+	else
+		bg:setFillColor( 0,0,0,0.05 )
+	end
+	-- bg:setStrokeColor( 0, 0, 0, 0.5 )
+	bg.strokeWidth = 2
+
 	view:insert( bg )
+	item_data.background = bg
 
-	bg._data = row_info
-
-	bg:addEventListener( 'touch', self )
+	-- hide data on background, for touch
+	-- bg._data = item_info
+	-- bg:addEventListener( 'touch', self )
 
 
 	-- create bottom-line
-
-
-	-- save items
-
-	row_data.view = view
-	row_data.background = bg
+	-- TODO: create line
 
 
 	--== Render View
 
 	local e ={
 		name = self.EVENT,
-		type = self.ROW_RENDER,
+		type = self.ITEM_RENDER,
 
 		parent = self,
-		target = row_info,
-		row = row_info,
+		target = item_info,
 		view = view,
 		background = bg,
 		line = line,
-		data = row_info.data,
-		index = row_data.index,
+		data = item_info.data,
+		index = item_data.index,
 	}
-	row_info.onItemRender( e )
+	item_info.onItemRender( e )
 
 
-	--== Update Row
+	--== Update Item
 
-	-- print( 'render ', row_data.yMin, row_data.yMax )
-	view.x, view.y = row_data.xMin, row_data.yMin
+	-- print( 'render ', item_data.yMin, item_data.yMax )
+	view.x, view.y = item_data.xMin, item_data.yMin
+
+
+	--== Save Item Data
 
 	local idx = 1
 	if options.head == false then idx = #self._rendered_items+1 end
 
 	-- print( 'insert', #self._rendered_items, idx )
-	table.insert( self._rendered_items, idx, row_data )
+	table.insert( self._rendered_items, idx, item_data )
 
 end
 
 
 
 function ScrollerBase:_unRenderItem( item_data, options )
-	-- print( "ScrollerBase:_unRenderItem", item_data.index )
+	print( "ScrollerBase:_unRenderItem", item_data.index )
+	options = options or {}
+	--==--
 
 	-- Utils.print( item_data )
 
 	-- if no item view then no need to unrender
 	if not item_data.view then return end
 
-	local dg = self._dg_scroller
-	local row_info = item_data.data
+	local rendered = self._rendered_items
+
+	-- local dg = self._dg_scroller
+	local index = options.index
+
+	local item_info = item_data.data
 
 	local view, bg, line
 
+	if index == nil then
+		for i,v in ipairs( rendered ) do
+			print(i,v)
+			if item_data == v then
+				index = i
+				print( "breaking at ", index )
+				break
+			end
+		end
+	end
 
 	--== Remove Rendered Item
 
 	view = item_data.view
 	bg = item_data.background
 
-	table.remove( self._rendered_items, options.index )
+	table.remove( rendered, index )
 
 	local e ={
 		name = self.EVENT,
-		type = self.ROW_RENDER,
+		type = self.ITEM_UNRENDER,
 
 		parent = self,
-		target = row_info,
-		row = row_info,
+		target = item_info,
+		row = item_info,
 		view = view,
 		background = bg,
 		line = line,
-		data = row_info.data,
+		data = item_info.data,
 		index = item_data.index,
 	}
-	row_info.onItemUnrender( e )
+	item_info.onItemUnrender( e )
 
 
 	bg = item_data.background
+	bg._data = nil
 	bg:removeSelf()
 	item_data.background = nil
 
@@ -751,6 +912,9 @@ function ScrollerBase:_unRenderItem( item_data, options )
 end
 
 
+-- _checkScrollBounds()
+-- check to see if scroll position is still valid
+--
 function ScrollerBase:_checkScrollBounds()
 	-- print( 'ScrollerBase:_checkScrollBounds' )
 
@@ -842,8 +1006,7 @@ end
 
 
 function ScrollerBase:do_state_at_rest( params )
-	-- print( "ScrollerBase:do_state_at_rest" )
-
+	-- print( "ScrollerBase:do_state_at_rest", params  )
 	params = params or {}
 
 	local h_v, v_v = self._h_velocity, self._v_velocity
