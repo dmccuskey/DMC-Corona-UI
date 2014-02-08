@@ -291,7 +291,7 @@ function SlideView:_reindexItems( index, record )
 		item_data.xMax = item_data.xMax - w
 		item_data.index = i
 		view = item_data.view
-		if view then view.x, view.y = item_data.xMin, item_data.xMin end
+		if view then view.x, view.y = item_data.xMin, item_data.yMin end
 	end
 
 end
