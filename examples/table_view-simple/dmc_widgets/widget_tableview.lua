@@ -116,12 +116,9 @@ TableView.STATE_SCROLL_TRANS_TIME = 1000
 
 function TableView:_init( params )
 	-- print( "TableView:_init" )
+	params = params or { }
 	self:superCall( "_init", params )
 	--==--
-
-	--== Sanity Check ==--
-
-	params = params or { }
 
 
 	--== Create Properties ==--
@@ -227,8 +224,8 @@ function TableView:_updateDimensions( item_info, item_data )
 	item_data.yMin = self._total_item_dimension
 	item_data.yMax = item_data.yMin + item_data.width
 
-	table.insert( self._items, item_data )
-	item_data.index = #self._items
+	table.insert( self._item_data_recs, item_data )
+	item_data.index = #self._item_data_recs
 
 	-- print( 'item insert', item_data.yMin, item_data.yMax )
 
