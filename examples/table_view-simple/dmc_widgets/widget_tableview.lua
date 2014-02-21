@@ -95,8 +95,7 @@ TableView.NAME = "Table View Widget Class"
 --== Class Constants
 
 
-
---== Event Constants
+--== State Constants
 
 -- STATE_CREATE = "state_create"
 -- STATE_AT_REST = "state_at_rest"
@@ -107,6 +106,12 @@ TableView.STATE_SCROLL = "state_scroll"
 
 TableView.STATE_SCROLL_TRANS_TIME = 1000
 
+
+--== Event Constants
+
+-- ScrollerBase.EVENT = "scroller_view"
+
+TableView.SCROLLED = 'tableview_scrolled_event'
 
 
 
@@ -207,6 +212,61 @@ TableView.insertRow = ScrollerViewBase.insertItem
 
 
 
+function TableView:_reindexItems( index, record )
+	-- print( "TableView:_reindexItems", index, record )
+
+	local items = self._item_data_recs
+	local item_data, view, h
+	h = record.height
+
+	for i=index,#items do
+		-- print(i)
+		item_data = items[ i ]
+		item_data.yMin = item_data.yMin - h
+		item_data.yMax = item_data.yMax - h
+		item_data.index = i
+		view = item_data.view
+		if view then view.x, view.y = item_data.xMin, item_data.yMin end
+	end
+
+end
+
+function TableView:_updateBackground()
+	-- print( "TableView:_updateBackground" )
+
+	local items = self._item_data_recs
+	local o = self._bg
+
+	local total_dim, item
+	local x, y
+
+	-- set our total item dimension
+
+	if #items == 0 then
+		total_dim = 0
+	else
+		item = items[ #items ]
+		total_dim = item.yMax
+	end
+
+	self._total_item_dimension = total_dim
+
+
+	-- set background height, make at least height of window
+
+	if total_dim < self._height then
+		total_dim = self._height
+	end
+
+	x, y = o.x, o.y
+	o.height = total_dim
+	o.anchorX, o.anchorY = 0,0
+	o.x, o.y = x, y
+
+end
+
+
+
 -- calculate vertical direction
 --
 function TableView:_updateDimensions( item_info, item_data )
@@ -222,7 +282,7 @@ function TableView:_updateDimensions( item_info, item_data )
 
 	item_data.height = item_info.height
 	item_data.yMin = self._total_item_dimension
-	item_data.yMax = item_data.yMin + item_data.width
+	item_data.yMax = item_data.yMin + item_data.height
 
 	table.insert( self._item_data_recs, item_data )
 	item_data.index = #self._item_data_recs
@@ -251,24 +311,32 @@ end
 
 
 function TableView:_isBounded( scroller, item )
-	-- print( "TableView:_isBounded", scroller, item )
+	-- print( "TableView:_isBounded", scroller, item.index )
 
 	local result = false
+	-- local test = 0
 
-	if item.yMin < scroller.yMin and scroller.yMin < item.yMax then
+	if item.yMin < scroller.yMin and scroller.yMin <= item.yMax then
+		-- test = 1
 		-- cut on top
 		result = true
-	elseif item.yMin < scroller.yMax and scroller.yMax < item.yMax then
+	elseif item.yMin <= scroller.yMax and scroller.yMax < item.yMax then
+		-- test = 2
 		-- cut on bottom
 		result = true
-	elseif item.yMin > scroller.yMin and item.yMax < scroller.yMax  then
+	elseif item.yMin >= scroller.yMin and item.yMax <= scroller.yMax  then
+		-- test = 3
 		-- fully in view
 		result = true
 	elseif item.yMin < scroller.yMin and scroller.yMax < item.yMax then
+		-- test = 4
 		-- extends over view
 		result = true
 	end
 
+	-- if item.index == 3 then
+	-- 	print( result, test, item.yMin, scroller.yMin, item.yMax, scroller.yMax )
+	-- end
 	return result
 end
 
@@ -396,7 +464,7 @@ function TableView:do_state_restore( params )
 	if limit == self.HIT_TOP_LIMIT then
 		dist = scr.y
 	else
-		dist = pos - ( self._height - background.height )
+		dist = pos - ( self._height - background.height - scr.y_offset )
 	end
 
 	delta = -dist
