@@ -31,6 +31,7 @@ local H_CENTER, V_CENTER = W*0.5, H*0.5
 local OFFSET = 100
 
 local o, p, f
+local x, y, w, h
 
 
 --===================================================================--
@@ -46,7 +47,24 @@ local function onRender( event )
 	local view = event.view
 	local index = event.data
 
-	local o
+	local o, d
+
+	o = display.newRect( 0,0, W-OFFSET, 300 )
+	o.anchorX, o.anchorY = 0,0
+	o.strokeWidth=2
+	o:setStrokeColor( 0.5, 0.5, 0 )
+	o.x, o.y = 0,0
+	view:insert( o )
+
+	d = index % 3
+	print( 'Main:onRender ', index, d )
+	if d == 1 then
+		o:setFillColor( 1, 0, 0 )
+	elseif d == 2 then
+		o:setFillColor( 0, 1, 0 )
+	else
+		o:setFillColor( 0, 0, 1 )
+	end
 
 	o = display.newText( tostring(index), 40,30, native.systemFont, 32)
 	o.anchorX, o.anchorY = 0.5,0
@@ -85,23 +103,35 @@ end
 -- Main
 --===================================================================--
 
+y = OFFSET
+o = display.newLine( 10, y, W-10, y )
+o:setStrokeColor( 1, 0, 0 )
+o.strokeWidth = 3
+
+h = H-OFFSET*4
+y = OFFSET+h
+o = display.newLine( 10, y, W-10, y )
+o:setStrokeColor( 1, 0, 0 )
+o.strokeWidth = 3
+
+
+
 -- create Table View
 
 p = {
 	width=W-OFFSET,
-	height=H-OFFSET*3,
+	height=h,
 }
 o = widgets.newTableView( p )
-o.x, o.y = OFFSET*0.5, OFFSET*0.5
-
+o.x, o.y = OFFSET*0.5, OFFSET
 
 -- create rows
 
-for i = 1, 5 do
+for i = 1, 50 do
 
 	local p = {
 		isCategory = false,
-		height = 100,
+		height = 300,
 		onItemRender=onRender,
 		onItemUnrender=onUnrender,
 		onItemEvent=onEvent,
