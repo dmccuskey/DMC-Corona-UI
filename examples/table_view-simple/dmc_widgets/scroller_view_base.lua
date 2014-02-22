@@ -1184,15 +1184,18 @@ function ScrollerBase:do_state_touch( params )
 
 
 	-- this is only for the first enterFrame on a touch event
-	-- only have one touch event, so can't calculate velocity
+	-- we might already have several events in our stack,
+	-- especially if someone is tapping hard/fast
+	-- the last one is usually closer to the target,
+	-- so we'll start with that one
 	--
 	enterFrameFunc1 = function( e )
-		-- print( "enterFrameFunc: enterFrameFunc1" )
+		-- print( "enterFrameFunc: enterFrameFunc1 touch " )
 
-		v_v.value, v_v.vector = 0, 1
-		h_v.value, h_v.vector = 0, 1
+		v_v.value, v_v.vector = 0, 0
+		h_v.value, h_v.vector = 0, 0
 
-		last_tevt = table.remove( self._touch_evt_stack, 1 )
+		last_tevt = table.remove( self._touch_evt_stack, #self._touch_evt_stack )
 		self._touch_evt_stack = {}
 
 		evt_tmp = e
