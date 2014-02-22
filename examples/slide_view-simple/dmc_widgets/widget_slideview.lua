@@ -115,6 +115,7 @@ SlideView.SLIDE_IN_FOCUS = "slide_in_focus_event"
 
 SlideView.SLIDE_RENDER = ScrollerViewBase.ITEM_RENDER
 SlideView.SLIDE_UNRENDER = ScrollerViewBase.ITEM_UNRENDER
+SlideView.SCROLLED = 'slideview_scrolled_event'
 
 --====================================================================--
 --== Start: Setup DMC Objects
@@ -739,12 +740,12 @@ function SlideView:do_state_restraint( params )
 
 		--== Action
 
-		if start_time_delta < TIME then
+		if start_time_delta < TIME and math.abs(x_delta) >= 1 then
 			scr.x = scr.x + x_delta
 
 		else
 			-- final state
-			v.value = 0
+			v.value, v.vector = 0, 0
 			self:gotoState( self.STATE_RESTORE, { event=e } )
 		end
 	end
@@ -791,6 +792,7 @@ function SlideView:do_state_restore( params )
 	local TIME = self.STATE_RESTORE_TRANS_TIME
 	local ease_f = easingx.easeOut
 
+	local v = self._h_velocity
 	local limit = self._h_scroll_limit
 	local scr = self._dg_scroller
 	local background = self._bg
@@ -834,6 +836,7 @@ function SlideView:do_state_restore( params )
 
 		else
 			-- final state
+			v.value, v.vector = 0, 0
 			scr.x = pos + delta
 			self:gotoState( self.STATE_AT_REST, item )
 
