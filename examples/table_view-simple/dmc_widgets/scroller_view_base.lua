@@ -262,8 +262,8 @@ function ScrollerBase:_init( params )
 	self._v_touch_limit = 10
 	self._v_touch_lock = false
 
-	self._v_velocity = { value=0, vector=1 }
-	self._h_velocity = { value=0, vector=1 }
+	self._v_velocity = { value=0, vector=0 }
+	self._h_velocity = { value=0, vector=0 }
 
 	self._transition = nil -- handle of active transition
 
@@ -1070,10 +1070,11 @@ function ScrollerBase:do_state_at_rest( params )
 
 	local h_v, v_v = self._h_velocity, self._v_velocity
 
-	h_v.value, h_v.vector = 0, 1
-	v_v.value, v_v.vector = 0, 1
+	h_v.value, h_v.vector = 0, 0
+	v_v.value, v_v.vector = 0, 0
 
 	self._enterFrameIterator = nil
+	-- this one is redundant
 	Runtime:removeEventListener( 'enterFrame', self )
 
 	self:setState( self.STATE_AT_REST )
@@ -1096,16 +1097,16 @@ end
 
 function ScrollerBase:do_state_touch( params )
 	-- print( "ScrollerBase:do_state_touch" )
-
 	params = params or {}
+	--==--
 
 	local VEL_STACK_LENGTH = 4 -- number of items to use for velocity calculation
 
 	local h_v, v_v = self._h_velocity, self._v_velocity
 	local vel_stack = {}
 
-	local evt_tmp = nil
-	local last_tevt = nil
+	local evt_tmp = nil -- enter frame event, updated each frame
+	local last_tevt = nil -- touch events, reset for each calculation
 
 	local enterFrameFunc1, enterFrameFunc2
 
@@ -1113,7 +1114,7 @@ function ScrollerBase:do_state_touch( params )
 	-- work to do after first event
 	--
 	enterFrameFunc2 = function( e )
-		-- print( "enterFrameFunc: enterFrameFunc2" )
+		-- print( "enterFrameFunc: enterFrameFunc2 state touch " )
 
 		local te_stack = self._touch_evt_stack
 		local num_evts = #te_stack
@@ -1141,7 +1142,6 @@ function ScrollerBase:do_state_touch( params )
 
 		end
 
-		self._touch_evt_stack = {}
 
 
 
@@ -1164,11 +1164,15 @@ function ScrollerBase:do_state_touch( params )
 		end
 		h_v_ave = h_v_ave / #vel_stack
 		v_v_ave = v_v_ave / #vel_stack
-		-- print( h_v_ave, v_v_ave )
+		-- print( 'touch vel ave ', v_v_ave )
 
 		v_v.value = math.abs( v_v_ave )
-		v_v.vector = 1
-		if v_v_ave < 0 then v_v.vector = -1 end
+		v_v.vector = 0
+		if v_v_ave < 0 then
+			v_v.vector = -1
+		elseif v_v_ave > 0 then
+			v_v.vector = 1
+		end
 
 		h_v.value = math.abs( h_v_ave )
 		h_v.vector = 1
@@ -1267,7 +1271,7 @@ end
 
 
 function ScrollerBase:touch( event )
-	-- print( "ScrollerBase:touch", event.phase )
+	-- print( "ScrollerBase:touch", event.phase, event.id )
 
 	local phase = event.phase
 
@@ -1294,7 +1298,7 @@ function ScrollerBase:touch( event )
 		self._tch_event_tmp = event
 
 		-- handle touch
-		display.getCurrentStage():setFocus( scr.view, event.id )
+		display.getCurrentStage():setFocus( scr.view )
 
 
 	elseif phase == "moved" then
@@ -1309,6 +1313,7 @@ function ScrollerBase:touch( event )
 
 
 		--== Check to see if we need to reliquish the touch
+		-- this is checking in our non-scroll direction
 
 		x_delta = math.abs( event.xStart - event.x )
 		if not self._v_touch_lock and x_delta > self._h_touch_limit then
@@ -1381,7 +1386,7 @@ function ScrollerBase:touch( event )
 		self:_checkScrollBounds()
 
 		-- clean up
-		display.getCurrentStage():setFocus( nil, event.id )
+		display.getCurrentStage():setFocus( nil )
 
 
 		-- add system time, we can re-use this event for Runtime

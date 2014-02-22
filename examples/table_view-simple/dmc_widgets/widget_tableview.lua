@@ -397,11 +397,12 @@ function TableView:do_state_scroll( params )
 			-- we hit edge while moving
 			self:gotoState( self.STATE_RESTRAINT, { event=e } )
 
-		elseif start_time_delta < TIME then
+		elseif start_time_delta < TIME and math.abs(y_delta) >= 1 then
+			-- movement is too small to see (pixel)
 			scr.y = scr.y + y_delta
 
 		else
-			v.value = 0
+			v.value, v.vector = 0, 0
 			self:gotoState( self.STATE_AT_REST, { event=e } )
 
 		end
@@ -454,6 +455,7 @@ function TableView:do_state_restore( params )
 	local TIME = self.STATE_RESTORE_TRANS_TIME
 	local ease_f = easingx.easeOut
 
+	local v = self._v_velocity
 	local limit = self._v_scroll_limit
 	local scr = self._dg_scroller
 	local background = self._bg
@@ -471,7 +473,7 @@ function TableView:do_state_restore( params )
 
 
 	local enterFrameFunc = function( e )
-		-- print( "TableView: enterFrameFunc: do_state_restore" )
+		-- print( "TableView: enterFrameFunc: do_state_restore " )
 
 		local evt_frame = self._event_tmp
 
@@ -492,6 +494,7 @@ function TableView:do_state_restore( params )
 
 		else
 			-- final state
+			v.value, v.vector = 0, 0
 			scr.y = pos + delta
 			self:gotoState( self.STATE_AT_REST )
 
@@ -566,14 +569,13 @@ function TableView:do_state_restraint( params )
 		v.value = ease_f( start_time_delta, TIME, velocity, v_delta )
 		y_delta = v.value * frame_time_delta
 
-
 		--== Action
 
-		if start_time_delta < TIME then
+		if start_time_delta < TIME and math.abs(y_delta) >= 1 then
 			scr.y = scr.y + y_delta
 
 		else
-			v.value = 0
+			v.value, v.vector = 0, 0
 			self:gotoState( self.STATE_RESTORE, { event=e } )
 
 		end
