@@ -323,17 +323,37 @@ function SlideView:_reindexItems( index, record )
 end
 
 function SlideView:_updateBackground()
+	-- print( "SlideView:_updateBackground" )
+
 	local items = self._item_data_recs
-	local item
+	local o = self._bg
+
+	local total_dim, item
+	local x, y
+
+	-- set our total item dimension
 
 	if #items == 0 then
-		self._total_item_dimension = 0
+		total_dim = 0
 	else
 		item = items[ #items ]
-		self._total_item_dimension = item.xMax
+		total_dim = item.xMax
 	end
 
-	self:superCall( '_updateBackground' )
+	self._total_item_dimension = total_dim
+
+
+	-- set background width, make at least width of window
+
+	if total_dim < self._width then
+		total_dim = self._width
+	end
+
+	x, y = o.x, o.y
+	o.width = total_dim
+	o.anchorX, o.anchorY = 0,0
+	o.x, o.y = x, y
+
 end
 
 
@@ -383,13 +403,13 @@ function SlideView:_isBounded( scroller, item )
 
 	local result = false
 
-	if item.xMin < scroller.xMin and scroller.xMin < item.xMax then
-		-- cut on top
+	if item.xMin < scroller.xMin and scroller.xMin <= item.xMax then
+		-- cut on left
 		result = true
-	elseif item.xMin < scroller.xMax and scroller.xMax < item.xMax then
-		-- cut on bottom
+	elseif item.xMin <= scroller.xMax and scroller.xMax < item.xMax then
+		-- cut on right
 		result = true
-	elseif item.xMin > scroller.xMin and item.xMax < scroller.xMax  then
+	elseif item.xMin >= scroller.xMin and item.xMax <= scroller.xMax then
 		-- fully in view
 		result = true
 	elseif item.xMin < scroller.xMin and scroller.xMax < item.xMax then
@@ -451,6 +471,16 @@ function SlideView:_findNextSlide()
 end
 
 
+
+function SlideView:_do_item_tap()
+	-- print( "SlideView:_do_item_tap" )
+
+	local data = {
+		index=self.index,
+		data=self.slide.data.data
+	}
+	self:_dispatchEvent( self.ITEM_SELECTED, data )
+end
 
 
 --======================================================--
