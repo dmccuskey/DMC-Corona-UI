@@ -45,7 +45,6 @@ dmc_lib_data = _G.__dmc_library
 dmc_lib_func = dmc_lib_data.func
 
 
-
 --====================================================================--
 -- DMC Widgets Setup
 --====================================================================--
@@ -116,6 +115,7 @@ SlideView.SLIDE_IN_FOCUS = "slide_in_focus_event"
 
 SlideView.SLIDE_RENDER = ScrollerViewBase.ITEM_RENDER
 SlideView.SLIDE_UNRENDER = ScrollerViewBase.ITEM_UNRENDER
+SlideView.SCROLLED = 'slideview_scrolled_event'
 
 --====================================================================--
 --== Start: Setup DMC Objects
@@ -267,8 +267,35 @@ function SlideView:gotoSlide( index )
 	scr.x = -item_data.xMin
 
 	ScrollerViewBase.gotoItem( self, item_data )
+
+	self.index = index
+	self.slide = self._rendered_items[ self.index ]
+
+	local data = {
+		index = index,
+		slide = self.slide
+	}
+	self:_dispatchEvent( self.SLIDE_IN_FOCUS, data )
+
 end
 
+
+-- return data portion of what user gave us
+--
+function SlideView:getSlideData( index )
+	-- print( "SlideView:getSlideData", index )
+
+	local items = self._item_data_recs
+	local idx = index or self.index
+	local item_info, obj_data -- info from user
+
+	if idx and items[ idx ] then
+		item_info = items[ idx ].data -- item_info record
+		obj_data = item_info.data
+	end
+
+	return obj_data
+end
 
 
 
@@ -297,17 +324,37 @@ function SlideView:_reindexItems( index, record )
 end
 
 function SlideView:_updateBackground()
+	-- print( "SlideView:_updateBackground" )
+
 	local items = self._item_data_recs
-	local item
+	local o = self._bg
+
+	local total_dim, item
+	local x, y
+
+	-- set our total item dimension
 
 	if #items == 0 then
-		self._total_item_dimension = 0
+		total_dim = 0
 	else
 		item = items[ #items ]
-		self._total_item_dimension = item.xMax
+		total_dim = item.xMax
 	end
 
-	self:superCall( '_updateBackground' )
+	self._total_item_dimension = total_dim
+
+
+	-- set background width, make at least width of window
+
+	if total_dim < self._width then
+		total_dim = self._width
+	end
+
+	x, y = o.x, o.y
+	o.width = total_dim
+	o.anchorX, o.anchorY = 0,0
+	o.x, o.y = x, y
+
 end
 
 
@@ -336,6 +383,18 @@ function SlideView:_updateDimensions( item_info, item_data )
 	total_dim = total_dim + item_data.width
 	self._total_item_dimension = total_dim
 
+	-- do i want this here ?
+	if #self._rendered_items == 1 then
+		self.index = 1
+		self.slide = self._rendered_items[ self.index ]
+
+		local data = {
+			index=self.index,
+			slide=self.slide
+		}
+		self:_dispatchEvent( self.SLIDE_IN_FOCUS, data )
+	end
+
 end
 
 
@@ -345,13 +404,13 @@ function SlideView:_isBounded( scroller, item )
 
 	local result = false
 
-	if item.xMin < scroller.xMin and scroller.xMin < item.xMax then
-		-- cut on top
+	if item.xMin < scroller.xMin and scroller.xMin <= item.xMax then
+		-- cut on left
 		result = true
-	elseif item.xMin < scroller.xMax and scroller.xMax < item.xMax then
-		-- cut on bottom
+	elseif item.xMin <= scroller.xMax and scroller.xMax < item.xMax then
+		-- cut on right
 		result = true
-	elseif item.xMin > scroller.xMin and item.xMax < scroller.xMax  then
+	elseif item.xMin >= scroller.xMin and item.xMax <= scroller.xMax then
 		-- fully in view
 		result = true
 	elseif item.xMin < scroller.xMin and scroller.xMax < item.xMax then
@@ -413,6 +472,16 @@ function SlideView:_findNextSlide()
 end
 
 
+
+function SlideView:_do_item_tap()
+	-- print( "SlideView:_do_item_tap" )
+
+	local data = {
+		index=self.index,
+		data=self.slide.data.data
+	}
+	self:_dispatchEvent( self.ITEM_SELECTED, data )
+end
 
 
 --======================================================--
@@ -671,12 +740,12 @@ function SlideView:do_state_restraint( params )
 
 		--== Action
 
-		if start_time_delta < TIME then
+		if start_time_delta < TIME and math.abs(x_delta) >= 1 then
 			scr.x = scr.x + x_delta
 
 		else
 			-- final state
-			v.value = 0
+			v.value, v.vector = 0, 0
 			self:gotoState( self.STATE_RESTORE, { event=e } )
 		end
 	end
@@ -723,6 +792,7 @@ function SlideView:do_state_restore( params )
 	local TIME = self.STATE_RESTORE_TRANS_TIME
 	local ease_f = easingx.easeOut
 
+	local v = self._h_velocity
 	local limit = self._h_scroll_limit
 	local scr = self._dg_scroller
 	local background = self._bg
@@ -766,6 +836,7 @@ function SlideView:do_state_restore( params )
 
 		else
 			-- final state
+			v.value, v.vector = 0, 0
 			scr.x = pos + delta
 			self:gotoState( self.STATE_AT_REST, item )
 
