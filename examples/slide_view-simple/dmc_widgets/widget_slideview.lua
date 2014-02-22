@@ -45,7 +45,6 @@ dmc_lib_data = _G.__dmc_library
 dmc_lib_func = dmc_lib_data.func
 
 
-
 --====================================================================--
 -- DMC Widgets Setup
 --====================================================================--
@@ -267,8 +266,35 @@ function SlideView:gotoSlide( index )
 	scr.x = -item_data.xMin
 
 	ScrollerViewBase.gotoItem( self, item_data )
+
+	self.index = index
+	self.slide = self._rendered_items[ self.index ]
+
+	local data = {
+		index = index,
+		slide = self.slide
+	}
+	self:_dispatchEvent( self.SLIDE_IN_FOCUS, data )
+
 end
 
+
+-- return data portion of what user gave us
+--
+function SlideView:getSlideData( index )
+	-- print( "SlideView:getSlideData", index )
+
+	local items = self._item_data_recs
+	local idx = index or self.index
+	local item_info, obj_data -- info from user
+
+	if idx and items[ idx ] then
+		item_info = items[ idx ].data -- item_info record
+		obj_data = item_info.data
+	end
+
+	return obj_data
+end
 
 
 
@@ -335,6 +361,18 @@ function SlideView:_updateDimensions( item_info, item_data )
 
 	total_dim = total_dim + item_data.width
 	self._total_item_dimension = total_dim
+
+	-- do i want this here ?
+	if #self._rendered_items == 1 then
+		self.index = 1
+		self.slide = self._rendered_items[ self.index ]
+
+		local data = {
+			index=self.index,
+			slide=self.slide
+		}
+		self:_dispatchEvent( self.SLIDE_IN_FOCUS, data )
+	end
 
 end
 
