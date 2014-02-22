@@ -115,7 +115,7 @@ local States = require( dmc_lib_func.find('dmc_states') )
 local inheritsFrom = Objects.inheritsFrom
 local CoronaBase = Objects.CoronaBase
 
-local LOCAL_DEBUG = true
+local LOCAL_DEBUG = false
 
 --====================================================================--
 -- Basic Scroller
@@ -156,9 +156,17 @@ function BasicScroller.__setters:x_offset( value )
 	-- print( "BasicScroller.__setters:x_offset" )
 	self._x_offset = value
 end
+function BasicScroller.__getters:x_offset()
+	-- print( "BasicScroller.__getters:x_offset" )
+	return self._x_offset
+end
 function BasicScroller.__setters:y_offset( value )
 	-- print( "BasicScroller.__setters:y_offset" )
 	self._y_offset = value
+end
+function BasicScroller.__getters:y_offset()
+	-- print( "BasicScroller.__getters:y_offset" )
+	return self._y_offset
 end
 
 
@@ -195,7 +203,7 @@ ScrollerBase.STATE_RESTRAINT = "state_restraint"
 ScrollerBase.STATE_RESTORE = "state_restore"
 
 ScrollerBase.STATE_RESTRAINT_TRANS_TIME = 100
-ScrollerBase.STATE_RESTORE_TRANS_TIME = 500
+ScrollerBase.STATE_RESTORE_TRANS_TIME = 400
 
 
 --== Event Constants
@@ -206,6 +214,7 @@ ScrollerBase.ITEM_RENDER = "item_render_event"
 ScrollerBase.ITEM_UNRENDER = "item_unrender_event"
 ScrollerBase.TAKE_FOCUS = "take_focus_event"
 ScrollerBase.ITEM_SELECTED = "item_selected"
+ScrollerBase.ITEMS_MODIFIED = "items_modified_event"
 
 
 
@@ -236,7 +245,9 @@ function ScrollerBase:_init( params )
 
 	self._current_category = nil
 
-	self._total_item_dimension = 0 -- dimension in scroll direction
+	-- dimension in scroll direction
+	-- based on our item data
+	self._total_item_dimension = 0
 
 	self._event_tmp = nil
 
@@ -251,8 +262,8 @@ function ScrollerBase:_init( params )
 	self._v_touch_limit = 10
 	self._v_touch_lock = false
 
-	self._v_velocity = { value=0, vector=1 }
-	self._h_velocity = { value=0, vector=1 }
+	self._v_velocity = { value=0, vector=0 }
+	self._h_velocity = { value=0, vector=0 }
 
 	self._transition = nil -- handle of active transition
 
@@ -429,6 +440,15 @@ end
 
 
 
+function ScrollerBase.__getters:item_count()
+	-- print( "ScrollerBase:item_count" )
+	local value = 0
+	local items = self._item_data_recs
+	if items then value = #items end
+	return value
+end
+
+
 
 function ScrollerBase:gotoItem( item_data )
 	-- print( "ScrollerBase:gotoItem", item_data )
@@ -436,6 +456,9 @@ function ScrollerBase:gotoItem( item_data )
 	self._tmp_item = item_data
 
 	self:_updateDisplay()
+
+	self._tmp_item = nil
+
 end
 
 
@@ -511,11 +534,13 @@ function ScrollerBase:insertItem( item_info  )
 	self:_updateBackground()
 	self:_updateDisplay()
 
+	self:_dispatchEvent( self.ITEMS_MODIFIED )
+
 end
 
 
 
-function ScrollerBase:deleteItem( index  )
+function ScrollerBase:deleteItem( index )
 	-- print( "ScrollerBase:deleteItem", index )
 
 	local items = self._item_data_recs
@@ -533,6 +558,8 @@ function ScrollerBase:deleteItem( index  )
 
 	self:_updateBackground()
 	self:_updateDisplay()
+
+	self:_dispatchEvent( self.ITEMS_MODIFIED )
 
 end
 
@@ -553,11 +580,15 @@ function ScrollerBase:deleteAllItems()
 		end
 	end
 
+	-- reset everything
+
+	self._dg_scroller.x, self._dg_scroller.y = 0, 0
+	self._total_item_dimension = 0
 	self._item_data_recs = {}
 
-	self._total_item_dimension = 0
-
 	self:_updateBackground()
+
+	self:_dispatchEvent( self.ITEMS_MODIFIED )
 
 end
 
@@ -571,20 +602,7 @@ end
 
 function ScrollerBase:_updateBackground()
 	-- print( "ScrollerBase:_updateBackground" )
-
-	local total_dim = self._total_item_dimension
-	local o = self._bg
-	local x, y
-
-	if total_dim < self._width then
-		total_dim = self._width
-	end
-
-	x, y = o.x, o.y -- temp
-	o.width = total_dim
-	o.anchorX, o.anchorY = 0,0
-	o.x, o.y = x, y
-
+	error( "ScrollerBase:_updateBackground: override this ")
 end
 
 
@@ -598,24 +616,26 @@ function ScrollerBase:_viewportBounds()
 	-- print( 'ScrollerBase:_viewportBounds')
 
 	local bounds = self._bg_viewport.contentBounds
-	local scr_x_offset = self._dg_scroller.x
-	local scr_y_offset = self._dg_scroller.y
+	local scr = self._dg_scroller
+	local scr_x, scr_x_offset = scr.x, scr._x_offset
+	local scr_y, scr_y_offset = scr.y, scr._y_offset
 
 	-- print( self._bg_viewport.y, self._bg_viewport.height )
 	local o = self._bg_viewport
 
 
-	-- print( "scroll offsets", scr_x_offset, scr_y_offset )
+	-- print( "scroll offsets", scr_x, scr_x_offset, scr_y, scr_y_offset )
+	-- print( "scroll offsets", scr_x, scr_x_offset, scr_y, scr_y_offset )
 	-- print( o.x, o.width )
 	-- print( bounds.yMin, bounds.yMax )
 
 	local MARGIN = self.DEFAULT_RENDER_MARGIN
 
 	local value =  {
-		xMin = o.x - scr_x_offset - MARGIN,
-		xMax = o.x + o.width - scr_x_offset + MARGIN,
-		yMin = o.y - scr_y_offset - MARGIN,
-		yMax = o.y + o.height - scr_y_offset + MARGIN,
+		xMin = o.x - scr_x - MARGIN,
+		xMax = o.x + o.width - scr_x + MARGIN,
+		yMin = o.y - scr_y - MARGIN,
+		yMax = o.y + o.height - scr_y + MARGIN,
 	}
 	-- print( value.xMin, value.xMax, value.yMin, value.yMax )
 	return value
@@ -658,9 +678,12 @@ function ScrollerBase:_updateDisplay()
 		end
 	end
 
-	-- print('after cull')
+
 	--[[
-	for i,v in ipairs( self._rendered_items ) do
+	print('= items', #items )
+
+	print('= after cull: rendered', #rendered )
+	for i,v in ipairs( rendered ) do
 		print( i, v.index )
 	end
 	--]]
@@ -677,10 +700,19 @@ function ScrollerBase:_updateDisplay()
 		min_visible_row = rendered[1]
 		max_visible_row = rendered[ #rendered ]
 
-		-- print( 'row', min_visible_row.index, min_visible_row.data.data )
-		-- print( #self._rendered_items, max_visible_row.index )
 
 	end
+
+--[[
+	print( "= setup ")
+	print( 'min', min_visible_row.index, min_visible_row.data.data.type )
+	print( 'max', max_visible_row.index, max_visible_row.data.data.type )
+
+	print( "= print test ")
+	for i, rec in ipairs( self._item_data_recs ) do
+		print( i, rec.index, rec.data.data.type )
+	end
+--]]
 
 	if min_visible_row then
 		-- search up until off screen
@@ -747,7 +779,6 @@ function ScrollerBase:_findFirstVisibleItem()
 
 	if self._tmp_item then
 		item = self._tmp_item
-		self._tmp_item = nil
 	else
 		item = self._item_data_recs[1]
 	end
@@ -817,10 +848,11 @@ function ScrollerBase:_renderItem( item_data, options )
 	if item_info.bgColor then
 		bg:setFillColor( unpack( item_info.bgColor ) )
 	else
-		bg:setFillColor( 0,0,0,0.05 )
+		bg:setFillColor( 0,0,0,0 )
+		bg.isHitTestable = true
 	end
-	-- bg:setStrokeColor( 0, 0, 0, 0.5 )
-	bg.strokeWidth = 2
+	bg:setStrokeColor( 0,0,0,0 )
+	bg.strokeWidth = 0
 
 	view:insert( bg )
 	item_data.background = bg
@@ -941,12 +973,9 @@ function ScrollerBase:_checkScrollBounds()
 	-- print( 'ScrollerBase:_checkScrollBounds' )
 
 	local scr = self._dg_scroller
-	local v_calc = self._height - self._bg.height
-	local h_calc = self._width - self._bg.width
-
-	-- print( "scr.y, ", scr.y , v_calc )
 
 	if self._h_scroll_enabled then
+		local h_calc = self._width - self._bg.width
 		if scr.x > 0 then
 			self._h_scroll_limit = ScrollerBase.HIT_TOP_LIMIT
 		elseif scr.x <  h_calc then
@@ -957,6 +986,10 @@ function ScrollerBase:_checkScrollBounds()
 	end
 
 	if self._v_scroll_enabled then
+		local y_offset = scr.y_offset or 0
+		local v_calc = self._height - self._bg.height - scr.y_offset
+		-- print( "scr.y, ", scr.y , v_calc )
+
 		if scr.y > 0 then
 			self._v_scroll_limit = ScrollerBase.HIT_TOP_LIMIT
 		elseif scr.y < v_calc then
@@ -967,6 +1000,10 @@ function ScrollerBase:_checkScrollBounds()
 	end
 
 	-- print( self._h_scroll_limit, self._v_scroll_limit )
+end
+
+
+function ScrollerBase:_do_item_tap()
 end
 
 
@@ -1033,10 +1070,11 @@ function ScrollerBase:do_state_at_rest( params )
 
 	local h_v, v_v = self._h_velocity, self._v_velocity
 
-	h_v.value, h_v.vector = 0, 1
-	v_v.value, v_v.vector = 0, 1
+	h_v.value, h_v.vector = 0, 0
+	v_v.value, v_v.vector = 0, 0
 
 	self._enterFrameIterator = nil
+	-- this one is redundant
 	Runtime:removeEventListener( 'enterFrame', self )
 
 	self:setState( self.STATE_AT_REST )
@@ -1059,16 +1097,16 @@ end
 
 function ScrollerBase:do_state_touch( params )
 	-- print( "ScrollerBase:do_state_touch" )
-
 	params = params or {}
+	--==--
 
 	local VEL_STACK_LENGTH = 4 -- number of items to use for velocity calculation
 
 	local h_v, v_v = self._h_velocity, self._v_velocity
 	local vel_stack = {}
 
-	local evt_tmp = nil
-	local last_tevt = nil
+	local evt_tmp = nil -- enter frame event, updated each frame
+	local last_tevt = nil -- touch events, reset for each calculation
 
 	local enterFrameFunc1, enterFrameFunc2
 
@@ -1076,7 +1114,7 @@ function ScrollerBase:do_state_touch( params )
 	-- work to do after first event
 	--
 	enterFrameFunc2 = function( e )
-		-- print( "enterFrameFunc: enterFrameFunc2" )
+		-- print( "enterFrameFunc: enterFrameFunc2 state touch " )
 
 		local te_stack = self._touch_evt_stack
 		local num_evts = #te_stack
@@ -1104,7 +1142,6 @@ function ScrollerBase:do_state_touch( params )
 
 		end
 
-		self._touch_evt_stack = {}
 
 
 
@@ -1127,11 +1164,15 @@ function ScrollerBase:do_state_touch( params )
 		end
 		h_v_ave = h_v_ave / #vel_stack
 		v_v_ave = v_v_ave / #vel_stack
-		-- print( h_v_ave, v_v_ave )
+		-- print( 'touch vel ave ', v_v_ave )
 
 		v_v.value = math.abs( v_v_ave )
-		v_v.vector = 1
-		if v_v_ave < 0 then v_v.vector = -1 end
+		v_v.vector = 0
+		if v_v_ave < 0 then
+			v_v.vector = -1
+		elseif v_v_ave > 0 then
+			v_v.vector = 1
+		end
 
 		h_v.value = math.abs( h_v_ave )
 		h_v.vector = 1
@@ -1147,15 +1188,18 @@ function ScrollerBase:do_state_touch( params )
 
 
 	-- this is only for the first enterFrame on a touch event
-	-- only have one touch event, so can't calculate velocity
+	-- we might already have several events in our stack,
+	-- especially if someone is tapping hard/fast
+	-- the last one is usually closer to the target,
+	-- so we'll start with that one
 	--
 	enterFrameFunc1 = function( e )
-		-- print( "enterFrameFunc: enterFrameFunc1" )
+		-- print( "enterFrameFunc: enterFrameFunc1 touch " )
 
-		v_v.value, v_v.vector = 0, 1
-		h_v.value, h_v.vector = 0, 1
+		v_v.value, v_v.vector = 0, 0
+		h_v.value, h_v.vector = 0, 0
 
-		last_tevt = table.remove( self._touch_evt_stack, 1 )
+		last_tevt = table.remove( self._touch_evt_stack, #self._touch_evt_stack )
 		self._touch_evt_stack = {}
 
 		evt_tmp = e
@@ -1227,7 +1271,7 @@ end
 
 
 function ScrollerBase:touch( event )
-	-- print( "ScrollerBase:touch", event.phase )
+	-- print( "ScrollerBase:touch", event.phase, event.id )
 
 	local phase = event.phase
 
@@ -1241,7 +1285,6 @@ function ScrollerBase:touch( event )
 
 	if phase == "began" then
 
-		self._touch_target = event.target
 		local scr = self._dg_scroller
 
 		self._v_touch_lock = false
@@ -1255,12 +1298,10 @@ function ScrollerBase:touch( event )
 		self._tch_event_tmp = event
 
 		-- handle touch
-		display.getCurrentStage():setFocus( scr.view, event.id )
-
-	end
+		display.getCurrentStage():setFocus( scr.view )
 
 
-	if phase == "moved" then
+	elseif phase == "moved" then
 		-- Utils.print( event )
 
 		local scr = self._dg_scroller
@@ -1272,6 +1313,7 @@ function ScrollerBase:touch( event )
 
 
 		--== Check to see if we need to reliquish the touch
+		-- this is checking in our non-scroll direction
 
 		x_delta = math.abs( event.xStart - event.x )
 		if not self._v_touch_lock and x_delta > self._h_touch_limit then
@@ -1336,16 +1378,15 @@ function ScrollerBase:touch( event )
 
 		-- save event for movement calculation
 		self._tch_event_tmp = event
-	end
 
 
-	if "ended" == phase or "cancelled" == phase then
+	elseif "ended" == phase or "cancelled" == phase then
 
 		-- validate our location
 		self:_checkScrollBounds()
 
 		-- clean up
-		display.getCurrentStage():setFocus( nil, event.id )
+		display.getCurrentStage():setFocus( nil )
 
 
 		-- add system time, we can re-use this event for Runtime
@@ -1357,15 +1398,12 @@ function ScrollerBase:touch( event )
 		self:gotoState( next_state, next_params )
 
 		if not self._h_touch_lock and not self._v_touch_lock then
-			self:_dispatchEvent( self.ITEM_SELECTED, self._touch_target._data )
+			self:_do_item_tap()
 		end
-
-		self._touch_target = nil
 
 	end
 
 	return true
-
 end
 
 
