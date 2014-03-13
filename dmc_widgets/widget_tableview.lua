@@ -95,8 +95,7 @@ TableView.NAME = "Table View Widget Class"
 --== Class Constants
 
 
-
---== Event Constants
+--== State Constants
 
 -- STATE_CREATE = "state_create"
 -- STATE_AT_REST = "state_at_rest"
@@ -108,6 +107,10 @@ TableView.STATE_SCROLL = "state_scroll"
 TableView.STATE_SCROLL_TRANS_TIME = 1000
 
 
+--== Event Constants
+
+-- ScrollerBase.EVENT = "scroller_view"
+
 
 
 --====================================================================--
@@ -116,12 +119,9 @@ TableView.STATE_SCROLL_TRANS_TIME = 1000
 
 function TableView:_init( params )
 	-- print( "TableView:_init" )
+	params = params or { }
 	self:superCall( "_init", params )
 	--==--
-
-	--== Sanity Check ==--
-
-	params = params or { }
 
 
 	--== Create Properties ==--
@@ -141,6 +141,11 @@ function TableView:_init( params )
 
 	-- self._transition = nil -- handle of active transition
 
+	self._scroll_transition_time = params.scroll_time or self.STATE_SCROLL_TRANS_TIME
+
+
+	self._h_scroll_enabled = false
+	self._v_scroll_enabled = true
 
 
 	--== Display Groups ==--
@@ -174,8 +179,6 @@ function TableView:_init( params )
 	-- self._category_view = nil
 	-- self._inactive_dots = {}
 
-	self._h_scroll_enabled = false
-	self._v_scroll_enabled = true
 
 end
 
@@ -204,9 +207,71 @@ TableView.insertRow = ScrollerViewBase.insertItem
 
 
 
+function TableView.__setters:scroll_time( value )
+	-- print( "TableView.__setters:scroll_time" )
+	if not value or not type( value ) == 'number' then return end
+	self._scroll_transition_time = value
+end
+
+
 
 --====================================================================--
 --== Private Methods
+
+
+
+function TableView:_reindexItems( index, record )
+	-- print( "TableView:_reindexItems", index, record )
+
+	local items = self._item_data_recs
+	local item_data, view, h
+	h = record.height
+
+	for i=index,#items do
+		-- print(i)
+		item_data = items[ i ]
+		item_data.yMin = item_data.yMin - h
+		item_data.yMax = item_data.yMax - h
+		item_data.index = i
+		view = item_data.view
+		if view then view.x, view.y = item_data.xMin, item_data.yMin end
+	end
+
+end
+
+function TableView:_updateBackground()
+	-- print( "TableView:_updateBackground" )
+
+	local items = self._item_data_recs
+	local o = self._bg
+
+	local total_dim, item
+	local x, y
+
+	-- set our total item dimension
+
+	if #items == 0 then
+		total_dim = 0
+	else
+		item = items[ #items ]
+		total_dim = item.yMax
+	end
+
+	self._total_item_dimension = total_dim
+
+
+	-- set background height, make at least height of window
+
+	if total_dim < self._height then
+		total_dim = self._height
+	end
+
+	x, y = o.x, o.y
+	o.height = total_dim
+	o.anchorX, o.anchorY = 0,0
+	o.x, o.y = x, y
+
+end
 
 
 
@@ -225,10 +290,10 @@ function TableView:_updateDimensions( item_info, item_data )
 
 	item_data.height = item_info.height
 	item_data.yMin = self._total_item_dimension
-	item_data.yMax = item_data.yMin + item_data.width
+	item_data.yMax = item_data.yMin + item_data.height
 
-	table.insert( self._items, item_data )
-	item_data.index = #self._items
+	table.insert( self._item_data_recs, item_data )
+	item_data.index = #self._item_data_recs
 
 	-- print( 'item insert', item_data.yMin, item_data.yMax )
 
@@ -254,24 +319,32 @@ end
 
 
 function TableView:_isBounded( scroller, item )
-	-- print( "TableView:_isBounded", scroller, item )
+	-- print( "TableView:_isBounded", scroller, item.index )
 
 	local result = false
+	-- local test = 0
 
-	if item.yMin < scroller.yMin and scroller.yMin < item.yMax then
+	if item.yMin < scroller.yMin and scroller.yMin <= item.yMax then
+		-- test = 1
 		-- cut on top
 		result = true
-	elseif item.yMin < scroller.yMax and scroller.yMax < item.yMax then
+	elseif item.yMin <= scroller.yMax and scroller.yMax < item.yMax then
+		-- test = 2
 		-- cut on bottom
 		result = true
-	elseif item.yMin > scroller.yMin and item.yMax < scroller.yMax  then
+	elseif item.yMin >= scroller.yMin and item.yMax <= scroller.yMax  then
+		-- test = 3
 		-- fully in view
 		result = true
 	elseif item.yMin < scroller.yMin and scroller.yMax < item.yMax then
+		-- test = 4
 		-- extends over view
 		result = true
 	end
 
+	-- if item.index == 3 then
+	-- 	print( result, test, item.yMin, scroller.yMin, item.yMax, scroller.yMax )
+	-- end
 	return result
 end
 
@@ -298,7 +371,7 @@ function TableView:do_state_scroll( params )
 	params = params or {}
 	local evt_start = params.event
 
-	local TIME = self.STATE_SCROLL_TRANS_TIME
+	local TIME = self._scroll_transition_time
 	local ease_f = easingx.easeOut
 
 	local v = self._v_velocity
@@ -332,11 +405,12 @@ function TableView:do_state_scroll( params )
 			-- we hit edge while moving
 			self:gotoState( self.STATE_RESTRAINT, { event=e } )
 
-		elseif start_time_delta < TIME then
+		elseif start_time_delta < TIME and math.abs(y_delta) >= 1 then
+			-- movement is too small to see (pixel)
 			scr.y = scr.y + y_delta
 
 		else
-			v.value = 0
+			v.value, v.vector = 0, 0
 			self:gotoState( self.STATE_AT_REST, { event=e } )
 
 		end
@@ -389,6 +463,7 @@ function TableView:do_state_restore( params )
 	local TIME = self.STATE_RESTORE_TRANS_TIME
 	local ease_f = easingx.easeOut
 
+	local v = self._v_velocity
 	local limit = self._v_scroll_limit
 	local scr = self._dg_scroller
 	local background = self._bg
@@ -399,14 +474,14 @@ function TableView:do_state_restore( params )
 	if limit == self.HIT_TOP_LIMIT then
 		dist = scr.y
 	else
-		dist = pos - ( self._height - background.height )
+		dist = pos - ( self._height - background.height - scr.y_offset )
 	end
 
 	delta = -dist
 
 
 	local enterFrameFunc = function( e )
-		-- print( "TableView: enterFrameFunc: do_state_restore" )
+		-- print( "TableView: enterFrameFunc: do_state_restore " )
 
 		local evt_frame = self._event_tmp
 
@@ -427,6 +502,7 @@ function TableView:do_state_restore( params )
 
 		else
 			-- final state
+			v.value, v.vector = 0, 0
 			scr.y = pos + delta
 			self:gotoState( self.STATE_AT_REST )
 
@@ -501,14 +577,13 @@ function TableView:do_state_restraint( params )
 		v.value = ease_f( start_time_delta, TIME, velocity, v_delta )
 		y_delta = v.value * frame_time_delta
 
-
 		--== Action
 
-		if start_time_delta < TIME then
+		if start_time_delta < TIME and math.abs(y_delta) >= 1 then
 			scr.y = scr.y + y_delta
 
 		else
-			v.value = 0
+			v.value, v.vector = 0, 0
 			self:gotoState( self.STATE_RESTORE, { event=e } )
 
 		end
