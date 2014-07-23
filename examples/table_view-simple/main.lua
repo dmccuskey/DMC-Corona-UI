@@ -3,39 +3,31 @@
 --
 -- Shows simple use of the DMC Widget: Table View
 --
--- by David McCuskey
---
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
 -- Copyright (C) 2014 David McCuskey. All Rights Reserved.
 --====================================================================--
 
-print("---------------------------------------------------")
 
+print("---------------------------------------------------")
 
 
 --===================================================================--
 -- Imports
---===================================================================--
 
-local widgets = require( 'dmc_widgets' )
+local widgets = require 'dmc_widgets'
 
 
 --===================================================================--
 -- Setup, Constants
---===================================================================--
-
-local W,H = display.contentWidth, display.contentHeight
-local H_CENTER, V_CENTER = W*0.5, H*0.5
 
 local OFFSET = 100
-
-local o, p, f
+local DIMS = {w=200,h=100} -- dimensions of a row item
+local SHOW = 3 -- how many items to display (for masking)
 
 
 --===================================================================--
 -- Support Functions
---===================================================================--
 
 -- onRender()
 -- called when table view needs to display a row
@@ -49,9 +41,9 @@ local function onRender( event )
 	local o
 
 	o = display.newText( tostring(index), 40,30, native.systemFont, 32)
-	o.anchorX, o.anchorY = 0.5,0
-	view:insert( o )
+	o.anchorX, o.anchorY = 0.5, 0
 
+	view:insert( o )
 	view._o = o
 
 end
@@ -67,7 +59,6 @@ local function onUnrender( event )
 
 	o = view._o
 	o:removeSelf()
-
 	view._o = nil
 
 end
@@ -81,17 +72,19 @@ local function onEvent( event )
 end
 
 
+
 --===================================================================--
 -- Main
 --===================================================================--
 
+
 -- create Table View
 
-p = {
-	width=W-OFFSET,
-	height=H-OFFSET*3,
+local o = widgets.newTableView{
+	width=DIMS.w,
+	height=DIMS.h*SHOW,
+	automask=false
 }
-o = widgets.newTableView( p )
 o.x, o.y = OFFSET*0.5, OFFSET*0.5
 
 
@@ -99,16 +92,17 @@ o.x, o.y = OFFSET*0.5, OFFSET*0.5
 
 for i = 1, 5 do
 
-	local p = {
+	local row_template = {
 		isCategory = false,
-		height = 100,
+		height = DIMS.h,
 		onItemRender=onRender,
 		onItemUnrender=onUnrender,
 		onItemEvent=onEvent,
+		bgColor={0.5,0,1},
 		data = i
 	}
 
-	o:insertRow( p )
+	o:insertRow( row_template )
 
 end
 

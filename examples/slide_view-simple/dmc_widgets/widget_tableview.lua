@@ -64,7 +64,6 @@ dmc_widget_func = dmc_widget_data.func
 
 --====================================================================--
 -- Imports
---====================================================================--
 
 local Utils = require( dmc_lib_func.find('dmc_utils') )
 local Objects = require( dmc_lib_func.find('dmc_objects') )

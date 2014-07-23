@@ -1,4 +1,3 @@
-
 --====================================================================--
 -- dmc_objects.lua
 --
@@ -8,7 +7,7 @@
 
 --[[
 
-Copyright (C) 2011-2013 David McCuskey. All Rights Reserved.
+Copyright (C) 2011-2014 David McCuskey. All Rights Reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in the
@@ -30,15 +29,25 @@ DEALINGS IN THE SOFTWARE.
 --]]
 
 
+
+--====================================================================--
+-- DMC Corona Library : DMC Objects
+--====================================================================--
+
+
 -- Semantic Versioning Specification: http://semver.org/
 
-local VERSION = "1.0.3"
+local VERSION = "1.1.0"
 
 
 
 --====================================================================--
--- DMC Library Support Methods
+-- DMC Corona Library Config
 --====================================================================--
+
+
+--====================================================================--
+-- Support Functions
 
 local Utils = {} -- make copying from dmc_utils easier
 
@@ -68,56 +77,32 @@ function Utils.extend( fromTable, toTable )
 end
 
 
-
 --====================================================================--
--- DMC Library Config
---====================================================================--
+-- Configuration
 
-local dmc_lib_data, dmc_lib_info, dmc_lib_location
+local dmc_lib_data, dmc_lib_info
 
 -- boot dmc_library with boot script or
 -- setup basic defaults if it doesn't exist
 --
-if false == pcall( function() require( "dmc_library_boot" ) end ) then
-	_G.__dmc_library = {
-		dmc_library={
-			location = ''
-		},
-		func = {
-			find=function( name )
-				local loc = ''
-				if dmc_lib_data[name] and dmc_lib_data[name].location then
-					loc = dmc_lib_data[name].location
-				else
-					loc = dmc_lib_info.location
-				end
-				if loc ~= '' and string.sub( loc, -1 ) ~= '.' then
-					loc = loc .. '.'
-				end
-				return loc .. name
-			end
-		}
+if false == pcall( function() require( "dmc_corona_boot" ) end ) then
+	_G.__dmc_corona = {
+		dmc_corona={},
 	}
 end
 
-dmc_lib_data = _G.__dmc_library
-dmc_lib_func = dmc_lib_data.func
+dmc_lib_data = _G.__dmc_corona
 dmc_lib_info = dmc_lib_data.dmc_library
-dmc_lib_location = dmc_lib_info.location
-
-
-
-
---====================================================================--
--- DMC Library : DMC Objects
---====================================================================--
-
 
 
 
 --====================================================================--
--- DMC Object Config
+-- DMC Objects
 --====================================================================--
+
+
+--====================================================================--
+-- Configuration
 
 dmc_lib_data.dmc_objects = dmc_lib_data.dmc_objects or {}
 
@@ -128,380 +113,49 @@ local DMC_OBJECTS_DEFAULTS = {
 local dmc_objects_data = Utils.extend( dmc_lib_data.dmc_objects, DMC_OBJECTS_DEFAULTS )
 
 
-
--- =========================================================
+--====================================================================--
 -- Imports
--- =========================================================
 
-local Utils = require( dmc_lib_func.find('dmc_utils') )
-
-
-
--- =========================================================
--- Class Support Functions
--- =========================================================
-
--- printObject()
--- print out the keys contained within a table.
--- by default, does not process items with underscore '_'
---
--- @param table the table (object) to print
--- @param include a list of names to include
--- @param exclude a list of names to exclude
---
-local function printObject( table, include, exclude, params )
-	local indent = ""
-	local step = 0
-	local include = include or {}
-	local exclude = exclude or {}
-	local params = params or {}
-	local options = {
-		limit = 10,
-	}
-	opts = Utils.extend( params, options )
-
-	--print("Printing object table =============================")
-	function _print( t, ind, s )
-
-		-- limit number of rounds
-		if s > options.limit then return end
-
-		for k, v in pairs( t ) do
-			local ok_to_process = true
-
-			if Utils.propertyIn( include, k ) then
-				ok_to_process = true
-			elseif type( t[k] ) == "function" or
-				Utils.propertyIn( exclude, k ) or
-				type( k ) == "string" and k:sub(1,1) == '_' then
-				ok_to_process = false
-			end
-
-			if ok_to_process then
-
-				if type( t[ k ] ) == "table" then
-					local  o = t[ k ]
-					local address = tostring( o )
-					local items = #o
-					print ( ind .. k .. " --> " .. address .. " w " .. items .. " items" )
-					_print( t[ k ], ( ind .. "  " ), ( s + 1 ) )
-
-				else
-					if type( v ) == "string" then
-						print ( ind ..  k .. " = '" .. v .. "'" )
-					else
-						print ( ind ..  k .. " = " .. tostring( v ) )
-					end
-
-				end
-			end
-
-		end
-	end
-
-	-- start printing process
-	_print( table, indent, step + 1 )
-
-end
+local LuaObject = require 'lua_objects'
+local Utils = require 'dmc_utils'
 
 
---
--- indexFunc()
--- override the normal Lua lookup functionality to allow
--- property getter functions
---
--- @param t object table
--- @param k key
---
-local function indexFunc( t, k )
+--====================================================================--
+-- Setup, Constants
 
-	local o, val
-
-	--== do key lookup in different places on object
-
-	-- check for key in getters table
-	o = rawget( t, '__getters' ) or {}
-	if o[k] then return o[k](t) end
-
-	-- check for key directly on object
-	val = rawget( t, k )
-	if val ~= nil then return val end
-
-	-- check OO hierarchy
-	o = rawget( t, '__parent' )
-	if o then val = o[k] end
-	if val ~= nil then return val end
-
-	-- check object's view
-	--[[
-	o = rawget( t, 'view' )
-	if o ~= nil and o[k] ~= nil then
-		print("on view ", type(o[k]), o.x, k, o )
-		if type(o[k]) == 'function' then
-			return o[k]()
-		else
-			return o[k]
-		end
-	end
-	--]]
-
-	return nil
-end
-
--- newindexFunc()
--- override the normal Lua lookup functionality to allow
--- property setter functions
---
--- @param t object table
--- @param k key
--- @param v value
---
-local function newindexFunc( t, k, v )
-
-	local o, f
-
-	-- check for key in setters table
-	o = rawget( t, '__setters' ) or {}
-	f = o[k]
-	if f then
-		-- found setter, so call it
-		f(t,v)
-	else
-		-- place key/value directly on object
-		rawset( t, k, v )
-	end
-
-end
-
--- _bless()
--- sets up the inheritance chain via metatables
--- creates object to bless if one isn't provided
---
--- @param base base class object (optional)
--- @param obj object to bless (optional)
--- @return a blessed object
---
-local function bless( base, obj )
-	local o = obj or {}
-	local mt = {
-		__index = indexFunc,
-		__newindex = newindexFunc
-	}
-	setmetatable( o, mt )
-
-	-- create lookup tables - parent, setter, getter
-	o.__parent = base
-	o.__setters = {}
-	o.__getters = {}
-	if base then
-		-- we have a parent, so let's copy down all its getters/setters
-		o.__getters = Utils.extend( base.__getters, o.__getters )
-		o.__setters = Utils.extend( base.__setters, o.__setters )
-	end
-
-	return o
-end
+-- setup some aliases to make code cleaner
+local inheritsFrom = LuaObject.inheritsFrom
+local ObjectBase = LuaObject.ObjectBase
 
 
-local function inheritsFrom( baseClass, options, constructor )
+--====================================================================--
+-- Support Functions
 
-	local constructor = constructor
-	local o
-
-	-- flag to indicate this is a subclass object
-	-- will be set in the constructor
-	options = options or {}
-	options.__setIntermediate = true
-
-	-- get default constructor
-	if baseClass and constructor == nil then
-		constructor = baseClass['new']	-- assuming new
-	end
-
-	-- create our class object
-	if baseClass == nil or constructor == nil then
-		o = bless( baseClass )
-	else
-		o = constructor( baseClass, options )
-	end
-
-
-	-- Setup some class type functions
-
-	-- Return the class object of the instance
-	function o:class()
-		return o
-	end
-
-	-- Return the super class object of the instance
-	function o:superClass()
-		return baseClass
-	end
-
-
-	-- Return true if the caller is an instance of theClass
-	function o:isa( theClass )
-		local b_isa = false
-
-		local cur_class = o
-
-		while ( nil ~= cur_class ) and ( false == b_isa ) do
-			if cur_class == theClass then
-				 b_isa = true
-			else
-				 cur_class = cur_class:superClass()
-			end
-		end
-
-		return b_isa
-	end
-
-
-	return o
+_G.getDMCObject = function( object )
+	return object.__dmc_ref
 end
 
 
 
-
-
--- =========================================================
--- Object Class
--- =========================================================
-
-
-local Object = inheritsFrom( nil )
-Object.NAME = "Object Base"
-
-Object._PRINT_INCLUDE = {}
-Object._PRINT_EXCLUDE = { '__dmc_super' }
-
-
-
--- new()
--- class constructor
---
-function Object:new( options )
-	return self:_bless()
-end
-
-
--- _bless()
--- interface to generic bless()
---
-function Object:_bless( obj )
-	return bless( self, obj )
-end
-
-
--- superCall( name, ... )
--- call a method on an object's parent
---
-function Object:superCall( name, ... )
-	-- print( 'Object:supercall', name, self.NAME )
-
-	local c, s 		-- class, super
-	local result
-	local self_dmc_super = self.__dmc_super
-	local super_flag = self_dmc_super
-
-	-- finds method in class hierarchy
-	-- returns found class or nil
-	function findMethod( class, method )
-		while class do
-			if rawget( class, method ) then break end
-			class = class:superClass()
-		end
-		return class
-	end
-
-	-- structure in which to save our place
-	-- in case supercall is invoked again
-	if self_dmc_super == nil then
-		self.__dmc_super = {} -- a stack
-		self_dmc_super = self.__dmc_super
-		-- here we start with our class
-		s = findMethod( self:class(), name )
-		table.insert( self_dmc_super, s )
-	end
-
-	c = self_dmc_super[ # self_dmc_super ]
-	-- here we start with the super class
-	s = findMethod( c:superClass(), name )
-	if s then
-		table.insert( self_dmc_super, s )
-		result = s[name]( self, unpack( arg ) )
-		table.remove( self_dmc_super, # self_dmc_super )
-	end
-
-	-- here were the first and last on callstack, so clean up
-	if super_flag == nil then
-		table.remove( self_dmc_super, # self_dmc_super )
-		self.__dmc_super = nil
-	end
-
-	return result
-end
-
-
--- print
---
-function Object:print( include, exclude )
-	local include = include or self._PRINT_INCLUDE
-	local exclude = exclude or self._PRINT_EXCLUDE
-
-	printObject( self, include, exclude )
-end
-
-
-
-function Object:optimize()
-
-	function _optimize( obj, class )
-
-		-- climb up the hierarchy
-		if not class then return end
-		_optimize( obj, class:superClass() )
-
-		-- make local references to all functions
-		for k,v in pairs( class ) do
-			if type( v ) == "function" then
-				obj[ k ] = v
-			end
-		end
-
-	end
-
-	_optimize( self, self:class() )
-end
-
-function Object:deoptimize()
-	for k,v in pairs( self ) do
-		if type( v ) == "function" then
-			self[ k ] = nil
-		end
-	end
-end
-
-
-
--- TODO: method can be a string or method reference
-function Object:createCallback( method )
-	if method == nil then
-		error( "ERROR: missing method in createCallback()", 2 )
-	end
-	return function( ... )
-		return method( self, ... )
-	end
-end
-
-
--- =========================================================
+--====================================================================--
 -- CoronaBase Class
--- =========================================================
+--====================================================================--
 
 
-local CoronaBase = inheritsFrom( Object )
+local CoronaBase = inheritsFrom( ObjectBase )
 CoronaBase.NAME = "Corona Base"
+
+--== references for setAnchor()
+
+CoronaBase.TopLeftReferencePoint = { 0, 0 }
+CoronaBase.TopCenterReferencePoint = { 0.5, 0 }
+CoronaBase.TopRightReferencePoint = { 1, 0 }
+CoronaBase.CenterLeftReferencePoint = { 0, 0.5 }
+CoronaBase.CenterReferencePoint = { 0.5, 0.5 }
+CoronaBase.CenterRightReferencePoint = { 1, 0.5 }
+CoronaBase.BottomLeftReferencePoint = { 0, 1 }
+CoronaBase.BottomCenterReferencePoint = { 0.5, 1 }
+CoronaBase.BottomRightReferencePoint = { 1, 1 }
 
 
 -- new()
@@ -533,12 +187,15 @@ function CoronaBase:new( options )
 end
 
 
+--====================================================================--
+--== Start: Setup DMC Objects
+
 -- _init()
 -- initialize the object - setting the view
 --
 function CoronaBase:_init( options )
-	-- OVERRIDE THIS
-
+	self:superCall( "_init" )
+	--==--
 	--== Create Properties ==--
 	--== Display Groups ==--
 	--== Object References ==--
@@ -551,8 +208,9 @@ end
 -- remove items added during _init()
 --
 function CoronaBase:_undoInit( options )
-	-- OVERRIDE THIS
 	self:_unsetView()
+	--==--
+	self:superCall( "_undoInit" )
 end
 
 
@@ -560,31 +218,33 @@ end
 -- create any visual items specific to object
 --
 function CoronaBase:_createView()
-	-- OVERRIDE THIS
+	self:superCall( "_createView" )
+	--==--
 
 	-- Subclasses should call self:superCall( "_createView" )
 
-	local o = self.display
+	local o = self.view
 
 	-- Used to block touches at the level of parent display
 	-- It can be moved to another subclass if the feature is not
 	-- generic for all Corona Base children
-	if dmc_objects_data.auto_touch_block then
-		o.touch = function(e) return true end
-		o:addEventListener( 'touch', o )
-	end
+	-- if dmc_objects_data.auto_touch_block and false then
+	-- 	o.touch = function(e) return true end
+	-- 	o:addEventListener( 'touch', o )
+	-- end
 end
 -- _undoCreateView()
 -- remove any items added during _createView()
 --
 function CoronaBase:_undoCreateView()
-	-- OVERRIDE THIS
+	local o = self.view
 
-	if dmc_objects_data.auto_touch_block and o.touch then
-		o:removeEventListener( 'touch', o.touch )
-		o.touch = nil
-	end
-
+	-- if dmc_objects_data.auto_touch_block and o.touch and false then
+	-- 	o:removeEventListener( 'touch', o.touch )
+	-- 	o.touch = nil
+	-- end
+	--==--
+	self:superCall( "_undoCreateView" )
 end
 
 
@@ -592,14 +252,23 @@ end
 -- any setup after object is done being created
 --
 function CoronaBase:_initComplete()
-	-- OVERRIDE THIS
+	self:superCall( "_initComplete" )
+	--==--
 end
 -- _undoInitComplete()
 -- remove any items added during _initComplete()
 --
 function CoronaBase:_undoInitComplete()
-	-- OVERRIDE THIS
+	--==--
+	self:superCall( "_undoInitComplete" )
 end
+
+--== END: Setup DMC Objects
+--====================================================================--
+
+
+--====================================================================--
+--== Private Methods
 
 
 -- _setView( viewObject )
@@ -610,7 +279,7 @@ function CoronaBase:_setView( viewObject )
 	self:_unsetView()
 
 	self.view = viewObject
-	self.display = self.view
+	self.display = self.view -- deprecated
 	-- save ref of our Lua object on Corona element
 	-- in case we need to get back to the object
 	self.view.__dmc_ref = self
@@ -637,13 +306,15 @@ function CoronaBase:_unsetView()
 end
 
 
+--====================================================================--
+--== Public Methods / Corona API
+
 -- destroy()
 -- remove the view object from the stage
 --
 function CoronaBase:destroy()
 	self:removeSelf()
 end
-
 
 function CoronaBase:show()
 	self.view.isVisible = true
@@ -672,8 +343,6 @@ end
 -- insert( [index,] child, [, resetTransform]  )
 --
 function CoronaBase:insert( ... )
-	-- print( "CoronaBase:insert " )
-	-- print( self, self.view, self.view.NAME, self.view.insert )
 	self.view:insert( ... )
 end
 -- remove( indexOrChild )
@@ -681,38 +350,6 @@ end
 function CoronaBase:remove( ... )
 	self.view:remove( ... )
 end
-
-
-
---= CORONA OBJECT =--
-
-
--- _dispatchEvent
---
-function Object:_dispatchEvent( e_type, data, params )
-	-- print( "Object:_dispatchEvent ", e_type, data )
-
-	params = params or {}
-	if params.merge == nil then params.merge = false end
-
-	-- setup custom event
-	local e = {
-		name = self.EVENT,
-		type = e_type
-	}
-
-	if params.merge and type( data ) == 'table' then
-		e = data
-		e.name = self.EVENT
-		e.type = e_type
-
-	else
-		e.data = data
-	end
-
-	self:dispatchEvent( e )
-end
-
 
 
 --= CORONA OBJECT =--
@@ -907,10 +544,10 @@ function CoronaBase.__setters:yScale( value )
 end
 
 
-
 -- Methods --
 
--- addEventListener( eventName, listener )
+
+-- addEventListener( eventName, handler )
 --
 function CoronaBase:addEventListener( ... )
 	local args = { ... }
@@ -923,33 +560,44 @@ function CoronaBase:addEventListener( ... )
 
 	self.view:addEventListener( ... )
 end
+
 -- contentToLocal( x_content, y_content )
 --
 function CoronaBase:contentToLocal( ... )
 	self.view:contentToLocal( ... )
 end
--- dispatchEvent( event )
---
+
+CoronaBase._buildDmcEvent = ObjectBase._buildDmcEvent
+
+-- dispatchEvent( event info )
+-- can either be dmc style event
+-- or corona style event
 function CoronaBase:dispatchEvent( ... )
-	self.view:dispatchEvent( ... )
+	if self._dispatchEventType == ObjectBase.CORONA_EVENT_DISPATCH then
+		self.view:dispatchEvent( self:_buildDmcEvent( ... ) )
+	else
+		self.view:dispatchEvent( ... )
+	end
 end
 -- localToContent( x, y )
 --
 function CoronaBase:localToContent( ... )
 	self.view:localToContent( ... )
 end
--- removeEventListener( eventName, listener )
+
+-- removeEventListener( eventName, handler )
 --
 function CoronaBase:removeEventListener( ... )
 	self.view:removeEventListener( ... )
 end
+
 -- removeSelf()
 --
 function CoronaBase:removeSelf()
-	--print( "\nOVERRIDE: removeSelf()\n" );
+	-- print( "\nOVERRIDE: removeSelf()\n" );
 
 	-- skip these if we're an intermediate class (eg, subclass)
-	if rawget( self, 'is_intermediate' ) == nil then
+	if rawget( self, 'is_intermediate' ) == false then
 		self:_undoInitComplete()
 		self:_undoCreateView()
 	end
@@ -967,19 +615,7 @@ function CoronaBase:scale( ... )
 	self.view:scale( ... )
 end
 
-
-CoronaBase.TopLeftReferencePoint = { 0, 0 }
-CoronaBase.TopCenterReferencePoint = { 0.5, 0 }
-CoronaBase.TopRightReferencePoint = { 1, 0 }
-CoronaBase.CenterLeftReferencePoint = { 0, 0.5 }
-CoronaBase.CenterReferencePoint = { 0.5, 0.5 }
-CoronaBase.CenterRightReferencePoint = { 1, 0.5 }
-CoronaBase.BottomLeftReferencePoint = { 0, 1 }
-CoronaBase.BottomCenterReferencePoint = { 0.5, 1 }
-CoronaBase.BottomRightReferencePoint = { 1, 1 }
-
-
---
+-- setAnchor
 --
 function CoronaBase:setAnchor( ... )
 	local args = {...}
@@ -1021,7 +657,7 @@ end
 
 
 
-
+--[[
 
 -- =========================================================
 -- CoronaPhysics Class
@@ -1033,7 +669,6 @@ CoronaPhysics.NAME = "Corona Physics"
 
 
 -- Properties --
-
 
 -- angularDamping()
 --
@@ -1155,20 +790,17 @@ function CoronaPhysics:setLinearVelocity( ... )
 	self.view:setLinearVelocity( ... )
 end
 
+--]]
 
 
 
--- =========================================================
+
+--====================================================================--
 -- DMC Objects Exports
--- =========================================================
+--====================================================================--
 
 
-local Objects = {
-	inheritsFrom = inheritsFrom,
-	Object = Object,
-	CoronaBase = CoronaBase,
-	CoronaPhysics = CoronaPhysics,
-}
+LuaObject.CoronaBase = CoronaBase
 
+return LuaObject
 
-return Objects
