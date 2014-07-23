@@ -37,42 +37,57 @@ local VERSION = "1.0.0"
 
 
 --====================================================================--
+-- DMC Widgets Config
+--====================================================================--
+
+local Widget = {}
+
+
+local args = { ... }
+local PATH = args[1]
+
+local dmc_widget_data, dmc_widget_func
+
+if _G.__dmc_widget == nil then
+
+	_G.__dmc_widget = {}
+	dmc_widget_data = _G.__dmc_widget
+
+	dmc_widget_data.func = {}
+	dmc_widget_func = dmc_widget_data.func
+	dmc_widget_func.find = function( name )
+		local loc = ''
+		if PATH then loc = PATH end
+		if loc ~= '' and string.sub( loc, -1 ) ~= '.' then
+			loc = loc .. '.'
+		end
+		return loc .. name
+	end
+
+end
+
+
+--====================================================================--
 -- DMC Library Config
 --====================================================================--
 
 local dmc_lib_data, dmc_lib_func, dmc_lib_info, dmc_lib_location
 
 
+
+local dmc_lib_data, dmc_lib_info, dmc_lib_location
+
 -- boot dmc_library with boot script or
 -- setup basic defaults if it doesn't exist
 --
-if false == pcall( function() require( "dmc_library_boot" ) end ) then
-	_G.__dmc_library = {
-		dmc_library={
-			location = ''
-		},
-		func = {
-			find=function( name )
-				local loc = ''
-				if dmc_lib_data[name] and dmc_lib_data[name].location then
-					loc = dmc_lib_data[name].location
-				else
-					loc = dmc_lib_info.location
-				end
-				if loc ~= '' and string.sub( loc, -1 ) ~= '.' then
-					loc = loc .. '.'
-				end
-				return loc .. name
-			end
-		}
+if false == pcall( function() require 'dmc_corona_boot' end ) then
+	_G.__dmc_corona = {
+		dmc_corona={},
 	}
 end
 
-dmc_lib_data = _G.__dmc_library
-dmc_lib_func = dmc_lib_data.func
-dmc_lib_info = dmc_lib_data.dmc_library
-dmc_lib_location = dmc_lib_info.location
-
+dmc_lib_data = _G.__dmc_corona
+dmc_lib_info = dmc_lib_data.dmc_corona
 
 
 
@@ -81,16 +96,15 @@ dmc_lib_location = dmc_lib_info.location
 --===================================================================--
 
 
+--===================================================================--
+-- newScroller widget
+--===================================================================--
 
---====================================================================--
--- Setup, Constants
---====================================================================--
-
-local Widget = {}
-
-local args = { ... }
-local PATH = args[1]
-
+function Widget.newScroller( options )
+	local theme = nil
+	local _library = require( PATH .. '.' .. 'widget_scroller' )
+	return _library:new( options, theme )
+end
 
 
 --===================================================================--
@@ -104,6 +118,16 @@ function Widget.newSlideView( options )
 end
 
 
+--===================================================================--
+-- newTableView widget
+--===================================================================--
+
+function Widget.newTableView( options )
+	local theme = nil
+	local _library = require( PATH .. '.' .. 'widget_tableview' )
+	return _library:new( options, theme )
+end
+
 
 --===================================================================--
 -- newViewPager widget
@@ -112,18 +136,6 @@ end
 function Widget.newViewPager( options )
 	local theme = nil
 	local _library = require( PATH .. '.' .. 'widget_viewpager' )
-	return _library:new( options, theme )
-end
-
-
-
---===================================================================--
--- newTableView widget
---===================================================================--
-
-function Widget.newTableView( options )
-	local theme = nil
-	local _library = require( PATH .. '.' .. 'widget_tableview' )
 	return _library:new( options, theme )
 end
 
