@@ -59,13 +59,14 @@ dmc_widget_func = dmc_widget_data.func
 local Objects = require 'dmc_objects'
 local Utils = require 'dmc_utils'
 
+local BaseView = require( dmc_widget_func.find( 'widget_button.view_base' ) )
+
 
 --====================================================================--
 --== Setup, Constants
 
 -- setup some aliases to make code cleaner
 local inheritsFrom = Objects.inheritsFrom
-local CoronaBase = Objects.CoronaBase
 
 --== these are the Corona shapes which can be a button view
 local TYPE_RECT = 'rect'
@@ -195,80 +196,13 @@ local function createShape( v_type, v_params )
 end
 
 
--- build parameters for the label
--- get defaults and layer in specific values
---
-local function createLabelParams( v_name, params )
-	-- print( "createLabelParams", v_name )
-	local v_p = params[ v_name ] -- specific view parameters
-	local l_p = params.label
-	local p
-
-	if type(l_p)=='string' then
-		p = {
-			text=l_p
-		}
-
-	else
-		p = {
-			text=l_p.text,
-			align=l_p.align,
-			margin=l_p.margin,
-			x_offset=l_p.x_offset,
-			y_offset=l_p.y_offset,
-			color=l_p.color,
-			font=l_p.font,
-			font_size=l_p.font_size,
-		}
-	end
-
-	-- layer in view specific values
-	if v_p and v_p.label then
-		l_p = v_p.label
-		p.text = l_p.text == nil and p.text or l_p.text
-		p.align = l_p.align == nil and p.align or l_p.align
-		p.margin = l_p.margin == nil and p.margin or l_p.margin
-		p.x_offset = l_p.x_offset == nil and p.x_offset or l_p.x_offset
-		p.y_offset = l_p.y_offset == nil and p.y_offset or l_p.y_offset
-		p.color = l_p.color == nil and p.color or l_p.color
-		p.font = l_p.font == nil and p.font or l_p.font
-		p.font_size = l_p.font_size == nil and p.font_size or l_p.font_size
-	end
-
-	-- set defaults
-	if p.align == nil then p.align = 'center' end
-	if p.x_offset == nil then p.x_offset = 0 end
-	if p.y_offset == nil then p.y_offset = 0 end
-	if p.width == nil then p.width = params.width end
-	if p.margin == nil then p.margin = 0 end
-	p.width = p.width-p.margin
-
-	return p
-end
-
-
--- create the actual corona display object
---
-local function createLabel( l_params )
-	-- print( "createLabel", l_params )
-	return display.newText{
-		text=l_params.text,
-		width=l_params.width,
-		height=l_params.height,
-		font=l_params.font,
-		fontSize=l_params.font_size,
-		align=l_params.align
-	}
-end
-
-
 
 --====================================================================--
 --== Button Shape View Class
 --====================================================================--
 
 
-local ShapeView = inheritsFrom( CoronaBase )
+local ShapeView = inheritsFrom( BaseView )
 ShapeView.NAME = "Shape View"
 
 
@@ -285,26 +219,14 @@ function ShapeView:_init( params )
 
 	if self.is_intermediate then return end
 	assert( type(params.shape)=='string', "expected string-type 'shape' parameter" )
-	assert( type(params.name)=='string', "expected string-type 'name' parameter" )
 
 	--== Create Properties ==--
 
-	self._view_name = params.name -- 'down', 'up', etc
 	self._view_type = validateShapeType( params.shape )
 	self._view_params = createShapeParams( self._view_type, self._view_name, params )
-	self._label_params = createLabelParams( self._view_name, params )
-
-	self._width = params.width
-	self._height = params.height
 
 	--== Display Groups ==--
-
 	--== Object References ==--
-
-	-- visual
-	self._view = nil
-	self._label = nil
-
 end
 
 
@@ -316,7 +238,6 @@ function ShapeView:_createView()
 	--==--
 
 	local v_params = self._view_params
-	local l_params = self._label_params
 	local o, tmp   -- object, temp
 
 	--== create background
@@ -338,33 +259,14 @@ function ShapeView:_createView()
 		o:setStrokeColor( unpack( tmp ) )
 	end
 
-	self.view:insert( o )
+	self.view:insert( 1, o ) -- insert over background
 	self._view = o
-
-	--== create label
-
-	o = createLabel( l_params )
-	o.x, o.y = l_params.x_offset, l_params.y_offset
-	o.anchorX, o.anchorY = 0.5, 0.5
-	tmp = l_params.color
-	if tmp and tmp.gradient then
-		o:setFillColor( tmp )
-	elseif tmp then
-		o:setFillColor( unpack( tmp ) )
-	end
-
-	self.view:insert( o )
-	self._label = o
 
 end
 
 function ShapeView:_undoCreateView()
 	-- print( "ShapeView:_undoCreateView" )
 	local o
-
-	o = self._label
-	o:removeSelf()
-	self._label = nil
 
 	o = self._view
 	o:removeSelf()

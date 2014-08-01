@@ -58,7 +58,7 @@ dmc_widget_func = dmc_widget_data.func
 local Objects = require 'dmc_objects'
 
 -- Button View Components
-local FrameView = require( dmc_widget_func.find( 'widget_button.view_frame' ) )
+local ImageView = require( dmc_widget_func.find( 'widget_button.view_image' ) )
 local ShapeView = require( dmc_widget_func.find( 'widget_button.view_shape' ) )
 
 
@@ -69,7 +69,7 @@ local ShapeView = require( dmc_widget_func.find( 'widget_button.view_shape' ) )
 local inheritsFrom = Objects.inheritsFrom
 local CoronaBase = Objects.CoronaBase
 
-local LOCAL_DEBUG = true
+local LOCAL_DEBUG = false
 
 
 --====================================================================--
@@ -79,11 +79,17 @@ local function getViewTypeClass( params )
 	if params.viewClass ~= nil then
 		return params.viewClass
 
+	elseif params.shape ~= nil then
+		return ShapeView
+
+	elseif params.file ~= nil then
+		return ImageView
+
 	elseif params.sheet ~= nil then
 		return FrameView
 
 	else -- default view
-		return ShapeView
+		error( "newButton: view type not found" )
 
 	end
 end

@@ -1,5 +1,5 @@
 --====================================================================--
--- widget_button/view_shape.lua
+-- widget_button/view_image.lua
 --
 -- Documentation: http://docs.davidmccuskey.com/display/docs/newButton.lua
 --====================================================================--
@@ -48,7 +48,7 @@ dmc_widget_func = dmc_widget_data.func
 
 
 --====================================================================--
---== DMC Widgets : Button Shape View
+--== DMC Widgets : Button Image View
 --====================================================================--
 
 
@@ -69,6 +69,44 @@ local BaseView = require( dmc_widget_func.find( 'widget_button.view_base' ) )
 local inheritsFrom = Objects.inheritsFrom
 
 
+--====================================================================--
+--== Support Functions
+
+-- build parameters for this image
+-- get defaults and layer in specific values
+--
+local function createImageParams( v_name, params )
+	-- print( "createImageParams", v_name, params )
+	local v_p = params[ v_name ] -- specific view parameters
+	local p = {
+		width=params.width,
+		height=params.height,
+		file=params.file,
+	}
+
+	-- layer in view specific values
+	if v_p then
+		p.width = v_p.width == nil and p.width or v_p.width
+		p.height = v_p.height == nil and p.height or v_p.height
+		p.file = v_p.file == nil and p.file or v_p.file
+	end
+
+	return p
+end
+
+
+-- create the actual corona display object
+--
+local function createImage( v_params )
+	-- print( "createImage", v_params )
+	if v_params.base_dir then
+		return display.newImageRect( v_params.file, v_params.baseDir, v_params.width, 	v_params.height )
+	else
+		return display.newImageRect( v_params.file, v_params.width, v_params.height )
+	end
+end
+
+
 
 --====================================================================--
 --== Button Image View Class
@@ -76,7 +114,7 @@ local inheritsFrom = Objects.inheritsFrom
 
 
 local ImageView = inheritsFrom( BaseView )
-ImageView.NAME = "Shape View"
+ImageView.NAME = "Image View"
 
 
 --======================================================--
@@ -95,10 +133,9 @@ function ImageView:_init( params )
 
 	--== Create Properties ==--
 
-	self._view_params = self:_createImageParams( self._view_name, params )
+	self._view_params = createImageParams( self._view_name, params )
 
 	--== Display Groups ==--
-
 	--== Object References ==--
 end
 
@@ -114,7 +151,7 @@ function ImageView:_createView()
 
 	--== create background
 
-	o = self:_createImage( v_params )
+	o = createImage( v_params )
 	o.x, o.y = 0, 0
 	o.anchorX, o.anchorY = 0.5, 0.5
 	tmp = v_params.fill_color
@@ -136,6 +173,19 @@ function ImageView:_createView()
 
 end
 
+
+function ImageView:_undoCreateView()
+	-- print( "ImageView:_undoCreateView" )
+	local o
+
+	o = self._view
+	o:removeSelf()
+	self._view = nil
+
+	--==--
+	self:superCall( '_undoCreateView' )
+end
+
 -- END: Setup DMC Objects
 --======================================================--
 
@@ -149,39 +199,7 @@ end
 --====================================================================--
 --== Private Methods
 
--- build parameters for this image
--- get defaults and layer in specific values
---
-function ImageView:_createImageParams( v_name, params )
-	-- print( "ImageView:_createImageParams", v_name, params )
-	local v_p = params[ v_name ] -- specific view parameters
-	local p = {
-		width=params.width,
-		height=params.height,
-		file=params.file,
-	}
-
-	-- layer in view specific values
-	if v_p then
-		p.width = v_p.width == nil and p.width or v_p.width
-		p.height = v_p.height == nil and p.height or v_p.height
-		p.file = v_p.file == nil and p.file or v_p.file
-	end
-
-	return p
-end
-
-
--- create the actual corona display object
---
-function ImageView:_createImage( v_params )
-	-- print( "ImageView:_createImage", v_params )
-	if v_params.base_dir then
-		return display.newImageRect( v_params.file, v_params.baseDir, v_params.width, 	v_params.height )
-	else
-		return display.newImageRect( v_params.file, v_params.width, v_params.height )
-	end
-end
+--none
 
 
 --====================================================================--

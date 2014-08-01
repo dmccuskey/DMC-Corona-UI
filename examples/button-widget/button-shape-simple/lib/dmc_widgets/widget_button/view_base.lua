@@ -1,7 +1,7 @@
 --====================================================================--
--- widget_popover.lua
+-- widget_BaseView.lua
 --
--- Documentation: http://docs.davidmccuskey.com/display/docs/newPopover.lua
+-- Documentation: http://docs.davidmccuskey.com/display/docs/newBaseView.lua
 --====================================================================--
 
 --[[
@@ -38,23 +38,21 @@ local VERSION = "1.0.0"
 --== DMC Widgets Setup
 --====================================================================--
 
-local dmc_widget_data, dmc_widget_func
-dmc_widget_data = _G.__dmc_widget
-dmc_widget_func = dmc_widget_data.func
+-- local dmc_widget_data, dmc_widget_func
+-- dmc_widget_data = _G.__dmc_widget
+-- dmc_widget_func = dmc_widget_data.func
 
 
 
 --====================================================================--
---== DMC Widgets : newPopover
+--== DMC Widgets : Button View Base
 --====================================================================--
-
 
 
 --====================================================================--
 --== Imports
 
 local Objects = require 'dmc_objects'
-local Utils = require 'dmc_utils'
 
 
 --====================================================================--
@@ -64,244 +62,175 @@ local Utils = require 'dmc_utils'
 local inheritsFrom = Objects.inheritsFrom
 local CoronaBase = Objects.CoronaBase
 
-local LOCAL_DEBUG = false
-
 
 
 --====================================================================--
---== Popover Widget Class
+--== BaseView Widget Class
 --====================================================================--
 
 
-local Popover = inheritsFrom( CoronaBase )
-Popover.NAME = "Popover"
-
-Popover.TOUCH_NONE = 'none'
-Popover.TOUCH_DONE = 'done'
-Popover.TOUCH_CANCEL = 'cancel'
+local BaseView = inheritsFrom( CoronaBase )
+BaseView.NAME = "Button View Base"
 
 
 --======================================================--
 -- Start: Setup DMC Objects
 
-function Popover:_init( params )
-	-- print( "Popover:_init" )
-	params = params or { }
-	self:superCall( "_init", params )
+function BaseView:_init( params )
+	-- print( "BaseView:_init" )
+	params = params or {}
+	self:superCall( '_init', params )
 	--==--
 
 	--== Sanity Check ==--
 
 	if self.is_intermediate then return end
+	assert( type(params.name)=='string', "expected string-type 'name' parameter" )
 
 	--== Create Properties ==--
 
-	self._outsideTouchAction = params.outsideTouchAction or Popover.TOUCH_CANCEL
+	self._view_name = params.name -- 'down', 'up', etc
+	self._label_params = self:_createLabelParams( self._view_name, params )
+	self._view_params = nil -- set in subclass
 
-	self._onDone = params.onDone
-	self._onCancel = params.onCancel
+	self._width = params.width
+	self._height = params.height
 
 	--== Display Groups ==--
-
-	-- group for popover background elements
-	self._dg_bg = nil
-
-	-- group for all main elements
-	self._dg_main = nil
 
 	--== Object References ==--
 
 	-- visual
-	self._bg_touch = nil  -- main background
-	self._bg_main = nil  -- main background
-	self._pointer = nil -- pointer element
+	self._view = nil
+	self._label = nil
 
 end
-
--- function Popover:_undoInit()
--- 	-- print( "Popover:_undoInit" )
--- 	--==--
--- 	self:superCall( "_undoInit" )
--- end
 
 
 -- _createView()
 --
-function Popover:_createView()
-	-- print( "Popover:_createView" )
-	self:superCall( "_createView" )
+function BaseView:_createView()
+
+	-- print( "BaseView:_createView" )
+	self:superCall( '_createView' )
 	--==--
 
-	local WIDTH, HEIGHT = display.contentWidth, display.contentHeight
+	local l_params = self._label_params
+	local o, tmp
 
-	local W,H = self._width, self._height
-	local H_CENTER, V_CENTER = W*0.5, H*0.5
+	--== create label
 
-	local o, dg, tmp  -- object, display group, tmp
-
-	--== setup background
-
-	o = display.newRect(0, 0, WIDTH, HEIGHT)
-	o:setFillColor(0,0,0,0)
-	if LOCAL_DEBUG then
-		o:setFillColor(0,255,0,255)
+	o = self:_createLabel( l_params )
+	o.x, o.y = l_params.x_offset, l_params.y_offset
+	o.anchorX, o.anchorY = 0.5, 0.5
+	tmp = l_params.color
+	if tmp and tmp.gradient then
+		o:setFillColor( tmp )
+	elseif tmp then
+		o:setFillColor( unpack( tmp ) )
 	end
-	o.isHitTestable = true
-	o.anchorX, o.anchorY = 0,0
-	o.x, o.y = 0,0
 
 	self.view:insert( o )
-	self._bg_touch = o
-
-
-	dg = display.newGroup()
-	self.view:insert( dg )
-	self._dg_bg = dg
-
-	-- viewable background
-
-	o = display.newRect(0, 0, W, H)
-	o:setFillColor(1,1,1,0.8)
-	if LOCAL_DEBUG then
-		o:setFillColor(0,255,0,255)
-	end
-	o.anchorX, o.anchorY = 0,0
-	o.x, o.y = 0,0
-
-	dg:insert( o )
-	self._bg_main = o
-
-	--== setup main group
-
-	dg = display.newGroup()
-	self.view:insert( dg )
-	self._dg_main = dg
+	self._label = o
 
 end
 
-function Popover:_undoCreateView()
-	-- print( "Popover:_undoCreateView" )
+function BaseView:_undoCreateView()
+	-- print( "BaseView:_undoCreateView" )
 
 	local o
 
-	--==--
-	self:superCall( "_undoCreateView" )
-end
-
-
--- _initComplete()
---
-function Popover:_initComplete()
-	--print( "Popover:_initComplete" )
-
-	local o, f
-
-	o = self._bg_touch
-	o._f = self:createCallback( self._bgTouchEvent_handler )
-	o:addEventListener( 'touch', o._f )
-
-	self:_updateView()
-	--==--
-	self:superCall( "_initComplete" )
-end
-
-function Popover:_undoInitComplete()
-	--print( "Popover:_undoInitComplete" )
-
-	o = self._bg_touch
-	o:removeEventListener( 'touch', o._f )
-	o._f = nil
+	o = self._label
+	o:removeSelf()
+	self._label = nil
 
 	--==--
-	self:superCall( "_undoInitComplete" )
+	self:superCall( '_undoCreateView' )
 end
 
-
---== END: Setup DMC Objects
-
-
-
+-- END: Setup DMC Objects
+--======================================================--
 
 
 --====================================================================--
 --== Public Methods
 
--- we only want items inserted into proper layer
-function Popover:insert( ... )
-	print( "Popover:insert" )
-	self._dg_main:insert( ... )
-end
-
-function Popover:show()
-	-- print( "Popover:show" )
-	self.view.isVisible = true
-	self._bg_touch.isHitTestable = true
-end
-function Popover:hide()
-	-- print( "Popover:hide" )
-	self.view.isVisible = false
-	self._bg_touch.isHitTestable = false
-end
-
-function Popover.__setters:x( value )
-	self._dg_bg.x = value
-	self._dg_main.x = value
-end
-function Popover.__setters:y( value )
-	self._dg_bg.y = value
-	self._dg_main.y = value
-end
+-- none
 
 
 --====================================================================--
 --== Private Methods
 
-function Popover:_updateView()
-	print( "Popover:_updateView" )
+-- build parameters for the label
+-- get defaults and layer in specific values
+--
+function BaseView:_createLabelParams( v_name, params )
+	-- print( "createLabelParams", v_name )
+	local v_p = params[ v_name ] -- specific view parameters
+	local l_p = params.label
+	local p
+
+	if type(l_p)=='string' then
+		p = {
+			text=l_p
+		}
+
+	else
+		p = {
+			text=l_p.text,
+			align=l_p.align,
+			margin=l_p.margin,
+			x_offset=l_p.x_offset,
+			y_offset=l_p.y_offset,
+			color=l_p.color,
+			font=l_p.font,
+			font_size=l_p.font_size,
+		}
+	end
+
+	-- layer in view specific values
+	if v_p and v_p.label then
+		l_p = v_p.label
+		p.text = l_p.text == nil and p.text or l_p.text
+		p.align = l_p.align == nil and p.align or l_p.align
+		p.margin = l_p.margin == nil and p.margin or l_p.margin
+		p.x_offset = l_p.x_offset == nil and p.x_offset or l_p.x_offset
+		p.y_offset = l_p.y_offset == nil and p.y_offset or l_p.y_offset
+		p.color = l_p.color == nil and p.color or l_p.color
+		p.font = l_p.font == nil and p.font or l_p.font
+		p.font_size = l_p.font_size == nil and p.font_size or l_p.font_size
+	end
+
+	-- set defaults
+	if p.font_size == nil then p.font_size = 13 end
+	if p.align == nil then p.align = 'center' end
+	if p.x_offset == nil then p.x_offset = 0 end
+	if p.y_offset == nil then p.y_offset = 0 end
+	if p.width == nil then p.width = params.width end
+	if p.margin == nil then p.margin = 0 end
+	p.width = p.width-p.margin
+
+	return p
 end
 
-function Popover:_doCancelCallback()
-	print( "Popover:_doCancelCallback" )
-	if type(self._onCancel)~='function' then return end
-	local event = {}
-	self._onCancel( event )
-end
-
-function Popover:_doDoneCallback()
-	print( "Popover:_doDoneCallback" )
-	if type(self._onDone)~='function' then return end
-	local event = {}
-	self._onDone( event )
+function BaseView:_createLabel( l_params )
+	-- print( "BaseView:_createLabel" )
+	return display.newText{
+		text=l_params.text,
+		width=l_params.width,
+		height=l_params.height,
+		font=l_params.font,
+		fontSize=l_params.font_size,
+		align=l_params.align
+	}
 end
 
 
 --====================================================================--
 --== Event Handlers
 
-function Popover:_bgTouchEvent_handler( event )
-	print( "Popover:_bgTouchEvent_handler", event.phase )
-	local target = event.target
-
-	if event.phase == 'began' then
-		display.getCurrentStage():setFocus( target )
-		self._has_focus = true
-	end
-
-	if not self._has_focus then return end
-
-	if event.phase == 'ended' or event.phase == 'canceled' then
-		if self._outsideTouchAction == Popover.TOUCH_DONE then
-			self:_doDoneCallback()
-		elseif self._outsideTouchAction == Popover.TOUCH_CANCEL then
-			self:_doCancelCallback()
-		else
-			-- pass
-		end
-		self._has_focus = false
-	end
-
-end
+-- none
 
 
 
-return Popover
+return BaseView

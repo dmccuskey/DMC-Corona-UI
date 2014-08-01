@@ -1,36 +1,39 @@
 --====================================================================--
--- widget_popover.lua
+-- widget_button/view_image.lua
 --
--- Documentation: http://docs.davidmccuskey.com/display/docs/newPopover.lua
+-- Documentation: http://docs.davidmccuskey.com/display/docs/newButton.lua
 --====================================================================--
 
 --[[
 
-Copyright (C) 2013-2014 David McCuskey. All Rights Reserved.
+The MIT License (MIT)
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in the
-Software without restriction, including without limitation the rights to use, copy,
-modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
-and to permit persons to whom the Software is furnished to do so, subject to the
-following conditions:
+Copyright (c) 2014 David McCuskey
 
-The above copyright notice and this permission notice shall be included in all copies
-or substantial portions of the Software.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
-FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-DEALINGS IN THE SOFTWARE.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
 --]]
 
 
 -- Semantic Versioning Specification: http://semver.org/
 
-local VERSION = "1.0.0"
+local VERSION = "0.1.0"
 
 
 
@@ -45,7 +48,7 @@ dmc_widget_func = dmc_widget_data.func
 
 
 --====================================================================--
---== DMC Widgets : newPopover
+--== DMC Widgets : Button Image View
 --====================================================================--
 
 
@@ -54,7 +57,9 @@ dmc_widget_func = dmc_widget_data.func
 --== Imports
 
 local Objects = require 'dmc_objects'
-local Utils = require 'dmc_utils'
+-- local Utils = require 'dmc_utils'
+
+local BaseView = require( dmc_widget_func.find( 'widget_button.view_base' ) )
 
 
 --====================================================================--
@@ -62,246 +67,147 @@ local Utils = require 'dmc_utils'
 
 -- setup some aliases to make code cleaner
 local inheritsFrom = Objects.inheritsFrom
-local CoronaBase = Objects.CoronaBase
 
-local LOCAL_DEBUG = false
+
+--====================================================================--
+--== Support Functions
+
+-- build parameters for this image
+-- get defaults and layer in specific values
+--
+local function createImageParams( v_name, params )
+	-- print( "createImageParams", v_name, params )
+	local v_p = params[ v_name ] -- specific view parameters
+	local p = {
+		width=params.width,
+		height=params.height,
+		file=params.file,
+	}
+
+	-- layer in view specific values
+	if v_p then
+		p.width = v_p.width == nil and p.width or v_p.width
+		p.height = v_p.height == nil and p.height or v_p.height
+		p.file = v_p.file == nil and p.file or v_p.file
+	end
+
+	return p
+end
+
+
+-- create the actual corona display object
+--
+local function createImage( v_params )
+	-- print( "createImage", v_params )
+	if v_params.base_dir then
+		return display.newImageRect( v_params.file, v_params.baseDir, v_params.width, 	v_params.height )
+	else
+		return display.newImageRect( v_params.file, v_params.width, v_params.height )
+	end
+end
 
 
 
 --====================================================================--
---== Popover Widget Class
+--== Button Image View Class
 --====================================================================--
 
 
-local Popover = inheritsFrom( CoronaBase )
-Popover.NAME = "Popover"
-
-Popover.TOUCH_NONE = 'none'
-Popover.TOUCH_DONE = 'done'
-Popover.TOUCH_CANCEL = 'cancel'
+local ImageView = inheritsFrom( BaseView )
+ImageView.NAME = "Image View"
 
 
 --======================================================--
 -- Start: Setup DMC Objects
 
-function Popover:_init( params )
-	-- print( "Popover:_init" )
-	params = params or { }
-	self:superCall( "_init", params )
+function ImageView:_init( params )
+	-- print( "ImageView:_init" )
+	params = params or {}
+	self:superCall( '_init', params )
 	--==--
 
 	--== Sanity Check ==--
 
 	if self.is_intermediate then return end
+	assert( type(params.file)=='string', "expected string-type 'file' parameter" )
 
 	--== Create Properties ==--
 
-	self._outsideTouchAction = params.outsideTouchAction or Popover.TOUCH_CANCEL
-
-	self._onDone = params.onDone
-	self._onCancel = params.onCancel
+	self._view_params = createImageParams( self._view_name, params )
 
 	--== Display Groups ==--
-
-	-- group for popover background elements
-	self._dg_bg = nil
-
-	-- group for all main elements
-	self._dg_main = nil
-
 	--== Object References ==--
-
-	-- visual
-	self._bg_touch = nil  -- main background
-	self._bg_main = nil  -- main background
-	self._pointer = nil -- pointer element
-
 end
-
--- function Popover:_undoInit()
--- 	-- print( "Popover:_undoInit" )
--- 	--==--
--- 	self:superCall( "_undoInit" )
--- end
-
 
 -- _createView()
 --
-function Popover:_createView()
-	-- print( "Popover:_createView" )
-	self:superCall( "_createView" )
+function ImageView:_createView()
+	-- print( "ImageView:_createView" )
+	self:superCall( '_createView' )
 	--==--
 
-	local WIDTH, HEIGHT = display.contentWidth, display.contentHeight
+	local v_params = self._view_params
+	local o, tmp   -- object, temp
 
-	local W,H = self._width, self._height
-	local H_CENTER, V_CENTER = W*0.5, H*0.5
+	--== create background
 
-	local o, dg, tmp  -- object, display group, tmp
-
-	--== setup background
-
-	o = display.newRect(0, 0, WIDTH, HEIGHT)
-	o:setFillColor(0,0,0,0)
-	if LOCAL_DEBUG then
-		o:setFillColor(0,255,0,255)
+	o = createImage( v_params )
+	o.x, o.y = 0, 0
+	o.anchorX, o.anchorY = 0.5, 0.5
+	tmp = v_params.fill_color
+	if tmp and tmp.gradient then
+		o:setFillColor( tmp )
+	elseif tmp then
+		o:setFillColor( unpack( tmp ) )
 	end
-	o.isHitTestable = true
-	o.anchorX, o.anchorY = 0,0
-	o.x, o.y = 0,0
-
-	self.view:insert( o )
-	self._bg_touch = o
-
-
-	dg = display.newGroup()
-	self.view:insert( dg )
-	self._dg_bg = dg
-
-	-- viewable background
-
-	o = display.newRect(0, 0, W, H)
-	o:setFillColor(1,1,1,0.8)
-	if LOCAL_DEBUG then
-		o:setFillColor(0,255,0,255)
+	o.strokeWidth = v_params.stroke_width
+	tmp = v_params.stroke_color
+	if tmp and tmp.gradient then
+		o:setStrokeColor( tmp )
+	elseif tmp then
+		o:setStrokeColor( unpack( tmp ) )
 	end
-	o.anchorX, o.anchorY = 0,0
-	o.x, o.y = 0,0
 
-	dg:insert( o )
-	self._bg_main = o
-
-	--== setup main group
-
-	dg = display.newGroup()
-	self.view:insert( dg )
-	self._dg_main = dg
+	self.view:insert( 1, o ) -- insert over background
+	self._view = o
 
 end
 
-function Popover:_undoCreateView()
-	-- print( "Popover:_undoCreateView" )
 
+function ImageView:_undoCreateView()
+	-- print( "ImageView:_undoCreateView" )
 	local o
 
-	--==--
-	self:superCall( "_undoCreateView" )
-end
-
-
--- _initComplete()
---
-function Popover:_initComplete()
-	--print( "Popover:_initComplete" )
-
-	local o, f
-
-	o = self._bg_touch
-	o._f = self:createCallback( self._bgTouchEvent_handler )
-	o:addEventListener( 'touch', o._f )
-
-	self:_updateView()
-	--==--
-	self:superCall( "_initComplete" )
-end
-
-function Popover:_undoInitComplete()
-	--print( "Popover:_undoInitComplete" )
-
-	o = self._bg_touch
-	o:removeEventListener( 'touch', o._f )
-	o._f = nil
+	o = self._view
+	o:removeSelf()
+	self._view = nil
 
 	--==--
-	self:superCall( "_undoInitComplete" )
+	self:superCall( '_undoCreateView' )
 end
 
-
---== END: Setup DMC Objects
-
-
-
+-- END: Setup DMC Objects
+--======================================================--
 
 
 --====================================================================--
 --== Public Methods
 
--- we only want items inserted into proper layer
-function Popover:insert( ... )
-	print( "Popover:insert" )
-	self._dg_main:insert( ... )
-end
-
-function Popover:show()
-	-- print( "Popover:show" )
-	self.view.isVisible = true
-	self._bg_touch.isHitTestable = true
-end
-function Popover:hide()
-	-- print( "Popover:hide" )
-	self.view.isVisible = false
-	self._bg_touch.isHitTestable = false
-end
-
-function Popover.__setters:x( value )
-	self._dg_bg.x = value
-	self._dg_main.x = value
-end
-function Popover.__setters:y( value )
-	self._dg_bg.y = value
-	self._dg_main.y = value
-end
+-- none
 
 
 --====================================================================--
 --== Private Methods
 
-function Popover:_updateView()
-	print( "Popover:_updateView" )
-end
-
-function Popover:_doCancelCallback()
-	print( "Popover:_doCancelCallback" )
-	if type(self._onCancel)~='function' then return end
-	local event = {}
-	self._onCancel( event )
-end
-
-function Popover:_doDoneCallback()
-	print( "Popover:_doDoneCallback" )
-	if type(self._onDone)~='function' then return end
-	local event = {}
-	self._onDone( event )
-end
+--none
 
 
 --====================================================================--
 --== Event Handlers
 
-function Popover:_bgTouchEvent_handler( event )
-	print( "Popover:_bgTouchEvent_handler", event.phase )
-	local target = event.target
-
-	if event.phase == 'began' then
-		display.getCurrentStage():setFocus( target )
-		self._has_focus = true
-	end
-
-	if not self._has_focus then return end
-
-	if event.phase == 'ended' or event.phase == 'canceled' then
-		if self._outsideTouchAction == Popover.TOUCH_DONE then
-			self:_doDoneCallback()
-		elseif self._outsideTouchAction == Popover.TOUCH_CANCEL then
-			self:_doCancelCallback()
-		else
-			-- pass
-		end
-		self._has_focus = false
-	end
-
-end
+-- none
 
 
 
-return Popover
+
+return ImageView
