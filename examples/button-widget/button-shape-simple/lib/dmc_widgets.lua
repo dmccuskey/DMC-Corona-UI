@@ -96,13 +96,13 @@ dmc_lib_info = dmc_lib_data.dmc_corona
 --== Imports
 
 Widget.Button = require( PATH .. '.' .. 'widget_button' )
+-- Widget.Popover = require( PATH .. '.' .. 'widget_popover' )
 
 
 
 --===================================================================--
 --== button widget
 --===================================================================--
-
 
 function Widget.newButton( options )
 	local theme = nil
@@ -111,13 +111,9 @@ function Widget.newButton( options )
 end
 
 
-
 --===================================================================--
 --== popover widget
 --===================================================================--
-
-
-Widget.Popover = require( PATH .. '.' .. 'widget_popover' )
 
 function Widget.newPopover( options )
 	local theme = nil
@@ -126,11 +122,9 @@ function Widget.newPopover( options )
 end
 
 
-
 --===================================================================--
 --== newScroller widget
 --===================================================================--
-
 
 function Widget.newScroller( options )
 	local theme = nil
@@ -139,11 +133,9 @@ function Widget.newScroller( options )
 end
 
 
-
 --===================================================================--
 --== newSlideView widget
 --===================================================================--
-
 
 function Widget.newSlideView( options )
 	local theme = nil
@@ -152,11 +144,9 @@ function Widget.newSlideView( options )
 end
 
 
-
 --===================================================================--
 --== newTableView widget
 --===================================================================--
-
 
 function Widget.newTableView( options )
 	local theme = nil
