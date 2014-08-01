@@ -79,6 +79,9 @@ local function getViewTypeClass( params )
 	if params.viewClass ~= nil then
 		return params.viewClass
 
+	elseif params.shape ~= nil then
+		return ShapeView
+
 	elseif params.file ~= nil then
 		return ImageView
 
@@ -86,7 +89,7 @@ local function getViewTypeClass( params )
 		return FrameView
 
 	else -- default view
-		return ShapeView
+		error( "newButton: view type not found" )
 
 	end
 end
