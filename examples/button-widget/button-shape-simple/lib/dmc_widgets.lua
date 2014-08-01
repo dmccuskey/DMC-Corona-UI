@@ -111,9 +111,11 @@ function Widget.newButton( options )
 end
 
 
+
 --===================================================================--
 --== popover widget
 --===================================================================--
+
 
 Widget.Popover = require( PATH .. '.' .. 'widget_popover' )
 
@@ -124,9 +126,11 @@ function Widget.newPopover( options )
 end
 
 
+
 --===================================================================--
 --== newScroller widget
 --===================================================================--
+
 
 function Widget.newScroller( options )
 	local theme = nil
@@ -135,9 +139,11 @@ function Widget.newScroller( options )
 end
 
 
+
 --===================================================================--
 --== newSlideView widget
 --===================================================================--
+
 
 function Widget.newSlideView( options )
 	local theme = nil
@@ -146,9 +152,11 @@ function Widget.newSlideView( options )
 end
 
 
+
 --===================================================================--
 --== newTableView widget
 --===================================================================--
+
 
 function Widget.newTableView( options )
 	local theme = nil
