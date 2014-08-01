@@ -57,13 +57,10 @@ dmc_widget_func = dmc_widget_data.func
 --== Imports
 
 local Objects = require 'dmc_objects'
-local Utils = require 'dmc_utils'
 
---== Button View Components
-
+-- Button View Components
 local FrameView = require( dmc_widget_func.find( 'widget_button.view_frame' ) )
 local ShapeView = require( dmc_widget_func.find( 'widget_button.view_shape' ) )
-
 
 
 --====================================================================--
@@ -101,12 +98,16 @@ end
 local ButtonBase = inheritsFrom( CoronaBase )
 ButtonBase.NAME = "Button Base"
 
+--== Class Constants
 
 ButtonBase._SUPPORTED_VIEWS = nil
+
+--== Class events
 
 ButtonBase.EVENT = 'button-event'
 ButtonBase.PHASE_PRESS = 'press'
 ButtonBase.PHASE_RELEASE = 'release'
+
 
 --======================================================--
 -- Start: Setup DMC Objects
@@ -120,9 +121,10 @@ function ButtonBase:_init( params )
 	--== Sanity Check ==--
 
 	if self.is_intermediate then return end
-	assert( params.width and params.height, "missing params" )
+	assert( params.width and params.height, "newButton: expected params 'width' and 'height'" )
 
 	--== Create Properties ==--
+
 	self._params = params -- save for view creation
 
 	self._id = params.id
@@ -150,11 +152,15 @@ function ButtonBase:_init( params )
 
 end
 
--- function ButtonBase:_undoInit()
--- 	-- print( "ButtonBase:_undoInit" )
--- 	--==--
--- 	self:superCall( "_undoInit" )
--- end
+function ButtonBase:_undoInit()
+	-- print( "ButtonBase:_undoInit" )
+
+	self._callbacks = nil
+	self._views = nil
+
+	--==--
+	self:superCall( "_undoInit" )
+end
 
 
 -- _createView()
@@ -184,6 +190,7 @@ function ButtonBase:_createView()
 	self._dg_views = dg
 
 	--== create individual button views
+
 	for _, name in ipairs( self._SUPPORTED_VIEWS ) do
 		self._params.name = name
 		o = self._class:new( self._params )
@@ -198,6 +205,19 @@ function ButtonBase:_undoCreateView()
 	-- print( "ButtonBase:_undoCreateView" )
 
 	local o
+
+	for name, view in pairs( self._views ) do
+		view:removeSelf()
+		self._views[ name ] = nil
+	end
+
+	o = self._dg_views
+	o:removeSelf()
+	self._dg_views = nil
+
+	o = self._bg_hit
+	o:removeSelf()
+	self._bg_hit = nil
 
 	--==--
 	self:superCall( '_undoCreateView' )
@@ -237,23 +257,24 @@ end
 --======================================================--
 
 
-
-
-
 --====================================================================--
 --== Public Methods
 
 function ButtonBase.__setters:enabled( value )
-	assert( type(value)=='boolean', "expected boolean for property 'enabled'")
+	assert( type(value)=='boolean', "newButton: expected boolean for property 'enabled'")
 
 	if self._enabled == value then return end
 	self._enabled = value
 	self:_updateView()
 end
 
+
 --====================================================================--
 --== Private Methods
 
+-- updateView()
+-- toggle visibility for button view layers
+--
 function ButtonBase:_updateView()
 	-- print( "ButtonBase:_updateView" )
 	local views = self._views
@@ -281,6 +302,8 @@ function ButtonBase:_updateView()
 	end
 end
 
+-- handle 'press' events
+--
 function ButtonBase:_handlePressDispatch()
 	-- print( "ButtonBase:_handlePressDispatch" )
 
@@ -296,6 +319,9 @@ function ButtonBase:_handlePressDispatch()
 	if cb.onEvent then cb.onEvent( event ) end
 	self:dispatchEvent( self.EVENT, event )
 end
+
+-- handle 'release' events
+--
 function ButtonBase:_handleReleaseDispatch()
 	-- print( "ButtonBase:_handleReleaseDispatch" )
 
