@@ -65,8 +65,8 @@ dmc_widget_func = dmc_widget_data.func
 --====================================================================--
 --== Imports
 
-local Utils = require 'dmc_utils'
 local Objects = require 'dmc_objects'
+local Utils = require 'dmc_utils'
 
 local ScrollerViewBase = require( dmc_widget_func.find( 'scroller_view_base' ) )
 local easingx = require( dmc_widget_func.find( 'lib.easingx' ) )
