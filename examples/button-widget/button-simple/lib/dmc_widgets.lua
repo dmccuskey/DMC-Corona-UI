@@ -30,6 +30,11 @@ DEALINGS IN THE SOFTWARE.
 --]]
 
 
+--====================================================================--
+--== DMC Widgets
+--====================================================================--
+
+
 -- Semantic Versioning Specification: http://semver.org/
 
 local VERSION = "1.0.0"
@@ -37,11 +42,10 @@ local VERSION = "1.0.0"
 
 
 --====================================================================--
--- DMC Widgets Config
+--== DMC Widgets Config
 --====================================================================--
 
 local Widget = {}
-
 
 local args = { ... }
 local PATH = args[1]
@@ -67,15 +71,13 @@ if _G.__dmc_widget == nil then
 end
 
 
+
 --====================================================================--
--- DMC Library Config
+--== DMC Library Config
 --====================================================================--
 
-local dmc_lib_data, dmc_lib_func, dmc_lib_info, dmc_lib_location
 
-
-
-local dmc_lib_data, dmc_lib_info, dmc_lib_location
+local dmc_lib_data, dmc_lib_info
 
 -- boot dmc_corona with boot script or
 -- setup basic defaults if it doesn't exist
@@ -90,11 +92,11 @@ dmc_lib_data = _G.__dmc_corona
 dmc_lib_info = dmc_lib_data.dmc_corona
 
 
-
 --===================================================================--
 --== Imports
 
 Widget.Button = require( PATH .. '.' .. 'widget_button' )
+
 
 
 --===================================================================--
@@ -113,7 +115,7 @@ end
 --== popover widget
 --===================================================================--
 
--- Widget.Popover = require( PATH .. '.' .. 'widget_popover' )
+Widget.Popover = require( PATH .. '.' .. 'widget_popover' )
 
 function Widget.newPopover( options )
 	local theme = nil
