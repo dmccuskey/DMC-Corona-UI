@@ -16,7 +16,7 @@ print( "\n\n#########################################################\n\n" )
 --== Imports
 
 local Widgets = require 'lib.dmc_widgets'
-
+local Utils = require 'dmc_utils'
 
 --===================================================================--
 --== Setup, Constants
@@ -27,16 +27,13 @@ local o
 --===================================================================--
 -- Support Functions
 
-local function onPress_handler( event )
-	print( 'Main: onPress_handler: id', event.id )
-end
+local function radioGroupEvent_handler( event )
+	print( 'Main: radioGroupEvent_handler: type', event.type )
+	print( 'Main: button: ', event.id, event.state )
 
-local function onRelease_handler( event )
-	print( 'Main: onRelease_handler: id', event.id )
-end
+	local group = event.target
+	local button = event.button
 
-local function onEvent_handler( event )
-	print( 'Main: onEvent_handler', event.id, event.phase )
 end
 
 
@@ -46,44 +43,14 @@ end
 --===================================================================--
 
 
+local radioGroup = Widgets.newButtonGroup{ type='radio' }
+
+
+-- we only need to listen to the group
+radioGroup:addEventListener( radioGroup.EVENT, radioGroupEvent_handler )
+
+
 --== Create Buttons
-
---[[
-	button shows:
-	* simple label
-	* more complex 'active' view (alignment, color)
---]]
-o = Widgets.newButton{
-	id='button-top',
-	type='toggle',
-	-- label stuff
-	label = 'Top',
-
-	-- dimension info
-	shape='roundedRect',
-	width = 75,
-	height = 30,
-	corner_radius = 10,
-	fill_color={1,1,0.5, 0.5},
-	stroke_width=6,
-	stroke_color={1,0,0,0.5},
-
-	active = {
-		label = {
-			color={0,0,0},
-			align='right',
-		},
-		fill_color={1,0,0},
-		corner_radius = 2,
-	},
-
-	-- handlers
-	onPress = onPress_handler,
-	onRelease = onRelease_handler,
-	onEvent = onEvent_handler,
-}
-o.x, o.y = 150, 75
-
 
 --[[
 	button shows:
@@ -100,7 +67,7 @@ o = Widgets.newButton{
 
 	-- label stuff
 	label = {
-		text='Middle',
+		text='Inactive',
 		align='center',
 		-- margin = 0,
 		x_offset = 0,
@@ -122,7 +89,7 @@ o = Widgets.newButton{
 
 	active = {
 		label = {
-			text='pressed',
+			text='Active',
 			color={0,0,0}
 		},
 		fill_color={1,0,0}
@@ -134,46 +101,180 @@ o = Widgets.newButton{
 	onEvent = onEvent_handler,
 
 }
-o.x, o.y = 150, 225
+o.x, o.y = 150, 75
+
+radioGroup:add( o )
+
 
 
 --[[
 	button shows:
-	* disabled state
+	* complex label
 	* more complex 'down' view (label change)
 	* bigger hit area
 --]]
-
 o = Widgets.newButton{
+	-- button info
 	id='button-bottom',
-	type='toggle',
+	type='radio',
+	width = 100,
+	height = 60,
 
 	-- label stuff
-	label ="Bottom",
+	label = {
+		text='Inactive',
+		align='center',
+		-- margin = 0,
+		x_offset = 0,
+		y_offset = 0,
+		color = { 1,0,0.5 },
+		font = native.systemFontBold,
+		font_size = 20,
+	},
 
 	-- dimension info
 	shape='roundedRect',
-	width = 100,
-	height = 60,
-	corner_radius = 4,
+	corner_radius = 2,
 	fill_color={1,1,0.5, 0.5},
-	stroke_width=4,
-	stroke_color={0.75,0.75,0.75,0.5},
+	stroke_width=2,
+	stroke_color={1,0,0,0.5},
 
-	disabled = {
+	hit_width = 150,
+	hit_height = 110,
+
+	active = {
 		label = {
-			text="Disabled",
-			color={0.5,0.5,0.5},
-			font = native.systemFontItalic,
+			text='Active',
+			color={0,0,0}
 		},
-		fill_color={0.1, 0.1, 0.1}
+		fill_color={1,0,0}
 	},
 
 	-- handlers
 	onPress = onPress_handler,
 	onRelease = onRelease_handler,
 	onEvent = onEvent_handler,
+
 }
-o.x, o.y = 150, 375
-o.enabled = false
+o.x, o.y = 150, 150
+
+radioGroup:add( o )
+
+
+
+
+local toggleGroup = Widgets.newButtonGroup{ type='toggle' }
+
+
+-- we only need to listen to the group
+toggleGroup:addEventListener( toggleGroup.EVENT, radioGroupEvent_handler )
+
+--[[
+	button shows:
+	* complex label
+	* more complex 'down' view (label change)
+	* bigger hit area
+--]]
+o = Widgets.newButton{
+	-- button info
+	id='button-middle',
+	type='toggle',
+	width = 100,
+	height = 60,
+
+	-- label stuff
+	label = {
+		text='Inactive',
+		align='center',
+		-- margin = 0,
+		x_offset = 0,
+		y_offset = 0,
+		color = { 1,0,0.5 },
+		font = native.systemFontBold,
+		font_size = 20,
+	},
+
+	-- dimension info
+	shape='roundedRect',
+	corner_radius = 2,
+	fill_color={1,1,0.5, 0.5},
+	stroke_width=2,
+	stroke_color={1,0,0,0.5},
+
+	hit_width = 150,
+	hit_height = 110,
+
+	active = {
+		label = {
+			text='Inactive',
+			color={0,0,0}
+		},
+		fill_color={1,0,0}
+	},
+
+	-- handlers
+	onPress = onPress_handler,
+	onRelease = onRelease_handler,
+	onEvent = onEvent_handler,
+
+}
+o.x, o.y = 150, 275
+
+toggleGroup:add( o )
+
+
+
+--[[
+	button shows:
+	* complex label
+	* more complex 'down' view (label change)
+	* bigger hit area
+--]]
+o = Widgets.newButton{
+	-- button info
+	id='button-bottom',
+	type='toggle',
+	width = 100,
+	height = 60,
+
+	-- label stuff
+	label = {
+		text='Inactive',
+		align='center',
+		-- margin = 0,
+		x_offset = 0,
+		y_offset = 0,
+		color = { 1,0,0.5 },
+		font = native.systemFontBold,
+		font_size = 20,
+	},
+
+	-- dimension info
+	shape='roundedRect',
+	corner_radius = 2,
+	fill_color={1,1,0.5, 0.5},
+	stroke_width=2,
+	stroke_color={1,0,0,0.5},
+
+	hit_width = 150,
+	hit_height = 110,
+
+	active = {
+		label = {
+			text='Active',
+			color={0,0,0}
+		},
+		fill_color={1,0,0}
+	},
+
+	-- handlers
+	onPress = onPress_handler,
+	onRelease = onRelease_handler,
+	onEvent = onEvent_handler,
+
+}
+o.x, o.y = 150, 350
+
+toggleGroup:add( o )
+
 

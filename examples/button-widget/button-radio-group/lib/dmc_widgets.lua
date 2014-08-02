@@ -96,6 +96,7 @@ dmc_lib_info = dmc_lib_data.dmc_corona
 --== Imports
 
 Widget.Button = require( PATH .. '.' .. 'widget_button' )
+Widget.ButtonGroup = require( PATH .. '.' .. 'button_group' )
 -- Widget.Popover = require( PATH .. '.' .. 'widget_popover' )
 
 
@@ -108,6 +109,16 @@ function Widget.newButton( options )
 	local theme = nil
 	local widget = Widget.Button
 	return widget.create( options, theme )
+end
+
+
+--===================================================================--
+--== button group widget
+--===================================================================--
+
+function Widget.newButtonGroup( options )
+	local widget = Widget.ButtonGroup
+	return widget.create( options )
 end
 
 
