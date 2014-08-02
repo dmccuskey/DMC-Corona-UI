@@ -28,16 +28,15 @@ local o
 -- Support Functions
 
 local function onPress_handler( event )
-	print( 'onPress_handler: id', event.id )
+	print( 'Main: onPress_handler: id', event.id )
 end
 
 local function onRelease_handler( event )
-	print( 'onRelease_handler: id', event.id )
+	print( 'Main: onRelease_handler: id', event.id )
 end
 
 local function onEvent_handler( event )
-	print( 'onEvent_handler' )
-	print( 'button id', event.id, event.phase )
+	print( 'Main: onEvent_handler: id', event.id, event.phase )
 end
 
 
@@ -52,7 +51,7 @@ end
 --[[
 	button shows:
 	* simple label
-	* more complex 'down' view (alignment, color)
+	* more complex 'active' view (alignment, color)
 --]]
 o = Widgets.newButton{
 	id='button-top',
@@ -69,7 +68,7 @@ o = Widgets.newButton{
 	stroke_width=6,
 	stroke_color={1,0,0,0.5},
 
-	down = {
+	active = {
 		label = {
 			color={0,0,0},
 			align='right',
@@ -89,7 +88,7 @@ o.x, o.y = 150, 75
 --[[
 	button shows:
 	* complex label
-	* more complex 'down' view (label change)
+	* more complex 'active' view (label change)
 	* bigger hit area
 --]]
 o = Widgets.newButton{
@@ -120,7 +119,7 @@ o = Widgets.newButton{
 	hit_width = 150,
 	hit_height = 110,
 
-	down = {
+	active = {
 		label = {
 			text='pressed',
 			color={0,0,0}
@@ -140,7 +139,7 @@ o.x, o.y = 150, 225
 --[[
 	button shows:
 	* disabled state
-	* more complex 'down' view (label change)
+	* more complex 'active' view (label change)
 	* bigger hit area
 --]]
 
