@@ -41,6 +41,7 @@ local VERSION = "0.1.0"
 --== DMC Widgets Setup
 --====================================================================--
 
+
 local dmc_widget_data, dmc_widget_func
 dmc_widget_data = _G.__dmc_widget
 dmc_widget_func = dmc_widget_data.func
@@ -94,6 +95,7 @@ local function getViewTypeClass( params )
 
 	end
 end
+
 
 
 --====================================================================--
@@ -299,6 +301,11 @@ function ButtonBase.__setters:enabled( value )
 end
 
 
+function ButtonBase.__getters:id()
+	return self._id
+end
+
+
 --====================================================================--
 --== Private Methods
 
@@ -311,12 +318,13 @@ function ButtonBase:_handlePressDispatch()
 
 	local cb = self._callbacks
 	local event = {
-		target=self,
 		id=self._id,
+		state=self:getState(),
 		phase=self.PHASE_PRESS,
 	}
 	if cb.onPress then cb.onPress( event ) end
 	if cb.onEvent then cb.onEvent( event ) end
+
 	self:dispatchEvent( self.EVENT, event )
 end
 
@@ -329,12 +337,13 @@ function ButtonBase:_handleReleaseDispatch()
 
 	local cb = self._callbacks
 	local event = {
-		target=self,
 		id=self._id,
+		state=self:getState(),
 		phase=self.PHASE_RELEASE,
 	}
 	if cb.onRelease then cb.onRelease( event ) end
 	if cb.onEvent then cb.onEvent( event ) end
+
 	self:dispatchEvent( self.EVENT, event )
 end
 
@@ -490,6 +499,8 @@ end
 local PushButton = inheritsFrom( ButtonBase )
 PushButton.NAME = "Push Button"
 
+PushButton.TYPE = 'push'
+
 
 --======================================================--
 -- Start: Setup DMC Objects
@@ -561,6 +572,8 @@ end
 
 local ToggleButton = inheritsFrom( ButtonBase )
 ToggleButton.NAME = "Toggle Button"
+
+ToggleButton.TYPE = 'toggle'
 
 
 --======================================================--
@@ -647,6 +660,8 @@ end
 local RadioButton = inheritsFrom( ToggleButton )
 RadioButton.NAME = "Radio Button"
 
+RadioButton.TYPE = 'radio'
+
 
 --======================================================--
 -- Start: Setup DMC Objects
@@ -691,16 +706,20 @@ Buttons.RadioButton = RadioButton
 
 function Buttons.create( params )
 	-- print( "Buttons.create" )
-	local button_type = params.type
+	assert( params.type, "newButton: expected param 'type'" )
+	--==--
+	if params.type == PushButton.TYPE then
+		return PushButton:new( params )
 
-	if button_type == "radio" then
+	elseif params.type == RadioButton.TYPE then
 		return RadioButton:new( params )
 
-	elseif button_type == "toggle" then
+	elseif params.type == ToggleButton.TYPE then
 		return ToggleButton:new( params )
 
-	else -- default type
-		return PushButton:new( params )
+	else
+		error( "newButton: unknown button type: " .. tostring( params.type ) )
+
 	end
 end
 
