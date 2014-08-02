@@ -368,6 +368,7 @@ end
 function ButtonBase:do_state_active( params )
 	-- print( "ButtonBase:do_state_active" )
 	params = params or {}
+	params.set_state = params.set_state == nil and true or params.set_state
 	--==--
 	local views = self._views
 
@@ -375,7 +376,9 @@ function ButtonBase:do_state_active( params )
 	views.active.isVisible = true
 	views.disabled.isVisible = false
 
-	self:setState( ButtonBase.STATE_ACTIVE )
+	if params.set_state == true then
+		self:setState( ButtonBase.STATE_ACTIVE )
+	end
 end
 
 function ButtonBase:state_active( next_state, params )
@@ -384,7 +387,7 @@ function ButtonBase:state_active( next_state, params )
 	--==--
 
 	if next_state == ButtonBase.STATE_ACTIVE then
-		-- pass
+		self:do_state_active( params )
 
 	elseif next_state == ButtonBase.STATE_INACTIVE then
 		self:do_state_inactive( params )
@@ -402,6 +405,7 @@ end
 function ButtonBase:do_state_inactive( params )
 	-- print( "ButtonBase:do_state_inactive" )
 	params = params or {}
+	params.set_state = params.set_state == nil and true or params.set_state
 	--==--
 	local views = self._views
 
@@ -409,7 +413,9 @@ function ButtonBase:do_state_inactive( params )
 	views.active.isVisible = false
 	views.disabled.isVisible = false
 
-	self:setState( ButtonBase.STATE_INACTIVE )
+	if params.set_state == true then
+		self:setState( ButtonBase.STATE_INACTIVE )
+	end
 end
 
 function ButtonBase:state_inactive( next_state, params )
@@ -421,7 +427,7 @@ function ButtonBase:state_inactive( next_state, params )
 		self:do_state_active( params )
 
 	elseif next_state == ButtonBase.STATE_INACTIVE then
-		-- pass
+		self:do_state_inactive( params )
 
 	elseif next_state == ButtonBase.STATE_DISABLED then
 		self:do_state_disabled( params )
@@ -430,7 +436,6 @@ function ButtonBase:state_inactive( next_state, params )
 		print( "WARNING :: WebSocket:state_create " .. tostring( next_state ) )
 	end
 end
-
 
 --== State: Disabled
 
@@ -453,13 +458,13 @@ function ButtonBase:state_disabled( next_state, params )
 	--==--
 
 	if next_state == ButtonBase.STATE_ACTIVE then
-		-- pass
+		self:do_state_active( params )
 
 	elseif next_state == ButtonBase.STATE_INACTIVE then
 		self:do_state_inactive( params )
 
 	elseif next_state == ButtonBase.STATE_DISABLED then
-		-- pass
+		self:do_state_disabled( params )
 
 	else
 		print( "WARNING :: WebSocket:state_create " .. tostring( next_state ) )
@@ -470,15 +475,51 @@ end
 --======================================================--
 
 
+--====================================================================--
+--== Event Handlers
+
+-- none
+
+
+
+--===================================================================--
+--== Push Button Class
+--===================================================================--
+
+
+local PushButton = inheritsFrom( ButtonBase )
+PushButton.NAME = "Push Button"
+
+
+--======================================================--
+-- Start: Setup DMC Objects
+
+-- END: Setup DMC Objects
+--======================================================--
+
+
+--====================================================================--
+--== Public Methods
+
+
+--====================================================================--
+--== Private Methods
+
 
 --====================================================================--
 --== Event Handlers
 
-function ButtonBase:_hitTouchEvent_handler( event )
-	-- print( "ButtonBase:_hitTouchEvent_handler", event.phase )
-	local target = event.target
+function PushButton:_hitTouchEvent_handler( event )
+	-- print( "PushButton:_hitTouchEvent_handler", event.phase )
 
 	if not self.enabled then return true end
+
+	local target = event.target
+	local bounds = target.contentBounds
+	local x,y = event.x,event.y
+	local is_bounded =
+		( x >= bounds.xMin and x <= bounds.xMax and
+		y >= bounds.yMin and y <= bounds.yMax )
 
 	if event.phase == 'began' then
 		display.getCurrentStage():setFocus( target )
@@ -490,12 +531,6 @@ function ButtonBase:_hitTouchEvent_handler( event )
 	end
 
 	if not self._has_focus then return end
-
-	local bounds = target.contentBounds
-	local x,y = event.x,event.y
-	local is_bounded =
-		( x >= bounds.xMin and x <= bounds.xMax and
-		y >= bounds.yMin and y <= bounds.yMax )
 
 	if event.phase == 'moved' then
 		if is_bounded then
@@ -520,33 +555,122 @@ end
 
 
 --===================================================================--
---== Push Button Class
+--== Toggle Button Class
 --===================================================================--
 
-local PushButton = inheritsFrom( ButtonBase )
-PushButton.NAME = "Push Button"
+
+local ToggleButton = inheritsFrom( ButtonBase )
+ToggleButton.NAME = "Toggle Button"
 
 
 --======================================================--
 -- Start: Setup DMC Objects
 
-function PushButton:_init( params )
-	-- print( "PushButton:_init" )
-	params = params or {}
-	self:superCall( '_init', params )
-	--==--
+-- END: Setup DMC Objects
+--======================================================--
 
+
+--====================================================================--
+--== Public Methods
+
+
+--====================================================================--
+--== Private Methods
+
+function ToggleButton:_getNextState()
+	-- print( "ToggleButton:_getNextState" )
+	if self:getState() == self.STATE_ACTIVE then
+		return self.STATE_INACTIVE
+	else
+		return self.STATE_ACTIVE
+	end
 end
 
-function PushButton:_initComplete()
-	-- print( "PushButton:_initComplete" )
 
-	--==--
-	self:superCall( '_initComplete' )
+--====================================================================--
+--== Event Handlers
+
+function ToggleButton:_hitTouchEvent_handler( event )
+	-- print( "ToggleButton:_hitTouchEvent_handler", event.phase )
+
+	if not self.enabled then return true end
+
+	local target = event.target
+	local bounds = target.contentBounds
+	local x,y = event.x,event.y
+	local is_bounded =
+		( x >= bounds.xMin and x <= bounds.xMax and
+		y >= bounds.yMin and y <= bounds.yMax )
+	local curr_state = self:getState()
+	local next_state = self:_getNextState()
+
+	if event.phase == 'began' then
+		display.getCurrentStage():setFocus( target )
+		self._has_focus = true
+		self:gotoState( next_state, { set_state=false } )
+		self:_handlePressDispatch()
+
+		return true
+	end
+
+	if not self._has_focus then return end
+
+	if event.phase == 'moved' then
+		if is_bounded then
+			self:gotoState( next_state, { set_state=false } )
+		else
+			self:gotoState( curr_state, { set_state=false } )
+		end
+
+	elseif event.phase == 'ended' or event.phase == 'cancelled' then
+		display.getCurrentStage():setFocus( nil )
+		self._has_focus = false
+		if is_bounded then
+			self:gotoState( next_state )
+			self:_handleReleaseDispatch()
+		else
+			self:gotoState( curr_state )
+		end
+
+	end
+
+	return true
 end
+
+
+
+--===================================================================--
+--== Radio Button Class
+--===================================================================--
+
+
+local RadioButton = inheritsFrom( ToggleButton )
+RadioButton.NAME = "Radio Button"
+
+
+--======================================================--
+-- Start: Setup DMC Objects
 
 -- END: Setup DMC Objects
 --======================================================--
+
+
+--====================================================================--
+--== Public Methods
+
+
+--====================================================================--
+--== Private Methods
+
+function RadioButton:_getNextState()
+	-- print( "RadioButton:_getNextState" )
+	return self.STATE_ACTIVE
+end
+
+
+--====================================================================--
+--== Event Handlers
+
 
 
 
@@ -560,7 +684,6 @@ local Buttons = {}
 -- export class instantiations for direct access
 Buttons.ButtonBase = ButtonBase
 Buttons.PushButton = PushButton
-Buttons.BinaryButton = BinaryButton
 Buttons.ToggleButton = ToggleButton
 Buttons.RadioButton = RadioButton
 
