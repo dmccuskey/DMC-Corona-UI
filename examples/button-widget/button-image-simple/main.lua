@@ -28,16 +28,15 @@ local o
 -- Support Functions
 
 local function onPress_handler( event )
-	print( 'onPress_handler: id', event.id )
+	print( 'Main: onPress_handler: id', event.id )
 end
 
 local function onRelease_handler( event )
-	print( 'onRelease_handler: id', event.id )
+	print( 'Main: onRelease_handler: id', event.id )
 end
 
 local function onEvent_handler( event )
-	print( 'onEvent_handler' )
-	print( 'button id', event.id, event.phase )
+	print( 'Main: onEvent_handler: id', event.id, event.phase )
 end
 
 
@@ -52,7 +51,7 @@ end
 --[[
 	button shows:
 	* simple label
-	* more complex 'down' view (alignment, color)
+	* more complex 'active' view (alignment, color)
 --]]
 o = Widgets.newButton{
 	id='button-back',
@@ -67,7 +66,7 @@ o = Widgets.newButton{
 	width = 55,
 	height = 38,
 
-	down = {
+	active = {
 		label = {
 			color={0,0,0},
 			align='right',
@@ -86,7 +85,7 @@ o.x, o.y = 150, 70
 --[[
 	button shows:
 	* complex label
-	* more complex 'down' view (label change)
+	* more complex 'active' view (label change)
 	* bigger hit area
 --]]
 o = Widgets.newButton{
@@ -101,14 +100,13 @@ o = Widgets.newButton{
 
 	-- dimension info
 	file = 'asset/image/btn_bg_green.png',
-	-- base_dir = 'asset/image/btn_back.png',
 	width = 152,
 	height = 56,
 
 	hit_width = 150,
 	hit_height = 110,
 
-	down = {
+	active = {
 		label = {
 			text='pressed',
 			color={0,0,0}
@@ -128,10 +126,10 @@ o.x, o.y = 150, 175
 --[[
 	button shows:
 	* complex label
-	* more complex 'down' view (label change)
+	* more complex 'active' view (label change)
 --]]
 o = Widgets.newButton{
-	id='button-middle',
+	id='button-orange',
 	type='push',
 
 	-- label stuff
@@ -144,11 +142,10 @@ o = Widgets.newButton{
 
 	-- dimension info
 	file = 'asset/image/btn_bg_orange.png',
-	-- base_dir = 'asset/image/btn_back.png',
 	width = 152,
 	height = 56,
 
-	down = {
+	active = {
 		label = {
 			text='pressed',
 			align='left',
@@ -170,7 +167,7 @@ o.x, o.y = 150, 300
 --[[
 	button shows:
 	* complex label
-	* more complex 'down' view (label change)
+	* more complex 'active' view (label change)
 --]]
 o = Widgets.newButton{
 	id='button-middle',
@@ -181,11 +178,10 @@ o = Widgets.newButton{
 
 	-- dimension info
 	file = 'asset/image/btn_bg_green.png',
-	-- base_dir = 'asset/image/btn_back.png',
 	width = 152,
 	height = 56,
 
-	down = {
+	active = {
 		label = {
 			text='pressed',
 			color={0,0,0}
