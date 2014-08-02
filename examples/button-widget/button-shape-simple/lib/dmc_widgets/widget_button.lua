@@ -56,6 +56,7 @@ dmc_widget_func = dmc_widget_data.func
 --== Imports
 
 local Objects = require 'dmc_objects'
+local StatesMix = require 'lua_states'
 
 -- Button View Components
 local ImageView = require( dmc_widget_func.find( 'widget_button.view_image' ) )
@@ -103,9 +104,18 @@ end
 local ButtonBase = inheritsFrom( CoronaBase )
 ButtonBase.NAME = "Button Base"
 
+StatesMix.mixin( ButtonBase )
+
 --== Class Constants
 
-ButtonBase._SUPPORTED_VIEWS = nil
+ButtonBase._SUPPORTED_VIEWS = { 'active', 'inactive', 'disabled' }
+
+--== Class States
+
+ButtonBase.STATE_INIT = 'state_init'
+ButtonBase.STATE_ACTIVE = 'state_active'
+ButtonBase.STATE_INACTIVE = 'state_inactive'
+ButtonBase.STATE_DISABLED = 'state_disabled'
 
 --== Class events
 
@@ -133,7 +143,6 @@ function ButtonBase:_init( params )
 	self._params = params -- save for view creation
 
 	self._id = params.id
-	self._enabled = params.enabled == nil and true or params.enabled
 
 	self._width = params.width
 	self._height = params.height
@@ -154,6 +163,10 @@ function ButtonBase:_init( params )
 	--== Display Groups ==--
 
 	self._dg_views = nil -- to put button views in display hierarchy
+
+
+	-- set initial state
+	self:setState( ButtonBase.STATE_INIT )
 
 end
 
@@ -233,18 +246,23 @@ end
 --
 function ButtonBase:_initComplete()
 	--print( "ButtonBase:_initComplete" )
+	self:superCall( '_initComplete' )
+	--==--
 
+	local is_active = self._params.is_active == nil and false or self._params.is_active
 	local o
-
-	self._params = nil -- get rid of structure
 
 	o = self._bg_hit
 	o._f = self:createCallback( self._hitTouchEvent_handler )
 	o:addEventListener( 'touch', o._f )
 
-	self:_updateView()
-	--==--
-	self:superCall( '_initComplete' )
+	if is_active then
+		self:gotoState( ButtonBase.STATE_ACTIVE )
+	else
+		self:gotoState( ButtonBase.STATE_INACTIVE )
+	end
+
+	self._params = nil -- get rid of temp structure
 end
 
 function ButtonBase:_undoInitComplete()
@@ -265,54 +283,31 @@ end
 --====================================================================--
 --== Public Methods
 
+function ButtonBase.__getters:enabled()
+	return ( self:getState() ~= self.STATE_DISABLED )
+end
 function ButtonBase.__setters:enabled( value )
 	assert( type(value)=='boolean', "newButton: expected boolean for property 'enabled'")
+	--==--
+	if self.enabled == value then return end
 
-	if self._enabled == value then return end
-	self._enabled = value
-	self:_updateView()
+	if value == true then
+		self:gotoState( ButtonBase.STATE_INACTIVE )
+	else
+		self:gotoState( ButtonBase.STATE_DISABLED )
+	end
 end
 
 
 --====================================================================--
 --== Private Methods
 
--- updateView()
--- toggle visibility for button view layers
---
-function ButtonBase:_updateView()
-	-- print( "ButtonBase:_updateView" )
-	local views = self._views
-
-	if not self._enabled then
-		views.down.isVisible = false
-		views.up.isVisible = false
-		views.disabled.isVisible = true
-
-	elseif self._has_focus ~= true then
-		views.up.isVisible = true
-		views.down.isVisible = false
-		views.disabled.isVisible = false
-
-	elseif self._has_focus and self._is_bounded then
-		views.up.isVisible = false
-		views.down.isVisible = true
-		views.disabled.isVisible = false
-
-	elseif self._has_focus and not self._is_bounded then
-		views.up.isVisible = true
-		views.down.isVisible = false
-		views.disabled.isVisible = false
-
-	end
-end
-
 -- handle 'press' events
 --
 function ButtonBase:_handlePressDispatch()
 	-- print( "ButtonBase:_handlePressDispatch" )
 
-	if not self._enabled then return end
+	if not self.enabled then return end
 
 	local cb = self._callbacks
 	local event = {
@@ -330,7 +325,7 @@ end
 function ButtonBase:_handleReleaseDispatch()
 	-- print( "ButtonBase:_handleReleaseDispatch" )
 
-	if not self._enabled then return end
+	if not self.enabled then return end
 
 	local cb = self._callbacks
 	local event = {
@@ -344,6 +339,138 @@ function ButtonBase:_handleReleaseDispatch()
 end
 
 
+--======================================================--
+-- START: State Machine
+
+--== State: Init
+
+function ButtonBase:state_init( next_state, params )
+	-- print( "ButtonBase:state_init >>", next_state )
+	params = params or {}
+	--==--
+
+	if next_state == ButtonBase.STATE_ACTIVE then
+		self:do_state_active( params )
+
+	elseif next_state == ButtonBase.STATE_INACTIVE then
+		self:do_state_inactive( params )
+
+	elseif next_state == ButtonBase.STATE_DISABLED then
+		self:do_state_disabled( params )
+
+	else
+		print( "WARNING :: WebSocket:state_create " .. tostring( next_state ) )
+	end
+end
+
+--== State: Active
+
+function ButtonBase:do_state_active( params )
+	-- print( "ButtonBase:do_state_active" )
+	params = params or {}
+	--==--
+	local views = self._views
+
+	views.inactive.isVisible = false
+	views.active.isVisible = true
+	views.disabled.isVisible = false
+
+	self:setState( ButtonBase.STATE_ACTIVE )
+end
+
+function ButtonBase:state_active( next_state, params )
+	-- print( "ButtonBase:state_active >>", next_state )
+	params = params or {}
+	--==--
+
+	if next_state == ButtonBase.STATE_ACTIVE then
+		-- pass
+
+	elseif next_state == ButtonBase.STATE_INACTIVE then
+		self:do_state_inactive( params )
+
+	elseif next_state == ButtonBase.STATE_DISABLED then
+		self:do_state_disabled( params )
+
+	else
+		print( "WARNING :: WebSocket:state_create " .. tostring( next_state ) )
+	end
+end
+
+--== State: Inactive
+
+function ButtonBase:do_state_inactive( params )
+	-- print( "ButtonBase:do_state_inactive" )
+	params = params or {}
+	--==--
+	local views = self._views
+
+	views.inactive.isVisible = true
+	views.active.isVisible = false
+	views.disabled.isVisible = false
+
+	self:setState( ButtonBase.STATE_INACTIVE )
+end
+
+function ButtonBase:state_inactive( next_state, params )
+	-- print( "ButtonBase:state_inactive >>", next_state )
+	params = params or {}
+	--==--
+
+	if next_state == ButtonBase.STATE_ACTIVE then
+		self:do_state_active( params )
+
+	elseif next_state == ButtonBase.STATE_INACTIVE then
+		-- pass
+
+	elseif next_state == ButtonBase.STATE_DISABLED then
+		self:do_state_disabled( params )
+
+	else
+		print( "WARNING :: WebSocket:state_create " .. tostring( next_state ) )
+	end
+end
+
+
+--== State: Disabled
+
+function ButtonBase:do_state_disabled( params )
+	-- print( "ButtonBase:do_state_disabled" )
+	params = params or {}
+	--==--
+	local views = self._views
+
+	views.inactive.isVisible = false
+	views.active.isVisible = false
+	views.disabled.isVisible = true
+
+	self:setState( ButtonBase.STATE_DISABLED )
+end
+
+function ButtonBase:state_disabled( next_state, params )
+	-- print( "ButtonBase:state_disabled >>", next_state )
+	params = params or {}
+	--==--
+
+	if next_state == ButtonBase.STATE_ACTIVE then
+		-- pass
+
+	elseif next_state == ButtonBase.STATE_INACTIVE then
+		self:do_state_inactive( params )
+
+	elseif next_state == ButtonBase.STATE_DISABLED then
+		-- pass
+
+	else
+		print( "WARNING :: WebSocket:state_create " .. tostring( next_state ) )
+	end
+end
+
+-- END: State Machine
+--======================================================--
+
+
+
 --====================================================================--
 --== Event Handlers
 
@@ -351,12 +478,15 @@ function ButtonBase:_hitTouchEvent_handler( event )
 	-- print( "ButtonBase:_hitTouchEvent_handler", event.phase )
 	local target = event.target
 
+	if not self.enabled then return true end
+
 	if event.phase == 'began' then
 		display.getCurrentStage():setFocus( target )
 		self._has_focus = true
-		self._is_bounded = true
-		self:_updateView()
+		self:gotoState( self.STATE_ACTIVE )
 		self:_handlePressDispatch()
+
+		return true
 	end
 
 	if not self._has_focus then return end
@@ -368,20 +498,23 @@ function ButtonBase:_hitTouchEvent_handler( event )
 		y >= bounds.yMin and y <= bounds.yMax )
 
 	if event.phase == 'moved' then
-		self._is_bounded = is_bounded
-		self:_updateView()
+		if is_bounded then
+			self:gotoState( self.STATE_ACTIVE )
+		else
+			self:gotoState( self.STATE_INACTIVE )
+		end
 
 	elseif event.phase == 'ended' or event.phase == 'cancelled' then
 		display.getCurrentStage():setFocus( nil )
 		self._has_focus = false
-		self._is_bounded = false
-		self:_updateView()
+		self:gotoState( self.STATE_INACTIVE )
 
 		if is_bounded then
 			self:_handleReleaseDispatch()
 		end
 	end
 
+	return true
 end
 
 
@@ -392,8 +525,6 @@ end
 
 local PushButton = inheritsFrom( ButtonBase )
 PushButton.NAME = "Push Button"
-
-PushButton._SUPPORTED_VIEWS = { 'up', 'down', 'disabled' }
 
 
 --======================================================--
