@@ -99,13 +99,17 @@ dmc_lib_info = dmc_lib_data.dmc_corona
 
 Widget.Button = require( PATH .. '.' .. 'widget_button' )
 Widget.ButtonGroup = require( PATH .. '.' .. 'button_group' )
--- Widget.Popover = require( PATH .. '.' .. 'widget_popover' )
+Widget.Popover = require( PATH .. '.' .. 'widget_popover' )
 
+
+
+--====================================================================--
+--== Widget Constructors
+--====================================================================--
 
 
 --===================================================================--
 --== newButton widget
---===================================================================--
 
 function Widget.newButton( options )
 	local theme = nil
@@ -116,7 +120,6 @@ end
 
 --===================================================================--
 --== newButtonGroup widget
---===================================================================--
 
 function Widget.newButtonGroup( options )
 	local widget = Widget.ButtonGroup
@@ -126,7 +129,6 @@ end
 
 --===================================================================--
 --== newPopover widget
---===================================================================--
 
 function Widget.newPopover( options )
 	local theme = nil
@@ -137,7 +139,6 @@ end
 
 --===================================================================--
 --== newScroller widget
---===================================================================--
 
 function Widget.newScroller( options )
 	local theme = nil
@@ -148,7 +149,6 @@ end
 
 --===================================================================--
 --== newSlideView widget
---===================================================================--
 
 function Widget.newSlideView( options )
 	local theme = nil
@@ -159,7 +159,6 @@ end
 
 --===================================================================--
 --== newTableView widget
---===================================================================--
 
 function Widget.newTableView( options )
 	local theme = nil
@@ -170,13 +169,13 @@ end
 
 --===================================================================--
 --== newViewPager widget
---===================================================================--
 
 function Widget.newViewPager( options )
 	local theme = nil
 	local _library = require( PATH .. '.' .. 'widget_viewpager' )
 	return _library:new( options, theme )
 end
+
 
 
 
