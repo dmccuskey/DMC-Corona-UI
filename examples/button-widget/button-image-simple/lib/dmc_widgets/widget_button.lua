@@ -60,6 +60,7 @@ local Objects = require 'dmc_objects'
 local StatesMix = require 'lua_states'
 
 -- Button View Components
+local BaseView = require( dmc_widget_func.find( 'widget_button.view_base' ) )
 local ImageView = require( dmc_widget_func.find( 'widget_button.view_image' ) )
 local ShapeView = require( dmc_widget_func.find( 'widget_button.view_shape' ) )
 
@@ -90,8 +91,8 @@ local function getViewTypeClass( params )
 	elseif params.sheet ~= nil then
 		return FrameView
 
-	else -- default view
-		error( "newButton: view type not found" )
+	else -- text view
+		return BaseView
 
 	end
 end
