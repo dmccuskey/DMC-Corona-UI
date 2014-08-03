@@ -30,6 +30,12 @@ DEALINGS IN THE SOFTWARE.
 --]]
 
 
+
+--====================================================================--
+--== DMC Widgets
+--====================================================================--
+
+
 -- Semantic Versioning Specification: http://semver.org/
 
 local VERSION = "1.0.0"
@@ -37,11 +43,11 @@ local VERSION = "1.0.0"
 
 
 --====================================================================--
--- DMC Widgets Config
+--== DMC Widgets Config
 --====================================================================--
 
-local Widget = {}
 
+local Widget = {}
 
 local args = { ... }
 local PATH = args[1]
@@ -67,17 +73,15 @@ if _G.__dmc_widget == nil then
 end
 
 
+
 --====================================================================--
--- DMC Library Config
+--== DMC Corona Library Config
 --====================================================================--
 
-local dmc_lib_data, dmc_lib_func, dmc_lib_info, dmc_lib_location
 
+local dmc_lib_data, dmc_lib_info
 
-
-local dmc_lib_data, dmc_lib_info, dmc_lib_location
-
--- boot dmc_library with boot script or
+-- boot dmc_corona with boot script or
 -- setup basic defaults if it doesn't exist
 --
 if false == pcall( function() require 'dmc_corona_boot' end ) then
@@ -90,14 +94,49 @@ dmc_lib_data = _G.__dmc_corona
 dmc_lib_info = dmc_lib_data.dmc_corona
 
 
+--===================================================================--
+--== Imports
+
+Widget.Button = require( PATH .. '.' .. 'widget_button' )
+Widget.ButtonGroup = require( PATH .. '.' .. 'button_group' )
+-- Widget.Popover = require( PATH .. '.' .. 'widget_popover' )
+
+
 
 --===================================================================--
--- Imports
+--== newButton widget
 --===================================================================--
+
+function Widget.newButton( options )
+	local theme = nil
+	local widget = Widget.Button
+	return widget.create( options, theme )
+end
 
 
 --===================================================================--
--- newScroller widget
+--== newButtonGroup widget
+--===================================================================--
+
+function Widget.newButtonGroup( options )
+	local widget = Widget.ButtonGroup
+	return widget.create( options )
+end
+
+
+--===================================================================--
+--== newPopover widget
+--===================================================================--
+
+function Widget.newPopover( options )
+	local theme = nil
+	local widget = Widget.Popover
+	return widget:new( options, theme )
+end
+
+
+--===================================================================--
+--== newScroller widget
 --===================================================================--
 
 function Widget.newScroller( options )
@@ -108,7 +147,7 @@ end
 
 
 --===================================================================--
--- newSlideView widget
+--== newSlideView widget
 --===================================================================--
 
 function Widget.newSlideView( options )
@@ -119,7 +158,7 @@ end
 
 
 --===================================================================--
--- newTableView widget
+--== newTableView widget
 --===================================================================--
 
 function Widget.newTableView( options )
@@ -130,7 +169,7 @@ end
 
 
 --===================================================================--
--- newViewPager widget
+--== newViewPager widget
 --===================================================================--
 
 function Widget.newViewPager( options )
