@@ -30,6 +30,7 @@ DEALINGS IN THE SOFTWARE.
 --]]
 
 
+
 --====================================================================--
 --== DMC Widgets
 --====================================================================--
@@ -44,6 +45,7 @@ local VERSION = "1.0.0"
 --====================================================================--
 --== DMC Widgets Config
 --====================================================================--
+
 
 local Widget = {}
 
@@ -73,7 +75,7 @@ end
 
 
 --====================================================================--
---== DMC Library Config
+--== DMC Corona Library Config
 --====================================================================--
 
 
@@ -96,13 +98,14 @@ dmc_lib_info = dmc_lib_data.dmc_corona
 --== Imports
 
 Widget.Button = require( PATH .. '.' .. 'widget_button' )
+Widget.ButtonGroup = require( PATH .. '.' .. 'button_group' )
+-- Widget.Popover = require( PATH .. '.' .. 'widget_popover' )
 
 
 
 --===================================================================--
---== button widget
+--== newButton widget
 --===================================================================--
-
 
 function Widget.newButton( options )
 	local theme = nil
@@ -112,10 +115,18 @@ end
 
 
 --===================================================================--
---== popover widget
+--== newButtonGroup widget
 --===================================================================--
 
-Widget.Popover = require( PATH .. '.' .. 'widget_popover' )
+function Widget.newButtonGroup( options )
+	local widget = Widget.ButtonGroup
+	return widget.create( options )
+end
+
+
+--===================================================================--
+--== newPopover widget
+--===================================================================--
 
 function Widget.newPopover( options )
 	local theme = nil
