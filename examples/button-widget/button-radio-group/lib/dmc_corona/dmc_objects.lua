@@ -158,6 +158,10 @@ CoronaBase.BottomCenterReferencePoint = { 0.5, 1 }
 CoronaBase.BottomRightReferencePoint = { 1, 1 }
 
 
+CoronaBase.DMC_EVENT_DISPATCH = 'dmc_event_style_dispatch'
+CoronaBase.CORONA_EVENT_DISPATCH = 'corona_event_style_dispatch'
+
+
 -- new()
 -- class constructor
 --
@@ -573,10 +577,11 @@ CoronaBase._buildDmcEvent = ObjectBase._buildDmcEvent
 -- can either be dmc style event
 -- or corona style event
 function CoronaBase:dispatchEvent( ... )
-	if self._dispatchEventType == ObjectBase.CORONA_EVENT_DISPATCH then
-		self.view:dispatchEvent( self:_buildDmcEvent( ... ) )
-	else
+	-- print( 'CoronaBase:dispatchEvent', self._dispatchEventType)
+	if self._dispatchEventType == CoronaBase.CORONA_EVENT_DISPATCH then
 		self.view:dispatchEvent( ... )
+	else
+		self.view:dispatchEvent( self:_buildDmcEvent( ... ) )
 	end
 end
 -- localToContent( x, y )
