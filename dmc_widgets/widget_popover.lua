@@ -96,7 +96,7 @@ function Popover:_init( params )
 
 	--== Create Properties ==--
 
-	self._outsideTouchAction = params.outsideTouchAction or Popover.TOUCH_CANCEL
+	self._outside_touch_action = params.outside_touch_action or Popover.TOUCH_CANCEL
 
 	self._onDone = params.onDone
 	self._onCancel = params.onCancel
@@ -290,14 +290,16 @@ function Popover:_bgTouchEvent_handler( event )
 	if not self._has_focus then return end
 
 	if event.phase == 'ended' or event.phase == 'canceled' then
-		if self._outsideTouchAction == Popover.TOUCH_DONE then
+		display.getCurrentStage():setFocus( nil )
+		self._has_focus = false
+
+		if self._outside_touch_action == Popover.TOUCH_DONE then
 			self:_doDoneCallback()
-		elseif self._outsideTouchAction == Popover.TOUCH_CANCEL then
+		elseif self._outside_touch_action == Popover.TOUCH_CANCEL then
 			self:_doCancelCallback()
 		else
 			-- pass
 		end
-		self._has_focus = false
 	end
 
 end
