@@ -80,6 +80,10 @@ Popover.TOUCH_NONE = 'none'
 Popover.TOUCH_DONE = 'done'
 Popover.TOUCH_CANCEL = 'cancel'
 
+--== Class Events
+
+Popover.EVENT = 'popover_event'
+
 
 --======================================================--
 -- Start: Setup DMC Objects
@@ -274,12 +278,23 @@ function Popover:_doDoneCallback()
 	self._onDone( event )
 end
 
+function Popover:_doOutsideTouchAction()
+	print( "Popover:_doOutsideTouchAction" )
+	if self._outside_touch_action == Popover.TOUCH_NONE then
+		-- pass
+	elseif self._outside_touch_action == Popover.TOUCH_DONE then
+		self:_doDoneCallback()
+	elseif self._outside_touch_action == Popover.TOUCH_CANCEL then
+		self:_doCancelCallback()
+	end
+end
+
 
 --====================================================================--
 --== Event Handlers
 
 function Popover:_bgTouchEvent_handler( event )
-	print( "Popover:_bgTouchEvent_handler", event.phase )
+	-- print( "Popover:_bgTouchEvent_handler", event.phase )
 	local target = event.target
 
 	if event.phase == 'began' then
@@ -292,14 +307,7 @@ function Popover:_bgTouchEvent_handler( event )
 	if event.phase == 'ended' or event.phase == 'canceled' then
 		display.getCurrentStage():setFocus( nil )
 		self._has_focus = false
-
-		if self._outside_touch_action == Popover.TOUCH_DONE then
-			self:_doDoneCallback()
-		elseif self._outside_touch_action == Popover.TOUCH_CANCEL then
-			self:_doCancelCallback()
-		else
-			-- pass
-		end
+		self:_doOutsideTouchAction()
 	end
 
 end
