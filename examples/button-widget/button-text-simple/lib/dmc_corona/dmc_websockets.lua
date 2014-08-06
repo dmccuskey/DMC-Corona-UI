@@ -175,7 +175,7 @@ local ERROR_CODES = {
 }
 
 
-local LOCAL_DEBUG = true
+local LOCAL_DEBUG = false
 
 
 --====================================================================--
@@ -575,7 +575,7 @@ function WebSocket:_receiveFrame()
 	--== processing loop
 
 	-- TODO: hook this up to enterFrame so large
-	-- amount of frames will pause processing
+	-- amount of frames won't pause processing
 
 	local err = nil
 	repeat
@@ -600,9 +600,9 @@ function WebSocket:_receiveFrame()
 		-- pass, WebSocket.STATE_CLOSED
 
 	elseif not err.isa then
-		if LOCAL_DEBUG then
-			print( "dmc_websockets :: Unknown Error", err )
-		end
+		-- always print this out, most likely a regular Lua error
+		print( "\n\ndmc_websockets :: Unknown Error", err )
+		print( debug.traceback() )
 		self:_bailout{
 			code=CLOSE_CODES.INTERNAL.code,
 			reason=CLOSE_CODES.INTERNAL.reason
@@ -614,6 +614,7 @@ function WebSocket:_receiveFrame()
 	elseif err:isa( ws_error.ProtocolError ) then
 		if LOCAL_DEBUG then
 			print( "dmc_websockets :: Protocol Error:", err.message )
+			print( "dmc_websockets :: Protocol Error:", err.traceback )
 		end
 		self:_close{
 			code=err.code,
@@ -854,7 +855,7 @@ function WebSocket:state_init( next_state, params )
 	params = params or {}
 	--==--
 
-	if next_state == self.CLOSED then
+	if next_state == WebSocket.STATE_CLOSED then
 		self:do_state_closed( params )
 
 	elseif next_state == WebSocket.STATE_NOT_CONNECTED then
@@ -874,7 +875,7 @@ function WebSocket:do_state_not_connected( params )
 	params = params or {}
 	--==--
 
-	self._ready_state = self.NOT_ESTABLISHED
+	self._ready_state = WebSocket.NOT_ESTABLISHED
 
 	self:setState( WebSocket.STATE_NOT_CONNECTED )
 
@@ -946,7 +947,7 @@ function WebSocket:do_state_connected( params )
 	params = params or {}
 	--==--
 
-	self._ready_state = self.ESTABLISHED
+	self._ready_state = WebSocket.ESTABLISHED
 	self:setState( WebSocket.STATE_CONNECTED )
 
 	if LOCAL_DEBUG then
@@ -988,7 +989,7 @@ function WebSocket:do_state_closing_connection( params )
 	params.from_server = params.from_server ~= nil and params.from_server or false
 	--==--
 
-	self._ready_state = self.CLOSING_HANDSHAKE
+	self._ready_state = WebSocket.CLOSING_HANDSHAKE
 	self:setState( WebSocket.STATE_CLOSING )
 
 	-- send close code to server
@@ -1033,7 +1034,7 @@ function WebSocket:do_state_closed( params )
 	params = params or {}
 	--==--
 
-	self._ready_state = self.CLOSED
+	self._ready_state = WebSocket.CLOSED
 	self:setState( WebSocket.STATE_CLOSED )
 
 	if self._close_timer then
@@ -1061,7 +1062,7 @@ function WebSocket:state_closed( next_state, params )
 	params = params or {}
 	--==--
 
-	if next_state == self.CLOSED then
+	if next_state == WebSocket.STATE_CLOSED then
 		self:do_state_closed( params )
 
 	else
