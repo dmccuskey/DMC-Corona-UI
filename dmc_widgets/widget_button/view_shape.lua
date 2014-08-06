@@ -240,14 +240,14 @@ function ShapeView:_createView()
 	o.x, o.y = 0, 0
 	o.anchorX, o.anchorY = 0.5, 0.5
 	tmp = v_params.fill_color
-	if tmp and tmp.gradient then
+	if tmp and tmp.type=='gradient' then
 		o:setFillColor( tmp )
 	elseif tmp then
 		o:setFillColor( unpack( tmp ) )
 	end
 	o.strokeWidth = v_params.stroke_width
 	tmp = v_params.stroke_color
-	if tmp and tmp.gradient then
+	if tmp and tmp.type=='gradient' then
 		o:setStrokeColor( tmp )
 	elseif tmp then
 		o:setStrokeColor( unpack( tmp ) )
