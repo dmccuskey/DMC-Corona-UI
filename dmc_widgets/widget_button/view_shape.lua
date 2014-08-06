@@ -170,24 +170,18 @@ local function createShape( v_type, v_params )
 	-- print( "createShape", v_type, v_params )
 
 	if v_type == TYPE_RECT then
-		return display.newRect{
-			0, 0, v_params.width, v_params.height
-		}
+		return display.newRect( 0, 0, v_params.width, v_params.height )
 
 	elseif v_type == TYPE_ROUNDED_RECT then
 		return display.newRoundedRect( 0, 0, v_params.width, v_params.height, v_params.corner_radius )
 
 	elseif v_type == TYPE_CIRCLE then
 		-- TODO
-		return display.newCircle{
-			0, 0, v_params.width, v_params.height
-		}
+		return display.newCircle( 0, 0, v_params.width, v_params.height )
 
 	elseif v_type == TYPE_POLYGON then
 		-- TODO
-		return display.newPolygon{
-			0, 0, v_params.width, v_params.height
-		}
+		return display.newPolygon( 0, 0, v_params.width, v_params.height )
 
 	else -- default view
 		error( "newButton: unknown shape type: " .. tostring( name ) )
