@@ -88,8 +88,6 @@ o.x, o.y = 150, 70
 o = Widgets.newButton{
 	-- button info
 	type='push',
-	width = 152,
-	height = 56,
 	id='button-middle',
 
 	-- label info
@@ -99,6 +97,8 @@ o = Widgets.newButton{
 	},
 
 	-- view info
+	width = 152,
+	height = 56,
 	active = {
 		label = {
 			text='pressed',
@@ -123,8 +123,6 @@ o.x, o.y = 150, 175
 o = Widgets.newButton{
 	-- button info
 	type='push',
-	width = 152,
-	height = 56,
 	id='button-orange',
 
 	-- label info
@@ -137,6 +135,8 @@ o = Widgets.newButton{
 	},
 
 	-- view info
+	width = 152,
+	height = 56,
 	active = {
 		label = {
 			text='pressed',
@@ -162,14 +162,14 @@ o.x, o.y = 150, 300
 --]]
 o = Widgets.newButton{
 	type='push',
-	width = 152,
-	height = 56,
 	id='button-middle',
 
 	-- label info
 	label = 'Middle',
 
 	-- view info
+	width = 152,
+	height = 56,
 	active = {
 		label = {
 			text='pressed',
