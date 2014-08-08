@@ -1,5 +1,5 @@
 --====================================================================--
--- dmc_wamp/exception.lua
+-- dmc_wamp.roles
 --
 --
 -- by David McCuskey
@@ -29,10 +29,10 @@ DEALINGS IN THE SOFTWARE.
 
 --]]
 
-
---====================================================================--
--- DMC Lua Library : Byte Array Errors
---====================================================================--
+--[[
+Wamp support adapted from:
+* AutobahnPython (https://github.com/tavendo/AutobahnPython/)
+--]]
 
 
 -- Semantic Versioning Specification: http://semver.org/
@@ -44,32 +44,41 @@ local VERSION = "0.1.0"
 -- Imports
 
 local Objects = require 'lua_objects'
-local Error = require 'lua_error'
-
-
---====================================================================--
--- Setup, Constants
-
--- setup some aliases to make code cleaner
-local inheritsFrom = Objects.inheritsFrom
+local Utils = require 'lua_utils'
 
 
 
 --====================================================================--
--- Buffer Error Class
+-- Subscriber Role Features
 --====================================================================--
 
 
-local BufferError = inheritsFrom( Error )
-BufferError.NAME = "Buffer Error"
+local roleSubscriberFeatures = {
+	ROLE = 'subscriber',
+
+	features = {}
+}
+
+
+
+--====================================================================--
+-- Subscriber Caller Features
+--====================================================================--
+
+local roleCallerFeatures = {
+	ROLE = 'caller',
+
+	features = {}
+}
 
 
 
 
 --====================================================================--
--- Error Facade
+-- Roles Facade
 --====================================================================--
 
 return {
-	BufferError=BufferError
+	subscriberFeatures=roleSubscriberFeatures,
+	callerFeatures=roleCallerFeatures
 }

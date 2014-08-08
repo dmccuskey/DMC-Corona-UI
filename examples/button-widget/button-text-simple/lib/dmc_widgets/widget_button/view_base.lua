@@ -121,8 +121,8 @@ function BaseView:_createView()
 	--== create label
 
 	o = self:_createLabel( l_params )
-	o.x, o.y = l_params.x_offset, l_params.y_offset
 	o.anchorX, o.anchorY = 0.5, 0.5
+	o.x, o.y = l_params.x_offset, l_params.y_offset
 	tmp = l_params.color
 	if tmp and tmp.gradient then
 		o:setFillColor( tmp )

@@ -1,5 +1,5 @@
 --====================================================================--
--- Button Simple
+-- Shape Button Simple
 --
 -- Shows simple use of the DMC Widget: Button
 --
@@ -54,15 +54,18 @@ end
 	* more complex 'active' view (alignment, color)
 --]]
 o = Widgets.newButton{
+	-- button info
 	id='button-top',
 	type='push',
-	-- label stuff
+
+	-- label info
 	label = 'Top',
 
-	-- dimension info
-	shape='roundedRect',
+	-- view info
+	view='shape',
 	width = 75,
 	height = 30,
+	shape='roundedRect',
 	corner_radius = 10,
 	fill_color={1,1,0.5, 0.5},
 	stroke_width=6,
@@ -92,10 +95,13 @@ o.x, o.y = 150, 75
 	* bigger hit area
 --]]
 o = Widgets.newButton{
+	-- button info
 	id='button-middle',
 	type='push',
+	hit_width = 150,
+	hit_height = 110,
 
-	-- label stuff
+	-- label info
 	label = {
 		text='Middle',
 		align='center',
@@ -107,17 +113,15 @@ o = Widgets.newButton{
 		font_size = 20,
 	},
 
-	-- dimension info
-	shape='roundedRect',
+	-- view info
+	view='shape',
 	width = 100,
 	height = 60,
+	shape='roundedRect',
 	corner_radius = 2,
 	fill_color={1,1,0.5, 0.5},
 	stroke_width=2,
 	stroke_color={1,0,0,0.5},
-
-	hit_width = 150,
-	hit_height = 110,
 
 	active = {
 		label = {
@@ -131,7 +135,6 @@ o = Widgets.newButton{
 	onPress = onPress_handler,
 	onRelease = onRelease_handler,
 	onEvent = onEvent_handler,
-
 }
 o.x, o.y = 150, 225
 
@@ -144,16 +147,18 @@ o.x, o.y = 150, 225
 --]]
 
 o = Widgets.newButton{
+	-- button info
 	id='button-bottom',
 	type='push',
 
 	-- label stuff
 	label ="Bottom",
 
-	-- dimension info
-	shape='roundedRect',
+	-- view info
+	view='shape',
 	width = 100,
 	height = 60,
+	shape='roundedRect',
 	corner_radius = 4,
 	fill_color={1,1,0.5, 0.5},
 	stroke_width=4,
