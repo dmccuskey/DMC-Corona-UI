@@ -1,7 +1,7 @@
 --====================================================================--
--- Button Simple
+-- Radio Group Simple
 --
--- Shows simple use of the DMC Widget: Button
+-- Shows simple use of the DMC Widget: Button Group
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
@@ -62,10 +62,11 @@ o = Widgets.newButton{
 	-- button info
 	id='button-middle',
 	type='radio',
-	width = 100,
-	height = 60,
+	hit_width = 150,
+	hit_height = 110,
 
-	-- label stuff
+
+	-- label info
 	label = {
 		text='Inactive',
 		align='center',
@@ -77,15 +78,15 @@ o = Widgets.newButton{
 		font_size = 20,
 	},
 
-	-- dimension info
+	-- view info
+	view='shape',
+	width = 100,
+	height = 60,
 	shape='roundedRect',
 	corner_radius = 2,
 	fill_color={1,1,0.5, 0.5},
 	stroke_width=2,
 	stroke_color={1,0,0,0.5},
-
-	hit_width = 150,
-	hit_height = 110,
 
 	active = {
 		label = {
@@ -117,10 +118,10 @@ o = Widgets.newButton{
 	-- button info
 	id='button-bottom',
 	type='radio',
-	width = 100,
-	height = 60,
+	hit_width = 150,
+	hit_height = 110,
 
-	-- label stuff
+	-- label info
 	label = {
 		text='Inactive',
 		align='center',
@@ -132,15 +133,15 @@ o = Widgets.newButton{
 		font_size = 20,
 	},
 
-	-- dimension info
+	-- view info
+	view='shape',
+	width = 100,
+	height = 60,
 	shape='roundedRect',
 	corner_radius = 2,
 	fill_color={1,1,0.5, 0.5},
 	stroke_width=2,
 	stroke_color={1,0,0,0.5},
-
-	hit_width = 150,
-	hit_height = 110,
 
 	active = {
 		label = {
@@ -179,10 +180,10 @@ o = Widgets.newButton{
 	-- button info
 	id='button-middle',
 	type='toggle',
-	width = 100,
-	height = 60,
+	hit_width = 150,
+	hit_height = 110,
 
-	-- label stuff
+	-- label info
 	label = {
 		text='Inactive',
 		align='center',
@@ -194,15 +195,15 @@ o = Widgets.newButton{
 		font_size = 20,
 	},
 
-	-- dimension info
+	-- view info
+	view='shape',
+	width = 100,
+	height = 60,
 	shape='roundedRect',
 	corner_radius = 2,
 	fill_color={1,1,0.5, 0.5},
 	stroke_width=2,
 	stroke_color={1,0,0,0.5},
-
-	hit_width = 150,
-	hit_height = 110,
 
 	active = {
 		label = {
@@ -234,8 +235,8 @@ o = Widgets.newButton{
 	-- button info
 	id='button-bottom',
 	type='toggle',
-	width = 100,
-	height = 60,
+	hit_width = 150,
+	hit_height = 110,
 
 	-- label stuff
 	label = {
@@ -249,15 +250,15 @@ o = Widgets.newButton{
 		font_size = 20,
 	},
 
-	-- dimension info
+	-- view info
+	view='shape',
+	width = 100,
+	height = 60,
 	shape='roundedRect',
 	corner_radius = 2,
 	fill_color={1,1,0.5, 0.5},
 	stroke_width=2,
 	stroke_color={1,0,0,0.5},
-
-	hit_width = 150,
-	hit_height = 110,
 
 	active = {
 		label = {
