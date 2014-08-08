@@ -199,6 +199,8 @@ end
 local ShapeView = inheritsFrom( BaseView )
 ShapeView.NAME = "Shape View"
 
+ShapeView.TYPE = 'shape'
+
 
 --======================================================--
 -- Start: Setup DMC Objects

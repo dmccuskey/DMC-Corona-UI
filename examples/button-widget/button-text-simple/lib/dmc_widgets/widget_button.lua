@@ -90,14 +90,11 @@ local function getViewTypeClass( params )
 	elseif params.view == NineSliceView.TYPE then
 		return NineSliceView
 
-	elseif params.shape ~= nil then
+	elseif params.view == ShapeView.TYPE then
 		return ShapeView
 
 	elseif params.view == ImageView.TYPE then
 		return ImageView
-
-	elseif params.sheet ~= nil then
-		return FrameView
 
 	else -- text view
 		return BaseView
