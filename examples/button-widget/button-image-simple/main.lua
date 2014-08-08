@@ -1,5 +1,5 @@
 --====================================================================--
---Image Simple Image Button
+-- Simple Image Button
 --
 -- Shows basic use of the DMC Widget: Button
 --
@@ -54,14 +54,17 @@ end
 	* more complex 'active' view (alignment, color)
 --]]
 o = Widgets.newButton{
+	-- button info
 	id='button-back',
 	type='push',
 
-	-- label stuff
+	-- label info
 	label = "Back",
 
-	-- dimension info
+	-- view info
+	view='image',
 	file = 'asset/image/btn_back.png',
+	fill_color={1,0,0},
 	-- base_dir = 'asset/image/btn_back.png',
 	width = 55,
 	height = 38,
@@ -89,22 +92,23 @@ o.x, o.y = 150, 70
 	* bigger hit area
 --]]
 o = Widgets.newButton{
+	-- button info
 	id='button-middle',
 	type='push',
+	hit_width = 150,
+	hit_height = 110,
 
-	-- label stuff
+	-- label info
 	label = {
 		text='Middle',
 		y_offset=-3
 	},
 
-	-- dimension info
+	-- view info
+	view='image',
 	file = 'asset/image/btn_bg_green.png',
 	width = 152,
 	height = 56,
-
-	hit_width = 150,
-	hit_height = 110,
 
 	active = {
 		label = {
@@ -129,10 +133,11 @@ o.x, o.y = 150, 175
 	* more complex 'active' view (label change)
 --]]
 o = Widgets.newButton{
+	-- button info
 	id='button-orange',
 	type='push',
 
-	-- label stuff
+	-- label info
 	label = {
 		text='Orange',
 		align='right',
@@ -140,7 +145,8 @@ o = Widgets.newButton{
 		y_offset=-3,
 	},
 
-	-- dimension info
+	-- view info
+	view='image',
 	file = 'asset/image/btn_bg_orange.png',
 	width = 152,
 	height = 56,
@@ -170,13 +176,15 @@ o.x, o.y = 150, 300
 	* more complex 'active' view (label change)
 --]]
 o = Widgets.newButton{
+	-- button info
 	id='button-middle',
 	type='push',
 
-	-- label stuff
+	-- label info
 	label = 'Middle',
 
-	-- dimension info
+	-- view info
+	view='image',
 	file = 'asset/image/btn_bg_green.png',
 	width = 152,
 	height = 56,
