@@ -300,15 +300,29 @@ function ButtonBase.__setters:enabled( value )
 	if self.enabled == value then return end
 
 	if value == true then
-		self:gotoState( ButtonBase.STATE_INACTIVE )
+		self:gotoState( ButtonBase.STATE_INACTIVE, { enabled=value } )
 	else
-		self:gotoState( ButtonBase.STATE_DISABLED )
+		self:gotoState( ButtonBase.STATE_DISABLED, { enabled=value } )
 	end
 end
 
 
 function ButtonBase.__getters:id()
 	return self._id
+end
+
+
+function ButtonBase.__setters:onPress( value )
+	assert( type(value)=='function' or type(value)=='nil', "expected function or nil for onPress")
+	self._callbacks.onPress = value
+end
+function ButtonBase.__setters:onRelease( value )
+	assert( type(value)=='function' or type(value)=='nil', "expected function or nil for onRelease")
+	self._callbacks.onRelease = value
+end
+function ButtonBase.__setters:onEvent( value )
+	assert( type(value)=='function' or type(value)=='nil', "expected function or nil for onEvent")
+	self._callbacks.onEvent = value
 end
 
 
@@ -324,6 +338,7 @@ function ButtonBase:_handlePressDispatch()
 
 	local cb = self._callbacks
 	local event = {
+		target=self,
 		id=self._id,
 		state=self:getState(),
 		phase=self.PHASE_PRESS,
@@ -343,6 +358,7 @@ function ButtonBase:_handleReleaseDispatch()
 
 	local cb = self._callbacks
 	local event = {
+		target=self,
 		id=self._id,
 		state=self:getState(),
 		phase=self.PHASE_RELEASE,
@@ -467,15 +483,22 @@ function ButtonBase:do_state_disabled( params )
 	self:setState( ButtonBase.STATE_DISABLED )
 end
 
+--[[
+params.enabled is to make sure that we have been enabled
+since someone else might ask us to change state eg, to ACTIVE
+when we are disabled (like a button group)
+--]]
 function ButtonBase:state_disabled( next_state, params )
 	-- print( "ButtonBase:state_disabled >>", next_state )
 	params = params or {}
+	params.enabled = params.enabled == nil and false or params.enabled
 	--==--
+	--
 
-	if next_state == ButtonBase.STATE_ACTIVE then
+	if next_state == ButtonBase.STATE_ACTIVE and params.enabled == true then
 		self:do_state_active( params )
 
-	elseif next_state == ButtonBase.STATE_INACTIVE then
+	elseif next_state == ButtonBase.STATE_INACTIVE and params.enabled == true then
 		self:do_state_inactive( params )
 
 	elseif next_state == ButtonBase.STATE_DISABLED then
