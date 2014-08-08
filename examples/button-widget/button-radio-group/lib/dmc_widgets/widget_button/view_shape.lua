@@ -170,24 +170,18 @@ local function createShape( v_type, v_params )
 	-- print( "createShape", v_type, v_params )
 
 	if v_type == TYPE_RECT then
-		return display.newRect{
-			0, 0, v_params.width, v_params.height
-		}
+		return display.newRect( 0, 0, v_params.width, v_params.height )
 
 	elseif v_type == TYPE_ROUNDED_RECT then
 		return display.newRoundedRect( 0, 0, v_params.width, v_params.height, v_params.corner_radius )
 
 	elseif v_type == TYPE_CIRCLE then
 		-- TODO
-		return display.newCircle{
-			0, 0, v_params.width, v_params.height
-		}
+		return display.newCircle( 0, 0, v_params.width, v_params.height )
 
 	elseif v_type == TYPE_POLYGON then
 		-- TODO
-		return display.newPolygon{
-			0, 0, v_params.width, v_params.height
-		}
+		return display.newPolygon( 0, 0, v_params.width, v_params.height )
 
 	else -- default view
 		error( "newButton: unknown shape type: " .. tostring( name ) )
@@ -246,14 +240,14 @@ function ShapeView:_createView()
 	o.x, o.y = 0, 0
 	o.anchorX, o.anchorY = 0.5, 0.5
 	tmp = v_params.fill_color
-	if tmp and tmp.gradient then
+	if tmp and tmp.type=='gradient' then
 		o:setFillColor( tmp )
 	elseif tmp then
 		o:setFillColor( unpack( tmp ) )
 	end
 	o.strokeWidth = v_params.stroke_width
 	tmp = v_params.stroke_color
-	if tmp and tmp.gradient then
+	if tmp and tmp.type=='gradient' then
 		o:setStrokeColor( tmp )
 	elseif tmp then
 		o:setStrokeColor( unpack( tmp ) )
