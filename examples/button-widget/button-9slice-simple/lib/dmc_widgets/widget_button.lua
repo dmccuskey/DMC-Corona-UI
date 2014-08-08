@@ -93,7 +93,7 @@ local function getViewTypeClass( params )
 	elseif params.shape ~= nil then
 		return ShapeView
 
-	elseif params.file ~= nil then
+	elseif params.view == ImageView.TYPE then
 		return ImageView
 
 	elseif params.sheet ~= nil then

@@ -41,6 +41,7 @@ local VERSION = "0.1.0"
 --== DMC Widgets Setup
 --====================================================================--
 
+
 local dmc_widget_data, dmc_widget_func
 dmc_widget_data = _G.__dmc_widget
 dmc_widget_func = dmc_widget_data.func
@@ -50,7 +51,6 @@ dmc_widget_func = dmc_widget_data.func
 --====================================================================--
 --== DMC Widgets : Button Image View
 --====================================================================--
-
 
 
 --====================================================================--
@@ -82,6 +82,7 @@ local function createImageParams( v_name, params )
 		width=params.width,
 		height=params.height,
 		file=params.file,
+		base_dir=params.base_dir,
 	}
 
 	-- layer in view specific values
@@ -89,6 +90,7 @@ local function createImageParams( v_name, params )
 		p.width = v_p.width == nil and p.width or v_p.width
 		p.height = v_p.height == nil and p.height or v_p.height
 		p.file = v_p.file == nil and p.file or v_p.file
+		p.base_dir = v_p.base_dir == nil and p.base_dir or v_p.base_dir
 	end
 
 	return p
@@ -100,7 +102,7 @@ end
 local function createImage( v_params )
 	-- print( "createImage", v_params )
 	if v_params.base_dir then
-		return display.newImageRect( v_params.file, v_params.baseDir, v_params.width, 	v_params.height )
+		return display.newImageRect( v_params.file, v_params.base_dir, v_params.width, 	v_params.height )
 	else
 		return display.newImageRect( v_params.file, v_params.width, v_params.height )
 	end
@@ -115,6 +117,8 @@ end
 
 local ImageView = inheritsFrom( BaseView )
 ImageView.NAME = "Image View"
+
+ImageView.TYPE = 'image'
 
 
 --======================================================--
@@ -142,35 +146,20 @@ end
 -- _createView()
 --
 function ImageView:_createView()
-	-- print( "ImageView:_createView" )
+	print( "ImageView:_createView" )
 	self:superCall( '_createView' )
 	--==--
 
-	local v_params = self._view_params
-	local o, tmp   -- object, temp
+	local o   -- object
 
 	--== create background
 
-	o = createImage( v_params )
-	o.x, o.y = 0, 0
+	o = createImage( self._view_params )
 	o.anchorX, o.anchorY = 0.5, 0.5
-	tmp = v_params.fill_color
-	if tmp and tmp.gradient then
-		o:setFillColor( tmp )
-	elseif tmp then
-		o:setFillColor( unpack( tmp ) )
-	end
-	o.strokeWidth = v_params.stroke_width
-	tmp = v_params.stroke_color
-	if tmp and tmp.gradient then
-		o:setStrokeColor( tmp )
-	elseif tmp then
-		o:setStrokeColor( unpack( tmp ) )
-	end
+	o.x, o.y = 0, 0
 
 	self.view:insert( 1, o ) -- insert over background
 	self._view = o
-
 end
 
 
