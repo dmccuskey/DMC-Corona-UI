@@ -231,7 +231,7 @@ local function inheritsFrom( baseClass, options, constructor )
 	-- flag to indicate this is a subclass object
 	-- will be set in the regular constructor
 	options = options or {}
-	options.__setIntermediate = true
+	options.__set_intermediate = true
 
 	-- get default constructor
 	if baseClass and constructor == nil then
@@ -433,21 +433,18 @@ end
 
 -- new()
 -- this method drives the initialization flow for DMC-style objects
--- typically, you won't override this
+-- typically you won't override this
 --
 function ObjectBase:new( params )
 	params = params or {}
+	params.__set_intermediate = params.__set_intermediate == true and params.__set_intermediate or false
 	--==--
 
 	local o = self:_bless()
 
 	-- set flag if this is an Intermediate class
-	if params.__setIntermediate == true then
-		o.is_intermediate = true
-		params.__setIntermediate = nil
-	else
-		o.is_intermediate = false
-	end
+	o.is_intermediate = params.__set_intermediate
+	params.__set_intermediate = nil
 
 	o:_init( params )
 
