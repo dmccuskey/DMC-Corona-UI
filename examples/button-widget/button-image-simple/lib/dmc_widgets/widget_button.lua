@@ -62,6 +62,7 @@ local StatesMix = require 'lua_states'
 -- Button View Components
 local BaseView = require( dmc_widget_func.find( 'widget_button.view_base' ) )
 local ImageView = require( dmc_widget_func.find( 'widget_button.view_image' ) )
+local NineSliceView = require( dmc_widget_func.find( 'widget_button.view_9slice' ) )
 local ShapeView = require( dmc_widget_func.find( 'widget_button.view_shape' ) )
 
 
@@ -79,8 +80,15 @@ local LOCAL_DEBUG = false
 --== Support Functions
 
 local function getViewTypeClass( params )
-	if params.viewClass ~= nil then
-		return params.viewClass
+	-- print( "getViewTypeClass", params, params.view )
+	params = params or {}
+	--==--
+
+	if type( params.view ) == 'table' and params.view.new then
+		return params.view
+
+	elseif params.view == NineSliceView.TYPE then
+		return NineSliceView
 
 	elseif params.shape ~= nil then
 		return ShapeView
