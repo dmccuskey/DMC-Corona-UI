@@ -168,6 +168,11 @@ function GroupBase:remove( obj )
 
 end
 
+function GroupBase.__getters:selected()
+	-- print( "GroupBase.__getters:selected" )
+	return self._selected
+end
+
 
 --====================================================================--
 --== Private Methods
