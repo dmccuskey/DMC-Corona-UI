@@ -80,7 +80,7 @@ local GroupBase = inheritsFrom( ObjectBase )
 GroupBase.NAME = "Button Group Base"
 
 GroupBase.EVENT = 'button_group_event'
-GroupBase.CHANGE = 'group_change'
+GroupBase.CHANGED = 'group_change'
 
 
 --======================================================--
@@ -198,7 +198,7 @@ function GroupBase:_dispatchChangeEvent( button )
 		id=button.id,
 		state=button:getState()
 	}
-	self:dispatchEvent( self.CHANGE, evt )
+	self:dispatchEvent( self.CHANGED, evt )
 end
 
 
