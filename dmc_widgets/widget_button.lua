@@ -128,8 +128,8 @@ ButtonBase.STATE_DISABLED = 'state_disabled'
 --== Class events
 
 ButtonBase.EVENT = 'button-event'
-ButtonBase.PHASE_PRESS = 'press'
-ButtonBase.PHASE_RELEASE = 'release'
+ButtonBase.PRESSED = 'pressed'
+ButtonBase.RELEASED = 'released'
 
 
 --======================================================--
@@ -311,6 +311,21 @@ function ButtonBase.__getters:id()
 	return self._id
 end
 
+function ButtonBase:press()
+	local bounds = self.contentBounds
+	-- setup fake press
+	local evt = {
+		target=self.view,
+		x=bounds.xMin,
+		y=bounds.yMin,
+	}
+
+	evt.phase = 'began'
+	self:_hitTouchEvent_handler( evt )
+	evt.phase = 'ended'
+	self:_hitTouchEvent_handler( evt )
+end
+
 
 function ButtonBase.__setters:onPress( value )
 	assert( type(value)=='function' or type(value)=='nil', "expected function or nil for onPress")
@@ -341,7 +356,7 @@ function ButtonBase:_handlePressDispatch()
 		target=self,
 		id=self._id,
 		state=self:getState(),
-		phase=self.PHASE_PRESS,
+		phase=self.PRESSED,
 	}
 	if cb.onPress then cb.onPress( event ) end
 	if cb.onEvent then cb.onEvent( event ) end
@@ -361,7 +376,7 @@ function ButtonBase:_handleReleaseDispatch()
 		target=self,
 		id=self._id,
 		state=self:getState(),
-		phase=self.PHASE_RELEASE,
+		phase=self.RELEASED,
 	}
 	if cb.onRelease then cb.onRelease( event ) end
 	if cb.onEvent then cb.onEvent( event ) end
