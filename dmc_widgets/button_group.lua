@@ -256,7 +256,7 @@ function RadioGroup:_buttonEvent_handler( event )
 
 	if self._selected == button then return end
 
-	if event.phase ~= button.PHASE_RELEASE then return end
+	if event.phase ~= button.RELEASED then return end
 
 	self:_setButtonGroupState( button.STATE_INACTIVE )
 	button:gotoState( button.STATE_ACTIVE )
@@ -313,7 +313,7 @@ function ToggleGroup:_buttonEvent_handler( event )
 	local button = event.target
 	local state = button:getState()
 
-	if event.phase ~= button.PHASE_RELEASE then return end
+	if event.phase ~= button.RELEASED then return end
 	if self._selected ~= button and state == button.STATE_ACTIVE then
 		self:_setButtonGroupState( button.STATE_INACTIVE )
 

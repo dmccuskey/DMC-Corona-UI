@@ -128,8 +128,8 @@ ButtonBase.STATE_DISABLED = 'state_disabled'
 --== Class events
 
 ButtonBase.EVENT = 'button-event'
-ButtonBase.PHASE_PRESS = 'press'
-ButtonBase.PHASE_RELEASE = 'release'
+ButtonBase.PRESSED = 'pressed'
+ButtonBase.RELEASED = 'released'
 
 
 --======================================================--
@@ -341,7 +341,7 @@ function ButtonBase:_handlePressDispatch()
 		target=self,
 		id=self._id,
 		state=self:getState(),
-		phase=self.PHASE_PRESS,
+		phase=self.PRESSED,
 	}
 	if cb.onPress then cb.onPress( event ) end
 	if cb.onEvent then cb.onEvent( event ) end
@@ -361,7 +361,7 @@ function ButtonBase:_handleReleaseDispatch()
 		target=self,
 		id=self._id,
 		state=self:getState(),
-		phase=self.PHASE_RELEASE,
+		phase=self.RELEASED,
 	}
 	if cb.onRelease then cb.onRelease( event ) end
 	if cb.onEvent then cb.onEvent( event ) end
