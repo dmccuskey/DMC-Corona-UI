@@ -194,6 +194,7 @@ end
 function GroupBase:_dispatchChangeEvent( button )
 	-- print( "GroupBase:_dispatchChangeEvent" )
 	local evt = {
+		target=self,
 		button=button,
 		id=button.id,
 		state=button:getState()
