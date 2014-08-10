@@ -261,7 +261,7 @@ function ButtonBase:_initComplete()
 	local o
 
 	o = self._bg_hit
-	o._f = self:createCallback( self._hitTouchEvent_handler )
+	o._f = self:createCallback( self._hitareaTouch_handler )
 	o:addEventListener( 'touch', o._f )
 
 	if is_active then
@@ -344,10 +344,10 @@ end
 --====================================================================--
 --== Private Methods
 
--- handle 'press' events
+-- dispatch 'press' events
 --
-function ButtonBase:_handlePressDispatch()
-	-- print( "ButtonBase:_handlePressDispatch" )
+function ButtonBase:_doPressEventDispatch()
+	-- print( "ButtonBase:_doPressEventDispatch" )
 
 	if not self.enabled then return end
 
@@ -364,10 +364,10 @@ function ButtonBase:_handlePressDispatch()
 	self:dispatchEvent( self.EVENT, event )
 end
 
--- handle 'release' events
+-- dispatch 'release' events
 --
-function ButtonBase:_handleReleaseDispatch()
-	-- print( "ButtonBase:_handleReleaseDispatch" )
+function ButtonBase:_doReleaseEventDispatch()
+	-- print( "ButtonBase:_doReleaseEventDispatch" )
 
 	if not self.enabled then return end
 
@@ -564,8 +564,8 @@ PushButton.TYPE = 'push'
 --====================================================================--
 --== Event Handlers
 
-function PushButton:_hitTouchEvent_handler( event )
-	-- print( "PushButton:_hitTouchEvent_handler", event.phase )
+function PushButton:_hitareaTouch_handler( event )
+	-- print( "PushButton:_hitareaTouch_handler", event.phase )
 
 	if not self.enabled then return true end
 
@@ -580,7 +580,7 @@ function PushButton:_hitTouchEvent_handler( event )
 		display.getCurrentStage():setFocus( target )
 		self._has_focus = true
 		self:gotoState( self.STATE_ACTIVE )
-		self:_handlePressDispatch()
+		self:_doPressEventDispatch()
 
 		return true
 	end
@@ -600,7 +600,7 @@ function PushButton:_hitTouchEvent_handler( event )
 		self:gotoState( self.STATE_INACTIVE )
 
 		if is_bounded then
-			self:_handleReleaseDispatch()
+			self:_doReleaseEventDispatch()
 		end
 	end
 
@@ -647,8 +647,8 @@ end
 --====================================================================--
 --== Event Handlers
 
-function ToggleButton:_hitTouchEvent_handler( event )
-	-- print( "ToggleButton:_hitTouchEvent_handler", event.phase )
+function ToggleButton:_hitareaTouch_handler( event )
+	-- print( "ToggleButton:_hitareaTouch_handler", event.phase )
 
 	if not self.enabled then return true end
 
@@ -665,7 +665,7 @@ function ToggleButton:_hitTouchEvent_handler( event )
 		display.getCurrentStage():setFocus( target )
 		self._has_focus = true
 		self:gotoState( next_state, { set_state=false } )
-		self:_handlePressDispatch()
+		self:_doPressEventDispatch()
 
 		return true
 	end
@@ -684,7 +684,7 @@ function ToggleButton:_hitTouchEvent_handler( event )
 		self._has_focus = false
 		if is_bounded then
 			self:gotoState( next_state )
-			self:_handleReleaseDispatch()
+			self:_doReleaseEventDispatch()
 		else
 			self:gotoState( curr_state )
 		end
