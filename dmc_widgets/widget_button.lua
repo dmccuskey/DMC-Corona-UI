@@ -331,7 +331,6 @@ function ButtonBase:press()
 	self:_hitTouchEvent_handler( evt )
 end
 
-
 function ButtonBase.__setters:onPress( value )
 	assert( type(value)=='function' or type(value)=='nil', "expected function or nil for onPress")
 	self._callbacks.onPress = value
@@ -352,6 +351,13 @@ end
 function ButtonBase.__setters:value( value )
 	self._value = value
 end
+
+
+function ButtonBase.__getters:views()
+	return self._views
+end
+
+
 
 --====================================================================--
 --== Private Methods
