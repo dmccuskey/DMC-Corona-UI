@@ -316,21 +316,6 @@ function ButtonBase.__setters:id( value )
 end
 
 
-function ButtonBase:press()
-	local bounds = self.contentBounds
-	-- setup fake press
-	local evt = {
-		target=self.view,
-		x=bounds.xMin,
-		y=bounds.yMin,
-	}
-
-	evt.phase = 'began'
-	self:_hitTouchEvent_handler( evt )
-	evt.phase = 'ended'
-	self:_hitTouchEvent_handler( evt )
-end
-
 function ButtonBase.__setters:onPress( value )
 	assert( type(value)=='function' or type(value)=='nil', "expected function or nil for onPress")
 	self._callbacks.onPress = value
@@ -357,6 +342,21 @@ function ButtonBase.__getters:views()
 	return self._views
 end
 
+
+function ButtonBase:press()
+	local bounds = self.contentBounds
+	-- setup fake press
+	local evt = {
+		target=self.view,
+		x=bounds.xMin,
+		y=bounds.yMin,
+	}
+
+	evt.phase = 'began'
+	self:_hitTouchEvent_handler( evt )
+	evt.phase = 'ended'
+	self:_hitTouchEvent_handler( evt )
+end
 
 
 --====================================================================--
