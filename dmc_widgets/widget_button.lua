@@ -311,6 +311,10 @@ end
 function ButtonBase.__getters:id()
 	return self._id
 end
+function ButtonBase.__setters:id( value )
+	self._id = value
+end
+
 
 function ButtonBase:press()
 	local bounds = self.contentBounds
