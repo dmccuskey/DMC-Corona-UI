@@ -151,6 +151,7 @@ function ButtonBase:_init( params )
 	self._params = params -- save for view creation
 
 	self._id = params.id
+	self._value = params.value
 
 	self._width = params.width
 	self._height = params.height
@@ -340,6 +341,13 @@ function ButtonBase.__setters:onEvent( value )
 	self._callbacks.onEvent = value
 end
 
+
+function ButtonBase.__getters:value()
+	return self._value
+end
+function ButtonBase.__setters:value( value )
+	self._value = value
+end
 
 --====================================================================--
 --== Private Methods
