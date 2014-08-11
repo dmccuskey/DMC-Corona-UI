@@ -61,15 +61,15 @@ The library has been designed to give a lot of flexibility where it is stored in
 The `Widgets.newButton` constructor is used to create new buttons.
 
 Button types can be one of:
-* *push* button (a typical momentary button)
-* *toggle* button (a typical on-off button)
-* *radio* button
+* **push** button (a typical momentary button)
+* **toggle** button (a typical on-off button)
+* **radio** button
 
 And the visual backgrounds can be created from:
-* a *9-slice* image sheet
-* plain *images* or those from an image sheet
-* *native shapes* from the Corona SDK
-* or a plain, *text-only* button
+* a **9-slice** image sheet
+* plain **images** or those from an image sheet
+* **native shapes** from the Corona SDK
+* or a plain, **text-only** button
 
 Combined with `Widgets.newButtonGroup`, `toggle` or `radio` buttons can be put into logical groups and can react to changes to other buttons in the group.
 
