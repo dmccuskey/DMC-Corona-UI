@@ -353,7 +353,7 @@ function ButtonGroup.create( params )
 		return ToggleGroup:new( params )
 
 	else
-		error( "newButton: unknown button type: " .. tostring( params.type ) )
+		error( "newButtonGroup: unknown button type: " .. tostring( params.type ) )
 
 	end
 end
