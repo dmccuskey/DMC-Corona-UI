@@ -47,11 +47,11 @@ The library has been designed to give a lot of flexibility where it is stored in
 
 * [newButton](#newButton)
 
-  Automatic JSON storage for your app. [Read more...](#newButton)
+  Advanced buttons for your applications. [Read more...](#newButton)
 
 * [newButtonGroup](#newButtonGroup)
 
-  This module has been deprecated. Please use the buttons from [dmc-corona-widgets](https://github.com/dmccuskey/dmc-corona-widgets)  [Read more...](#dmc_buttons)
+  Logical groups for `toggle` or `radio` buttons. [Read more...](#newButtonGroup)
 
 
 
