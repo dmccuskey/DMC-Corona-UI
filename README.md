@@ -58,6 +58,9 @@ The library has been designed to give a lot of flexibility where it is stored in
 
   Logical groups for `toggle` or `radio` buttons. [Read more...](#newButtonGroup)
 
+* [tableView Widget](#newTableView)
+
+  Modern version of a table scroller. [Read more...](#newTableView)
 
 
 <a name="newButton"></a>
@@ -93,7 +96,7 @@ There are examples in the folder `examples/button-widget/` for each of the butto
 
 
 <a name="newButtonGroup"></a>
-### Module: newButtonGroup ###
+### Widget: newButtonGroup ###
 
 The `Widgets.newButtonGroup` constructor is used to create groups for buttons.
 
@@ -111,12 +114,29 @@ There are examples in the folder `examples/button-widget/` for each of the butto
 
 
 
+<a name="newTableView"></a>
+### Widget: newTableView ###
+
+This widget brings the scroller into the modern world. Advanced features include:
+
+* separate onRender/onUnrender method calls
+  Plays nicely with other Lua OO-libraries
+
+* y-offset value
+  For use with moving headers, etc (eg, iOS Safari header/footer)
+
+* Auto-masking
+  Can have table view which is smaller than device screen.
+
+* takeFocus/returnFocus
+  allows the scroller to get first chance at the touch, then returned to row. this gives more responsive scrolling and stops initial row highlighting when scrolling.
+
 
 ## License ##
 
 The MIT License (MIT)
 
-Copyright (c) 2014 David McCuskey
+Copyright (c) 2013-2014 David McCuskey
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
