@@ -60,6 +60,8 @@ The library has been designed to give a lot of flexibility where it is stored in
 
 The `Widgets.newButton` constructor is used to create new buttons.
 
+Buttons are very configurable and can be modified on-the-fly at any point in your application.
+
 Button types can be one of:
 * **push** button (a typical momentary button)
 * **toggle** button (a typical on-off button)
