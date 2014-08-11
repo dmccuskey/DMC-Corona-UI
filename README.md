@@ -2,9 +2,13 @@
 
 The DMC Corona Widget library is collection of advanced widgets for the Corona SDK. They can be used in any size or type of application.
 
+The module architecture is heavily object-oriented, but each module can be used with any style of coding. The OO-nature ensures that the modules can be easily re-used or modified as necessary.
+
+
 **Documentation & Examples**
 
 There are examples and documentation available for the modules. Look in the `examples` folder for available examples which can be run directly in the Corona SDK. Documentation is online at: [docs.davidmccuskey.com](http://docs.davidmccuskey.com/display/docs/DMC+Corona+Widgets)
+
 
 **Questions or Comments**
 
@@ -13,6 +17,7 @@ If you have questions or comments you can either (preferred order):
 * send a PM @ coronalabs.com: @dmccuskey
 * post an issue here on github
 * post to the Corona forums: http://forums.coronalabs.com
+
 
 **Issues**
 
