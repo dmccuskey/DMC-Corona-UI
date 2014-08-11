@@ -312,6 +312,7 @@ function ButtonBase.__getters:id()
 	return self._id
 end
 function ButtonBase.__setters:id( value )
+	assert( type(value)=='string' or type(value)=='nil', "expected string or nil for button id")
 	self._id = value
 end
 
@@ -374,6 +375,7 @@ function ButtonBase:_doPressEventDispatch()
 	local event = {
 		target=self,
 		id=self._id,
+		value=self._value,
 		state=self:getState(),
 		phase=self.PRESSED,
 	}
@@ -394,6 +396,7 @@ function ButtonBase:_doReleaseEventDispatch()
 	local event = {
 		target=self,
 		id=self._id,
+		value=self._value,
 		state=self:getState(),
 		phase=self.RELEASED,
 	}

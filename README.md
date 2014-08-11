@@ -1,10 +1,14 @@
 # Overview #
 
-The DMC Corona Widget library is collection of advanced widgets for the Corona SDK. Though useful for any type of application, they are perhaps more applicable to business-type, mobile applications.
+The DMC Corona Widget library is collection of advanced widgets for the Corona SDK. They can be used in any size or type of application.
+
+The module architecture is heavily object-oriented, but each module can be used with any style of coding. The OO-nature ensures that the modules can be easily re-used or modified as necessary.
+
 
 **Documentation & Examples**
 
 There are examples and documentation available for the modules. Look in the `examples` folder for available examples which can be run directly in the Corona SDK. Documentation is online at: [docs.davidmccuskey.com](http://docs.davidmccuskey.com/display/docs/DMC+Corona+Widgets)
+
 
 **Questions or Comments**
 
@@ -13,6 +17,7 @@ If you have questions or comments you can either (preferred order):
 * send a PM @ coronalabs.com: @dmccuskey
 * post an issue here on github
 * post to the Corona forums: http://forums.coronalabs.com
+
 
 **Issues**
 
@@ -47,11 +52,11 @@ The library has been designed to give a lot of flexibility where it is stored in
 
 * [newButton](#newButton)
 
-  Automatic JSON storage for your app. [Read more...](#newButton)
+  Advanced buttons for your applications. [Read more...](#newButton)
 
 * [newButtonGroup](#newButtonGroup)
 
-  This module has been deprecated. Please use the buttons from [dmc-corona-widgets](https://github.com/dmccuskey/dmc-corona-widgets)  [Read more...](#dmc_buttons)
+  Logical groups for `toggle` or `radio` buttons. [Read more...](#newButtonGroup)
 
 
 
@@ -60,16 +65,18 @@ The library has been designed to give a lot of flexibility where it is stored in
 
 The `Widgets.newButton` constructor is used to create new buttons.
 
+Buttons are very configurable and can be modified on-the-fly at any point in your application.
+
 Button types can be one of:
-* push button (a typical momentary button)
-* toggle button (a typical on-off button)
-* radio button
+* **push** button (a typical momentary button)
+* **toggle** button (a typical on-off button)
+* **radio** button
 
 And the visual backgrounds can be created from:
-* a 9-slice image sheet
-* plain images or those from an image sheet
-* native shapes from the Corona SDK
-* or a plain, text-only button
+* a **9-slice** image sheet
+* plain **images** or those from an image sheet
+* **native shapes** from the Corona SDK
+* or a plain, **text-only** button
 
 Combined with `Widgets.newButtonGroup`, `toggle` or `radio` buttons can be put into logical groups and can react to changes to other buttons in the group.
 
