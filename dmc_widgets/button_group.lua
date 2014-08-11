@@ -67,8 +67,6 @@ local Utils = require 'dmc_utils'
 local inheritsFrom = Objects.inheritsFrom
 local ObjectBase = Objects.ObjectBase
 
-local LOCAL_DEBUG = false
-
 
 
 --====================================================================--
@@ -140,6 +138,12 @@ end
 --====================================================================--
 --== Public Methods
 
+function GroupBase.__getters:selected()
+	-- print( "GroupBase.__getters:selected" )
+	return self._selected
+end
+
+
 -- we only want items inserted into proper layer
 function GroupBase:add( obj, params )
 	-- print( "GroupBase:add" )
@@ -166,11 +170,6 @@ function GroupBase:remove( obj )
 	self._buttons[ key ] = nil
 	obj:removeEventListener( obj.EVENT, self._button_handler )
 
-end
-
-function GroupBase.__getters:selected()
-	-- print( "GroupBase.__getters:selected" )
-	return self._selected
 end
 
 
@@ -354,7 +353,7 @@ function ButtonGroup.create( params )
 		return ToggleGroup:new( params )
 
 	else
-		error( "newButton: unknown button type: " .. tostring( params.type ) )
+		error( "newButtonGroup: unknown button type: " .. tostring( params.type ) )
 
 	end
 end
