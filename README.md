@@ -1,6 +1,6 @@
 # Overview #
 
-The DMC Corona Widget library is collection of advanced widgets for the Corona SDK. Though useful for any type of application, they are perhaps more applicable to business-type, mobile applications.
+The DMC Corona Widget library is collection of advanced widgets for the Corona SDK. They can be used in any size or type of application.
 
 **Documentation & Examples**
 
