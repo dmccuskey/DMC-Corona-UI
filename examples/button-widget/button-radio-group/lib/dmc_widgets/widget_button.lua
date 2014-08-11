@@ -128,8 +128,8 @@ ButtonBase.STATE_DISABLED = 'state_disabled'
 --== Class events
 
 ButtonBase.EVENT = 'button-event'
-ButtonBase.PHASE_PRESS = 'press'
-ButtonBase.PHASE_RELEASE = 'release'
+ButtonBase.PRESSED = 'pressed'
+ButtonBase.RELEASED = 'released'
 
 
 --======================================================--
@@ -151,6 +151,7 @@ function ButtonBase:_init( params )
 	self._params = params -- save for view creation
 
 	self._id = params.id
+	self._value = params.value
 
 	self._width = params.width
 	self._height = params.height
@@ -261,7 +262,7 @@ function ButtonBase:_initComplete()
 	local o
 
 	o = self._bg_hit
-	o._f = self:createCallback( self._hitTouchEvent_handler )
+	o._f = self:createCallback( self._hitareaTouch_handler )
 	o:addEventListener( 'touch', o._f )
 
 	if is_active then
@@ -300,9 +301,9 @@ function ButtonBase.__setters:enabled( value )
 	if self.enabled == value then return end
 
 	if value == true then
-		self:gotoState( ButtonBase.STATE_INACTIVE )
+		self:gotoState( ButtonBase.STATE_INACTIVE, { enabled=value } )
 	else
-		self:gotoState( ButtonBase.STATE_DISABLED )
+		self:gotoState( ButtonBase.STATE_DISABLED, { enabled=value } )
 	end
 end
 
@@ -310,23 +311,71 @@ end
 function ButtonBase.__getters:id()
 	return self._id
 end
+function ButtonBase.__setters:id( value )
+	self._id = value
+end
+
+
+function ButtonBase.__setters:onPress( value )
+	assert( type(value)=='function' or type(value)=='nil', "expected function or nil for onPress")
+	self._callbacks.onPress = value
+end
+function ButtonBase.__setters:onRelease( value )
+	assert( type(value)=='function' or type(value)=='nil', "expected function or nil for onRelease")
+	self._callbacks.onRelease = value
+end
+function ButtonBase.__setters:onEvent( value )
+	assert( type(value)=='function' or type(value)=='nil', "expected function or nil for onEvent")
+	self._callbacks.onEvent = value
+end
+
+
+function ButtonBase.__getters:value()
+	return self._value
+end
+function ButtonBase.__setters:value( value )
+	self._value = value
+end
+
+
+function ButtonBase.__getters:views()
+	return self._views
+end
+
+-- Method to programmatically press the button
+--
+function ButtonBase:press()
+	local bounds = self.contentBounds
+	-- setup fake touch event
+	local evt = {
+		target=self.view,
+		x=bounds.xMin,
+		y=bounds.yMin,
+	}
+
+	evt.phase = 'began'
+	self:_hitareaTouch_handler( evt )
+	evt.phase = 'ended'
+	self:_hitareaTouch_handler( evt )
+end
 
 
 --====================================================================--
 --== Private Methods
 
--- handle 'press' events
+-- dispatch 'press' events
 --
-function ButtonBase:_handlePressDispatch()
-	-- print( "ButtonBase:_handlePressDispatch" )
+function ButtonBase:_doPressEventDispatch()
+	-- print( "ButtonBase:_doPressEventDispatch" )
 
 	if not self.enabled then return end
 
 	local cb = self._callbacks
 	local event = {
+		target=self,
 		id=self._id,
 		state=self:getState(),
-		phase=self.PHASE_PRESS,
+		phase=self.PRESSED,
 	}
 	if cb.onPress then cb.onPress( event ) end
 	if cb.onEvent then cb.onEvent( event ) end
@@ -334,18 +383,19 @@ function ButtonBase:_handlePressDispatch()
 	self:dispatchEvent( self.EVENT, event )
 end
 
--- handle 'release' events
+-- dispatch 'release' events
 --
-function ButtonBase:_handleReleaseDispatch()
-	-- print( "ButtonBase:_handleReleaseDispatch" )
+function ButtonBase:_doReleaseEventDispatch()
+	-- print( "ButtonBase:_doReleaseEventDispatch" )
 
 	if not self.enabled then return end
 
 	local cb = self._callbacks
 	local event = {
+		target=self,
 		id=self._id,
 		state=self:getState(),
-		phase=self.PHASE_RELEASE,
+		phase=self.RELEASED,
 	}
 	if cb.onRelease then cb.onRelease( event ) end
 	if cb.onEvent then cb.onEvent( event ) end
@@ -467,15 +517,22 @@ function ButtonBase:do_state_disabled( params )
 	self:setState( ButtonBase.STATE_DISABLED )
 end
 
+--[[
+params.enabled is to make sure that we have been enabled
+since someone else might ask us to change state eg, to ACTIVE
+when we are disabled (like a button group)
+--]]
 function ButtonBase:state_disabled( next_state, params )
 	-- print( "ButtonBase:state_disabled >>", next_state )
 	params = params or {}
+	params.enabled = params.enabled == nil and false or params.enabled
 	--==--
+	--
 
-	if next_state == ButtonBase.STATE_ACTIVE then
+	if next_state == ButtonBase.STATE_ACTIVE and params.enabled == true then
 		self:do_state_active( params )
 
-	elseif next_state == ButtonBase.STATE_INACTIVE then
+	elseif next_state == ButtonBase.STATE_INACTIVE and params.enabled == true then
 		self:do_state_inactive( params )
 
 	elseif next_state == ButtonBase.STATE_DISABLED then
@@ -526,8 +583,8 @@ PushButton.TYPE = 'push'
 --====================================================================--
 --== Event Handlers
 
-function PushButton:_hitTouchEvent_handler( event )
-	-- print( "PushButton:_hitTouchEvent_handler", event.phase )
+function PushButton:_hitareaTouch_handler( event )
+	-- print( "PushButton:_hitareaTouch_handler", event.phase )
 
 	if not self.enabled then return true end
 
@@ -542,7 +599,7 @@ function PushButton:_hitTouchEvent_handler( event )
 		display.getCurrentStage():setFocus( target )
 		self._has_focus = true
 		self:gotoState( self.STATE_ACTIVE )
-		self:_handlePressDispatch()
+		self:_doPressEventDispatch()
 
 		return true
 	end
@@ -562,7 +619,7 @@ function PushButton:_hitTouchEvent_handler( event )
 		self:gotoState( self.STATE_INACTIVE )
 
 		if is_bounded then
-			self:_handleReleaseDispatch()
+			self:_doReleaseEventDispatch()
 		end
 	end
 
@@ -609,8 +666,8 @@ end
 --====================================================================--
 --== Event Handlers
 
-function ToggleButton:_hitTouchEvent_handler( event )
-	-- print( "ToggleButton:_hitTouchEvent_handler", event.phase )
+function ToggleButton:_hitareaTouch_handler( event )
+	-- print( "ToggleButton:_hitareaTouch_handler", event.phase )
 
 	if not self.enabled then return true end
 
@@ -627,7 +684,7 @@ function ToggleButton:_hitTouchEvent_handler( event )
 		display.getCurrentStage():setFocus( target )
 		self._has_focus = true
 		self:gotoState( next_state, { set_state=false } )
-		self:_handlePressDispatch()
+		self:_doPressEventDispatch()
 
 		return true
 	end
@@ -646,7 +703,7 @@ function ToggleButton:_hitTouchEvent_handler( event )
 		self._has_focus = false
 		if is_bounded then
 			self:gotoState( next_state )
-			self:_handleReleaseDispatch()
+			self:_doReleaseEventDispatch()
 		else
 			self:gotoState( curr_state )
 		end

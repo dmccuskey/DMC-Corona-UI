@@ -67,8 +67,6 @@ local Utils = require 'dmc_utils'
 local inheritsFrom = Objects.inheritsFrom
 local ObjectBase = Objects.ObjectBase
 
-local LOCAL_DEBUG = false
-
 
 
 --====================================================================--
@@ -80,7 +78,7 @@ local GroupBase = inheritsFrom( ObjectBase )
 GroupBase.NAME = "Button Group Base"
 
 GroupBase.EVENT = 'button_group_event'
-GroupBase.CHANGE = 'group_change'
+GroupBase.CHANGED = 'group_change'
 
 
 --======================================================--
@@ -140,6 +138,12 @@ end
 --====================================================================--
 --== Public Methods
 
+function GroupBase.__getters:selected()
+	-- print( "GroupBase.__getters:selected" )
+	return self._selected
+end
+
+
 -- we only want items inserted into proper layer
 function GroupBase:add( obj, params )
 	-- print( "GroupBase:add" )
@@ -189,11 +193,12 @@ end
 function GroupBase:_dispatchChangeEvent( button )
 	-- print( "GroupBase:_dispatchChangeEvent" )
 	local evt = {
+		target=self,
 		button=button,
 		id=button.id,
 		state=button:getState()
 	}
-	self:dispatchEvent( self.CHANGE, evt )
+	self:dispatchEvent( self.CHANGED, evt )
 end
 
 
@@ -251,7 +256,7 @@ function RadioGroup:_buttonEvent_handler( event )
 
 	if self._selected == button then return end
 
-	if event.phase ~= button.PHASE_RELEASE then return end
+	if event.phase ~= button.RELEASED then return end
 
 	self:_setButtonGroupState( button.STATE_INACTIVE )
 	button:gotoState( button.STATE_ACTIVE )
@@ -308,7 +313,7 @@ function ToggleGroup:_buttonEvent_handler( event )
 	local button = event.target
 	local state = button:getState()
 
-	if event.phase ~= button.PHASE_RELEASE then return end
+	if event.phase ~= button.RELEASED then return end
 	if self._selected ~= button and state == button.STATE_ACTIVE then
 		self:_setButtonGroupState( button.STATE_INACTIVE )
 
