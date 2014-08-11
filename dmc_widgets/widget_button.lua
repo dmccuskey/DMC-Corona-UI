@@ -342,10 +342,11 @@ function ButtonBase.__getters:views()
 	return self._views
 end
 
-
+-- Method to programmatically press the button
+--
 function ButtonBase:press()
 	local bounds = self.contentBounds
-	-- setup fake press
+	-- setup fake touch event
 	local evt = {
 		target=self.view,
 		x=bounds.xMin,
@@ -353,9 +354,9 @@ function ButtonBase:press()
 	}
 
 	evt.phase = 'began'
-	self:_hitTouchEvent_handler( evt )
+	self:_hitareaTouch_handler( evt )
 	evt.phase = 'ended'
-	self:_hitTouchEvent_handler( evt )
+	self:_hitareaTouch_handler( evt )
 end
 
 
