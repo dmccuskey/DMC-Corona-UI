@@ -175,7 +175,12 @@ function BaseView:_createLabelParams( v_name, params )
 	local l_p = params.label
 	local p
 
-	if type(l_p)=='string' then
+	if l_p==nil then
+		p = {
+			text=''
+		}
+
+	elseif type(l_p)=='string' then
 		p = {
 			text=l_p
 		}
