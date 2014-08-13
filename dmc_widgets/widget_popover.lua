@@ -304,6 +304,7 @@ function Popover:_bgTouchEvent_handler( event )
 	if event.phase == 'began' then
 		display.getCurrentStage():setFocus( target )
 		self._has_focus = true
+		return true
 	end
 
 	if not self._has_focus then return end
@@ -314,6 +315,7 @@ function Popover:_bgTouchEvent_handler( event )
 		self:_doOutsideTouchAction()
 	end
 
+	return true
 end
 
 
