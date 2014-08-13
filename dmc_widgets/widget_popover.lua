@@ -200,6 +200,8 @@ function Popover:_initComplete()
 
 	local o, f
 
+	self:setTouchBlock( self._bg_main )
+
 	o = self._bg_touch
 	o._f = self:createCallback( self._bgTouchEvent_handler )
 	o:addEventListener( 'touch', o._f )
@@ -215,6 +217,8 @@ function Popover:_undoInitComplete()
 	o = self._bg_touch
 	o:removeEventListener( 'touch', o._f )
 	o._f = nil
+
+	self:unsetTouchBlock( self._bg_main )
 
 	--==--
 	self:superCall( "_undoInitComplete" )
@@ -300,6 +304,7 @@ function Popover:_bgTouchEvent_handler( event )
 	if event.phase == 'began' then
 		display.getCurrentStage():setFocus( target )
 		self._has_focus = true
+		return true
 	end
 
 	if not self._has_focus then return end
@@ -310,6 +315,7 @@ function Popover:_bgTouchEvent_handler( event )
 		self:_doOutsideTouchAction()
 	end
 
+	return true
 end
 
 
