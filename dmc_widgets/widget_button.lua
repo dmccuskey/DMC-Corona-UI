@@ -292,18 +292,18 @@ end
 --====================================================================--
 --== Public Methods
 
-function ButtonBase.__getters:enabled()
+function ButtonBase.__getters:is_enabled()
 	return ( self:getState() ~= self.STATE_DISABLED )
 end
-function ButtonBase.__setters:enabled( value )
+function ButtonBase.__setters:is_enabled( value )
 	assert( type(value)=='boolean', "newButton: expected boolean for property 'enabled'")
 	--==--
-	if self.enabled == value then return end
+	if self.is_enabled == value then return end
 
 	if value == true then
-		self:gotoState( ButtonBase.STATE_INACTIVE, { enabled=value } )
+		self:gotoState( ButtonBase.STATE_INACTIVE, { is_enabled=value } )
 	else
-		self:gotoState( ButtonBase.STATE_DISABLED, { enabled=value } )
+		self:gotoState( ButtonBase.STATE_DISABLED, { is_enabled=value } )
 	end
 end
 
@@ -369,7 +369,7 @@ end
 function ButtonBase:_doPressEventDispatch()
 	-- print( "ButtonBase:_doPressEventDispatch" )
 
-	if not self.enabled then return end
+	if not self.is_enabled then return end
 
 	local cb = self._callbacks
 	local event = {
@@ -390,7 +390,7 @@ end
 function ButtonBase:_doReleaseEventDispatch()
 	-- print( "ButtonBase:_doReleaseEventDispatch" )
 
-	if not self.enabled then return end
+	if not self.is_enabled then return end
 
 	local cb = self._callbacks
 	local event = {
@@ -521,21 +521,21 @@ function ButtonBase:do_state_disabled( params )
 end
 
 --[[
-params.enabled is to make sure that we have been enabled
+params.is_enabled is to make sure that we have been enabled
 since someone else might ask us to change state eg, to ACTIVE
 when we are disabled (like a button group)
 --]]
 function ButtonBase:state_disabled( next_state, params )
 	-- print( "ButtonBase:state_disabled >>", next_state )
 	params = params or {}
-	params.enabled = params.enabled == nil and false or params.enabled
+	params.is_enabled = params.is_enabled == nil and false or params.is_enabled
 	--==--
 	--
 
-	if next_state == ButtonBase.STATE_ACTIVE and params.enabled == true then
+	if next_state == ButtonBase.STATE_ACTIVE and params.is_enabled == true then
 		self:do_state_active( params )
 
-	elseif next_state == ButtonBase.STATE_INACTIVE and params.enabled == true then
+	elseif next_state == ButtonBase.STATE_INACTIVE and params.is_enabled == true then
 		self:do_state_inactive( params )
 
 	elseif next_state == ButtonBase.STATE_DISABLED then
@@ -589,7 +589,7 @@ PushButton.TYPE = 'push'
 function PushButton:_hitareaTouch_handler( event )
 	-- print( "PushButton:_hitareaTouch_handler", event.phase )
 
-	if not self.enabled then return true end
+	if not self.is_enabled then return true end
 
 	local target = event.target
 	local bounds = target.contentBounds
@@ -672,7 +672,7 @@ end
 function ToggleButton:_hitareaTouch_handler( event )
 	-- print( "ToggleButton:_hitareaTouch_handler", event.phase )
 
-	if not self.enabled then return true end
+	if not self.is_enabled then return true end
 
 	local target = event.target
 	local bounds = target.contentBounds
