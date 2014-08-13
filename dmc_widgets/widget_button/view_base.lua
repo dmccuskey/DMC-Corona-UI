@@ -155,7 +155,12 @@ end
 --====================================================================--
 --== Public Methods
 
--- none
+function BaseView.__getters:background()
+	return self._view
+end
+function BaseView.__getters:label()
+	return self._label
+end
 
 
 --====================================================================--
