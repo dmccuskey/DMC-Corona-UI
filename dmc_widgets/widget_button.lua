@@ -311,6 +311,10 @@ function ButtonBase.__setters:is_enabled( value )
 	end
 end
 
+function ButtonBase.__getters:is_active()
+	return ( self:getState() == self.STATE_ACTIVE )
+end
+
 
 function ButtonBase.__getters:id()
 	return self._id
