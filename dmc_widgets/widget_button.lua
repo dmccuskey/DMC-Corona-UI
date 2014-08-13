@@ -125,6 +125,10 @@ ButtonBase.STATE_ACTIVE = 'state_active'
 ButtonBase.STATE_INACTIVE = 'state_inactive'
 ButtonBase.STATE_DISABLED = 'state_disabled'
 
+ButtonBase.ACTIVE = ButtonBase.STATE_ACTIVE
+ButtonBase.INACTIVE = ButtonBase.STATE_INACTIVE
+ButtonBase.DISABLED = ButtonBase.STATE_DISABLED
+
 --== Class events
 
 ButtonBase.EVENT = 'button-event'
