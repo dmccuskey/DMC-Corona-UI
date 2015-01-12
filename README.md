@@ -48,7 +48,7 @@ The library has been designed to give a lot of flexibility where it is stored in
 
 
 
-## Current Modules ##
+## Current Widgets ##
 
 * [newButton](#newButton)
 
@@ -57,6 +57,18 @@ The library has been designed to give a lot of flexibility where it is stored in
 * [newButtonGroup](#newButtonGroup)
 
   Logical groups for `toggle` or `radio` buttons. [Read more...](#newButtonGroup)
+
+* [newTableView]
+
+  Advanced table functionality to power pull-to-refresh, moving header/footers, all OO libraries, and more.
+
+* [newSlideView]
+
+  Advanced widget for slide carousels.
+
+* [newPageControl]
+
+  Widget to display number of open views and which is visible.
 
 
 
