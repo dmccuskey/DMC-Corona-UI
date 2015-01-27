@@ -1,31 +1,34 @@
 --====================================================================--
 -- dmc_widgets.lua
 --
+-- entry point into dmc-corona-widgets
 --
--- by David McCuskey
--- Documentation: http://docs.davidmccuskey.com/display/docs/dmc_widgets.lua
+-- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
 
 --[[
 
-Copyright (C) 2013-2014 David McCuskey. All Rights Reserved.
+The MIT License (MIT)
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in the
-Software without restriction, including without limitation the rights to use, copy,
-modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
-and to permit persons to whom the Software is furnished to do so, subject to the
-following conditions:
+Copyright (c) 2013-2015 David McCuskey
 
-The above copyright notice and this permission notice shall be included in all copies
-or substantial portions of the Software.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
-FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-DEALINGS IN THE SOFTWARE.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
 --]]
 
@@ -94,8 +97,10 @@ dmc_lib_data = _G.__dmc_corona
 dmc_lib_info = dmc_lib_data.dmc_corona
 
 
+
 --===================================================================--
 --== Imports
+
 
 Widget.Button = require( PATH .. '.' .. 'widget_button' )
 Widget.ButtonGroup = require( PATH .. '.' .. 'button_group' )
@@ -105,7 +110,7 @@ Widget.ButtonGroup = require( PATH .. '.' .. 'button_group' )
 
 --===================================================================--
 --== newButton widget
---===================================================================--
+
 
 function Widget.newButton( options )
 	local theme = nil
@@ -114,9 +119,10 @@ function Widget.newButton( options )
 end
 
 
+
 --===================================================================--
 --== newButtonGroup widget
---===================================================================--
+
 
 function Widget.newButtonGroup( options )
 	local widget = Widget.ButtonGroup
@@ -124,9 +130,10 @@ function Widget.newButtonGroup( options )
 end
 
 
+
 --===================================================================--
 --== newPopover widget
---===================================================================--
+
 
 function Widget.newPopover( options )
 	local theme = nil
@@ -135,9 +142,10 @@ function Widget.newPopover( options )
 end
 
 
+
 --===================================================================--
 --== newScroller widget
---===================================================================--
+
 
 function Widget.newScroller( options )
 	local theme = nil
@@ -146,9 +154,10 @@ function Widget.newScroller( options )
 end
 
 
+
 --===================================================================--
 --== newSlideView widget
---===================================================================--
+
 
 function Widget.newSlideView( options )
 	local theme = nil
@@ -157,9 +166,10 @@ function Widget.newSlideView( options )
 end
 
 
+
 --===================================================================--
 --== newTableView widget
---===================================================================--
+
 
 function Widget.newTableView( options )
 	local theme = nil
@@ -168,15 +178,17 @@ function Widget.newTableView( options )
 end
 
 
+
 --===================================================================--
 --== newViewPager widget
---===================================================================--
+
 
 function Widget.newViewPager( options )
 	local theme = nil
 	local _library = require( PATH .. '.' .. 'widget_viewpager' )
 	return _library:new( options, theme )
 end
+
 
 
 
