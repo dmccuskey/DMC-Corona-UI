@@ -47,6 +47,7 @@ local VERSION = "0.1.0"
 --== DMC Widgets Setup
 --====================================================================--
 
+
 local dmc_widget_data, dmc_widget_func
 dmc_widget_data = _G.__dmc_widget
 dmc_widget_func = dmc_widget_data.func
@@ -54,7 +55,7 @@ dmc_widget_func = dmc_widget_data.func
 
 
 --====================================================================--
---== DMC Widgets : Button Image View
+--== DMC Widgets : Button 9-Slice View
 --====================================================================--
 
 
@@ -64,7 +65,8 @@ dmc_widget_func = dmc_widget_data.func
 
 
 local Objects = require 'dmc_objects'
-local Utils = require 'dmc_utils'
+
+--== Components
 
 local BaseView = require( dmc_widget_func.find( 'widget_button.view_base' ) )
 
@@ -110,7 +112,7 @@ end
 
 
 --====================================================================--
---== 9-Slice View Class
+--== Button 9-Slice View Class
 --====================================================================--
 
 
