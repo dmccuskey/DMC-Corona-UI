@@ -1,14 +1,14 @@
 --====================================================================--
 -- widget_button/view_shape.lua
 --
--- Documentation: http://docs.davidmccuskey.com/display/docs/newButton.lua
+-- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
 
 --[[
 
 The MIT License (MIT)
 
-Copyright (c) 2014 David McCuskey
+Copyright (c) 2014-2015 David McCuskey
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -31,6 +31,12 @@ SOFTWARE.
 --]]
 
 
+
+--====================================================================--
+--== DMC Corona Widgets : Shape Button
+--====================================================================--
+
+
 -- Semantic Versioning Specification: http://semver.org/
 
 local VERSION = "0.1.0"
@@ -40,6 +46,7 @@ local VERSION = "0.1.0"
 --====================================================================--
 --== DMC Widgets Setup
 --====================================================================--
+
 
 local dmc_widget_data, dmc_widget_func
 dmc_widget_data = _G.__dmc_widget
@@ -56,17 +63,22 @@ dmc_widget_func = dmc_widget_data.func
 --====================================================================--
 --== Imports
 
+
 local Objects = require 'dmc_objects'
 local Utils = require 'dmc_utils'
 
+--== Components
+
 local BaseView = require( dmc_widget_func.find( 'widget_button.view_base' ) )
+
 
 
 --====================================================================--
 --== Setup, Constants
 
+
 -- setup some aliases to make code cleaner
-local inheritsFrom = Objects.inheritsFrom
+local newClass = Objects.newClass
 
 --== these are the Corona shapes which can be a button view
 local TYPE_RECT = 'rect'
@@ -82,11 +94,13 @@ local VALID_SHAPES = {
 }
 
 
-local LOCAL_DEBUG = false
+local LOCAL_DEBUG = true
+
 
 
 --====================================================================--
 --== Support Functions
+
 
 -- ensure we have a shape-type we know about
 --
@@ -196,8 +210,7 @@ end
 --====================================================================--
 
 
-local ShapeView = inheritsFrom( BaseView )
-ShapeView.NAME = "Shape View"
+local ShapeView = newClass( BaseView, {name="Shape View"} )
 
 ShapeView.TYPE = 'shape'
 
@@ -205,15 +218,16 @@ ShapeView.TYPE = 'shape'
 --======================================================--
 -- Start: Setup DMC Objects
 
-function ShapeView:_init( params )
-	-- print( "ShapeView:_init" )
+function ShapeView:__init__( params )
+	print( "ShapeView:__init__" )
 	params = params or {}
-	self:superCall( '_init', params )
+	self:superCall( '__init__', params )
 	--==--
 
 	--== Sanity Check ==--
 
-	if self.is_intermediate then return end
+	if self.is_class then return end
+
 	assert( type(params.shape)=='string', "expected string-type 'shape' parameter" )
 
 	--== Create Properties ==--
@@ -228,9 +242,9 @@ end
 
 -- _createView()
 --
-function ShapeView:_createView()
-	-- print( "ShapeView:_createView" )
-	self:superCall( '_createView' )
+function ShapeView:__createView__()
+	print( "ShapeView:__createView__" )
+	self:superCall( '__createView__' )
 	--==--
 
 	local v_params = self._view_params
@@ -260,8 +274,8 @@ function ShapeView:_createView()
 
 end
 
-function ShapeView:_undoCreateView()
-	-- print( "ShapeView:_undoCreateView" )
+function ShapeView:__undoCreateView__()
+	-- print( "ShapeView:__undoCreateView__" )
 	local o
 
 	o = self._view
@@ -269,27 +283,33 @@ function ShapeView:_undoCreateView()
 	self._view = nil
 
 	--==--
-	self:superCall( '_undoCreateView' )
+	self:superCall( '__undoCreateView__' )
 end
 
 -- END: Setup DMC Objects
 --======================================================--
 
 
+
 --====================================================================--
 --== Public Methods
 
+
 -- none
+
 
 
 --====================================================================--
 --== Private Methods
 
+
 -- none
+
 
 
 --====================================================================--
 --== Event Handlers
+
 
 -- none
 
