@@ -1,10 +1,10 @@
 {
 	"module": {
-		"default_dir": "",
+		"default_dir": "lib",
 		"libs": {
 			"dmc-corona-boot": "",
-			"DMC-Lua-Library": "dmc_corona/lib/dmc_lua",
-			"DMC-Corona-Library": "dmc_corona"
+			"DMC-Lua-Library": "lib/dmc_corona/lib/dmc_lua",
+			"DMC-Corona-Library": "lib/dmc_corona"
 		}
 	}
 }

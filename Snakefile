@@ -9,7 +9,7 @@ except:
 module_config = {
 	"name": "DMC-Corona-Widgets",
 	"module": {
-		"dir": "",
+		"dir": "lib",
 		"files": [
 			"dmc_widgets.lua",
 			"dmc_widgets/button_group.lua",
@@ -37,7 +37,7 @@ module_config = {
 				"exp_dir": "button-widget/button-9slice-simple",
 				"requires": [],
 				"mod_dir_map": {
-					"default_dir": "lib",
+					"default_dir": "",
 					"libs": {
 						"dmc-corona-boot":""
 					}
@@ -47,7 +47,7 @@ module_config = {
 				"exp_dir": "slide_view-simple",
 				"requires": [],
 				"mod_dir_map": {
-					"default_dir": "lib",
+					"default_dir": "",
 					"libs": {
 						"dmc-corona-boot":""
 					}
