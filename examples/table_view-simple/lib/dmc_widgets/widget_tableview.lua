@@ -251,7 +251,7 @@ end
 
 
 function TableView:_isBounded( scroller, item )
-	-- print( "TableView:_isBounded", scroller, item.index )
+	print( "TableView:_isBounded", scroller, item.index )
 
 	local result = false
 	-- local test = 0
@@ -273,6 +273,7 @@ function TableView:_isBounded( scroller, item )
 		-- extends over view
 		result = true
 	end
+	print( "bound", result )
 
 	-- if item.index == 3 then
 	-- 	print( result, test, item.yMin, scroller.yMin, item.yMax, scroller.yMax )
