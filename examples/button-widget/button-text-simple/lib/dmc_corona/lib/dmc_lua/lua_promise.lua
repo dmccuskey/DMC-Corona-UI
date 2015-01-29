@@ -1,14 +1,14 @@
 --====================================================================--
 -- lua_promise.lua
 --
--- Documentation: http://docs.davidmccuskey.com/display/docs/lua_promise.lua
+-- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
 
 --[[
 
 The MIT License (MIT)
 
-Copyright (C) 2014 David McCuskey. All Rights Reserved.
+Copyright (C) 2014-2015 David McCuskey. All Rights Reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -33,27 +33,31 @@ SOFTWARE.
 
 
 --====================================================================--
--- DMC Lua Library: Promises
+--== DMC Lua Library: Lua Promise
 --====================================================================--
 
 
 -- Semantic Versioning Specification: http://semver.org/
 
-local VERSION = "0.1.0"
+local VERSION = "0.1.1"
+
 
 
 --====================================================================--
--- Imports
+--== Imports
+
 
 local Objects = require 'lua_objects'
 
 
+
 --====================================================================--
--- Setup, Constants
+--== Setup, Constants
+
 
 -- setup some aliases to make code cleaner
-local inheritsFrom = Objects.inheritsFrom
-local ObjectBase = Objects.ObjectBase
+local newClass = Objects.newClass
+local Class = Objects.Class
 
 -- local control of development functionality
 local LOCAL_DEBUG = false
@@ -63,8 +67,10 @@ local tinsert = table.insert
 local Promise, Deferred, Failure -- forward declaration
 
 
+
 --====================================================================--
--- Support Functions
+--== Support Functions
+
 
 -- implemented from Twisted defer.py
 -- https://twistedmatrix.com/documents/13.1.0/api/twisted.internet.defer.html
@@ -101,25 +107,26 @@ end
 
 
 --====================================================================--
--- Promise Class
+--== Promise Class
 --====================================================================--
 
 
-Promise = inheritsFrom( ObjectBase )
-Promise.NAME = "Promise Instance"
+Promise = newClass( nil, { name="Lua Promise" } )
 
---== State Constants
+--== State Constants ==--
 
 Promise.STATE_PENDING = 'pending'
 Promise.STATE_RESOLVED = 'resolved'
 Promise.STATE_REJECTED = 'rejected'
 
 
---====================================================================--
---== Start: Setup Lua Objects
+--======================================================--
+-- Start: Setup Lua Objects
 
-function Promise:_init( params )
-	self:superCall( "_init", params )
+function Promise:__new__( params )
+	-- print( "Promise:__new__" )
+	params = params or {}
+	self:superCall( '__new__', params )
 	--==--
 	self._state = Promise.STATE_PENDING
 	self._done_cbs = {}
@@ -131,12 +138,13 @@ function Promise:_init( params )
 
 end
 
---== END: Setup Lua Objects
---====================================================================--
+-- END: Setup Lua Objects
+--======================================================--
 
 
 --====================================================================--
 --== Public Methods
+
 
 function Promise.__getters:state()
 	return self._state
@@ -144,14 +152,14 @@ end
 
 
 function Promise:resolve( ... )
-	-- print("Promise:resolve")
+	-- print( "Promise:resolve" )
 	self._state = Promise.STATE_RESOLVED
 	self._result = {...}
 	self:_execute( self._done_cbs, ... )
 end
 
 function Promise:reject( ... )
-	-- print("Promise:reject")
+	-- print( "Promise:reject" )
 	self._state = Promise.STATE_REJECTED
 	self._reason = {...}
 	self:_execute( self._fail_cbs, ... )
@@ -159,7 +167,7 @@ end
 
 
 function Promise:done( callback )
-	-- print("Promise:done")
+	-- print( "Promise:done" )
 	if self._state == Promise.STATE_RESOLVED then
 		callback( unpack( self._result ) )
 	else
@@ -168,11 +176,11 @@ function Promise:done( callback )
 end
 
 function Promise:progress( ... )
-	error("Promise:progress: not yet implemented")
+	error( "Promise:progress: not yet implemented" )
 end
 
 function Promise:fail( errback )
-	-- print("Promise:fail")
+	-- print( "Promise:fail" )
 	if self._state == Promise.STATE_REJECTED then
 		errback( unpack( self._reason ) )
 	else
@@ -181,8 +189,10 @@ function Promise:fail( errback )
 end
 
 
+
 --====================================================================--
 --== Private Methods
+
 
 function Promise:_addCallback( list, func )
 	tinsert( list, #list+1, func )
@@ -197,30 +207,33 @@ end
 
 
 
---====================================================================--
--- Deferred Class
---====================================================================--
-
-
-Deferred = inheritsFrom( ObjectBase )
-Deferred.NAME = "Deferred Instance"
-
 
 --====================================================================--
---== Start: Setup Lua Objects
+--== Deferred Class
+--====================================================================--
 
-function Deferred:_init( params )
-	self:superCall( "_init", params )
+
+Deferred = newClass( nil, { name="Lua Deferred" } )
+
+
+--======================================================--
+-- Start: Setup Lua Objects
+
+function Deferred:__new__( params )
+	params = params or {}
+	self:superCall( '__new__', params )
 	--==--
 	self._promise = Promise:new()
 end
 
---== END: Setup Lua Objects
---====================================================================--
+-- END: Setup Lua Objects
+--======================================================--
+
 
 
 --====================================================================--
 --== Public Methods
+
 
 function Deferred.__getters:promise()
 	return self._promise
@@ -246,11 +259,13 @@ end
 
 
 --====================================================================--
--- Promise Module Facade
+--== Promise Module Facade
 --====================================================================--
 
 
 return {
+	__version=VERSION,
+
 	Promise=Promise,
 	Deferred=Deferred,
 	maybeDeferred=maybeDeferred

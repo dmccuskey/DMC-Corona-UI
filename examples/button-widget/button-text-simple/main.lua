@@ -5,27 +5,34 @@
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
--- Copyright (C) 2014 David McCuskey. All Rights Reserved.
+-- Copyright (C) 2014-2015 David McCuskey. All Rights Reserved.
 --====================================================================--
+
 
 
 print( "\n\n#########################################################\n\n" )
 
 
+
 --===================================================================--
 --== Imports
 
+
 local Widgets = require 'lib.dmc_widgets'
+
 
 
 --===================================================================--
 --== Setup, Constants
 
+
 local o
 
 
+
 --===================================================================--
--- Support Functions
+--== Support Functions
+
 
 local function onPress_handler( event )
 	print( 'Main: onPress_handler: id', event.id )
@@ -42,7 +49,7 @@ end
 
 
 --===================================================================--
--- Main
+--== Main
 --===================================================================--
 
 

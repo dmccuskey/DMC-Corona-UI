@@ -1,14 +1,14 @@
 --====================================================================--
--- button_group.lua
+-- dmc_widgets/button_group.lua
 --
--- Documentation: http://docs.davidmccuskey.com/display/docs/newButton.lua
+-- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
 
 --[[
 
 The MIT License (MIT)
 
-Copyright (c) 2014 David McCuskey
+Copyright (c) 2014-2015 David McCuskey
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -31,6 +31,12 @@ SOFTWARE.
 --]]
 
 
+
+--====================================================================--
+--== DMC Corona Widgets : Button Group
+--====================================================================--
+
+
 -- Semantic Versioning Specification: http://semver.org/
 
 local VERSION = "0.1.0"
@@ -42,6 +48,7 @@ local VERSION = "0.1.0"
 --====================================================================--
 
 
+
 local dmc_widget_data, dmc_widget_func
 dmc_widget_data = _G.__dmc_widget
 dmc_widget_func = dmc_widget_data.func
@@ -49,22 +56,26 @@ dmc_widget_func = dmc_widget_data.func
 
 
 --====================================================================--
---== newButton: Button Groups
+--== Button Group Setup
 --====================================================================--
+
 
 
 --====================================================================--
 --== Imports
 
+
 local Objects = require 'dmc_objects'
 local Utils = require 'dmc_utils'
+
 
 
 --====================================================================--
 --== Setup, Constants
 
+
 -- setup some aliases to make code cleaner
-local inheritsFrom = Objects.inheritsFrom
+local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
 
 
@@ -74,25 +85,27 @@ local ObjectBase = Objects.ObjectBase
 --====================================================================--
 
 
-local GroupBase = inheritsFrom( ObjectBase )
-GroupBase.NAME = "Button Group Base"
+local GroupBase = newClass( ObjectBase, {name="Button Group Base"} )
+
+--== Class Events
 
 GroupBase.EVENT = 'button_group_event'
+
 GroupBase.CHANGED = 'group_change'
 
 
 --======================================================--
 -- Start: Setup DMC Objects
 
-function GroupBase:_init( params )
-	-- print( "GroupBase:_init" )
+function GroupBase:__init__( params )
+	-- print( "GroupBase:__init__" )
 	params = params or { }
-	self:superCall( '_init', params )
+	self:superCall( '__init__', params )
 	--==--
 
 	--== Sanity Check ==--
 
-	if self.is_intermediate then return end
+	if self.is_class then return end
 
 	--== Create Properties ==--
 
@@ -105,38 +118,40 @@ function GroupBase:_init( params )
 
 end
 
-function GroupBase:_undoInit( params )
-	-- print( "GroupBase:_undoInit" )
+function GroupBase:__undoInit__( params )
+	-- print( "GroupBase:__undoInit__" )
 
 	self._selected = nil
 	--==--
-	self:superCall( '_undoInit' )
+	self:superCall( '__undoInit__' )
 end
 
 -- _initComplete()
 --
-function GroupBase:_initComplete()
-	--print( "GroupBase:_initComplete" )
-	self:superCall( '_initComplete' )
+function GroupBase:__initComplete__()
+	--print( "GroupBase:__initComplete__" )
+	self:superCall( '__initComplete__' )
 	--==--
 	self._button_handler = self:createCallback( self._buttonEvent_handler )
 end
 
-function GroupBase:_undoInitComplete()
-	--print( "GroupBase:_undoInitComplete" )
+function GroupBase:__undoInitComplete__()
+	--print( "GroupBase:__undoInitComplete__" )
 	self:_removeAllButtons()
 
 	self._button_handler = nil
 	--==--
-	self:superCall( '_undoInitComplete' )
+	self:superCall( '__undoInitComplete__' )
 end
 
 -- END: Setup DMC Objects
 --======================================================--
 
 
+
 --====================================================================--
 --== Public Methods
+
 
 function GroupBase.__getters:selected()
 	-- print( "GroupBase.__getters:selected" )
@@ -146,7 +161,7 @@ end
 
 -- we only want items inserted into proper layer
 function GroupBase:add( obj, params )
-	-- print( "GroupBase:add" )
+	-- print( "GroupBase:add", obj.NAME, obj.EVENT )
 	params = params or {}
 	params.set_active = params.set_active == nil and false or params.set_active
 	--==--
@@ -189,8 +204,10 @@ function GroupBase:getButton( id )
 end
 
 
+
 --====================================================================--
 --== Private Methods
+
 
 function GroupBase:_setButtonGroupState( state )
 	-- print( "GroupBase:_setButtonGroupState" )
@@ -218,8 +235,10 @@ function GroupBase:_dispatchChangeEvent( button )
 end
 
 
+
 --====================================================================--
 --== Event Handlers
+
 
 function GroupBase:_buttonEvent_handler( event )
 	error( "OVERRIDE: GroupBase:_buttonEvent_handler" )
@@ -234,8 +253,7 @@ end
 --====================================================================--
 
 
-local RadioGroup = inheritsFrom( GroupBase )
-RadioGroup.NAME = "Radio Group"
+local RadioGroup = newClass( GroupBase, {name="Radio Group"} )
 
 RadioGroup.TYPE = 'radio'
 
@@ -243,10 +261,10 @@ RadioGroup.TYPE = 'radio'
 --======================================================--
 -- Start: Setup DMC Objects
 
-function RadioGroup:_init( params )
-	-- print( "RadioGroup:_init" )
+function RadioGroup:__init__( params )
+	-- print( "RadioGroup:__init__" )
 	params = params or { }
-	self:superCall( '_init', params )
+	self:superCall( '__init__', params )
 	--==--
 
 	--== Create Properties ==--
@@ -260,11 +278,24 @@ end
 
 
 --====================================================================--
+--== Public Methods
+
+
+-- none
+
+
+
+--====================================================================--
 --== Private Methods
+
+
+-- none
+
 
 
 --====================================================================--
 --== Event Handlers
+
 
 function RadioGroup:_buttonEvent_handler( event )
 	-- print( "RadioGroup:_buttonEvent_handler", event.phase )
@@ -289,8 +320,7 @@ end
 --====================================================================--
 
 
-local ToggleGroup = inheritsFrom( GroupBase )
-ToggleGroup.NAME = "Toggle Group"
+local ToggleGroup = newClass( GroupBase, {name="Toggle Group"} )
 
 ToggleGroup.TYPE = 'toggle'
 
@@ -298,10 +328,10 @@ ToggleGroup.TYPE = 'toggle'
 --======================================================--
 -- Start: Setup DMC Objects
 
-function ToggleGroup:_init( params )
-	-- print( "ToggleGroup:_init" )
+function ToggleGroup:__init__( params )
+	-- print( "ToggleGroup:__init__" )
 	params = params or {}
-	self:superCall( '_init', params )
+	self:superCall( '__init__', params )
 	--==--
 
 	--== Create Properties ==--
@@ -313,16 +343,26 @@ end
 --======================================================--
 
 
+
 --====================================================================--
 --== Public Methods
+
+
+-- none
+
 
 
 --====================================================================--
 --== Private Methods
 
 
+-- none
+
+
+
 --====================================================================--
 --== Event Handlers
+
 
 function ToggleGroup:_buttonEvent_handler( event )
 	-- print( "ToggleGroup:_buttonEvent_handler", event.phase )
@@ -360,6 +400,7 @@ ButtonGroup.RadioGroup = RadioGroup
 ButtonGroup.ToggleGroup = ToggleGroup
 
 function ButtonGroup.create( params )
+	params = params or {}
 	assert( params.type, "newButtonGroup: expected param 'type'" )
 	--==--
 	if params.type == RadioGroup.TYPE then
