@@ -156,16 +156,20 @@ def _getBuildExamplesFileList( target ):
 
 		if DEBUG: print( "Working on example app: ", app )
 
-		mod_dir_map=app['mod_dir_map']
+		if 'mod_dir_map' in app:
+			mod_dir_map=app['mod_dir_map']
+		else:
+			mod_dir_map=None
 
 		for module in Requires + app['requires']:
 			dst_root = [ '/'.join( dst_fmt ) ]
 
-			if module in mod_dir_map['libs'].keys():
-				alt_dir = mod_dir_map['libs'][module]
-				if alt_dir: dst_root.append( alt_dir )
-			elif mod_dir_map['default_dir']:
-				dst_root.append( mod_dir_map['default_dir'] )
+			if mod_dir_map:
+				if module in mod_dir_map['libs'].keys():
+					alt_dir = mod_dir_map['libs'][module]
+					if alt_dir: dst_root.append( alt_dir )
+				elif mod_dir_map['default_dir']:
+					dst_root.append( mod_dir_map['default_dir'] )
 
 			dst_root = '/'.join( dst_root )
 
