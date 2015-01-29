@@ -1275,7 +1275,9 @@ end
 
 
 function ScrollerBase:_do_item_tap()
+	-- OVERRIDE THIS
 end
+
 
 
 --======================================================--
