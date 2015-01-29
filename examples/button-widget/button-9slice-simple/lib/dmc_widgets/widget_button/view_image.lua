@@ -1,14 +1,14 @@
 --====================================================================--
 -- widget_button/view_image.lua
 --
--- Documentation: http://docs.davidmccuskey.com/display/docs/newButton.lua
+-- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
 
 --[[
 
 The MIT License (MIT)
 
-Copyright (c) 2014 David McCuskey
+Copyright (c) 2014-2015 David McCuskey
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +29,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 --]]
+
+
+
+--====================================================================--
+--== DMC Corona Widgets : Image Button Widget
+--====================================================================--
 
 
 -- Semantic Versioning Specification: http://semver.org/
@@ -53,24 +59,31 @@ dmc_widget_func = dmc_widget_data.func
 --====================================================================--
 
 
+
 --====================================================================--
 --== Imports
 
+
 local Objects = require 'dmc_objects'
--- local Utils = require 'dmc_utils'
+
+--== Components
 
 local BaseView = require( dmc_widget_func.find( 'widget_button.view_base' ) )
+
 
 
 --====================================================================--
 --== Setup, Constants
 
+
 -- setup some aliases to make code cleaner
-local inheritsFrom = Objects.inheritsFrom
+local newClass = Objects.newClass
+
 
 
 --====================================================================--
 --== Support Functions
+
 
 -- build parameters for this image
 -- get defaults and layer in specific values
@@ -115,8 +128,7 @@ end
 --====================================================================--
 
 
-local ImageView = inheritsFrom( BaseView )
-ImageView.NAME = "Image View"
+local ImageView = newClass( BaseView, {name="Image View"} )
 
 ImageView.TYPE = 'image'
 
@@ -124,15 +136,16 @@ ImageView.TYPE = 'image'
 --======================================================--
 -- Start: Setup DMC Objects
 
-function ImageView:_init( params )
-	-- print( "ImageView:_init" )
+function ImageView:__init__( params )
+	-- print( "ImageView:__init__" )
 	params = params or {}
-	self:superCall( '_init', params )
+	self:superCall( '__init__', params )
 	--==--
 
 	--== Sanity Check ==--
 
-	if self.is_intermediate then return end
+	if self.is_class then return end
+
 	assert( type(params.file)=='string', "expected string-type 'file' parameter" )
 
 	--== Create Properties ==--
@@ -143,11 +156,11 @@ function ImageView:_init( params )
 	--== Object References ==--
 end
 
--- _createView()
+-- __createView__()
 --
-function ImageView:_createView()
-	print( "ImageView:_createView" )
-	self:superCall( '_createView' )
+function ImageView:__createView__()
+	-- print( "ImageView:__createView__" )
+	self:superCall( '__createView__' )
 	--==--
 
 	local o   -- object
@@ -163,8 +176,8 @@ function ImageView:_createView()
 end
 
 
-function ImageView:_undoCreateView()
-	-- print( "ImageView:_undoCreateView" )
+function ImageView:__undoCreateView__()
+	-- print( "ImageView:__undoCreateView__" )
 	local o
 
 	o = self._view
@@ -172,27 +185,33 @@ function ImageView:_undoCreateView()
 	self._view = nil
 
 	--==--
-	self:superCall( '_undoCreateView' )
+	self:superCall( '__undoCreateView__' )
 end
 
 -- END: Setup DMC Objects
 --======================================================--
 
 
+
 --====================================================================--
 --== Public Methods
 
+
 -- none
+
 
 
 --====================================================================--
 --== Private Methods
 
+
 --none
+
 
 
 --====================================================================--
 --== Event Handlers
+
 
 -- none
 

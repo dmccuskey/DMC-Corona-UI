@@ -1,39 +1,41 @@
 --====================================================================--
--- dmc_websockets.lua
+-- dmc_corona/dmc_websockets.lua
 --
---
--- by David McCuskey
--- Documentation: http://docs.davidmccuskey.com/display/docs/dmc_websockets.lua
+-- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
 
 --[[
 
-Copyright (C) 2014 David McCuskey. All Rights Reserved.
+The MIT License (MIT)
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in the
-Software without restriction, including without limitation the rights to use, copy,
-modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
-and to permit persons to whom the Software is furnished to do so, subject to the
-following conditions:
+Copyright (C) 2014-2015 David McCuskey. All Rights Reserved.
 
-The above copyright notice and this permission notice shall be included in all copies
-or substantial portions of the Software.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
-FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-DEALINGS IN THE SOFTWARE.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
 --]]
 
 
 
 --====================================================================--
--- DMC Corona Library : DMC Websockets
+--== DMC Corona Library : DMC Websockets
 --====================================================================--
+
 
 --[[
 
@@ -47,17 +49,19 @@ WebSocket support adapted from:
 
 -- Semantic Versioning Specification: http://semver.org/
 
-local VERSION = "1.2.0"
+local VERSION = "1.3.0"
 
 
 
 --====================================================================--
--- DMC Corona Library Config
+--== DMC Corona Library Config
 --====================================================================--
 
 
+
 --====================================================================--
--- Support Functions
+--== Support Functions
+
 
 local Utils = {} -- make copying from dmc_utils easier
 
@@ -87,32 +91,36 @@ function Utils.extend( fromTable, toTable )
 end
 
 
+
 --====================================================================--
--- Configuration
+--== Configuration
 
-local dmc_lib_data, dmc_lib_info
 
--- boot dmc_library with boot script or
+local dmc_lib_data
+
+-- boot dmc_corona with boot script or
 -- setup basic defaults if it doesn't exist
 --
-if false == pcall( function() require( "dmc_corona_boot" ) end ) then
+if false == pcall( function() require( 'dmc_corona_boot' ) end ) then
 	_G.__dmc_corona = {
 		dmc_corona={},
 	}
 end
 
 dmc_lib_data = _G.__dmc_corona
-dmc_lib_info = dmc_lib_data.dmc_library
+
+
+
+
+--====================================================================--
+--== DMC WebSockets
+--====================================================================--
 
 
 
 --====================================================================--
--- DMC WebSockets
---====================================================================--
+--== Configuration
 
-
---====================================================================--
--- Configuration
 
 dmc_lib_data.dmc_websockets = dmc_lib_data.dmc_websockets or {}
 
@@ -123,19 +131,21 @@ local DMC_WEBSOCKETS_DEFAULTS = {
 local dmc_websockets_data = Utils.extend( dmc_lib_data.dmc_websockets, DMC_WEBSOCKETS_DEFAULTS )
 
 
+
 --====================================================================--
--- Imports
+--== Imports
+
 
 local mime = require 'mime'
 local urllib = require 'socket.url'
 
-local ByteArray = require 'dmc_websockets.bytearray'
-local ByteArrayErrorFactory = require 'lua_bytearray.exceptions'
-local Objects = require 'lua_objects'
-local Patch = require( 'lua_patch' )()
+local ByteArray = require 'lib.dmc_lua.lua_bytearray'
+local ByteArrayError = require 'lib.dmc_lua.lua_bytearray.exceptions'
+local Objects = require 'dmc_objects'
+local Patch = require 'lib.dmc_lua.lua_patch'
 local Sockets = require 'dmc_sockets'
-local StatesMix = require 'lua_states'
-local Utils = require 'lua_utils'
+local LuaStatesMixin = require 'lib.dmc_lua.lua_states_mix'
+local Utils = require 'dmc_utils'
 
 -- websocket modules
 local ws_error = require 'dmc_websockets.exception'
@@ -144,11 +154,17 @@ local ws_handshake = require 'dmc_websockets.handshake'
 local ws_message = require 'dmc_websockets.message'
 
 
+
 --====================================================================--
--- Setup, Constants
+--== Setup, Constants
+
+
+Patch.addAllPatches()
+
+local StatesMix = LuaStatesMixin.StatesMix
 
 -- setup some aliases to make code cleaner
-local inheritsFrom = Objects.inheritsFrom
+local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
 
 local tinsert = table.insert
@@ -156,7 +172,7 @@ local tconcat = table.concat
 local tremove = table.remove
 
 local ProtocolError = ws_error.ProtocolError
-local BufferError = ByteArrayErrorFactory.BufferError
+local BufferError = ByteArrayError.BufferError
 
 
 --== dmc_websocket Close Constants
@@ -175,18 +191,15 @@ local ERROR_CODES = {
 }
 
 
-local LOCAL_DEBUG = true
+local LOCAL_DEBUG = false
 
 
 --====================================================================--
--- WebSocket Class
+--== WebSocket Class
 --====================================================================--
 
 
-local WebSocket = inheritsFrom( ObjectBase )
-WebSocket.NAME = "WebSocket"
-
-StatesMix.mixin( WebSocket )
+local WebSocket = newClass( { ObjectBase, StatesMix }, {name="DMC WebSocket"} )
 
 -- version for the the group of WebSocket files
 WebSocket.VERSION = '1.2.0'
@@ -231,18 +244,19 @@ WebSocket.ONERROR = 'onerror'
 WebSocket.ONCLOSE = 'onclose'
 
 
---====================================================================--
---== Start: Setup DMC Objects
+--======================================================--
+-- Start: Setup DMC Objects
 
-function WebSocket:_init( params )
-	-- print( "WebSocket:_init" )
+function WebSocket:__init__( params )
+	-- print( "WebSocket:__init__" )
 	params = params or {}
-	self:superCall( "_init", params )
+	self:superCall( ObjectBase, '__init__', params )
+	self:superCall( StatesMix, '__init__', params )
 	--==--
 
 	--== Sanity Check ==--
 
-	if not self.is_intermediate then
+	if self.is_instance then
 		assert( params.uri, "WebSocket: requires parameter 'uri'" )
 	end
 
@@ -267,7 +281,8 @@ function WebSocket:_init( params )
 	-- self._send_unmasked = params.send_unmasked or false
 	-- self._rd_frame_co = nil -- ref to read-frame coroutine
 
-	self._socket_handler = nil -- ref to
+	self._socket_data_handler = nil -- ref to
+	self._socket_connect_handler = nil -- ref to
 	self._socket_throttle = params.throttle
 
 
@@ -279,6 +294,7 @@ function WebSocket:_init( params )
 
 	self._ba = nil -- our Byte Array, buffer
 	self._socket = nil
+	self._ssl_params = params.ssl_params
 
 
 	-- set first state
@@ -287,10 +303,13 @@ function WebSocket:_init( params )
 end
 
 
-function WebSocket:_initComplete()
-	-- print( "WebSocket:_initComplete" )
-	self:superCall( "_initComplete" )
+function WebSocket:__initComplete__()
+	-- print( "WebSocket:__initComplete__" )
+	self:superCall( ObjectBase, '__initComplete__' )
 	--==--
+
+	self._socket_connect_handler = self:createCallback( self._socketConnectEvent_handler )
+	self._socket_data_handler = self:createCallback( self._socketDataEvent_handler )
 
 	self._msg_queue_handler = self:createCallback( self._processMessageQueue )
 	self:_createNewFrame()
@@ -300,12 +319,13 @@ function WebSocket:_initComplete()
 	end
 end
 
---== END: Setup DMC Objects
---====================================================================--
+-- END: Setup DMC Objects
+--======================================================--
 
 
 --====================================================================--
 --== Public Methods
+
 
 function WebSocket:connect()
 	-- print( 'WebSocket:connect' )
@@ -326,6 +346,7 @@ end
 
 function WebSocket:send( data, params )
 	-- print( "WebSocket:send", #data )
+	assert( type(data)=='string', "expected string for send()")
 	params = params or {}
 	params.type = params.type or WebSocket.TEXT
 	--==--
@@ -346,9 +367,9 @@ function WebSocket:close()
 end
 
 
+
 --====================================================================--
 --== Private Methods
-
 
 --== the following "_on"-methods dispatch event to app client level
 
@@ -575,7 +596,7 @@ function WebSocket:_receiveFrame()
 	--== processing loop
 
 	-- TODO: hook this up to enterFrame so large
-	-- amount of frames will pause processing
+	-- amount of frames won't pause processing
 
 	local err = nil
 	repeat
@@ -600,9 +621,9 @@ function WebSocket:_receiveFrame()
 		-- pass, WebSocket.STATE_CLOSED
 
 	elseif not err.isa then
-		if LOCAL_DEBUG then
-			print( "dmc_websockets :: Unknown Error", err )
-		end
+		-- always print this out, most likely a regular Lua error
+		print( "\n\ndmc_websockets :: Unknown Error", err )
+		print( debug.traceback() )
 		self:_bailout{
 			code=CLOSE_CODES.INTERNAL.code,
 			reason=CLOSE_CODES.INTERNAL.reason
@@ -614,6 +635,7 @@ function WebSocket:_receiveFrame()
 	elseif err:isa( ws_error.ProtocolError ) then
 		if LOCAL_DEBUG then
 			print( "dmc_websockets :: Protocol Error:", err.message )
+			print( "dmc_websockets :: Protocol Error:", err.traceback )
 		end
 		self:_close{
 			code=err.code,
@@ -780,8 +802,8 @@ function WebSocket:_processMessageQueue()
 end
 
 
---====================================================================--
---== START: STATE MACHINE
+--======================================================--
+-- START: STATE MACHINE
 
 function WebSocket:state_create( next_state, params )
 	-- print( "WebSocket:state_create >>", next_state )
@@ -818,8 +840,8 @@ function WebSocket:do_state_init( params )
 
 	local port = self._port or port
 
-	if not port then
-		port = 80
+	if port == nil or port == 0 then
+		port = url_parts.scheme == 'wss' and 443 or 80
 	end
 
 	if not path or path == "" then
@@ -837,15 +859,15 @@ function WebSocket:do_state_init( params )
 
 	Sockets.throttle = self._socket_throttle
 
-	socket = Sockets:create( Sockets.ATCP )
+	socket = Sockets:create( Sockets.ATCP, {ssl_params=self._ssl_params} )
+	socket.secure = (url_parts.scheme == 'wss') -- true/false
 	self._socket = socket
-	self._socket_handler = self:createCallback( self._socketEvent_handler )
 
 	if LOCAL_DEBUG then
 		print( "dmc_websockets:: Connecting to '%s:%s'" % { self._host, self._port } )
 	end
 
-	socket:connect( host, port, { onConnect=self._socket_handler, onData=self._socket_handler } )
+	socket:connect( host, port, { onConnect=self._socket_connect_handler, onData=self._socket_data_handler } )
 
 end
 
@@ -854,7 +876,7 @@ function WebSocket:state_init( next_state, params )
 	params = params or {}
 	--==--
 
-	if next_state == self.CLOSED then
+	if next_state == WebSocket.STATE_CLOSED then
 		self:do_state_closed( params )
 
 	elseif next_state == WebSocket.STATE_NOT_CONNECTED then
@@ -874,7 +896,7 @@ function WebSocket:do_state_not_connected( params )
 	params = params or {}
 	--==--
 
-	self._ready_state = self.NOT_ESTABLISHED
+	self._ready_state = WebSocket.NOT_ESTABLISHED
 
 	self:setState( WebSocket.STATE_NOT_CONNECTED )
 
@@ -946,7 +968,7 @@ function WebSocket:do_state_connected( params )
 	params = params or {}
 	--==--
 
-	self._ready_state = self.ESTABLISHED
+	self._ready_state = WebSocket.ESTABLISHED
 	self:setState( WebSocket.STATE_CONNECTED )
 
 	if LOCAL_DEBUG then
@@ -988,7 +1010,7 @@ function WebSocket:do_state_closing_connection( params )
 	params.from_server = params.from_server ~= nil and params.from_server or false
 	--==--
 
-	self._ready_state = self.CLOSING_HANDSHAKE
+	self._ready_state = WebSocket.CLOSING_HANDSHAKE
 	self:setState( WebSocket.STATE_CLOSING )
 
 	-- send close code to server
@@ -1033,7 +1055,7 @@ function WebSocket:do_state_closed( params )
 	params = params or {}
 	--==--
 
-	self._ready_state = self.CLOSED
+	self._ready_state = WebSocket.CLOSED
 	self:setState( WebSocket.STATE_CLOSED )
 
 	if self._close_timer then
@@ -1061,7 +1083,7 @@ function WebSocket:state_closed( next_state, params )
 	params = params or {}
 	--==--
 
-	if next_state == self.CLOSED then
+	if next_state == WebSocket.STATE_CLOSED then
 		self:do_state_closed( params )
 
 	else
@@ -1070,40 +1092,54 @@ function WebSocket:state_closed( next_state, params )
 
 end
 
---== END: STATE MACHINE
---====================================================================--
+-- END: STATE MACHINE
+--======================================================--
 
 
 --====================================================================--
 --== Event Handlers
 
-function WebSocket:_socketEvent_handler( event )
-	-- print( "WebSocket:_socketEvent_handler", event.type, event.status )
+
+
+-- handle connection events from socket
+--
+function WebSocket:_socketConnectEvent_handler( event )
+	-- print( "WebSocket:_socketConnectEvent_handler", event.type, event.status )
 
 	local state = self:getState()
 	local sock = self._socket
 
 	if event.type == sock.CONNECT then
 
-		if event.status == sock.CONNECTED then
+		if event.isError then
+			self:gotoState( WebSocket.STATE_CLOSED )
+		elseif event.status == sock.CONNECTED then
 			self:gotoState( WebSocket.STATE_NOT_CONNECTED )
 		else
 			if state ~= WebSocket.STATE_CLOSED then
 				self:gotoState( WebSocket.STATE_CLOSED )
 			end
 		end
+	end
 
-	elseif event.type == sock.READ then
+end
+
+-- handle read/write events from socket
+--
+function WebSocket:_socketDataEvent_handler( event )
+	-- print( "WebSocket:_socketDataEvent_handler", event.type, event.status )
+
+	local state = self:getState()
+	local sock = self._socket
+
+	if event.type == sock.READ then
 
 		local callback = function( s_event )
 			local data = s_event.data
-			local ba = self._ba
 
-			if ba == nil then
-				ba = ByteArray()
-			else
-				ba = ByteArray()
-				ba:readFromArray( self._ba, self._ba.pos )
+			local ba = ByteArray:new()
+			if self._ba then
+				ba:writeBytes( self._ba )
 			end
 			self._ba = ba
 
@@ -1122,7 +1158,7 @@ function WebSocket:_socketEvent_handler( event )
 
 		end
 
-		sock:receive('*a', callback )
+		sock:receive( '*a', callback )
 
 	end
 
