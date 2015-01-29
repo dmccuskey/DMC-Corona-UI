@@ -1,14 +1,14 @@
 --====================================================================--
--- widget_button.lua
+-- dmc_widgets/widget_button.lua
 --
--- Documentation: http://docs.davidmccuskey.com/display/docs/newButton.lua
+-- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
 
 --[[
 
 The MIT License (MIT)
 
-Copyright (c) 2014 David McCuskey
+Copyright (c) 2014-2015 David McCuskey
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +29,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 --]]
+
+
+
+--====================================================================--
+--== DMC Corona Widgets : Widget Button
+--====================================================================--
 
 
 -- Semantic Versioning Specification: http://semver.org/
@@ -53,31 +59,40 @@ dmc_widget_func = dmc_widget_data.func
 --====================================================================--
 
 
+
 --====================================================================--
 --== Imports
 
-local Objects = require 'dmc_objects'
-local StatesMix = require 'lua_states'
 
--- Button View Components
+local Objects = require 'dmc_objects'
+local StatesMixModule = require 'dmc_states_mix'
+
+--== Components
+
 local BaseView = require( dmc_widget_func.find( 'widget_button.view_base' ) )
 local ImageView = require( dmc_widget_func.find( 'widget_button.view_image' ) )
 local NineSliceView = require( dmc_widget_func.find( 'widget_button.view_9slice' ) )
 local ShapeView = require( dmc_widget_func.find( 'widget_button.view_shape' ) )
 
 
+
 --====================================================================--
 --== Setup, Constants
 
+
+local StatesMix = StatesMixModule.StatesMix
+
 -- setup some aliases to make code cleaner
-local inheritsFrom = Objects.inheritsFrom
-local CoronaBase = Objects.CoronaBase
+local newClass = Objects.newClass
+local ComponentBase = Objects.ComponentBase
 
 local LOCAL_DEBUG = false
 
 
+
 --====================================================================--
 --== Support Functions
+
 
 local function getViewTypeClass( params )
 	-- print( "getViewTypeClass", params, params.view )
@@ -109,10 +124,7 @@ end
 --====================================================================--
 
 
-local ButtonBase = inheritsFrom( CoronaBase )
-ButtonBase.NAME = "Button Base"
-
-StatesMix.mixin( ButtonBase )
+local ButtonBase = newClass( { ComponentBase, StatesMix }, {name="Button Base"}  )
 
 --== Class Constants
 
@@ -132,6 +144,7 @@ ButtonBase.DISABLED = ButtonBase.STATE_DISABLED
 --== Class events
 
 ButtonBase.EVENT = 'button-event'
+
 ButtonBase.PRESSED = 'pressed'
 ButtonBase.RELEASED = 'released'
 
@@ -139,15 +152,17 @@ ButtonBase.RELEASED = 'released'
 --======================================================--
 -- Start: Setup DMC Objects
 
-function ButtonBase:_init( params )
-	-- print( "ButtonBase:_init" )
+function ButtonBase:__init__( params )
+	-- print( "ButtonBase:__init__", params )
 	params = params or {}
-	self:superCall( '_init', params )
+	self:superCall( ComponentBase, '__init__', params )
+	self:superCall( StatesMix, '__init__', params )
 	--==--
 
 	--== Sanity Check ==--
 
-	if self.is_intermediate then return end
+	if self.is_class then return end
+
 	assert( params.width and params.height, "newButton: expected params 'width' and 'height'" )
 
 	--== Create Properties ==--
@@ -183,22 +198,23 @@ function ButtonBase:_init( params )
 
 end
 
-function ButtonBase:_undoInit()
-	-- print( "ButtonBase:_undoInit" )
+function ButtonBase:__undoInit__()
+	-- print( "ButtonBase:__undoInit__" )
 
 	self._callbacks = nil
 	self._views = nil
 
 	--==--
-	self:superCall( "_undoInit" )
+	self:superCall( ComponentBase, '__undoInit__' )
+	self:superCall( StatesMix, '__undoInit__' )
 end
 
 
--- _createView()
+-- __createView__()
 --
-function ButtonBase:_createView()
-	-- print( "ButtonBase:_createView" )
-	self:superCall( '_createView' )
+function ButtonBase:__createView__()
+	-- print( "ButtonBase:__createView__" )
+	self:superCall( ComponentBase, '__createView__' )
 	--==--
 
 	local o, p, dg  -- object, display group
@@ -232,8 +248,8 @@ function ButtonBase:_createView()
 
 end
 
-function ButtonBase:_undoCreateView()
-	-- print( "ButtonBase:_undoCreateView" )
+function ButtonBase:__undoCreateView__()
+	-- print( "ButtonBase:__undoCreateView__" )
 
 	local o
 
@@ -251,15 +267,15 @@ function ButtonBase:_undoCreateView()
 	self._bg_hit = nil
 
 	--==--
-	self:superCall( '_undoCreateView' )
+	self:superCall( ComponentBase, '__undoCreateView__' )
 end
 
 
--- _initComplete()
+-- __initComplete__()
 --
-function ButtonBase:_initComplete()
-	--print( "ButtonBase:_initComplete" )
-	self:superCall( '_initComplete' )
+function ButtonBase:__initComplete__()
+	-- print( "ButtonBase:__initComplete__" )
+	self:superCall( ComponentBase, '__initComplete__' )
 	--==--
 
 	local is_active = self._params.is_active == nil and false or self._params.is_active
@@ -278,23 +294,25 @@ function ButtonBase:_initComplete()
 	self._params = nil -- get rid of temp structure
 end
 
-function ButtonBase:_undoInitComplete()
-	--print( "ButtonBase:_undoInitComplete" )
+function ButtonBase:__undoInitComplete__()
+	--print( "ButtonBase:__undoInitComplete__" )
 
 	o = self._bg_hit
 	o:removeEventListener( 'touch', o._f )
 	o._f = nil
 
 	--==--
-	self:superCall( '_undoInitComplete' )
+	self:superCall( ComponentBase, '__undoInitComplete__' )
 end
 
 -- END: Setup DMC Objects
 --======================================================--
 
 
+
 --====================================================================--
 --== Public Methods
+
 
 function ButtonBase.__getters:is_enabled()
 	return ( self:getState() ~= self.STATE_DISABLED )
@@ -369,8 +387,10 @@ function ButtonBase:press()
 end
 
 
+
 --====================================================================--
 --== Private Methods
+
 
 -- dispatch 'press' events
 --
@@ -381,16 +401,17 @@ function ButtonBase:_doPressEventDispatch()
 
 	local cb = self._callbacks
 	local event = {
+		name=self.EVENT,
+		phase=self.PRESSED,
 		target=self,
 		id=self._id,
 		value=self._value,
-		state=self:getState(),
-		phase=self.PRESSED,
+		state=self:getState()
 	}
+
 	if cb.onPress then cb.onPress( event ) end
 	if cb.onEvent then cb.onEvent( event ) end
-
-	self:dispatchEvent( self.EVENT, event )
+	self:dispatchEvent( event )
 end
 
 -- dispatch 'release' events
@@ -402,16 +423,17 @@ function ButtonBase:_doReleaseEventDispatch()
 
 	local cb = self._callbacks
 	local event = {
+		name=self.EVENT,
+		phase=self.RELEASED,
 		target=self,
 		id=self._id,
 		value=self._value,
-		state=self:getState(),
-		phase=self.RELEASED,
+		state=self:getState()
 	}
+
 	if cb.onRelease then cb.onRelease( event ) end
 	if cb.onEvent then cb.onEvent( event ) end
-
-	self:dispatchEvent( self.EVENT, event )
+	self:dispatchEvent( event )
 end
 
 
@@ -558,8 +580,10 @@ end
 --======================================================--
 
 
+
 --====================================================================--
 --== Event Handlers
+
 
 -- none
 
@@ -570,8 +594,7 @@ end
 --===================================================================--
 
 
-local PushButton = inheritsFrom( ButtonBase )
-PushButton.NAME = "Push Button"
+local PushButton = newClass( ButtonBase, {name="Push Button"} )
 
 PushButton.TYPE = 'push'
 
@@ -583,16 +606,26 @@ PushButton.TYPE = 'push'
 --======================================================--
 
 
+
 --====================================================================--
 --== Public Methods
+
+
+-- none
+
 
 
 --====================================================================--
 --== Private Methods
 
 
+-- none
+
+
+
 --====================================================================--
 --== Event Handlers
+
 
 function PushButton:_hitareaTouch_handler( event )
 	-- print( "PushButton:_hitareaTouch_handler", event.phase )
@@ -644,8 +677,7 @@ end
 --===================================================================--
 
 
-local ToggleButton = inheritsFrom( ButtonBase )
-ToggleButton.NAME = "Toggle Button"
+local ToggleButton = newClass( ButtonBase, {name="Toggle Button"}  )
 
 ToggleButton.TYPE = 'toggle'
 
@@ -657,12 +689,18 @@ ToggleButton.TYPE = 'toggle'
 --======================================================--
 
 
+
 --====================================================================--
 --== Public Methods
 
 
+-- none
+
+
+
 --====================================================================--
 --== Private Methods
+
 
 function ToggleButton:_getNextState()
 	-- print( "ToggleButton:_getNextState" )
@@ -674,8 +712,10 @@ function ToggleButton:_getNextState()
 end
 
 
+
 --====================================================================--
 --== Event Handlers
+
 
 function ToggleButton:_hitareaTouch_handler( event )
 	-- print( "ToggleButton:_hitareaTouch_handler", event.phase )
@@ -731,8 +771,7 @@ end
 --===================================================================--
 
 
-local RadioButton = inheritsFrom( ToggleButton )
-RadioButton.NAME = "Radio Button"
+local RadioButton = newClass( ToggleButton, {name="Radio Button"} )
 
 RadioButton.TYPE = 'radio'
 
@@ -744,12 +783,18 @@ RadioButton.TYPE = 'radio'
 --======================================================--
 
 
+
 --====================================================================--
 --== Public Methods
 
 
+-- none
+
+
+
 --====================================================================--
 --== Private Methods
+
 
 function RadioButton:_getNextState()
 	-- print( "RadioButton:_getNextState" )
@@ -757,9 +802,12 @@ function RadioButton:_getNextState()
 end
 
 
+
 --====================================================================--
 --== Event Handlers
 
+
+-- none
 
 
 
@@ -779,7 +827,7 @@ Buttons.RadioButton = RadioButton
 -- Button factory method
 
 function Buttons.create( params )
-	-- print( "Buttons.create" )
+	-- print( "Buttons.create", params.type )
 	assert( params.type, "newButton: expected param 'type'" )
 	--==--
 	if params.type == PushButton.TYPE then

@@ -33,17 +33,19 @@ SOFTWARE.
 
 
 --====================================================================--
--- DMC Lua Library : Lua Utils
+--== DMC Lua Library : Lua Utils
 --====================================================================--
 
 
 -- Semantic Versioning Specification: http://semver.org/
 
-local VERSION = "0.1.1"
+local VERSION = "0.2.0"
+
 
 
 --====================================================================--
--- Setup, Constants
+--== Setup, Constants
+
 
 local slower = string.lower
 
@@ -56,7 +58,7 @@ local Utils = {} -- Utils object
 
 
 --====================================================================--
--- Callback Functions
+--== Callback Functions
 --====================================================================--
 
 
@@ -68,8 +70,8 @@ local Utils = {} -- Utils object
 -- @param method the method to call
 --
 function Utils.createObjectCallback( object, method )
-	assert( object ~= nil, "missing object in Utils.createObjectCallback" )
-	assert( method ~= nil, "missing method in Utils.createObjectCallback" )
+	assert( object, "dmc_utils.createObjectCallback: missing object" )
+	assert( method, "dmc_utils.createObjectCallback: missing method" )
 	--==--
 	return function( ... )
 		return method( object, ... )
@@ -92,7 +94,7 @@ end
 
 
 --====================================================================--
--- Date Functions
+--== Date Functions
 --====================================================================--
 
 
@@ -157,8 +159,9 @@ end
 
 
 --====================================================================--
--- Image Functions
+--== Image Functions
 --====================================================================--
+
 
 -- imageScale()
 -- container, image - table with width/height keys
@@ -191,77 +194,9 @@ end
 
 
 --====================================================================--
--- JSON/Lua Functions
+--== Math Functions
 --====================================================================--
 
---[[
-These functions fix the issue that arises when working with JSON and
-the duality of tables/arrays in Lua.
-When encoding Lua structures to JSON, empty tables will be converted
-to empty arrays ( {} => [] )
-
-This is an issue for data correctness and certain Internet protocols (WAMP)
---]]
-
--- encodeLuaTable( table )
--- checks table structure. if empty, it will embellish it with data
--- besure to call encodeLuaTable() after it has been encoded
---
--- @params table_ref table reference to table structure
---
-function Utils.encodeLuaTable( table_ref )
-	-- print( "Utils.encodeLuaTable", table_ref )
-	if table_ref == nil or Utils.tableSize( table_ref ) == 0 then
-		table_ref = { ['__HACK__']='__PAD__' }
-	end
-	return table_ref
-end
-
--- decodeLuaTable( encoded_json )
--- removes any data embellishments added with encodeLuaTable().
---
--- @params encoded_json string of encoded JSON
---
-function Utils.decodeLuaTable( encoded_json )
-	-- print( "Utils.decodeLuaTable", encoded_json )
-	return string.gsub( encoded_json, '"__HACK__":"__PAD__"', '' )
-end
-
-
---[[
-These functions fix the issue that arises when working with JSON and
-the large numbers in Lua.
-Large Lua numbers (integers) will always be represented by exponential notation
-435985071997801 => 4.359850719978e+14
-
-This is an issue for data correctness and certain Internet protocols (WAMP)
---]]
-
--- encodeLuaInteger( integer )
--- will encode the integer into a string
---
--- @params integer large integer number
---
-function Utils.encodeLuaInteger( integer )
-	-- print( "Utils.encodeLuaInteger", integer )
-	return string.format("<<<%.0f>>>", integer )
-end
-
--- decodeLuaInteger( integer )
--- will remove encoding from encodeLuaInteger()
---
--- @params integer large integer number
---
-function Utils.decodeLuaInteger( encoded_json )
-	-- print( "Utils.decodeLuaTable", encoded_json )
-	return string.gsub( encoded_json, '"<<<(.-)>>>"', '%1' )
-end
-
-
-
---====================================================================--
--- Math Functions
---====================================================================--
 
 function Utils.getUniqueRandom( include, exclude )
 	--print( "Utils.getUniqueRandom" )
@@ -325,8 +260,9 @@ end
 
 
 --====================================================================--
--- String Functions
+--== String Functions
 --====================================================================--
+
 
 -- split string up in parts, using separator
 -- returns array of pieces
@@ -360,8 +296,9 @@ end
 
 
 --====================================================================--
--- Table Functions
+--== Table Functions
 --====================================================================--
+
 
 -- destroy()
 -- Deletes all of the items in a table structure.
@@ -609,8 +546,9 @@ end
 
 
 --====================================================================--
--- Web Functions
+--== Web Functions
 --====================================================================--
+
 
 function Utils.createHttpRequest( params )
 	-- print( "Utils.createHttpRequest")
@@ -641,6 +579,7 @@ end
 function Utils.normalizeHeaders( headers, params )
 	params = params or {}
 	params.case = params.case or 'lower' -- camel, lower
+	params.debug = params.debug ~= nil and params.debug or false
 	--==--
 	local h = {}
 	local f
@@ -649,10 +588,12 @@ function Utils.normalizeHeaders( headers, params )
 	else
 		f = string.lower
 	end
+
 	for k,v in pairs( headers ) do
-		print(k,v)
+		if params.debug then print(k,v) end
 		h[ f(k) ] = v
 	end
+
 	return h
 end
 
