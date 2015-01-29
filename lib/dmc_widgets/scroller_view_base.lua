@@ -251,7 +251,7 @@ function ScrollerBase:__init__( params )
 
 	if params.x_offset == nil then params.x_offset = 0 end
 	if params.y_offset == nil then params.y_offset = 0 end
-	if params.do_auto_mask == nil then params.do_auto_mask = false end
+	if params.automask == nil then params.automask = false end
 
 	--== Sanity Check ==--
 
@@ -347,12 +347,13 @@ function ScrollerBase:__init__( params )
 
 end
 
+--[[
 function ScrollerBase:__undoInit__()
 	-- print( "ScrollerBase:_undoInit" )
-
 	--==--
 	self:superCall( '__undoInit__' )
 end
+--]]
 
 
 -- __createView__()
