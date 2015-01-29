@@ -1,14 +1,15 @@
 --====================================================================--
 -- lua_error.lua
 --
--- Documentation: http://docs.davidmccuskey.com/display/docs/lua_error.lua
+-- Documentation:
+-- * http://github.com/dmccuskey/lua-error
 --====================================================================--
 
 --[[
 
 The MIT License (MIT)
 
-Copyright (C) 2014 David McCuskey. All Rights Reserved.
+Copyright (C) 2014-2015 David McCuskey. All Rights Reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -33,36 +34,49 @@ SOFTWARE.
 
 
 --====================================================================--
--- DMC Lua Library : Lua Error
+--== DMC Lua Library : Lua Error
 --====================================================================--
 
 
 -- Semantic Versioning Specification: http://semver.org/
 
-local VERSION = "0.1.1"
+local VERSION = "0.2.0"
+
 
 
 --====================================================================--
--- Imports
+--== Imports
+
 
 local Objects = require 'lua_objects'
 
 
+-- Check imports
+-- TODO: work on this
+assert( Objects, "lua_error: requires lua_objects" )
+if checkModule then checkModule( Objects, '1.1.2' ) end
+
+
+
 --====================================================================--
--- Setup, Constants
+--== Setup, Constants
+
 
 -- setup some aliases to make code cleaner
-local inheritsFrom = Objects.inheritsFrom
-local ObjectBase = Objects.ObjectBase
+local newClass = Objects.newClass
+
 
 
 --====================================================================--
--- Support Functions
+--== Support Functions
+
 
 -- based on https://gist.github.com/cwarden/1207556
 
 local function try( funcs )
 	local try_f, catch_f, finally_f = funcs[1], funcs[2], funcs[3]
+	assert( try_f, "lua_error: missing function for try()" )
+	--==--
 	local status, result = pcall(try_f)
 	if not status and catch_f then
 		catch_f(result)
@@ -82,31 +96,43 @@ end
 
 
 --====================================================================--
--- Error Base Class
+--== Error Base Class
 --====================================================================--
 
 
-local Error = inheritsFrom( ObjectBase )
-Error.NAME = "Error Instance"
+local Error = newClass( nil, { name="Error Instance" } )
 
-function Error:_init( params )
-	-- print( "Error:_init" )
+--== Class Constants ==--
+
+Error.__version = VERSION
+
+Error.DEFAULT_PREFIX = "ERROR: "
+Error.DEFAULT_MESSAGE = "There was an error"
+
+
+function Error:__new__( message, params )
+	message = message or self.DEFAULT_MESSAGE
 	params = params or {}
-	self:superCall( "_init", params )
+	params.prefix = params.prefix or self.DEFAULT_PREFIX
 	--==--
 
-	if self.is_intermediate then return end
+	-- guard subclasses
+	if self.is_class then return end
 
-	self.prefix = params.prefix or "ERROR: "
-	self.message = params.message or "there was an error"
+	-- save args
+	self.prefix = params.prefix
+	self.message = message
 	self.traceback = debug.traceback()
 
-	local mt = getmetatable( self )
-	mt.__tostring = function(e)
-		return table.concat({self.prefix,e.message,"\n",e.traceback})
-	end
-
 end
+
+
+-- must return a string
+--
+function Error:__tostring__( id )
+	return table.concat( { self.prefix, self.message, "\n", self.traceback } )
+end
+
 
 
 
