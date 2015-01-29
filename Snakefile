@@ -92,6 +92,16 @@ module_config = {
 						"dmc-corona-boot":""
 					}
 				}
+			},
+			{
+				"exp_dir": "table_view-simple",
+				"requires": [],
+				"mod_dir_map": {
+					"default_dir": "",
+					"libs": {
+						"dmc-corona-boot":""
+					}
+				}
 			}
 		]
 	},
