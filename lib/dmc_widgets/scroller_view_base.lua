@@ -456,8 +456,14 @@ function ScrollerBase:__undoInitComplete__()
 
 	self._is_rendered = false
 
+	self:deleteAllItems()
+
 	-- remove touch capability to our scroller item
 	self._dg_scroller:removeEventListener( 'touch', self )
+
+	self._item_data_recs = nil
+	self._rendered_items = nil
+	self._touch_evt_stack = nil
 
 	--==--
 	self:superCall( '__undoInitComplete__' )
@@ -934,6 +940,8 @@ e.index = row.index
 
 function ScrollerBase:_renderItem( item_data, options )
 	-- print( "ScrollerBase:_renderItem", item_data, item_data.index )
+	options = options or {}
+	--==--
 
 	if item_data.view then print("already rendered") ; return end
 
