@@ -74,7 +74,21 @@ end
 -- called when table view needs to send an event to a row
 --
 local function onEvent( event )
-	-- print( 'onEvent' )
+	-- print( 'onEvent', event.type )
+	local etype = event.type
+	local tv = event.target -- our table view
+
+	if etype == tv.ITEMS_MODIFIED then
+		print( "Items Modified" )
+	elseif etype == tv.TAKE_FOCUS then
+		print( "Take Focus" )
+	elseif etype == tv.SCROLLING then
+		print( "View Scrolling", event.x, event.y, event.velocity )
+	elseif etype == tv.SCROLLED then
+		print( "View Scrolled", event.x, event.y, event.velocity )
+	else
+		print( 'onEvent', event.type )
+	end
 
 end
 
@@ -90,9 +104,11 @@ end
 local o = Widgets.newTableView{
 	width=DIMS.w,
 	height=DIMS.h*SHOW,
-	automask=false
+	automask=true
 }
 o.x, o.y = OFFSET*0.5, OFFSET*0.5
+
+o:addEventListener( o.EVENT, onEvent )
 
 
 -- create rows
