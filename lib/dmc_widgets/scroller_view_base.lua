@@ -284,6 +284,10 @@ function ScrollerBase:__init__( params )
 
 	self._transition = nil -- handle of active transition
 
+	self._returnFocus = nil -- return focus callback
+	self._returnFocusCancel = nil -- return focus callback
+	self._returnFocus_t = nil -- return focus timer
+
 	self._is_rendered = true
 
 	--== Display Groups ==--
@@ -486,15 +490,96 @@ function ScrollerBase:gotoItem( item_data )
 end
 
 
--- method to have the table view take focus
--- from calling method
+-- sets up giving away focus when someone wants to take it
+--
+function ScrollerBase:relinquishFocus( event )
+	-- print( "ScrollerBase:relinquishFocus" )
+
+	-- we need to end this touch action
+	-- the following is copied from :touch(), END
+
+	self:_checkScrollBounds()
+
+	display.getCurrentStage():setFocus( nil )
+	self._has_focus = false
+
+	self._tch_event_tmp = event
+
+	local next_state, next_params = self:_getNextState( { event=event } )
+	self:gotoState( next_state, next_params )
+
+end
+
+
 function ScrollerBase:takeFocus( event )
 	-- print( "ScrollerBase:takeFocus" )
+
+	if self._returnFocusCancel then self._returnFocusCancel() end
+
+	if event.returnFocus then
+
+		local returnFocusCallback = event.returnFocus
+		local returnFocusTarget = event.returnTarget
+
+		local returnFocus_f, cancelFocus_f
+
+		returnFocus_f = function( state )
+			-- print( 'ScrollerBase: returnFocus' )
+
+			cancelFocus_f()
+
+			local e = self._tch_event_tmp
+
+			local evt = {
+				name = e.name,
+				id=e.id,
+				time=e.time,
+				x=e.x,
+				y=e.y,
+				xStart=e.xStart,
+				yStart=e.yStart,
+			}
+
+			if state then
+				-- coming from end touch
+				evt.phase = state  -- we want to give ended
+			else
+				-- coming from timer
+				evt.phase = 'began'
+				self:relinquishFocus( e )
+			end
+
+			evt.target = returnFocusTarget
+			returnFocusCallback( evt )
+		end
+
+		cancelFocus_f = function()
+			-- print( 'ScrollerBase: cancelFocus' )
+
+			if self._returnFocus_t then
+				timer.cancel( self._returnFocus_t )
+				self._returnFocus_t = nil
+			end
+
+			self._returnFocus = nil
+			self._returnFocusCancel = nil
+		end
+
+		self._returnFocus = returnFocus_f
+		self._returnFocusCancel = cancelFocus_f
+		self._returnFocus_t = timer.performWithDelay( 100, function(e) returnFocus_f() end )
+
+	end
+
+	-- remove previous focus, if any
 	display.getCurrentStage():setFocus( nil )
+
 	event.phase = 'began'
 	event.target = self._dg_scroller
 	self:touch( event )
+
 end
+
 
 
 -- insert new item into scroller
@@ -1339,22 +1424,31 @@ function ScrollerBase:touch( event )
 
 		x_delta = math.abs( event.xStart - event.x )
 		if not self._v_touch_lock and x_delta > self._h_touch_limit then
+			-- we're only moving in H direction now
 			self._h_touch_lock = true
 		end
 		if not self._v_touch_lock and not self._h_scroll_enabled then
 			if x_delta > self._h_touch_limit then
-				self:dispatchEvent( self.TAKE_FOCUS, event )
+				self:_dispatchEvent( self.TAKE_FOCUS, event )
 			end
+		end
+		if self._returnFocusCancel and self._h_touch_lock and self._h_scroll_enabled then
+			self._returnFocusCancel()
 		end
 
 		y_delta = math.abs( event.yStart - event.y )
 		if not self._h_touch_lock and y_delta > self._v_touch_limit then
+			-- we're only moving in V direction now
 			self._v_touch_lock = true
 		end
+
 		if not self._h_touch_lock and not self._v_scroll_enabled then
 			if y_delta > self._v_touch_limit then
-				self:dispatchEvent( self.TAKE_FOCUS, event )
+				self:_dispatchEvent( self.TAKE_FOCUS, event )
 			end
+		end
+		if self._returnFocusCancel and y_delta > self._v_touch_limit*0.5 and self._v_scroll_enabled then
+			self._returnFocusCancel()
 		end
 
 		self:_checkScrollBounds()
@@ -1412,8 +1506,14 @@ function ScrollerBase:touch( event )
 		self._tch_event_tmp = event
 		-- event.time = system.getTimer()
 
+
+		-- maybe we have ended without moving
+		-- so need to give back ended as a touch to our item
+
 		local next_state, next_params = self:_getNextState( { event=event } )
 		self:gotoState( next_state, next_params )
+
+		if self._returnFocus then self._returnFocus( 'ended' ) end
 
 		if not self._h_touch_lock and not self._v_touch_lock then
 			self:_do_item_tap()
