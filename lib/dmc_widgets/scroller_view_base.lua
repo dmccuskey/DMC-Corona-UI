@@ -1584,7 +1584,7 @@ function ScrollerBase:touch( event )
 		end
 		if not self._v_touch_lock and not self._h_scroll_enabled then
 			if x_delta > self._h_touch_limit then
-				self:_dispatchEvent( self.TAKE_FOCUS, event )
+				self:dispatchEvent( self.TAKE_FOCUS, event )
 			end
 		end
 		if self._returnFocusCancel and self._h_touch_lock and self._h_scroll_enabled then
@@ -1599,7 +1599,7 @@ function ScrollerBase:touch( event )
 
 		if not self._h_touch_lock and not self._v_scroll_enabled then
 			if y_delta > self._v_touch_limit then
-				self:_dispatchEvent( self.TAKE_FOCUS, event )
+				self:dispatchEvent( self.TAKE_FOCUS, event )
 			end
 		end
 		if self._returnFocusCancel and y_delta > self._v_touch_limit*0.5 and self._v_scroll_enabled then
