@@ -155,7 +155,12 @@ end
 --====================================================================--
 --== Public Methods
 
--- none
+function BaseView.__getters:background()
+	return self._view
+end
+function BaseView.__getters:label()
+	return self._label
+end
 
 
 --====================================================================--
@@ -170,7 +175,12 @@ function BaseView:_createLabelParams( v_name, params )
 	local l_p = params.label
 	local p
 
-	if type(l_p)=='string' then
+	if l_p==nil then
+		p = {
+			text=''
+		}
+
+	elseif type(l_p)=='string' then
 		p = {
 			text=l_p
 		}

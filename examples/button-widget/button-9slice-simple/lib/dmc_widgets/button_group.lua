@@ -173,6 +173,22 @@ function GroupBase:remove( obj )
 end
 
 
+function GroupBase:getButton( id )
+	-- print( "GroupBase:getButton", id )
+	assert( type(id)=='string', 'getButton: expected string for button id')
+	--==--
+	local button = nil
+
+	for _, o in pairs( self._buttons ) do
+		if o.id == id then
+			button = o
+			break
+		end
+	end
+	return button
+end
+
+
 --====================================================================--
 --== Private Methods
 
