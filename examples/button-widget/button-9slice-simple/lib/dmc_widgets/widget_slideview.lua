@@ -1,33 +1,40 @@
 --====================================================================--
--- widget_SlideView.lua
+-- dmc_widgets/widget_slideview.lua
 --
---
--- by David McCuskey
--- Documentation: http://docs.davidmccuskey.com/display/docs/newSlideView.lua
+-- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
 
 --[[
 
-Copyright (C) 2013-2014 David McCuskey. All Rights Reserved.
+The MIT License (MIT)
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in the
-Software without restriction, including without limitation the rights to use, copy,
-modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
-and to permit persons to whom the Software is furnished to do so, subject to the
-following conditions:
+Copyright (c) 2013-2015 David McCuskey
 
-The above copyright notice and this permission notice shall be included in all copies
-or substantial portions of the Software.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
-FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-DEALINGS IN THE SOFTWARE.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
 --]]
+
+
+
+--====================================================================--
+--== DMC Corona Widgets : Slide View
+--====================================================================--
 
 
 -- Semantic Versioning Specification: http://semver.org/
@@ -37,17 +44,9 @@ local VERSION = "1.0.0"
 
 
 --====================================================================--
--- DMC Library Setup
+--== DMC Widgets Setup
 --====================================================================--
 
-local dmc_lib_data, dmc_lib_func
-dmc_lib_data = _G.__dmc_library
-dmc_lib_func = dmc_lib_data.func
-
-
---====================================================================--
--- DMC Widgets Setup
---====================================================================--
 
 local dmc_widget_data, dmc_widget_func
 dmc_widget_data = _G.__dmc_widget
@@ -56,7 +55,7 @@ dmc_widget_func = dmc_widget_data.func
 
 
 --====================================================================--
--- DMC Widgets : newSlideView
+--== Slide View Setup
 --====================================================================--
 
 
@@ -64,20 +63,22 @@ dmc_widget_func = dmc_widget_data.func
 --====================================================================--
 --== Imports
 
-local Utils = require( dmc_lib_func.find('dmc_utils') )
-local Objects = require( dmc_lib_func.find('dmc_objects') )
-local States = require( dmc_lib_func.find('dmc_states') )
+
+local Objects = require 'dmc_objects'
+local Utils = require 'dmc_utils'
+
+--== Components
 
 local ScrollerViewBase = require( dmc_widget_func.find( 'scroller_view_base' ) )
 local easingx = require( dmc_widget_func.find( 'lib.easingx' ) )
+
 
 
 --====================================================================--
 --== Setup, Constants
 
 -- setup some aliases to make code cleaner
-local inheritsFrom = Objects.inheritsFrom
-local CoronaBase = Objects.CoronaBase
+local newClass = Objects.newClass
 
 
 
@@ -86,8 +87,7 @@ local CoronaBase = Objects.CoronaBase
 --====================================================================--
 
 
-local SlideView = inheritsFrom( ScrollerViewBase )
-SlideView.NAME = "Slide View Widget Class"
+local SlideView = newClass( ScrollerViewBase, {name="Slide View Widget"} )
 
 --== Class Constants
 
@@ -98,8 +98,8 @@ SlideView.NAME = "Slide View Widget Class"
 -- STATE_TOUCH = "state_touch"
 -- STATE_RESTRAINT = "state_touch"
 -- STATE_RESTORE = "state_touch"
-SlideView.STATE_MOVE_TO_NEAREST_SLIDE = "move_to_nearest_slide"
-SlideView.STATE_MOVE_TO_NEXT_SLIDE = "move_to_next_slide"
+SlideView.STATE_MOVE_TO_NEAREST_SLIDE = 'move_to_nearest_slide'
+SlideView.STATE_MOVE_TO_NEXT_SLIDE = 'move_to_next_slide'
 
 SlideView.STATE_MOVE_TO_NEAREST_SLIDE_TRANS_TIME = 250
 SlideView.STATE_MOVE_TO_NEXT_SLIDE_TRANS_TIME = 250
@@ -107,19 +107,20 @@ SlideView.STATE_MOVE_TO_NEXT_SLIDE_TRANS_TIME = 250
 
 --== Event Constants
 
-SlideView.SLIDE_IN_FOCUS = "slide_in_focus_event"
+SlideView.SLIDE_IN_FOCUS = 'slide_in_focus_event'
 
 SlideView.SLIDE_RENDER = ScrollerViewBase.ITEM_RENDER
 SlideView.SLIDE_UNRENDER = ScrollerViewBase.ITEM_UNRENDER
 
 
---====================================================================--
+
+--======================================================--
 -- Start: Setup DMC Objects
 
-function SlideView:_init( params )
-	-- print( "SlideView:_init" )
+function SlideView:__init__( params )
+	-- print( "SlideView:__init__" )
 	params = params or { }
-	self:superCall( "_init", params )
+	self:superCall( '__init__', params )
 	--==--
 
 
@@ -173,20 +174,20 @@ function SlideView:_init( params )
 
 end
 
-function SlideView:_undoInit()
-	-- print( "SlideView:_undoInit" )
+function SlideView:__undoInit__()
+	-- print( "SlideView:__undoInit__" )
 
 	--==--
-	self:superCall( "_undoInit" )
+	self:superCall( '__undoInit__' )
 end
 
 
 
--- _createView()
+-- __createView__()
 --
-function SlideView:_createView()
-	-- print( "SlideView:_createView" )
-	self:superCall( "_createView" )
+function SlideView:__createView__()
+	-- print( "SlideView:__createView__" )
+	self:superCall( '__createView__' )
 	--==--
 
 	local W,H = self._width, self._height
@@ -196,20 +197,20 @@ function SlideView:_createView()
 
 end
 
-function SlideView:_undoCreateView()
-	-- print( "SlideView:_undoCreateView" )
+function SlideView:__undoCreateView__()
+	-- print( "SlideView:__undoCreateView__" )
 
 	local o
 
 	--==--
-	self:superCall( "_undoCreateView" )
+	self:superCall( '__undoCreateView__' )
 end
 
 
--- _initComplete()
+-- __initComplete__()
 --
-function SlideView:_initComplete()
-	--print( "SlideView:_initComplete" )
+function SlideView:__initComplete__()
+	--print( "SlideView:__initComplete__" )
 
 	local o, f
 
@@ -218,20 +219,18 @@ function SlideView:_initComplete()
 	self:gotoState( self.STATE_AT_REST )
 
 	--==--
-	self:superCall( "_initComplete" )
+	self:superCall( '__initComplete__' )
 end
 
-function SlideView:_undoInitComplete()
-	--print( "SlideView:_undoInitComplete" )
+function SlideView:__undoInitComplete__()
+	--print( "SlideView:__undoInitComplete__" )
 
 	--==--
-	self:superCall( "_undoInitComplete" )
+	self:superCall( '__undoInitComplete__' )
 end
 
-
 --== END: Setup DMC Objects
-
-
+--======================================================--
 
 
 
@@ -269,7 +268,11 @@ function SlideView:gotoSlide( index )
 		index = index,
 		slide = self.slide
 	}
-	self:_dispatchEvent( self.SLIDE_IN_FOCUS, data )
+	if data.index and data.slide then
+		self:dispatchEvent( self.SLIDE_IN_FOCUS, data )
+	else
+		print( "SlideView::goto slide not in focus", index, self.slide )
+	end
 
 end
 
@@ -297,7 +300,6 @@ end
 --== Private Methods
 
 
-
 function SlideView:_reindexItems( index, record )
 	-- print( "SlideView:_reindexItems", index, record )
 
@@ -318,17 +320,37 @@ function SlideView:_reindexItems( index, record )
 end
 
 function SlideView:_updateBackground()
+	-- print( "SlideView:_updateBackground" )
+
 	local items = self._item_data_recs
-	local item
+	local o = self._bg
+
+	local total_dim, item
+	local x, y
+
+	-- set our total item dimension
 
 	if #items == 0 then
-		self._total_item_dimension = 0
+		total_dim = 0
 	else
 		item = items[ #items ]
-		self._total_item_dimension = item.xMax
+		total_dim = item.xMax
 	end
 
-	self:superCall( '_updateBackground' )
+	self._total_item_dimension = total_dim
+
+
+	-- set background width, make at least width of window
+
+	if total_dim < self._width then
+		total_dim = self._width
+	end
+
+	x, y = o.x, o.y
+	o.width = total_dim
+	o.anchorX, o.anchorY = 0,0
+	o.x, o.y = x, y
+
 end
 
 
@@ -357,18 +379,24 @@ function SlideView:_updateDimensions( item_info, item_data )
 	total_dim = total_dim + item_data.width
 	self._total_item_dimension = total_dim
 
+
 	-- do i want this here ?
 	if #self._rendered_items == 1 then
+
 		self.index = 1
-		self.slide = self._rendered_items[ self.index ]
+		self.slide = self:_findRenderedItem( self.index )
 
 		local data = {
 			index=self.index,
 			slide=self.slide
 		}
-		self:_dispatchEvent( self.SLIDE_IN_FOCUS, data )
-	end
+		if data.index and data.slide then
+			self:dispatchEvent( self.SLIDE_IN_FOCUS, data )
+		else
+			print( "SlideView::_updateDimensions not in focus" )
+		end
 
+	end
 end
 
 
@@ -384,7 +412,7 @@ function SlideView:_isBounded( scroller, item )
 	elseif item.xMin <= scroller.xMax and scroller.xMax < item.xMax then
 		-- cut on right
 		result = true
-	elseif item.xMin >= scroller.xMin and item.xMax <= scroller.xMax  then
+	elseif item.xMin >= scroller.xMin and item.xMax <= scroller.xMax then
 		-- fully in view
 		result = true
 	elseif item.xMin < scroller.xMin and scroller.xMax < item.xMax then
@@ -447,10 +475,20 @@ end
 
 
 
+function SlideView:_do_item_tap()
+	-- print( "SlideView:_do_item_tap" )
+	local data = {
+		index=self.index,
+		slide=self.slide,
+		data=self.slide.data.data
+	}
+	self:dispatchEvent( self.ITEM_SELECTED, data )
+end
+
+
 
 --======================================================--
 --== START: SLIDEVIEW STATE MACHINE
-
 
 
 function SlideView:_getNextState( params )
@@ -704,12 +742,12 @@ function SlideView:do_state_restraint( params )
 
 		--== Action
 
-		if start_time_delta < TIME then
+		if start_time_delta < TIME and math.abs(x_delta) >= 1 then
 			scr.x = scr.x + x_delta
 
 		else
 			-- final state
-			v.value = 0
+			v.value, v.vector = 0, 0
 			self:gotoState( self.STATE_RESTORE, { event=e } )
 		end
 	end
@@ -756,6 +794,7 @@ function SlideView:do_state_restore( params )
 	local TIME = self.STATE_RESTORE_TRANS_TIME
 	local ease_f = easingx.easeOut
 
+	local v = self._h_velocity
 	local limit = self._h_scroll_limit
 	local scr = self._dg_scroller
 	local background = self._bg
@@ -799,6 +838,7 @@ function SlideView:do_state_restore( params )
 
 		else
 			-- final state
+			v.value, v.vector = 0, 0
 			scr.x = pos + delta
 			self:gotoState( self.STATE_AT_REST, item )
 
@@ -850,7 +890,13 @@ function SlideView:do_state_at_rest( slide )
 			index=slide.index,
 			slide=slide
 		}
-		self:_dispatchEvent( self.SLIDE_IN_FOCUS, data )
+		if data.index and data.slide then
+			if self._has_moved then
+				self:dispatchEvent( self.SLIDE_IN_FOCUS, data )
+			end
+		else
+			print( "SlideView::do_state_at_rest not in focus" )
+		end
 	end
 
 end
