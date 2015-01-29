@@ -62,21 +62,18 @@ dmc_widget_func = dmc_widget_data.func
 
 
 --====================================================================--
--- Imports
---====================================================================--
+--== Imports
 
 local Utils = require( dmc_lib_func.find('dmc_utils') )
 local Objects = require( dmc_lib_func.find('dmc_objects') )
 local States = require( dmc_lib_func.find('dmc_states') )
 
 local ScrollerViewBase = require( dmc_widget_func.find( 'scroller_view_base' ) )
-local easingx = require( dmc_widget_func.find( 'easingx' ) )
-
+local easingx = require( dmc_widget_func.find( 'lib.easingx' ) )
 
 
 --====================================================================--
--- Setup, Constants
---====================================================================--
+--== Setup, Constants
 
 -- setup some aliases to make code cleaner
 local inheritsFrom = Objects.inheritsFrom
@@ -88,12 +85,11 @@ local CoronaBase = Objects.CoronaBase
 -- Slide View Widget Class
 --====================================================================--
 
+
 local SlideView = inheritsFrom( ScrollerViewBase )
 SlideView.NAME = "Slide View Widget Class"
 
-
 --== Class Constants
-
 
 --== State Constants
 
@@ -115,11 +111,12 @@ SlideView.SLIDE_IN_FOCUS = "slide_in_focus_event"
 
 SlideView.SLIDE_RENDER = ScrollerViewBase.ITEM_RENDER
 SlideView.SLIDE_UNRENDER = ScrollerViewBase.ITEM_UNRENDER
+
 SlideView.SCROLLED = 'slideview_scrolled_event'
 
---====================================================================--
---== Start: Setup DMC Objects
 
+--====================================================================--
+-- Start: Setup DMC Objects
 
 function SlideView:_init( params )
 	-- print( "SlideView:_init" )
@@ -242,7 +239,6 @@ end
 
 --====================================================================--
 --== Public Methods
-
 
 
 -- set method on our object, make lookup faster

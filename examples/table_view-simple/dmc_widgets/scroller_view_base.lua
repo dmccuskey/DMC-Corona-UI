@@ -217,6 +217,7 @@ ScrollerBase.ITEM_SELECTED = "item_selected"
 ScrollerBase.ITEMS_MODIFIED = "items_modified_event"
 
 
+ScrollerBase.SCROLLED = "view_scrolled_event"
 
 
 --====================================================================--
@@ -234,6 +235,7 @@ function ScrollerBase:_init( params )
 
 	if params.x_offset == nil then params.x_offset = 0 end
 	if params.y_offset == nil then params.y_offset = 0 end
+	if params.do_auto_mask == nil then params.do_auto_mask = false end
 
 	self._params = params -- save for later
 
@@ -266,6 +268,11 @@ function ScrollerBase:_init( params )
 	self._h_velocity = { value=0, vector=0 }
 
 	self._transition = nil -- handle of active transition
+
+	self._returnFocus = nil -- return focus callback
+	self._returnFocusCancel = nil -- return focus callback
+	self._returnFocus_t = nil -- return focus timer
+
 
 	self._is_rendered = true
 
@@ -303,6 +310,14 @@ function ScrollerBase:_init( params )
 	self._categories = nil -- array of category data
 
 	self._category_view = nil
+
+
+	-- auto masking
+	if params.do_auto_mask then
+		self:_setView( display.newContainer( self._width, self._height ) )
+		self.view.anchorChildren = false
+		self.view.anchorX, self.view.anchorY = 0, 0
+	end
 
 end
 
@@ -424,6 +439,14 @@ function ScrollerBase:_undoInitComplete()
 
 	self._is_rendered = false
 
+	self:deleteAllItems()
+
+	self._dg_scroller:removeEventListener( "touch", self )
+
+	self._item_data_recs = nil
+	self._rendered_items = nil
+	self._touch_evt_stack = nil
+
 	--==--
 	self:superCall( "_undoInitComplete" )
 end
@@ -450,14 +473,32 @@ end
 
 
 
+-- move scroller to item
 function ScrollerBase:gotoItem( item_data )
 	-- print( "ScrollerBase:gotoItem", item_data )
-
 	self._tmp_item = item_data
-
-	self:_updateDisplay()
-
+	self:_updateView()
 	self._tmp_item = nil
+end
+
+
+-- sets up giving away focus when someone wants to take it
+--
+function ScrollerBase:relinquishFocus( event )
+	-- print( "ScrollerBase:relinquishFocus" )
+
+	-- we need to end this touch action
+	-- the following is copied from :touch(), END
+
+	self:_checkScrollBounds()
+
+	display.getCurrentStage():setFocus( nil )
+	self._has_focus = false
+
+	self._tch_event_tmp = event
+
+	local next_state, next_params = self:_getNextState( { event=event } )
+	self:gotoState( next_state, next_params )
 
 end
 
@@ -466,11 +507,69 @@ end
 function ScrollerBase:takeFocus( event )
 	-- print( "ScrollerBase:takeFocus" )
 
+	if self._returnFocusCancel then self._returnFocusCancel() end
+
+	if event.returnFocus then
+
+		local returnFocusCallback = event.returnFocus
+		local returnFocusTarget = event.returnTarget
+
+		local returnFocus_f, cancelFocus_f
+
+		returnFocus_f = function( state )
+			-- print( 'ScrollerBase: returnFocus' )
+
+			cancelFocus_f()
+
+			local e = self._tch_event_tmp
+
+			local evt = {
+				name = e.name,
+				id=e.id,
+				time=e.time,
+				x=e.x,
+				y=e.y,
+				xStart=e.xStart,
+				yStart=e.yStart,
+			}
+
+			if state then
+				-- coming from end touch
+				evt.phase = state  -- we want to give ended
+			else
+				-- coming from timer
+				evt.phase = 'began'
+				self:relinquishFocus( e )
+			end
+
+			evt.target = returnFocusTarget
+			returnFocusCallback( evt )
+		end
+
+		cancelFocus_f = function()
+			-- print( 'ScrollerBase: cancelFocus' )
+
+			if self._returnFocus_t then
+				timer.cancel( self._returnFocus_t )
+				self._returnFocus_t = nil
+			end
+
+			self._returnFocus = nil
+			self._returnFocusCancel = nil
+		end
+
+		self._returnFocus = returnFocus_f
+		self._returnFocusCancel = cancelFocus_f
+		self._returnFocus_t = timer.performWithDelay( 100, function(e) returnFocus_f() end )
+
+	end
+
+
+	-- remove previous focus, if any
 	display.getCurrentStage():setFocus( nil )
 
 	event.phase = 'began'
 	event.target = self._dg_scroller
-
 	self:touch( event )
 
 end
@@ -600,6 +699,30 @@ end
 
 
 
+-- this is the slide index
+function ScrollerBase:_findRenderedItem( index )
+	-- print( "ScrollerBase:_findRenderedItem", index )
+	local rendered = self._rendered_items
+	local record
+
+	if #rendered > 0 then
+		for i = #rendered, 1, -1 do
+			local item_data = rendered[ i ]
+			-- print( i, 'rendered row', item_data.index )
+			if item_data.index == index then
+				record = item_data
+				break
+			end
+		end
+	end
+
+	return record
+end
+
+
+
+
+
 function ScrollerBase:_updateBackground()
 	-- print( "ScrollerBase:_updateBackground" )
 	error( "ScrollerBase:_updateBackground: override this ")
@@ -643,6 +766,152 @@ function ScrollerBase:_viewportBounds()
 end
 
 
+-- binary search
+function ScrollerBase:_findVisibleItem( min, max )
+	-- print( "ScrollerBase:_findVisibleItem", min, max  )
+
+	local items = self._item_data_recs
+
+	if #items == 0 then return end
+
+	local item
+	local low, high = 1, #items
+	local mid
+
+	if self._tmp_item then
+		return self._tmp_item.index
+
+	else
+		while( low <= high ) do
+			mid = math.floor( low + ( (high-low)/2 ) )
+			if items[mid].yMin > max then
+				high = mid - 1
+			elseif items[mid].yMin < min then
+				low = mid + 1
+			else
+				return mid  -- found
+			end
+
+		end
+	end
+
+	return nil
+end
+
+
+
+-- start at index
+-- used for adding from TOP of list, moving UP
+--
+function ScrollerBase:_renderUp( index, bounds )
+	-- print( "ScrollerBase:_renderUp", index )
+
+	local bounded_f = self._isBounded
+	local items = self._item_data_recs
+
+	local item_data, is_bounded
+
+	if index < 1 or index > #items then return end
+
+	repeat
+
+		item_data = items[ index ]
+		is_bounded = bounded_f( self, bounds, item_data )
+		-- print( index, item_data, is_bounded )
+		if not is_bounded then
+			break
+		else
+			self:_renderItem( item_data, { head=true } )
+			index = index - 1
+		end
+
+	until true
+
+end
+
+
+-- start at index
+-- used for adding from BOTTOM of list, moving DOWN
+--
+function ScrollerBase:_renderDown( index, bounds )
+	-- print( "ScrollerBase:_renderDown", index )
+
+	local bounded_f = self._isBounded
+	local items = self._item_data_recs
+
+	local item_data, is_bounded
+
+	if index < 1 or index > #items then return end
+
+	repeat
+
+		item_data = items[ index ]
+		is_bounded = bounded_f( self, bounds, item_data )
+		-- print( index, item_data, is_bounded )
+		if not is_bounded then
+			break
+		else
+			self:_renderItem( item_data, { head=false } )
+			index = index + 1
+		end
+
+	until true
+
+end
+
+
+-- used for removing starting from BOTTOM and moving UP
+--
+function ScrollerBase:_unrenderUp( bounds )
+	-- print( "ScrollerBase:_unrenderUp"  )
+
+	local bounded_f = self._isBounded
+	local rendered = self._rendered_items
+
+	local index, item_data, is_bounded
+
+	index = #rendered
+	item_data = rendered[ index ]
+	while item_data do
+		is_bounded = bounded_f( self, bounds, item_data )
+		if is_bounded then
+			break
+		else
+			self:_unRenderItem( item_data, { index=index } )
+			index = #rendered
+			item_data = rendered[ index ]
+		end
+
+	end
+
+end
+
+
+-- used for removing starting from TOP and moving DOWN
+--
+function ScrollerBase:_unrenderDown( bounds )
+	-- print( "ScrollerBase:_unrenderDown"  )
+
+	local bounded_f = self._isBounded
+	local rendered = self._rendered_items
+
+	local item_data, is_bounded
+
+	-- we don't have to change the index
+	item_data = rendered[ 1 ]
+	while item_data do
+		is_bounded = bounded_f( self, bounds, item_data )
+		if is_bounded then
+			break
+		else
+			self:_unRenderItem( item_data, { index=1 } )
+			item_data = rendered[ 1 ]
+		end
+	end
+
+end
+
+
 
 -- _updateDisplay()
 -- checks current rendered items, re-/renders if necessary
@@ -650,124 +919,128 @@ end
 function ScrollerBase:_updateDisplay()
 	-- print( "ScrollerBase:_updateDisplay" )
 
+	local bounds = self:_viewportBounds()
+	-- print( 'bounds >> ', bounds.yMin, bounds.yMax )
+
+	local renderUp = self._renderUp
+	local renderDown = self._renderDown
+	local unrenderUp = self._unrenderUp
+	local unrenderDown = self._unrenderDown
+
+
+	--== Start Processing ==--
+
 	local items = self._item_data_recs
+	local rendered = self._rendered_items
+	local bounded_f = self._isBounded
+	local item_data, is_bounded
 
 	if #items == 0 then return end
 
-	local bounded_f = self._isBounded
-	local rendered = self._rendered_items
-	local bounds = self:_viewportBounds()
-
-	-- print( 'back >> ', bounds.yMin, bounds.yMax )
+	-- print( 'rendered items', #rendered )
 
 
-	local min_visible_row, max_visible_row = nil, nil
-	local row
-
-	-- check if current list of rendered items are valid
-	-- print( 'checking valid rows', #self._rendered_items )
-
-	if #rendered > 0 then
-		for i = #rendered, 1, -1 do
-			local data = rendered[ i ]
-			local is_bounded = bounded_f( self, bounds, data )
-			-- print( i, 'rendered row', data.index, is_bounded )
-
-			if not is_bounded then self:_unRenderItem( data, { index=i } ) end
-
-		end
-	end
+	local index, item_data, is_bounded
 
 
-	--[[
-	print('= items', #items )
+	--== CASE: no rendered items ==--
 
-	print('= after cull: rendered', #rendered )
-	for i,v in ipairs( rendered ) do
-		print( i, v.index )
-	end
-	--]]
-
-	-- if no rows are valid, find the top one
 	if #rendered == 0 then
-		min_visible_row = self:_findFirstVisibleItem()
-		max_visible_row = min_visible_row
 
-		row = self:_renderItem( min_visible_row, { head=true } )
+		index = self:_findVisibleItem( bounds.yMin, bounds.yMax )
+
+		if index then
+			item_data = items[ index ]
+			self:_renderItem( item_data )
+			renderUp( self, index-1, bounds )
+			renderDown( self, index+1, bounds )
+		end
+
+		return
+	end
+
+
+	--== CASE: we have rendered items
+
+
+	--== check top of rendered list
+
+	item_data = rendered[ 1 ]
+	is_bounded = bounded_f( self, bounds, item_data )
+
+	if is_bounded then
+		-- the top item is still bound, so let's see if
+		-- we need to add items to the bottom of rendered list
+		item_data = rendered[ #rendered ]
+		renderDown( self, item_data.index+1, bounds )
 
 	else
+		-- this item scrolled off screen
+		-- so let's check rest below it too
+		unrenderDown( self, bounds )
 
-		min_visible_row = rendered[1]
-		max_visible_row = rendered[ #rendered ]
+		if #rendered == 0 then
+			-- we removed all of our items
+			-- so find one which should be visible
+			index = self:_findVisibleItem( bounds.yMin, bounds.yMax )
 
-
-	end
-
---[[
-	print( "= setup ")
-	print( 'min', min_visible_row.index, min_visible_row.data.data.type )
-	print( 'max', max_visible_row.index, max_visible_row.data.data.type )
-
-	print( "= print test ")
-	for i, rec in ipairs( self._item_data_recs ) do
-		print( i, rec.index, rec.data.data.type )
-	end
---]]
-
-	if min_visible_row then
-		-- search up until off screen
-
-		local item_data, index
-		index = min_visible_row.index - 1
-		-- print( 'searching up from index', index )
-		if index >= 1 then
-
-			for i = index, 1, -1 do
-				item_data = self._item_data_recs[ i ]
-				local is_bounded = bounded_f( self, bounds, item_data )
-
-				if not is_bounded then
-					-- print( 'not bounded breaking' )
-					break
-				end
-
-				self:_renderItem( item_data, { head=true } )
-
+			if index then
+				item_data = items[ index ]
+				self:_renderItem( item_data )
+				renderUp( self, index-1, bounds )
+				renderDown( self, index+1, bounds )
 			end
+
+		else
+			-- we have cleaned off the top
+			-- so let's check to add to bottom
+			item_data = rendered[ #rendered ]
+			renderDown( self, item_data.index+1, bounds )
 
 		end
 
+		return
 	end
 
 
-	if max_visible_row then
-		-- search down until off screen
+	--== check bottom of rendered list
 
-		local is_bounded
-		local item_data, index
-		index = max_visible_row.index + 1
+	item_data = rendered[ #rendered ]
+	is_bounded = bounded_f( self, bounds, item_data )
 
-		-- print( 'searching down from index', index )
+	if is_bounded then
+		-- the bottom item is still bound, so let's see if
+		-- we need to add items to the top of rendered list
+		item_data = rendered[ 1 ]
+		renderUp( self, item_data.index-1, bounds )
 
-		if index <= #self._item_data_recs then
+	else
+		-- this item scrolled off screen
+		-- so let's check rest above it too
+		unrenderUp( self, bounds )
 
-			for i = index, #self._item_data_recs do
-				item_data = self._item_data_recs[ i ]
-				if not item_data then print("no row data!!") ; break end
-				is_bounded = bounded_f( self, bounds, item_data )
+		if #rendered == 0 then
+			-- we removed all of our items
+			-- so find one which should be visible
+			index = self:_findVisibleItem( bounds.yMin, bounds.yMax )
 
-				if not is_bounded then
-					-- print( 'not bounded breaking' )
-					break
-				end
+			if index then
+				item_data = items[ index ]
+				self:_renderItem( item_data )
+				renderUp( self, index-1, bounds )
+				renderDown( self, index+1, bounds )
+			end
 
-				self:_renderItem( item_data, { head=false } )
+		else
+			-- we have cleaned off the bottom
+			-- so let's check to add to the top
+			item_data = rendered[ 1 ]
+			renderUp( self, item_data.index-1, bounds )
 
-			end  -- for
-		end -- if
+		end
 
-	end -- if max_visible_row
-
+		return
+	end
 
 end
 
@@ -816,18 +1089,18 @@ e.index = row.index
 
 function ScrollerBase:_renderItem( item_data, options )
 	-- print( "ScrollerBase:_renderItem", item_data, item_data.index )
-
-	local item_info = item_data.data
+	options = options or {}
+	--==--
 
 	if item_data.view then print("already rendered") ; return end
 
 	local dg = self._dg_scroller
+
+	local item_info = item_data.data
+	if item_info.hasBackground == nil then item_info.hasBackground = true end
+
 	local view, bg, line
 
-
-	--== Setup
-
-	if item_info.hasBackground == nil then item_info.hasBackground = true end
 
 
 	--== Create View Items
@@ -1262,6 +1535,17 @@ function ScrollerBase:enterFrame( event )
 		self._event_tmp = event
 		self:_updateDisplay()
 		self:_checkScrollBounds()
+
+
+		local scr = self._dg_scroller
+		local v = self._v_velocity
+		local d = {
+			x=scr.x,
+			y=scr.y,
+			velocity = v.value * v.vector
+		}
+		self:_dispatchEvent( ScrollerBase.SCROLLED, d )
+
 	end
 
 end
@@ -1299,9 +1583,13 @@ function ScrollerBase:touch( event )
 
 		-- handle touch
 		display.getCurrentStage():setFocus( scr.view )
+		self._has_focus = true
 
+	end
 
-	elseif phase == "moved" then
+	if not self._has_focus then return false end
+
+	if phase == "moved" then
 		-- Utils.print( event )
 
 		local scr = self._dg_scroller
@@ -1317,6 +1605,7 @@ function ScrollerBase:touch( event )
 
 		x_delta = math.abs( event.xStart - event.x )
 		if not self._v_touch_lock and x_delta > self._h_touch_limit then
+			-- we're only moving in H direction now
 			self._h_touch_lock = true
 		end
 		if not self._v_touch_lock and not self._h_scroll_enabled then
@@ -1324,16 +1613,26 @@ function ScrollerBase:touch( event )
 				self:_dispatchEvent( self.TAKE_FOCUS, event )
 			end
 		end
+		if self._returnFocusCancel and self._h_touch_lock and self._h_scroll_enabled then
+			self._returnFocusCancel()
+		end
 
 		y_delta = math.abs( event.yStart - event.y )
 		if not self._h_touch_lock and y_delta > self._v_touch_limit then
+			-- we're only moving in V direction now
 			self._v_touch_lock = true
 		end
+
 		if not self._h_touch_lock and not self._v_scroll_enabled then
 			if y_delta > self._v_touch_limit then
 				self:_dispatchEvent( self.TAKE_FOCUS, event )
 			end
 		end
+		if self._returnFocusCancel and y_delta > self._v_touch_limit*0.5 and self._v_scroll_enabled then
+			self._returnFocusCancel()
+		end
+
+
 
 		self:_checkScrollBounds()
 
@@ -1374,8 +1673,6 @@ function ScrollerBase:touch( event )
 
 		--== The Rest
 
-		self:_updateDisplay()
-
 		-- save event for movement calculation
 		self._tch_event_tmp = event
 
@@ -1387,15 +1684,19 @@ function ScrollerBase:touch( event )
 
 		-- clean up
 		display.getCurrentStage():setFocus( nil )
-
+		self._has_focus = false
 
 		-- add system time, we can re-use this event for Runtime
 		self._tch_event_tmp = event
 		-- event.time = system.getTimer()
 
+		-- maybe we have ended without moving
+		-- so need to give back ended as a touch to our item
 
 		local next_state, next_params = self:_getNextState( { event=event } )
 		self:gotoState( next_state, next_params )
+
+		if self._returnFocus then self._returnFocus( 'ended' ) end
 
 		if not self._h_touch_lock and not self._v_touch_lock then
 			self:_do_item_tap()

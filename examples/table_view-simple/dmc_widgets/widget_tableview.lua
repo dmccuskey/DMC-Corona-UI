@@ -1,31 +1,32 @@
 --====================================================================--
 -- widget_tableview.lua
 --
---
--- by David McCuskey
 -- Documentation: http://docs.davidmccuskey.com/display/docs/newTableView.lua
 --====================================================================--
 
 --[[
 
-Copyright (C) 2013-2014 David McCuskey. All Rights Reserved.
+The MIT License (MIT)
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in the
-Software without restriction, including without limitation the rights to use, copy,
-modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
-and to permit persons to whom the Software is furnished to do so, subject to the
-following conditions:
+Copyright (c) 2013-2014 David McCuskey
 
-The above copyright notice and this permission notice shall be included in all copies
-or substantial portions of the Software.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
-FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-DEALINGS IN THE SOFTWARE.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
 --]]
 
@@ -37,17 +38,17 @@ local VERSION = "1.0.0"
 
 
 --====================================================================--
--- DMC Library Setup
+--== DMC Corona Setup
 --====================================================================--
 
 local dmc_lib_data, dmc_lib_func
-dmc_lib_data = _G.__dmc_library
+dmc_lib_data = _G.__dmc_corona
 dmc_lib_func = dmc_lib_data.func
 
 
 
 --====================================================================--
--- DMC Widgets Setup
+--== DMC Widgets Setup
 --====================================================================--
 
 local dmc_widget_data, dmc_widget_func
@@ -57,53 +58,41 @@ dmc_widget_func = dmc_widget_data.func
 
 
 --====================================================================--
--- DMC Widgets : newTableView
+--== DMC Widgets : newTableView
 --====================================================================--
 
 
-
 --====================================================================--
--- Imports
---====================================================================--
+--== Imports
 
-local Utils = require( dmc_lib_func.find('dmc_utils') )
-local Objects = require( dmc_lib_func.find('dmc_objects') )
+local Objects = require 'dmc_objects'
+local Utils = require 'dmc_utils'
 
 local ScrollerViewBase = require( dmc_widget_func.find( 'scroller_view_base' ) )
-local easingx = require( dmc_widget_func.find( 'easingx' ) )
-
+local easingx = require( dmc_widget_func.find( 'lib.easingx' ) )
 
 
 --====================================================================--
--- Setup, Constants
---====================================================================--
+--== Setup, Constants
 
 -- setup some aliases to make code cleaner
 local inheritsFrom = Objects.inheritsFrom
-local CoronaBase = Objects.CoronaBase
 
 
 
 --====================================================================--
--- Table View Widget Class
+--== Table View Widget Class
 --====================================================================--
+
 
 local TableView = inheritsFrom( ScrollerViewBase )
-TableView.NAME = "Table View Widget Class"
+TableView.NAME = "Table View Widget"
 
-
---== Class Constants
-
+-- see constants from super class
 
 --== State Constants
 
--- STATE_CREATE = "state_create"
--- STATE_AT_REST = "state_at_rest"
--- STATE_TOUCH = "state_touch"
--- STATE_RESTRAINT = "state_touch"
--- STATE_RESTORE = "state_touch"
 TableView.STATE_SCROLL = "state_scroll"
-
 TableView.STATE_SCROLL_TRANS_TIME = 1000
 
 
@@ -114,10 +103,8 @@ TableView.STATE_SCROLL_TRANS_TIME = 1000
 TableView.SCROLLED = 'tableview_scrolled_event'
 
 
-
---====================================================================--
---== Start: Setup DMC Objects
-
+--======================================================--
+-- Start: Setup DMC Objects
 
 function TableView:_init( params )
 	-- print( "TableView:_init" )
@@ -125,92 +112,38 @@ function TableView:_init( params )
 	self:superCall( "_init", params )
 	--==--
 
+	-- check properties from super class
 
 	--== Create Properties ==--
-
-	-- self._width = params.width or display.contentWidth
-	-- self._height = params.height or display.contentHeight
-
-	-- self._current_category = nil
-
-	-- self._total_row_height = 0
-
-	-- self._event_tmp = nil
-
-	-- self._scroll_limit = nil -- type of limit, HIT_TOP_LIMIT, HIT_BOTTOM_LIMIT
-
-	-- self._velocity = { value=0, vector=1 }
-
-	-- self._transition = nil -- handle of active transition
-
-
-
-	--== Display Groups ==--
-
-	-- self._dg_scroller = nil  -- moveable item with rows
-	-- self._dg_scroller_f = nil  -- ref to touch callback
-
-	-- self._dg_gui = nil  -- fixed items over table (eg, scrollbar)
-
-
-	--== Object References ==--
-
-	-- self._primer = nil
-
-	-- self._bg = nil
-
-	-- --[[
-	-- 	array of row data
-	-- 	this is all of the rows we know about
-	-- --]]
-	-- self._rows = nil
-
-	-- --[[
-	-- 	array of rendered row data
-	-- 	this is only list of visible *rendered* rows
-	-- --]]
-	-- self._rendered_rows = nil
-
-	-- self._categories = nil -- array of category data
-
-	-- self._category_view = nil
-	-- self._inactive_dots = {}
 
 	self._h_scroll_enabled = false
 	self._v_scroll_enabled = true
 
+	--== Display Groups ==--
+
+	--== Object References ==--
+
 end
 
-function TableView:_undoInit()
-	-- print( "TableView:_undoInit" )
+-- function TableView:_undoInit()
+-- 	-- print( "TableView:_undoInit" )
+-- 	--==--
+-- 	self:superCall( "_undoInit" )
+-- end
 
-	--==--
-	self:superCall( "_undoInit" )
-end
-
-
-
---== END: Setup DMC Objects
---====================================================================--
-
-
+-- END: Setup DMC Objects
+--======================================================--
 
 
 --====================================================================--
 --== Public Methods
 
-
-
 -- set method on our object, make lookup faster
 TableView.insertRow = ScrollerViewBase.insertItem
 
 
-
-
 --====================================================================--
 --== Private Methods
-
-
 
 function TableView:_reindexItems( index, record )
 	-- print( "TableView:_reindexItems", index, record )
@@ -230,6 +163,7 @@ function TableView:_reindexItems( index, record )
 	end
 
 end
+
 
 function TableView:_updateBackground()
 	-- print( "TableView:_updateBackground" )
@@ -264,7 +198,6 @@ function TableView:_updateBackground()
 	o.x, o.y = x, y
 
 end
-
 
 
 -- calculate vertical direction
@@ -309,7 +242,6 @@ function TableView:_updateDimensions( item_info, item_data )
 end
 
 
-
 function TableView:_isBounded( scroller, item )
 	-- print( "TableView:_isBounded", scroller, item.index )
 
@@ -341,17 +273,11 @@ function TableView:_isBounded( scroller, item )
 end
 
 
-
-
-
 --======================================================--
---== START: TABLEVIEW STATE MACHINE
-
-
+-- START: TABLEVIEW STATE MACHINE
 
 -- set method on our object, make lookup faster
 TableView._getNextState = ScrollerViewBase._getNextState
-
 
 
 -- when object has neither velocity nor limit
@@ -359,8 +285,8 @@ TableView._getNextState = ScrollerViewBase._getNextState
 --
 function TableView:do_state_scroll( params )
 	-- print( "TableView:do_state_scroll" )
-
 	params = params or {}
+
 	local evt_start = params.event
 
 	local TIME = self.STATE_SCROLL_TRANS_TIME
@@ -437,10 +363,6 @@ function TableView:state_scroll( next_state, params )
 	end
 
 end
-
-
-
-
 
 
 -- when object has neither velocity nor limit
@@ -528,11 +450,6 @@ function TableView:state_restore( next_state, params )
 end
 
 
-
-
-
-
-
 -- when object has velocity and hit limit
 -- we constrain its motion away from limit
 --
@@ -607,13 +524,12 @@ function TableView:state_restraint( next_state, params )
 
 end
 
-
+-- END: TABLEVIEW STATE MACHINE
+--======================================================--
 
 
 --====================================================================--
 --== Event Handlers
-
-
 
 -- set method on our object, make lookup faster
 TableView.enterFrame = ScrollerViewBase.enterFrame
