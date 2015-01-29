@@ -1,7 +1,7 @@
 --====================================================================--
--- widget_tableview.lua
+-- dmc_widgets/widget_tableview.lua
 --
--- Documentation: http://docs.davidmccuskey.com/display/docs/newTableView.lua
+-- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
 
 --[[
@@ -31,6 +31,12 @@ SOFTWARE.
 --]]
 
 
+
+--====================================================================--
+--== DMC Corona Widgets : Table View
+--====================================================================--
+
+
 -- Semantic Versioning Specification: http://semver.org/
 
 local VERSION = "1.0.0"
@@ -38,18 +44,9 @@ local VERSION = "1.0.0"
 
 
 --====================================================================--
---== DMC Corona Setup
---====================================================================--
-
-local dmc_lib_data, dmc_lib_func
-dmc_lib_data = _G.__dmc_corona
-dmc_lib_func = dmc_lib_data.func
-
-
-
---====================================================================--
 --== DMC Widgets Setup
 --====================================================================--
+
 
 local dmc_widget_data, dmc_widget_func
 dmc_widget_data = _G.__dmc_widget
@@ -58,25 +55,31 @@ dmc_widget_func = dmc_widget_data.func
 
 
 --====================================================================--
---== DMC Widgets : newTableView
+--== Table View Setup
 --====================================================================--
+
 
 
 --====================================================================--
 --== Imports
 
+
+local easingx = require( dmc_widget_func.find( 'lib.easingx' ) )
 local Objects = require 'dmc_objects'
 local Utils = require 'dmc_utils'
 
+--== Components
+
 local ScrollerViewBase = require( dmc_widget_func.find( 'scroller_view_base' ) )
-local easingx = require( dmc_widget_func.find( 'lib.easingx' ) )
+
 
 
 --====================================================================--
 --== Setup, Constants
 
+
 -- setup some aliases to make code cleaner
-local inheritsFrom = Objects.inheritsFrom
+local newClass = Objects.newClass
 
 
 
@@ -85,24 +88,23 @@ local inheritsFrom = Objects.inheritsFrom
 --====================================================================--
 
 
-local TableView = inheritsFrom( ScrollerViewBase )
-TableView.NAME = "Table View Widget"
+local TableView = newClass( ScrollerViewBase, {name="Table View Widget"} )
 
 -- see constants from super class
 
 --== State Constants
 
-TableView.STATE_SCROLL = "state_scroll"
+TableView.STATE_SCROLL = 'state_scroll'
 TableView.STATE_SCROLL_TRANS_TIME = 1000
 
 
 --======================================================--
 -- Start: Setup DMC Objects
 
-function TableView:_init( params )
-	-- print( "TableView:_init" )
+function TableView:__init__( params )
+	-- print( "TableView:__init__" )
 	params = params or { }
-	self:superCall( "_init", params )
+	self:superCall( '__init__', params )
 	--==--
 
 	-- check properties from super class
@@ -128,15 +130,19 @@ end
 --======================================================--
 
 
+
 --====================================================================--
 --== Public Methods
+
 
 -- set method on our object, make lookup faster
 TableView.insertRow = ScrollerViewBase.insertItem
 
 
+
 --====================================================================--
 --== Private Methods
+
 
 function TableView:_reindexItems( index, record )
 	-- print( "TableView:_reindexItems", index, record )
@@ -521,8 +527,10 @@ end
 --======================================================--
 
 
+
 --====================================================================--
 --== Event Handlers
+
 
 -- set method on our object, make lookup faster
 TableView.enterFrame = ScrollerViewBase.enterFrame

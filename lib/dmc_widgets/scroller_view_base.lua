@@ -1,14 +1,16 @@
 --====================================================================--
--- scroller_view_base.lua
+-- dmc_widgets/scroller_view_base.lua
 --
 -- base class for scrolling UI elements
+--
+-- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
 
 --[[
 
 The MIT License (MIT)
 
-Copyright (c) 2013-2014 David McCuskey
+Copyright (c) 2013-2015 David McCuskey
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -85,35 +87,34 @@ Item Data Record
 
 
 
+--====================================================================--
+--== DMC Corona Widgets : Scroller View Base
+--====================================================================--
+
+
 -- Semantic Versioning Specification: http://semver.org/
 
 local VERSION = "1.0.0"
 
 
---====================================================================--
---== DMC Library Setup
---====================================================================--
-
-
-local dmc_lib_data, dmc_lib_func
-dmc_lib_data = _G.__dmc_corona
-dmc_lib_func = dmc_lib_data.func
-
 
 --====================================================================--
 --== Imports
 
-local Utils = require 'dmc_utils'
+
 local Objects = require 'dmc_objects'
-local States = require 'dmc_states'
+local StatesMixModule = require 'dmc_states_mix'
+local Utils = require 'dmc_utils'
+
 
 
 --====================================================================--
 --== Setup, Constants
 
+
 -- setup some aliases to make code cleaner
-local inheritsFrom = Objects.inheritsFrom
-local CoronaBase = Objects.CoronaBase
+local newClass = Objects.newClass
+local ComponentBase = Objects.ComponentBase
 
 local tinsert = table.insert
 local tremove = table.remove
@@ -134,16 +135,16 @@ local LOCAL_DEBUG = false
 	(thank you getters and setters !! =)
 --]]
 
-local BasicScroller = inheritsFrom( CoronaBase )
+local BasicScroller = newClass( ComponentBase, {name="Basic Scroller"} )
 
 
 --======================================================--
 -- Start: Setup DMC Objects
 
-function BasicScroller:_init( params )
-	-- print( "BasicScroller:_init" )
+function BasicScroller:__init__( params )
+	-- print( "BasicScroller:__init__" )
 	params = params or {}
-	self:superCall( "_init", params )
+	self:superCall( '__init__', params )
 	--==--
 
 	if params.x_offset == nil then params.x_offset = 0 end
@@ -190,10 +191,9 @@ end
 --====================================================================--
 
 
-local ScrollerBase = inheritsFrom( CoronaBase )
-ScrollerBase.NAME = "Scroller View Base Class"
+local ScrollerBase = newClass( ComponentBase, {name="Scroller View Base Class"} )
 
-States.mixin( ScrollerBase )
+StatesMixModule.patch( ScrollerBase )
 -- ScrollerBase:setDebug( true ) -- States mixin
 
 --== Class Constants
@@ -239,16 +239,17 @@ ScrollerBase.SCROLLED = "view_scrolled_event"
 --======================================================--
 -- Start: Setup DMC Objects
 
-function ScrollerBase:_init( params )
-	-- print( "ScrollerBase:_init" )
+function ScrollerBase:__init__( params )
+	-- print( "ScrollerBase:__init__" )
 	params = params or {}
-	self:superCall( "_init", params )
+	self:superCall( '__init__', params )
 	--==--
+
 	if params.x_offset == nil then params.x_offset = 0 end
 	if params.y_offset == nil then params.y_offset = 0 end
 
 	--== Sanity Check ==--
-	if self.is_intermediate then return end
+	if self.is_class then return end
 
 	self._params = params -- save for later
 
@@ -332,19 +333,19 @@ function ScrollerBase:_init( params )
 
 end
 
-function ScrollerBase:_undoInit()
+function ScrollerBase:__undoInit__()
 	-- print( "ScrollerBase:_undoInit" )
 
 	--==--
-	self:superCall( "_undoInit" )
+	self:superCall( '__undoInit__' )
 end
 
 
--- _createView()
+-- __createView__()
 --
-function ScrollerBase:_createView()
-	-- print( "ScrollerBase:_createView" )
-	self:superCall( "_createView" )
+function ScrollerBase:__createView__()
+	-- print( "ScrollerBase:__createView__" )
+	self:superCall( '__createView__' )
 	--==--
 
 	local W,H = self._width, self._height
@@ -399,8 +400,8 @@ function ScrollerBase:_createView()
 
 end
 
-function ScrollerBase:_undoCreateView()
-	-- print( "ScrollerBase:_undoCreateView" )
+function ScrollerBase:__undoCreateView__()
+	-- print( "ScrollerBase:__undoCreateView__" )
 
 	local o
 
@@ -423,9 +424,9 @@ end
 
 -- _initComplete()
 --
-function ScrollerBase:_initComplete()
-	-- print( "ScrollerBase:_initComplete" )
-	self:superCall( "_initComplete" )
+function ScrollerBase:__initComplete__()
+	-- print( "ScrollerBase:__initComplete__" )
+	self:superCall( '__initComplete__' )
 	--==--
 
 	-- setup item containers
@@ -443,8 +444,8 @@ function ScrollerBase:_initComplete()
 
 end
 
-function ScrollerBase:_undoInitComplete()
-	-- print( "ScrollerBase:_undoInitComplete" )
+function ScrollerBase:__undoInitComplete__()
+	-- print( "ScrollerBase:__undoInitComplete__" )
 
 	self._is_rendered = false
 
@@ -452,15 +453,17 @@ function ScrollerBase:_undoInitComplete()
 	self._dg_scroller:removeEventListener( 'touch', self )
 
 	--==--
-	self:superCall( "_undoInitComplete" )
+	self:superCall( '__undoInitComplete__' )
 end
 
 -- END: Setup DMC Objects
 --======================================================--
 
 
+
 --====================================================================--
 --== Public Methods
+
 
 -- getter: return count of items
 function ScrollerBase.__getters:item_count()
@@ -601,8 +604,10 @@ function ScrollerBase:deleteAllItems()
 end
 
 
+
 --====================================================================--
 --== Private Methods
+
 
 function ScrollerBase:_updateBackground()
 	-- print( "ScrollerBase:_updateBackground" )
@@ -1246,11 +1251,13 @@ end
 --======================================================--
 
 
+
 --====================================================================--
 --== Event Handlers
 
+
 -- bring to this class to make lookup faster
-ScrollerBase.dispatchEvent = CoronaBase.dispatchEvent
+ScrollerBase.dispatchEvent = ComponentBase.dispatchEvent
 
 
 function ScrollerBase:enterFrame( event )
