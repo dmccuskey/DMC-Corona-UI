@@ -111,7 +111,7 @@ dmc_lib_data = _G.__dmc_corona
 --== imports
 
 
-Utils = require 'lua_utils'
+Utils = require 'lib.dmc_lua.lua_utils'
 
 
 
