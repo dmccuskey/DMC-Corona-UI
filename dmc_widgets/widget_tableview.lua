@@ -111,8 +111,11 @@ TableView.STATE_SCROLL_TRANS_TIME = 1000
 
 -- ScrollerBase.EVENT = "scroller_view"
 
+<<<<<<< HEAD
 TableView.SCROLLED = 'tableview_scrolled_event'
 
+=======
+>>>>>>> 44dcb74b1dc1bd3bb315bef144ec5a93a5e84953
 
 
 --====================================================================--
@@ -143,6 +146,11 @@ function TableView:_init( params )
 
 	-- self._transition = nil -- handle of active transition
 
+	self._scroll_transition_time = params.scroll_time or self.STATE_SCROLL_TRANS_TIME
+
+
+	self._h_scroll_enabled = false
+	self._v_scroll_enabled = true
 
 
 	--== Display Groups ==--
@@ -176,8 +184,6 @@ function TableView:_init( params )
 	-- self._category_view = nil
 	-- self._inactive_dots = {}
 
-	self._h_scroll_enabled = false
-	self._v_scroll_enabled = true
 
 end
 
@@ -204,6 +210,13 @@ end
 -- set method on our object, make lookup faster
 TableView.insertRow = ScrollerViewBase.insertItem
 
+
+
+function TableView.__setters:scroll_time( value )
+	-- print( "TableView.__setters:scroll_time" )
+	if not value or not type( value ) == 'number' then return end
+	self._scroll_transition_time = value
+end
 
 
 
@@ -363,7 +376,7 @@ function TableView:do_state_scroll( params )
 	params = params or {}
 	local evt_start = params.event
 
-	local TIME = self.STATE_SCROLL_TRANS_TIME
+	local TIME = self._scroll_transition_time
 	local ease_f = easingx.easeOut
 
 	local v = self._v_velocity
