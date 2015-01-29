@@ -401,16 +401,17 @@ function ButtonBase:_doPressEventDispatch()
 
 	local cb = self._callbacks
 	local event = {
+		name=self.EVENT,
+		phase=self.PRESSED,
 		target=self,
 		id=self._id,
 		value=self._value,
-		state=self:getState(),
-		phase=self.PRESSED,
+		state=self:getState()
 	}
+
 	if cb.onPress then cb.onPress( event ) end
 	if cb.onEvent then cb.onEvent( event ) end
-
-	self:dispatchEvent( self.EVENT, event )
+	self:dispatchEvent( event )
 end
 
 -- dispatch 'release' events
@@ -422,16 +423,17 @@ function ButtonBase:_doReleaseEventDispatch()
 
 	local cb = self._callbacks
 	local event = {
+		name=self.EVENT,
+		phase=self.RELEASED,
 		target=self,
 		id=self._id,
 		value=self._value,
-		state=self:getState(),
-		phase=self.RELEASED,
+		state=self:getState()
 	}
+
 	if cb.onRelease then cb.onRelease( event ) end
 	if cb.onEvent then cb.onEvent( event ) end
-
-	self:dispatchEvent( self.EVENT, event )
+	self:dispatchEvent( event )
 end
 
 
