@@ -247,8 +247,10 @@ function ScrollerBase:__init__( params )
 
 	if params.x_offset == nil then params.x_offset = 0 end
 	if params.y_offset == nil then params.y_offset = 0 end
+	if params.do_auto_mask == nil then params.do_auto_mask = false end
 
 	--== Sanity Check ==--
+
 	if self.is_class then return end
 
 	self._params = params -- save for later
@@ -325,6 +327,7 @@ function ScrollerBase:__init__( params )
 
 	self._category_view = nil
 
+	-- auto-masking
 	if params.automask == true then
 		self:_setView( display.newContainer( self._width, self._height ) )
 		self.view.anchorChildren = false
