@@ -703,9 +703,51 @@ end
 --== Private Methods
 
 
-function ScrollerBase:_updateBackground()
-	-- print( "ScrollerBase:_updateBackground" )
-	error( "ScrollerBase:_updateBackground: override this ")
+function ScrollerBase:_findFirstVisibleItem()
+	-- print( "ScrollerBase:_findFirstVisibleItem" )
+
+	local item
+
+	if self._tmp_item then
+		item = self._tmp_item
+	else
+		item = self._item_data_recs[1]
+	end
+
+	return item
+end
+
+
+-- binary search
+function ScrollerBase:_findVisibleItem( min, max )
+	-- print( "ScrollerBase:_findVisibleItem", min, max  )
+
+	local items = self._item_data_recs
+
+	if #items == 0 then return end
+
+	local item
+	local low, high = 1, #items
+	local mid
+
+	if self._tmp_item then
+		return self._tmp_item.index
+
+	else
+		while( low <= high ) do
+			mid = math.floor( low + ( (high-low)/2 ) )
+			if items[mid].yMin > max then
+				high = mid - 1
+			elseif items[mid].yMin < min then
+				low = mid + 1
+			else
+				return mid  -- found
+			end
+
+		end
+	end
+
+	return nil
 end
 
 
@@ -727,6 +769,12 @@ function ScrollerBase:_findRenderedItem( index )
 	end
 
 	return record
+end
+
+
+function ScrollerBase:_updateBackground()
+	-- print( "ScrollerBase:_updateBackground" )
+	error( "ScrollerBase:_updateBackground: override this ")
 end
 
 
@@ -768,152 +816,251 @@ end
 
 
 
+
+
+-- start at index
+-- used for adding from TOP of list, moving UP
+--
+function ScrollerBase:_renderUp( index, bounds )
+	-- print( "ScrollerBase:_renderUp", index )
+
+	local bounded_f = self._isBounded
+	local items = self._item_data_recs
+
+	local item_data, is_bounded
+
+	if index < 1 or index > #items then return end
+
+	repeat
+
+		item_data = items[ index ]
+		is_bounded = bounded_f( self, bounds, item_data )
+		-- print( index, item_data, is_bounded )
+		if not is_bounded then
+			break
+		else
+			self:_renderItem( item_data, { head=true } )
+			index = index - 1
+		end
+
+	until true
+
+end
+
+
+-- start at index
+-- used for adding from BOTTOM of list, moving DOWN
+--
+function ScrollerBase:_renderDown( index, bounds )
+	-- print( "ScrollerBase:_renderDown", index )
+
+	local bounded_f = self._isBounded
+	local items = self._item_data_recs
+
+	local item_data, is_bounded
+
+	if index < 1 or index > #items then return end
+
+	repeat
+
+		item_data = items[ index ]
+		is_bounded = bounded_f( self, bounds, item_data )
+		-- print( index, item_data, is_bounded )
+		if not is_bounded then
+			break
+		else
+			self:_renderItem( item_data, { head=false } )
+			index = index + 1
+		end
+
+	until true
+
+end
+
+
+-- used for removing starting from BOTTOM and moving UP
+--
+function ScrollerBase:_unrenderUp( bounds )
+	-- print( "ScrollerBase:_unrenderUp"  )
+
+	local bounded_f = self._isBounded
+	local rendered = self._rendered_items
+
+	local index, item_data, is_bounded
+
+	index = #rendered
+	item_data = rendered[ index ]
+	while item_data do
+		is_bounded = bounded_f( self, bounds, item_data )
+		if is_bounded then
+			break
+		else
+			self:_unRenderItem( item_data, { index=index } )
+			index = #rendered
+			item_data = rendered[ index ]
+		end
+
+	end
+
+end
+
+
+-- used for removing starting from TOP and moving DOWN
+--
+function ScrollerBase:_unrenderDown( bounds )
+	-- print( "ScrollerBase:_unrenderDown"  )
+
+	local bounded_f = self._isBounded
+	local rendered = self._rendered_items
+
+	local item_data, is_bounded
+
+	-- we don't have to change the index
+	item_data = rendered[ 1 ]
+	while item_data do
+		is_bounded = bounded_f( self, bounds, item_data )
+		if is_bounded then
+			break
+		else
+			self:_unRenderItem( item_data, { index=1 } )
+			item_data = rendered[ 1 ]
+		end
+	end
+
+end
+
+
+
+
 -- _updateView()
 -- checks current rendered items, re-/renders if necessary
 --
 function ScrollerBase:_updateView()
 	-- print( "ScrollerBase:_updateView" )
 
+	local bounds = self:_viewportBounds()
+	-- print( 'bounds >> ', bounds.yMin, bounds.yMax )
+
+	local renderUp = self._renderUp
+	local renderDown = self._renderDown
+	local unrenderUp = self._unrenderUp
+	local unrenderDown = self._unrenderDown
+
+
+	--== Start Processing ==--
+
 	local items = self._item_data_recs
+	local rendered = self._rendered_items
+	local bounded_f = self._isBounded
+	local item_data, is_bounded
 
 	if #items == 0 then return end
 
-	local bounded_f = self._isBounded
-	local rendered = self._rendered_items
-	local bounds = self:_viewportBounds()
-
-	-- print( 'back >> ', bounds.yMin, bounds.yMax )
-
-	local min_visible_row, max_visible_row = nil, nil
-	local row
-
-	--== Remove any views which are outside of our view boundary
-
-	-- check if current list of rendered items are valid
-	-- removing ones which aren't
-
-	-- print( 'checking valid rows', #self._rendered_items )
-
-	if #rendered > 0 then
-		for i = #rendered, 1, -1 do
-			local data = rendered[ i ]
-			local is_bounded = bounded_f( self, bounds, data )
-			-- print( i, 'rendered row', data.index, is_bounded )
-
-			if not is_bounded then self:_unRenderItem( data, { index=i } ) end
-
-		end
-	end
+	-- print( 'rendered items', #rendered )
 
 
-	--[[
-	print('= items', #items )
+	local index, item_data, is_bounded
 
-	print('= after cull: rendered', #rendered )
-	for i,v in ipairs( rendered ) do
-		print( i, v.index )
-	end
-	--]]
 
-	-- if no rows are valid, find the top one
+	--== CASE: no rendered items ==--
+
 	if #rendered == 0 then
-		min_visible_row = self:_findFirstVisibleItem()
-		max_visible_row = min_visible_row
 
-		row = self:_renderItem( min_visible_row, { head=true } )
+		index = self:_findVisibleItem( bounds.yMin, bounds.yMax )
+
+		if index then
+			item_data = items[ index ]
+			self:_renderItem( item_data )
+			renderUp( self, index-1, bounds )
+			renderDown( self, index+1, bounds )
+		end
+
+		return
+	end
+
+
+	--== CASE: we have rendered items
+
+
+	--== check top of rendered list
+
+	item_data = rendered[ 1 ]
+	is_bounded = bounded_f( self, bounds, item_data )
+
+	if is_bounded then
+		-- the top item is still bound, so let's see if
+		-- we need to add items to the bottom of rendered list
+		item_data = rendered[ #rendered ]
+		renderDown( self, item_data.index+1, bounds )
 
 	else
+		-- this item scrolled off screen
+		-- so let's check rest below it too
+		unrenderDown( self, bounds )
 
-		min_visible_row = rendered[1]
-		max_visible_row = rendered[ #rendered ]
+		if #rendered == 0 then
+			-- we removed all of our items
+			-- so find one which should be visible
+			index = self:_findVisibleItem( bounds.yMin, bounds.yMax )
 
-	end
-
---[[
-	print( "= setup ")
-	print( 'min', min_visible_row.index, min_visible_row.data.data.type )
-	print( 'max', max_visible_row.index, max_visible_row.data.data.type )
-
-	print( "= print test ")
-	for i, rec in ipairs( self._item_data_recs ) do
-		print( i, rec.index, rec.data.data.type )
-	end
---]]
-
-	--== Let's use our valid row(s) to find the others
-
- 	-- we do searches forwards and backwards
-
-
-	if min_visible_row then
-		-- search up until off screen
-
-		local item_data, index
-		index = min_visible_row.index - 1
-		-- print( 'searching up from index', index )
-		if index >= 1 then
-
-			for i = index, 1, -1 do
-				item_data = self._item_data_recs[ i ]
-				local is_bounded = bounded_f( self, bounds, item_data )
-
-				if not is_bounded then
-					-- print( 'not bounded breaking' )
-					break
-				end
-
-				self:_renderItem( item_data, { head=true } )
-
+			if index then
+				item_data = items[ index ]
+				self:_renderItem( item_data )
+				renderUp( self, index-1, bounds )
+				renderDown( self, index+1, bounds )
 			end
 
+		else
+			-- we have cleaned off the top
+			-- so let's check to add to bottom
+			item_data = rendered[ #rendered ]
+			renderDown( self, item_data.index+1, bounds )
+
 		end
 
+		return
 	end
 
 
-	if max_visible_row then
-		-- search down until off screen
+	--== check bottom of rendered list
 
-		local is_bounded
-		local item_data, index
-		index = max_visible_row.index + 1
+	item_data = rendered[ #rendered ]
+	is_bounded = bounded_f( self, bounds, item_data )
 
-		-- print( 'searching down from index', index )
+	if is_bounded then
+		-- the bottom item is still bound, so let's see if
+		-- we need to add items to the top of rendered list
+		item_data = rendered[ 1 ]
+		renderUp( self, item_data.index-1, bounds )
 
-		if index <= #self._item_data_recs then
-
-			for i = index, #self._item_data_recs do
-				item_data = self._item_data_recs[ i ]
-				if not item_data then print("no row data!!") ; break end
-				is_bounded = bounded_f( self, bounds, item_data )
-
-				if not is_bounded then
-					-- print( 'not bounded breaking' )
-					break
-				end
-
-				self:_renderItem( item_data, { head=false } )
-
-			end  -- for
-		end -- if
-
-	end -- if max_visible_row
-
-end
-
-
-function ScrollerBase:_findFirstVisibleItem()
-	-- print( "ScrollerBase:_findFirstVisibleItem" )
-
-	local item
-
-	if self._tmp_item then
-		item = self._tmp_item
 	else
-		item = self._item_data_recs[1]
+		-- this item scrolled off screen
+		-- so let's check rest above it too
+		unrenderUp( self, bounds )
+
+		if #rendered == 0 then
+			-- we removed all of our items
+			-- so find one which should be visible
+			index = self:_findVisibleItem( bounds.yMin, bounds.yMax )
+
+			if index then
+				item_data = items[ index ]
+				self:_renderItem( item_data )
+				renderUp( self, index-1, bounds )
+				renderDown( self, index+1, bounds )
+			end
+
+		else
+			-- we have cleaned off the bottom
+			-- so let's check to add to the top
+			item_data = rendered[ 1 ]
+			renderUp( self, item_data.index-1, bounds )
+
+		end
+
+		return
 	end
 
-	return item
 end
 
 
