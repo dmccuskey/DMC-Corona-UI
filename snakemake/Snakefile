@@ -1,6 +1,6 @@
 # global flag, if we've started
 gSTARTED = True
-DEBUG = True
+DEBUG = False
 
 configfile: "../DMC-Corona-Widgets/snakemake/snakeconfig.json"
 
