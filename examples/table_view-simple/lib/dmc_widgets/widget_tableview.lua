@@ -111,6 +111,8 @@ function TableView:__init__( params )
 
 	--== Create Properties ==--
 
+	self._scroll_transition_time = params.scroll_time or self.STATE_SCROLL_TRANS_TIME
+
 	self._h_scroll_enabled = false
 	self._v_scroll_enabled = true
 
@@ -137,6 +139,13 @@ end
 
 -- set method on our object, make lookup faster
 TableView.insertRow = ScrollerViewBase.insertItem
+
+
+function TableView.__setters:scroll_time( value )
+	-- print( "TableView.__setters:scroll_time" )
+	if not value or not type( value ) == 'number' then return end
+	self._scroll_transition_time = value
+end
 
 
 
@@ -242,7 +251,7 @@ end
 
 
 function TableView:_isBounded( scroller, item )
-	-- print( "TableView:_isBounded", scroller, item.index )
+	print( "TableView:_isBounded", scroller, item.index )
 
 	local result = false
 	-- local test = 0
@@ -264,6 +273,7 @@ function TableView:_isBounded( scroller, item )
 		-- extends over view
 		result = true
 	end
+	print( "bound", result )
 
 	-- if item.index == 3 then
 	-- 	print( result, test, item.yMin, scroller.yMin, item.yMax, scroller.yMax )
@@ -288,7 +298,7 @@ function TableView:do_state_scroll( params )
 
 	local evt_start = params.event
 
-	local TIME = self.STATE_SCROLL_TRANS_TIME
+	local TIME = self._scroll_transition_time
 	local ease_f = easingx.easeOut
 
 	local v = self._v_velocity
