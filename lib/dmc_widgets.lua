@@ -135,11 +135,11 @@ end
 --== newPopover widget
 
 
-function Widget.newPopover( options )
-	local theme = nil
-	local widget = Widget.Popover
-	return widget:new( options, theme )
-end
+-- function Widget.newPopover( options )
+-- 	local theme = nil
+-- 	local widget = Widget.Popover
+-- 	return widget:new( options, theme )
+-- end
 
 
 
@@ -147,11 +147,11 @@ end
 --== newScroller widget
 
 
-function Widget.newScroller( options )
-	local theme = nil
-	local _library = require( PATH .. '.' .. 'widget_scroller' )
-	return _library:new( options, theme )
-end
+-- function Widget.newScroller( options )
+-- 	local theme = nil
+-- 	local _library = require( PATH .. '.' .. 'widget_scroller' )
+-- 	return _library:new( options, theme )
+-- end
 
 
 
@@ -183,11 +183,11 @@ end
 --== newViewPager widget
 
 
-function Widget.newViewPager( options )
-	local theme = nil
-	local _library = require( PATH .. '.' .. 'widget_viewpager' )
-	return _library:new( options, theme )
-end
+-- function Widget.newViewPager( options )
+-- 	local theme = nil
+-- 	local _library = require( PATH .. '.' .. 'widget_viewpager' )
+-- 	return _library:new( options, theme )
+-- end
 
 
 
