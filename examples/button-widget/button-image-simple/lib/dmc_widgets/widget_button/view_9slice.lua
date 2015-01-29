@@ -1,14 +1,14 @@
 --====================================================================--
 -- widget_button/view_9slice.lua
 --
--- Documentation: http://docs.davidmccuskey.com/display/docs/newButton.lua
+-- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
 
 --[[
 
 The MIT License (MIT)
 
-Copyright (c) 2014 David McCuskey
+Copyright (c) 2014-2015 David McCuskey
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -31,6 +31,12 @@ SOFTWARE.
 --]]
 
 
+
+--====================================================================--
+--== DMC Corona Widgets : 9-Slice Button
+--====================================================================--
+
+
 -- Semantic Versioning Specification: http://semver.org/
 
 local VERSION = "0.1.0"
@@ -41,6 +47,7 @@ local VERSION = "0.1.0"
 --== DMC Widgets Setup
 --====================================================================--
 
+
 local dmc_widget_data, dmc_widget_func
 dmc_widget_data = _G.__dmc_widget
 dmc_widget_func = dmc_widget_data.func
@@ -48,28 +55,35 @@ dmc_widget_func = dmc_widget_data.func
 
 
 --====================================================================--
---== DMC Widgets : Button Image View
+--== DMC Widgets : Button 9-Slice View
 --====================================================================--
+
 
 
 --====================================================================--
 --== Imports
 
+
 local Objects = require 'dmc_objects'
-local Utils = require 'dmc_utils'
+
+--== Components
 
 local BaseView = require( dmc_widget_func.find( 'widget_button.view_base' ) )
+
 
 
 --====================================================================--
 --== Setup, Constants
 
+
 -- setup some aliases to make code cleaner
-local inheritsFrom = Objects.inheritsFrom
+local newClass = Objects.newClass
+
 
 
 --====================================================================--
 --== Support Functions
+
 
 -- build parameters for this image
 -- get defaults and layer in specific values
@@ -98,12 +112,11 @@ end
 
 
 --====================================================================--
---== 9-Slice View Class
+--== Button 9-Slice View Class
 --====================================================================--
 
 
-local NineSliceView = inheritsFrom( BaseView )
-NineSliceView.NAME = "9-Slice View"
+local NineSliceView = newClass( BaseView, {name="9-Slice View"} )
 
 NineSliceView.TYPE = '9-slice'
 
@@ -111,15 +124,16 @@ NineSliceView.TYPE = '9-slice'
 --======================================================--
 -- Start: Setup DMC Objects
 
-function NineSliceView:_init( params )
-	-- print( "NineSliceView:_init" )
+function NineSliceView:__init__( params )
+	-- print( "NineSliceView:__init__" )
 	params = params or {}
-	self:superCall( '_init', params )
+	self:superCall( '__init__', params )
 	--==--
 
 	--== Sanity Check ==--
 
-	if self.is_intermediate then return end
+	if self.is_class then return end
+
 	assert( params.sheet, "expected 'sheet' parameter" )
 	assert( type(params.frames)=='table', "expected 'frames' parameter" )
 
@@ -149,9 +163,9 @@ end
 
 -- _createView()
 --
-function NineSliceView:_createView()
-	-- print( "NineSliceView:_createView" )
-	self:superCall( '_createView' )
+function NineSliceView:__createView__()
+	-- print( "NineSliceView:__createView__" )
+	self:superCall( '__createView__' )
 	--==--
 
 	local v_params = self._view_params
@@ -228,8 +242,8 @@ function NineSliceView:_createView()
 
 end
 
-function NineSliceView:_undoCreateView()
-	-- print( "NineSliceView:_undoCreateView" )
+function NineSliceView:__undoCreateView__()
+	-- print( "NineSliceView:__undoCreateView__" )
 	local o
 
 	self._tl:removeSelf()
@@ -263,13 +277,13 @@ function NineSliceView:_undoCreateView()
 	self._dg_slices = nil
 
 	--==--
-	self:superCall( '_undoCreateView' )
+	self:superCall( '__undoCreateView__' )
 end
 
 
-function NineSliceView:_initComplete()
-	-- print( "NineSliceView:_initComplete" )
-	self:superCall( '_initComplete' )
+function NineSliceView:__initComplete__()
+	-- print( "NineSliceView:__initComplete__" )
+	self:superCall( '__initComplete__' )
 	--==--
 	self:_updateView()
 end
@@ -279,14 +293,18 @@ end
 --======================================================--
 
 
+
 --====================================================================--
 --== Public Methods
+
 
 -- none
 
 
+
 --====================================================================--
 --== Private Methods
+
 
 function NineSliceView:_updateView()
 	-- print( "NineSliceView:_updateView" )
@@ -351,8 +369,10 @@ function NineSliceView:_updateView()
 end
 
 
+
 --====================================================================--
 --== Event Handlers
+
 
 -- none
 

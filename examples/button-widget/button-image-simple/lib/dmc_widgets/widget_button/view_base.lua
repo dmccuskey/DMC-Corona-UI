@@ -1,31 +1,39 @@
 --====================================================================--
--- widget_BaseView.lua
+-- widget_button/view_base.lua
 --
--- Documentation: http://docs.davidmccuskey.com/display/docs/newBaseView.lua
+-- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
 
 --[[
 
-Copyright (C) 2013-2014 David McCuskey. All Rights Reserved.
+The MIT License (MIT)
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in the
-Software without restriction, including without limitation the rights to use, copy,
-modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
-and to permit persons to whom the Software is furnished to do so, subject to the
-following conditions:
+Copyright (c) 2014-2015 David McCuskey
 
-The above copyright notice and this permission notice shall be included in all copies
-or substantial portions of the Software.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
-FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-DEALINGS IN THE SOFTWARE.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
 --]]
+
+
+--====================================================================--
+--== DMC Corona Widgets : Widget Base View
+--====================================================================--
 
 
 -- Semantic Versioning Specification: http://semver.org/
@@ -45,22 +53,26 @@ local VERSION = "1.0.0"
 
 
 --====================================================================--
---== DMC Widgets : Button View Base
+--== Button View Base
 --====================================================================--
+
 
 
 --====================================================================--
 --== Imports
 
+
 local Objects = require 'dmc_objects'
+
 
 
 --====================================================================--
 --== Setup, Constants
 
+
 -- setup some aliases to make code cleaner
-local inheritsFrom = Objects.inheritsFrom
-local CoronaBase = Objects.CoronaBase
+local newClass = Objects.newClass
+local ComponentBase = Objects.ComponentBase
 
 
 
@@ -69,22 +81,22 @@ local CoronaBase = Objects.CoronaBase
 --====================================================================--
 
 
-local BaseView = inheritsFrom( CoronaBase )
-BaseView.NAME = "Button View Base"
+local BaseView = newClass( ComponentBase, {name="Button View Base"} )
 
 
 --======================================================--
 -- Start: Setup DMC Objects
 
-function BaseView:_init( params )
-	-- print( "BaseView:_init" )
+function BaseView:__init__( params )
+	-- print( "BaseView:__init__" )
 	params = params or {}
-	self:superCall( '_init', params )
+	self:superCall( '__init__', params )
 	--==--
 
 	--== Sanity Check ==--
 
-	if self.is_intermediate then return end
+	if self.is_class then return end
+
 	assert( type(params.name)=='string', "expected string-type 'name' parameter" )
 
 	--== Create Properties ==--
@@ -109,10 +121,9 @@ end
 
 -- _createView()
 --
-function BaseView:_createView()
-
-	-- print( "BaseView:_createView" )
-	self:superCall( '_createView' )
+function BaseView:__createView__()
+	-- print( "BaseView:__createView__" )
+	self:superCall( '__createView__' )
 	--==--
 
 	local l_params = self._label_params
@@ -135,8 +146,8 @@ function BaseView:_createView()
 
 end
 
-function BaseView:_undoCreateView()
-	-- print( "BaseView:_undoCreateView" )
+function BaseView:__undoCreateView__()
+	-- print( "BaseView:__undoCreateView__" )
 
 	local o
 
@@ -145,15 +156,17 @@ function BaseView:_undoCreateView()
 	self._label = nil
 
 	--==--
-	self:superCall( '_undoCreateView' )
+	self:superCall( '__undoCreateView__' )
 end
 
 -- END: Setup DMC Objects
 --======================================================--
 
 
+
 --====================================================================--
 --== Public Methods
+
 
 function BaseView.__getters:background()
 	return self._view
@@ -163,8 +176,10 @@ function BaseView.__getters:label()
 end
 
 
+
 --====================================================================--
 --== Private Methods
+
 
 -- build parameters for the label
 -- get defaults and layer in specific values
@@ -236,8 +251,10 @@ function BaseView:_createLabel( l_params )
 end
 
 
+
 --====================================================================--
 --== Event Handlers
+
 
 -- none
 

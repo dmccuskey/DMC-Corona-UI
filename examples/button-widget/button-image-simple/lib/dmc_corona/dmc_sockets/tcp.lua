@@ -1,16 +1,14 @@
 --====================================================================--
--- dmc_sockets/tcp.lua
+-- dmc_corona/dmc_sockets/tcp.lua
 --
---
--- by David McCuskey
--- Documentation: http://docs.davidmccuskey.com/display/docs/dmc_sockets.lua
+-- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
 
 --[[
 
 The MIT License (MIT)
 
-Copyright (c) 2014 David McCuskey
+Copyright (c) 2014-2015 David McCuskey
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -35,41 +33,45 @@ SOFTWARE.
 
 
 --====================================================================--
--- DMC Corona Library : TCP
+--== DMC Corona Library : TCP
 --====================================================================--
 
 
 -- Semantic Versioning Specification: http://semver.org/
 
-local VERSION = "1.0.1"
+local VERSION = "1.2.0"
+
 
 
 --====================================================================--
--- Imports
+--== Imports
 
-local Objects = require 'lua_objects'
+local Objects = require 'dmc_objects'
 local socket = require 'socket'
-local Utils = require 'lua_utils'
+local Utils = require 'dmc_utils'
+
 
 
 --====================================================================--
--- Setup, Constants
+--== Setup, Constants
+
 
 -- setup some aliases to make code cleaner
-local inheritsFrom = Objects.inheritsFrom
+local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
+
+local tconcat = table.concat
 
 local LOCAL_DEBUG = false
 
 
 
 --====================================================================--
--- TCP Socket Class
+--== TCP Socket Class
 --====================================================================--
 
 
-local TCPSocket = inheritsFrom( ObjectBase )
-TCPSocket.NAME = "TCP Socket"
+local TCPSocket = newClass( ObjectBase, { name="TCP Socket" } )
 
 --== Class Constants
 
@@ -85,6 +87,7 @@ TCPSocket.CLOSED = 'socket_closed'
 TCPSocket.ERR_CONNECTED = 'already connected'
 TCPSocket.ERR_CONNECTION = 'Operation already in progress'
 TCPSocket.ERR_TIMEOUT = 'timeout'
+TCPSocket.SSL_READTIMEOUT = 'wantread'
 TCPSocket.ERR_CLOSED = 'already closed'
 
 --== Event Constants
@@ -96,18 +99,18 @@ TCPSocket.READ = 'read_event'
 TCPSocket.WRITE = 'write_event'
 
 
---====================================================================--
---== Start: Setup DMC Objects
+--======================================================--
+-- Start: Setup DMC Objects
 
-function TCPSocket:_init( params )
-	-- print( "TCPSocket:_init" )
+function TCPSocket:__init__( params )
+	-- print( "TCPSocket:__init__" )
 	params = params or {}
-	self:superCall( "_init", params )
+	self:superCall( '__init__', params )
 	--==--
 
-	if not self.is_intermediate then
-		assert( params.master, "TCP Socket requires Master")
-	end
+	if self.is_class then return end
+
+	assert( params.master, "TCP Socket requires Master")
 
 	--== Create Properties ==--
 
@@ -117,6 +120,8 @@ function TCPSocket:_init( params )
 	self._status = nil
 	self._buffer = "" -- string
 
+	self.secure = false
+
 	--== Object References ==--
 
 	self._socket = nil -- real Lua Socket
@@ -125,21 +130,23 @@ function TCPSocket:_init( params )
 end
 
 
-function TCPSocket:_undoInitComplete()
-	-- print( "TCPSocket:_undoInitComplete" )
+function TCPSocket:__undoInitComplete__()
+	-- print( "TCPSocket:__undoInitComplete__" )
 
 	self:_removeSocket()
 
 	--==--
-	self:superCall( "_undoInitComplete" )
+	self:superCall( '__undoInitComplete__' )
 end
 
---== END: Setup DMC Objects
---====================================================================--
+-- END: Setup DMC Objects
+--======================================================--
+
 
 
 --====================================================================--
 --== Public Methods
+
 
 function TCPSocket.__getters:status()
 	return self._status
@@ -227,7 +234,7 @@ end
 
 function TCPSocket:unreceive( data )
 	-- print( 'TCPSocket:unreceive', #data )
-	self._buffer = table.concat( { data, self._buffer } )
+	self._buffer = tconcat( { data, self._buffer } )
 end
 
 function TCPSocket:receive( ... )
@@ -294,8 +301,10 @@ function TCPSocket:close()
 end
 
 
+
 --====================================================================--
 --== Private Methods
+
 
 function TCPSocket:_createSocket( params )
 	-- print( 'TCPSocket:_createSocket' )
@@ -354,12 +363,12 @@ function TCPSocket:_readStatus( status )
 
 	local buff_tmp, buff_len
 
-	local bytes, emsg, partial = self._socket:receive( '*a' )
+	local bytes, status, partial = self._socket:receive( '*a' )
 	if LOCAL_DEBUG then
-		print( 'TCP:dataReady', bytes, emsg, partial )
+		print( 'TCP:dataReady', bytes, status, partial )
 	end
 
-	if bytes == nil and emsg == 'closed' then
+	if bytes == nil and status == 'closed' then
 		self:close()
 		return
 	end
@@ -367,13 +376,16 @@ function TCPSocket:_readStatus( status )
 	if bytes ~= nil then
 		buff_tmp = { self._buffer, bytes }
 
-	elseif emsg == self.ERR_TIMEOUT and partial then
+	elseif not self.secure and status == self.ERR_TIMEOUT and partial then
+		buff_tmp = { self._buffer, partial }
+
+	elseif self.secure and status==self.SSL_READTIMEOUT and partial then
 		buff_tmp = { self._buffer, partial }
 
 	end
 
 	if buff_tmp then
-		self._buffer = table.concat( buff_tmp )
+		self._buffer = tconcat( buff_tmp )
 	end
 
 	if LOCAL_DEBUG then
@@ -406,8 +418,10 @@ function TCPSocket:_writeStatus( status )
 end
 
 
+
 --====================================================================--
 --== Event Handlers
+
 
 -- none
 
