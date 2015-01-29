@@ -219,7 +219,7 @@ ShapeView.TYPE = 'shape'
 -- Start: Setup DMC Objects
 
 function ShapeView:__init__( params )
-	print( "ShapeView:__init__" )
+	-- print( "ShapeView:__init__" )
 	params = params or {}
 	self:superCall( '__init__', params )
 	--==--
@@ -243,7 +243,7 @@ end
 -- _createView()
 --
 function ShapeView:__createView__()
-	print( "ShapeView:__createView__" )
+	-- print( "ShapeView:__createView__" )
 	self:superCall( '__createView__' )
 	--==--
 
