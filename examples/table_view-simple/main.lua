@@ -5,29 +5,36 @@
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
--- Copyright (C) 2014 David McCuskey. All Rights Reserved.
+-- Copyright (C) 2014=2015 David McCuskey. All Rights Reserved.
 --====================================================================--
 
 
-print("---------------------------------------------------")
 
+print( "\n\n#########################################################\n\n" )
 
---===================================================================--
--- Imports
-
-local widgets = require 'dmc_widgets'
 
 
 --===================================================================--
--- Setup, Constants
+--== Imports
+
+
+local Widgets = require 'lib.dmc_widgets'
+
+
+
+--===================================================================--
+--== Setup, Constants
+
 
 local OFFSET = 100
 local DIMS = {w=200,h=100} -- dimensions of a row item
 local SHOW = 3 -- how many items to display (for masking)
 
 
+
 --===================================================================--
--- Support Functions
+--== Support Functions
+
 
 -- onRender()
 -- called when table view needs to display a row
@@ -74,13 +81,13 @@ end
 
 
 --===================================================================--
--- Main
+--== Main
 --===================================================================--
 
 
 -- create Table View
 
-local o = widgets.newTableView{
+local o = Widgets.newTableView{
 	width=DIMS.w,
 	height=DIMS.h*SHOW,
 	automask=false
