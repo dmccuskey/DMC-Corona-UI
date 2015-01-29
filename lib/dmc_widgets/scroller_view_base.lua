@@ -226,14 +226,18 @@ ScrollerBase.STATE_RESTORE_TRANS_TIME = 400
 
 ScrollerBase.EVENT = "scroller_view"
 
+-- for scroll view
+ScrollerBase.ITEM_SELECTED = 'item_selected'
+ScrollerBase.ITEMS_MODIFIED = 'items_modified_event'
+ScrollerBase.SCROLLING = 'view_scrolling_event'
+ScrollerBase.SCROLLED = 'view_scrolled_event'
+ScrollerBase.TAKE_FOCUS = 'take_focus_event'
+
+-- for scroll items
 ScrollerBase.ITEM_RENDER = "item_render_event"
 ScrollerBase.ITEM_UNRENDER = "item_unrender_event"
-ScrollerBase.TAKE_FOCUS = "take_focus_event"
-ScrollerBase.ITEM_SELECTED = "item_selected"
-ScrollerBase.ITEMS_MODIFIED = "items_modified_event"
 
 
-ScrollerBase.SCROLLED = "view_scrolled_event"
 
 
 --======================================================--
@@ -278,6 +282,9 @@ function ScrollerBase:__init__( params )
 	self._h_touch_lock = false
 	self._v_touch_limit = 10
 	self._v_touch_lock = false
+
+	self._is_moving = false
+	self._has_moved = false
 
 	self._v_velocity = { value=0, vector=0 }
 	self._h_velocity = { value=0, vector=0 }
@@ -1324,6 +1331,7 @@ function ScrollerBase:do_state_at_rest( params )
 	params = params or {}
 
 	local h_v, v_v = self._h_velocity, self._v_velocity
+	local scr = self._dg_scroller
 
 	h_v.value, h_v.vector = 0, 0
 	v_v.value, v_v.vector = 0, 0
@@ -1507,6 +1515,7 @@ function ScrollerBase:enterFrame( event )
 	-- print( 'ScrollerBase:enterFrame' )
 
 	local f = self._enterFrameIterator
+	local scr = self._dg_scroller
 
 	if not f or not self._is_rendered then
 		Runtime:removeEventListener( 'enterFrame', self )
@@ -1517,15 +1526,27 @@ function ScrollerBase:enterFrame( event )
 		self:_updateView()
 		self:_checkScrollBounds()
 
+		if self._is_moving then
+			self._has_moved = true
 
-		local scr = self._dg_scroller
-		local v = self._v_velocity
-		local d = {
-			x=scr.x,
-			y=scr.y,
-			velocity = v.value * v.vector
-		}
-		self:dispatchEvent( ScrollerBase.SCROLLED, d )
+			local v = self._v_velocity
+			local data = {
+				x=scr.x,
+				y=scr.y,
+				velocity = v.value * v.vector
+			}
+			self:dispatchEvent( ScrollerBase.SCROLLING, data )
+		end
+
+		if not self._enterFrameIterator and self._has_moved then
+			self._has_moved = false
+			local data = {
+				x=scr.x,
+				y=scr.y,
+				velocity = 0
+			}
+			self:dispatchEvent( ScrollerBase.SCROLLED, data )
+		end
 
 	end
 end
@@ -1580,6 +1601,7 @@ function ScrollerBase:touch( event )
 		x_delta = math.abs( event.xStart - event.x )
 		if not self._v_touch_lock and x_delta > self._h_touch_limit then
 			-- we're only moving in H direction now
+			self._is_moving = true
 			self._h_touch_lock = true
 		end
 		if not self._v_touch_lock and not self._h_scroll_enabled then
@@ -1594,6 +1616,7 @@ function ScrollerBase:touch( event )
 		y_delta = math.abs( event.yStart - event.y )
 		if not self._h_touch_lock and y_delta > self._v_touch_limit then
 			-- we're only moving in V direction now
+			self._is_moving = true
 			self._v_touch_lock = true
 		end
 
@@ -1656,6 +1679,7 @@ function ScrollerBase:touch( event )
 		-- clean up
 		display.getCurrentStage():setFocus( nil )
 		target._has_focus = false
+		self._is_moving = false
 
 		-- add system time, we can re-use this event for Runtime
 		self._tch_event_tmp = event
