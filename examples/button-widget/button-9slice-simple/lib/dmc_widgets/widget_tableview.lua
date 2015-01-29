@@ -1,7 +1,7 @@
 --====================================================================--
--- widget_tableview.lua
+-- dmc_widgets/widget_tableview.lua
 --
--- Documentation: http://docs.davidmccuskey.com/display/docs/newTableView.lua
+-- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
 
 --[[
@@ -31,6 +31,12 @@ SOFTWARE.
 --]]
 
 
+
+--====================================================================--
+--== DMC Corona Widgets : Table View
+--====================================================================--
+
+
 -- Semantic Versioning Specification: http://semver.org/
 
 local VERSION = "1.0.0"
@@ -38,18 +44,9 @@ local VERSION = "1.0.0"
 
 
 --====================================================================--
---== DMC Corona Setup
---====================================================================--
-
-local dmc_lib_data, dmc_lib_func
-dmc_lib_data = _G.__dmc_corona
-dmc_lib_func = dmc_lib_data.func
-
-
-
---====================================================================--
 --== DMC Widgets Setup
 --====================================================================--
+
 
 local dmc_widget_data, dmc_widget_func
 dmc_widget_data = _G.__dmc_widget
@@ -58,25 +55,31 @@ dmc_widget_func = dmc_widget_data.func
 
 
 --====================================================================--
---== DMC Widgets : newTableView
+--== Table View Setup
 --====================================================================--
+
 
 
 --====================================================================--
 --== Imports
 
+
+local easingx = require( dmc_widget_func.find( 'lib.easingx' ) )
 local Objects = require 'dmc_objects'
 local Utils = require 'dmc_utils'
 
+--== Components
+
 local ScrollerViewBase = require( dmc_widget_func.find( 'scroller_view_base' ) )
-local easingx = require( dmc_widget_func.find( 'lib.easingx' ) )
+
 
 
 --====================================================================--
 --== Setup, Constants
 
+
 -- setup some aliases to make code cleaner
-local inheritsFrom = Objects.inheritsFrom
+local newClass = Objects.newClass
 
 
 
@@ -85,29 +88,30 @@ local inheritsFrom = Objects.inheritsFrom
 --====================================================================--
 
 
-local TableView = inheritsFrom( ScrollerViewBase )
-TableView.NAME = "Table View Widget"
+local TableView = newClass( ScrollerViewBase, {name="Table View Widget"} )
 
 -- see constants from super class
 
 --== State Constants
 
-TableView.STATE_SCROLL = "state_scroll"
+TableView.STATE_SCROLL = 'state_scroll'
 TableView.STATE_SCROLL_TRANS_TIME = 1000
 
 
 --======================================================--
 -- Start: Setup DMC Objects
 
-function TableView:_init( params )
-	-- print( "TableView:_init" )
+function TableView:__init__( params )
+	-- print( "TableView:__init__" )
 	params = params or { }
-	self:superCall( "_init", params )
+	self:superCall( '__init__', params )
 	--==--
 
 	-- check properties from super class
 
 	--== Create Properties ==--
+
+	self._scroll_transition_time = params.scroll_time or self.STATE_SCROLL_TRANS_TIME
 
 	self._h_scroll_enabled = false
 	self._v_scroll_enabled = true
@@ -128,15 +132,26 @@ end
 --======================================================--
 
 
+
 --====================================================================--
 --== Public Methods
+
 
 -- set method on our object, make lookup faster
 TableView.insertRow = ScrollerViewBase.insertItem
 
 
+function TableView.__setters:scroll_time( value )
+	-- print( "TableView.__setters:scroll_time" )
+	if not value or not type( value ) == 'number' then return end
+	self._scroll_transition_time = value
+end
+
+
+
 --====================================================================--
 --== Private Methods
+
 
 function TableView:_reindexItems( index, record )
 	-- print( "TableView:_reindexItems", index, record )
@@ -282,7 +297,7 @@ function TableView:do_state_scroll( params )
 
 	local evt_start = params.event
 
-	local TIME = self.STATE_SCROLL_TRANS_TIME
+	local TIME = self._scroll_transition_time
 	local ease_f = easingx.easeOut
 
 	local v = self._v_velocity
@@ -521,8 +536,10 @@ end
 --======================================================--
 
 
+
 --====================================================================--
 --== Event Handlers
+
 
 -- set method on our object, make lookup faster
 TableView.enterFrame = ScrollerViewBase.enterFrame
