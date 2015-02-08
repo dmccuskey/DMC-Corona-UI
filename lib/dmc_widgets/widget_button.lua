@@ -130,7 +130,7 @@ local ButtonBase = newClass( { ComponentBase, StatesMix }, {name="Button Base"} 
 
 ButtonBase._SUPPORTED_VIEWS = { 'active', 'inactive', 'disabled' }
 
---== Class States
+--== State Constants
 
 ButtonBase.STATE_INIT = 'state_init'
 ButtonBase.STATE_ACTIVE = 'state_active'
@@ -141,7 +141,7 @@ ButtonBase.ACTIVE = ButtonBase.STATE_ACTIVE
 ButtonBase.INACTIVE = ButtonBase.STATE_INACTIVE
 ButtonBase.DISABLED = ButtonBase.STATE_DISABLED
 
---== Class events
+--== Event Constants
 
 ButtonBase.EVENT = 'button-event'
 
