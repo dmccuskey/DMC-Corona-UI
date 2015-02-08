@@ -121,6 +121,34 @@ end
 
 
 --===================================================================--
+--== newPushButton widget
+
+
+function Widget.newPushButton( options )
+	options = options or {}
+	--==--
+	local theme = nil
+	options.type = Widget.Button.PushButton.TYPE
+	return Widget.Button.create( options, theme )
+end
+
+
+
+--===================================================================--
+--== newToggleButton widget
+
+
+function Widget.newToggleButton( options )
+	options = options or {}
+	--==--
+	local theme = nil
+	options.type = Widget.Button.ToggleButton.TYPE
+	return Widget.Button.create( options, theme )
+end
+
+
+
+--===================================================================--
 --== newButtonGroup widget
 
 
