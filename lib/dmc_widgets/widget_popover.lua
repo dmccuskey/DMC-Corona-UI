@@ -1,42 +1,52 @@
 --====================================================================--
--- widget_popover.lua
+-- dmc_widgets/widget_popover.lua
 --
--- Documentation: http://docs.davidmccuskey.com/display/docs/newPopover.lua
+-- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
 
 --[[
 
-Copyright (C) 2013-2014 David McCuskey. All Rights Reserved.
+The MIT License (MIT)
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in the
-Software without restriction, including without limitation the rights to use, copy,
-modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
-and to permit persons to whom the Software is furnished to do so, subject to the
-following conditions:
+Copyright (c) 2014-2015 David McCuskey
 
-The above copyright notice and this permission notice shall be included in all copies
-or substantial portions of the Software.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
-FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-DEALINGS IN THE SOFTWARE.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
 --]]
 
 
+--====================================================================--
+--== DMC Corona Widgets : Popover
+--====================================================================--
+
+
+
 -- Semantic Versioning Specification: http://semver.org/
 
-local VERSION = "1.0.0"
+local VERSION = "0.1.0"
 
 
 
 --====================================================================--
 --== DMC Widgets Setup
 --====================================================================--
+
 
 local dmc_widget_data, dmc_widget_func
 dmc_widget_data = _G.__dmc_widget
@@ -61,8 +71,8 @@ local Utils = require 'dmc_utils'
 --== Setup, Constants
 
 -- setup some aliases to make code cleaner
-local inheritsFrom = Objects.inheritsFrom
-local CoronaBase = Objects.CoronaBase
+local newClass = Objects.newClass
+local ComponentBase = Objects.ComponentBase
 
 local LOCAL_DEBUG = false
 
@@ -73,8 +83,9 @@ local LOCAL_DEBUG = false
 --====================================================================--
 
 
-local Popover = inheritsFrom( CoronaBase )
-Popover.NAME = "Popover"
+local Popover = newClass( ComponentBase, {name="Popover"} )
+
+--== Class Constants
 
 Popover.TOUCH_NONE = 'none'
 Popover.TOUCH_DONE = 'done'
@@ -84,15 +95,15 @@ Popover.TOUCH_CANCEL = 'cancel'
 --======================================================--
 -- Start: Setup DMC Objects
 
-function Popover:_init( params )
-	-- print( "Popover:_init" )
+function Popover:__init__( params )
+	-- print( "Popover:__init__" )
 	params = params or { }
-	self:superCall( "_init", params )
+	self:superCall( '__init__', params )
 	--==--
 
 	--== Sanity Check ==--
 
-	if self.is_intermediate then return end
+	if self.is_class then return end
 
 	--== Create Properties ==--
 
@@ -118,18 +129,20 @@ function Popover:_init( params )
 
 end
 
--- function Popover:_undoInit()
--- 	-- print( "Popover:_undoInit" )
--- 	--==--
--- 	self:superCall( "_undoInit" )
--- end
+--[[
+function Popover:_undoInit()
+	-- print( "Popover:_undoInit" )
+	--==--
+	self:superCall( "_undoInit" )
+end
+--]]
 
 
--- _createView()
+-- __createView__()
 --
-function Popover:_createView()
-	-- print( "Popover:_createView" )
-	self:superCall( "_createView" )
+function Popover:__createView__()
+	-- print( "Popover:__createView__" )
+	self:superCall( '__createView__' )
 	--==--
 
 	local WIDTH, HEIGHT = display.contentWidth, display.contentHeight
@@ -179,20 +192,21 @@ function Popover:_createView()
 
 end
 
-function Popover:_undoCreateView()
-	-- print( "Popover:_undoCreateView" )
-
-	local o
-
+--[[
+function Popover:__undoCreateView__()
+	-- print( "Popover:__undoCreateView__" )
 	--==--
-	self:superCall( "_undoCreateView" )
+	self:superCall( '__undoCreateView__' )
 end
+--]]
 
 
--- _initComplete()
+-- __initComplete__()
 --
-function Popover:_initComplete()
-	--print( "Popover:_initComplete" )
+function Popover:__initComplete__()
+	--print( "Popover:__initComplete__" )
+	self:superCall( '__initComplete__' )
+	--==--
 
 	local o, f
 
@@ -201,30 +215,27 @@ function Popover:_initComplete()
 	o:addEventListener( 'touch', o._f )
 
 	self:_updateView()
-	--==--
-	self:superCall( "_initComplete" )
 end
 
-function Popover:_undoInitComplete()
-	--print( "Popover:_undoInitComplete" )
+function Popover:__undoInitComplete__()
+	--print( "Popover:__undoInitComplete__" )
 
 	o = self._bg_touch
 	o:removeEventListener( 'touch', o._f )
 	o._f = nil
 
 	--==--
-	self:superCall( "_undoInitComplete" )
+	self:superCall( '__undoInitComplete__' )
 end
 
-
---== END: Setup DMC Objects
-
-
+-- END: Setup DMC Objects
+--======================================================--
 
 
 
 --====================================================================--
 --== Public Methods
+
 
 -- we only want items inserted into proper layer
 function Popover:insert( ... )
@@ -253,8 +264,10 @@ function Popover.__setters:y( value )
 end
 
 
+
 --====================================================================--
 --== Private Methods
+
 
 function Popover:_updateView()
 	print( "Popover:_updateView" )
@@ -275,8 +288,10 @@ function Popover:_doDoneCallback()
 end
 
 
+
 --====================================================================--
 --== Event Handlers
+
 
 function Popover:_bgTouchEvent_handler( event )
 	print( "Popover:_bgTouchEvent_handler", event.phase )
@@ -301,6 +316,7 @@ function Popover:_bgTouchEvent_handler( event )
 	end
 
 end
+
 
 
 
