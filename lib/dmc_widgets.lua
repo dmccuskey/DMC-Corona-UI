@@ -153,8 +153,7 @@ end
 
 
 function Widget.newButtonGroup( options )
-	local widget = Widget.ButtonGroup
-	return widget.create( options )
+	return Widget.ButtonGroup.create( options )
 end
 
 
