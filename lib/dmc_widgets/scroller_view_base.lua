@@ -433,7 +433,7 @@ function ScrollerBase:__undoCreateView__()
 	self._dg_scroller = nil
 
 	--==--
-	self:superCall( "_undoCreateView" )
+	self:superCall( '__undoCreateView__' )
 end
 
 
