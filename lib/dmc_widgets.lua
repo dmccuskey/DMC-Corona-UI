@@ -133,34 +133,6 @@ end
 
 
 --===================================================================--
---== newPushButton widget
-
-
-function Widget.newPushButton( options )
-	options = options or {}
-	--==--
-	local theme = nil
-	options.type = Widget.Button.PushButton.TYPE
-	return Widget.Button.create( options, theme )
-end
-
-
-
---===================================================================--
---== newToggleButton widget
-
-
-function Widget.newToggleButton( options )
-	options = options or {}
-	--==--
-	local theme = nil
-	options.type = Widget.Button.ToggleButton.TYPE
-	return Widget.Button.create( options, theme )
-end
-
-
-
---===================================================================--
 --== newButtonGroup widget
 
 
@@ -178,6 +150,20 @@ function Widget.newPopover( options )
 	local theme = nil
 	local widget = Widget.Popover
 	return widget:new( options, theme )
+end
+
+
+
+--===================================================================--
+--== newPushButton widget
+
+
+function Widget.newPushButton( options )
+	options = options or {}
+	--==--
+	local theme = nil
+	options.type = Widget.Button.PushButton.TYPE
+	return Widget.Button.create( options, theme )
 end
 
 
@@ -214,6 +200,20 @@ function Widget.newTableView( options )
 	local theme = nil
 	local _library = require( PATH .. '.' .. 'widget_tableview' )
 	return _library:new( options, theme )
+end
+
+
+
+--===================================================================--
+--== newToggleButton widget
+
+
+function Widget.newToggleButton( options )
+	options = options or {}
+	--==--
+	local theme = nil
+	options.type = Widget.Button.ToggleButton.TYPE
+	return Widget.Button.create( options, theme )
 end
 
 
