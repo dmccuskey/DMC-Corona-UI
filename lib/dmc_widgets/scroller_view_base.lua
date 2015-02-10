@@ -202,8 +202,8 @@ StatesMixModule.patch( ScrollerBase )
 ScrollerBase.DEFAULT_RENDER_MARGIN = 100
 
 -- flags used when scroller hits top/bottom of scroll range
-ScrollerBase.HIT_TOP_LIMIT = "top_limit_hit"
-ScrollerBase.HIT_BOTTOM_LIMIT = "bottom_limit_hit"
+ScrollerBase.HIT_TOP_LIMIT = 'top_limit_hit'
+ScrollerBase.HIT_BOTTOM_LIMIT = 'bottom_limit_hit'
 
 -- delta pixel amount before touch event is given up
 ScrollerBase.X_TOUCH_LIMIT = 10
@@ -212,11 +212,11 @@ ScrollerBase.Y_TOUCH_LIMIT = 10
 
 --== State Constants
 
-ScrollerBase.STATE_CREATE = "state_create"
-ScrollerBase.STATE_AT_REST = "state_at_rest"
-ScrollerBase.STATE_TOUCH = "state_touch"
-ScrollerBase.STATE_RESTRAINT = "state_restraint"
-ScrollerBase.STATE_RESTORE = "state_restore"
+ScrollerBase.STATE_CREATE = 'state_create'
+ScrollerBase.STATE_AT_REST = 'state_at_rest'
+ScrollerBase.STATE_TOUCH = 'state_touch'
+ScrollerBase.STATE_RESTRAINT = 'state_restraint'
+ScrollerBase.STATE_RESTORE = 'state_restore'
 
 ScrollerBase.STATE_RESTRAINT_TRANS_TIME = 100
 ScrollerBase.STATE_RESTORE_TRANS_TIME = 400
@@ -224,7 +224,7 @@ ScrollerBase.STATE_RESTORE_TRANS_TIME = 400
 
 --== Event Constants
 
-ScrollerBase.EVENT = "scroller_view"
+ScrollerBase.EVENT = 'scroller_view'
 
 -- for scroll view
 ScrollerBase.ITEM_SELECTED = 'item_selected'
@@ -234,8 +234,8 @@ ScrollerBase.SCROLLED = 'view_scrolled_event'
 ScrollerBase.TAKE_FOCUS = 'take_focus_event'
 
 -- for scroll items
-ScrollerBase.ITEM_RENDER = "item_render_event"
-ScrollerBase.ITEM_UNRENDER = "item_unrender_event"
+ScrollerBase.ITEM_RENDER = 'item_render_event'
+ScrollerBase.ITEM_UNRENDER = 'item_unrender_event'
 
 
 
