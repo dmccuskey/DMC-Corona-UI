@@ -1605,7 +1605,7 @@ function ScrollerBase:touch( event )
 
 	end
 
-	if not target._has_focus then return false end
+	if not self._has_focus then return false end
 
 	if phase == 'moved' then
 		-- Utils.print( event )
@@ -1700,7 +1700,7 @@ function ScrollerBase:touch( event )
 
 		-- clean up
 		display.getCurrentStage():setFocus( nil )
-		target._has_focus = false
+		self._has_focus = false
 		self._is_moving = false
 
 		-- add system time, we can re-use this event for Runtime
