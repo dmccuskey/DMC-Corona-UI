@@ -109,6 +109,18 @@ Widget.Popover = require( PATH .. '.' .. 'widget_popover' )
 
 
 --===================================================================--
+--== Setup, Constants
+
+
+Widget.WIDTH = display.contentWidth
+Widget.HEIGHT = display.contentHeight
+
+-- set display content width/height
+Widget.Popover.__setWidgetManager( Widget )
+
+
+
+--===================================================================--
 --== newButton widget
 
 
