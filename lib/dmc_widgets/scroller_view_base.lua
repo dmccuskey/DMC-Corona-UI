@@ -1587,6 +1587,8 @@ function ScrollerBase:touch( event )
 
 	if phase == 'began' then
 
+		local scr = self._dg_scroller
+
 		self._v_touch_lock = false
 		self._h_touch_lock = false
 
@@ -1598,8 +1600,8 @@ function ScrollerBase:touch( event )
 		self._tch_event_tmp = event
 
 		-- handle touch
-		display.getCurrentStage():setFocus( target )
-		target._has_focus = true
+		display.getCurrentStage():setFocus( scr.view )
+		self._has_focus = true
 
 	end
 
