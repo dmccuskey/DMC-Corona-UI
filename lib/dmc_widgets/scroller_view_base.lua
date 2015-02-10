@@ -201,6 +201,8 @@ StatesMixModule.patch( ScrollerBase )
 -- pixel amount to edges of ScrollerBase in which rows are de-/rendered
 ScrollerBase.DEFAULT_RENDER_MARGIN = 100
 
+ScrollerBase.DEFAULT_BG_COLOR = {1,1,1,1}
+
 -- flags used when scroller hits top/bottom of scroll range
 ScrollerBase.HIT_TOP_LIMIT = 'top_limit_hit'
 ScrollerBase.HIT_BOTTOM_LIMIT = 'bottom_limit_hit'
@@ -252,6 +254,7 @@ function ScrollerBase:__init__( params )
 	if params.x_offset == nil then params.x_offset = 0 end
 	if params.y_offset == nil then params.y_offset = 0 end
 	if params.automask == nil then params.automask = false end
+	if params.bgColor == nil then params.bgColor = self.DEFAULT_BG_COLOR end
 
 	--== Sanity Check ==--
 
@@ -307,6 +310,7 @@ function ScrollerBase:__init__( params )
 
 	-- this is the *stationary* background of the table view
 	self._bg_viewport = nil
+	self._bg_viewport_color = params.bgColor
 
 	-- this is the *moving* background of all items
 	self._bg = nil
@@ -452,6 +456,10 @@ function ScrollerBase:__initComplete__()
 	-- add touch capability to our scroller item
 	self._dg_scroller:addEventListener( 'touch', self )
 
+	-- set background color
+	self.bg_color = self._bg_viewport_color -- setter
+	self._bg_viewport_color = nil
+
 	self._is_rendered = true
 
 	self:setState( self.STATE_CREATE )
@@ -484,6 +492,15 @@ end
 
 --====================================================================--
 --== Public Methods
+
+
+-- setter: set background color of table view
+--
+function ScrollerBase.__setters:bg_color( color )
+	-- print( "ScrollerBase.__setters:bg_color", color )
+	assert( type(color)=='table', "color must be a table of values" )
+	self._bg_viewport:setFillColor( unpack( color ) )
+end
 
 
 -- getter: return count of items
