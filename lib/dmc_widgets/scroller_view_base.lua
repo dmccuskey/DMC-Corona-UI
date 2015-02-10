@@ -374,7 +374,7 @@ function ScrollerBase:__createView__()
 
 	--== viewport background
 
-	o = display.newRect( 0,0, self._width, self._height )
+	o = display.newRect( 0, 0, self._width, self._height )
 	o:setFillColor( 0, 0, 0, 0 )
 	if LOCAL_DEBUG then
 		o:setFillColor( 0, 1, 1, 1 )
