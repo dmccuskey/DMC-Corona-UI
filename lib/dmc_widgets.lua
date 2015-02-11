@@ -104,6 +104,8 @@ dmc_lib_info = dmc_lib_data.dmc_corona
 
 Widget.Button = require( PATH .. '.' .. 'widget_button' )
 Widget.ButtonGroup = require( PATH .. '.' .. 'button_group' )
+Widget.NavBar = require( PATH .. '.' .. 'widget_navbar' )
+Widget.NavItem = require( PATH .. '.' .. 'widget_navitem' )
 Widget.Popover = require( PATH .. '.' .. 'widget_popover' )
 
 
@@ -116,6 +118,8 @@ Widget.WIDTH = display.contentWidth
 Widget.HEIGHT = display.contentHeight
 
 -- set display content width/height
+Widget.NavBar.__setWidgetManager( Widget )
+Widget.NavItem.__setWidgetManager( Widget )
 Widget.Popover.__setWidgetManager( Widget )
 
 
@@ -138,6 +142,26 @@ end
 
 function Widget.newButtonGroup( options )
 	return Widget.ButtonGroup.create( options )
+end
+
+
+
+--===================================================================--
+--== newNavBar widget
+
+
+function Widget.newNavBar( options )
+	return Widget.NavBar:new( options )
+end
+
+
+
+--===================================================================--
+--== newNavItem widget
+
+
+function Widget.newNavItem( options )
+	return Widget.NavItem:new( options )
 end
 
 
