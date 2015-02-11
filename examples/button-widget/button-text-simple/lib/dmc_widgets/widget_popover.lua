@@ -63,12 +63,17 @@ dmc_widget_func = dmc_widget_data.func
 --====================================================================--
 --== Imports
 
+
 local Objects = require 'dmc_objects'
 local Utils = require 'dmc_utils'
+
+local Widgets -- set later
+
 
 
 --====================================================================--
 --== Setup, Constants
+
 
 -- setup some aliases to make code cleaner
 local newClass = Objects.newClass
@@ -85,14 +90,6 @@ local LOCAL_DEBUG = true
 
 local Popover = newClass( ComponentBase, {name="Popover"} )
 
---== Class Constants
-
-Popover.TOUCH_NONE = 'none'
-Popover.TOUCH_DONE = 'done'
-Popover.TOUCH_CANCEL = 'cancel'
-
-Popover.__WIDGET = nil -- widget manager
-
 
 --======================================================--
 -- Start: Setup DMC Objects
@@ -100,7 +97,6 @@ Popover.__WIDGET = nil -- widget manager
 function Popover:__init__( params )
 	-- print( "Popover:__init__" )
 	params = params or {}
-	if params.outside_touch_action==nil then params.outside_touch_action=Popover.TOUCH_CANCEL end
 	self:superCall( '__init__', params )
 	--==--
 
@@ -108,17 +104,12 @@ function Popover:__init__( params )
 
 	if self.is_class then return end
 
-	assert( params.x_pos, "Popover: requires param 'x_pos'" )
-	assert( params.y_pos, "Popover: requires param 'y_pos'" )
-	assert( params.width, "Popover: requires param 'width'" )
-	assert( params.height, "Popover: requires param 'height'" )
+	assert( params.delegate, "Popover: requires param 'delegate'" )
 
 	--== Create Properties ==--
 
-	self._outside_touch_action = params.outside_touch_action
-
-	self._width = params.width
-	self._height = params.height
+	self._width = params.delegate.width
+	self._height = params.delegate.height
 
 	-- we don't move our core group
 	-- so we save x/y separately
@@ -129,9 +120,6 @@ function Popover:__init__( params )
 	self._x_pos = params.x_pos
 	self._y_pos = params.y_pos
 
-	self._onDone = params.onDone
-	self._onCancel = params.onCancel
-
 	--== Display Groups ==--
 
 	-- group for popover background elements
@@ -141,6 +129,8 @@ function Popover:__init__( params )
 	self._dg_main = nil
 
 	--== Object References ==--
+
+	self._delegate = params.delegate
 
 	-- visual
 	self._bg_touch = nil  -- main touch background
@@ -164,7 +154,7 @@ function Popover:__createView__()
 	-- print( "Popover:__createView__" )
 	self:superCall( '__createView__' )
 	--==--
-	local WIDTH, HEIGHT = Popover.__WIDGET.WIDTH, Popover.__WIDGET.HEIGHT
+	local WIDTH, HEIGHT = Widgets.WIDTH, Widgets.HEIGHT
 	local W,H = self._width, self._height
 	local H_CENTER, V_CENTER = W*0.5, H*0.5
 
@@ -196,6 +186,10 @@ function Popover:__createView__()
 	self.view:insert( dg )
 	self._dg_main = dg
 
+	-- delegate view
+
+	dg = self._dg_bg
+	dg:insert( self._delegate.view )
 
 	-- viewable background
 
@@ -228,27 +222,18 @@ function Popover:__initComplete__()
 	--print( "Popover:__initComplete__" )
 	self:superCall( '__initComplete__' )
 	--==--
-
-	local o, f
-
+	local o
 	o = self._bg_touch
 	o._f = self:createCallback( self._bgTouchEvent_handler )
 	o:addEventListener( 'touch', o._f )
-
-	-- use setters to test
-	self.onDone = self._onDone
-	self.onCancel = self._onCancel
-
-	self:_calculatePosition()
 end
 
 function Popover:__undoInitComplete__()
 	--print( "Popover:__undoInitComplete__" )
-
+	local o
 	o = self._bg_touch
 	o:removeEventListener( 'touch', o._f )
 	o._f = nil
-
 	--==--
 	self:superCall( '__undoInitComplete__' )
 end
@@ -257,12 +242,14 @@ end
 --======================================================--
 
 
+
 --====================================================================--
 --== Static Methods
 
+
 function Popover.__setWidgetManager( manager )
 	-- print( "Popover.__setWidgetManager" )
-	Popover.__WIDGET = manager
+	Widgets = manager
 end
 
 
@@ -271,23 +258,36 @@ end
 --== Public Methods
 
 
+-- -- we only want items inserted into proper layer
+-- function Popover.__setters:delegate( obj )
+-- 	-- print( "Popover.__setters:delegate" )
+-- 	self._dg_main:insert( obj.view )
+-- 	self._delegate = obj
+-- end
+
+
 -- we only want items inserted into proper layer
 function Popover:insert( ... )
 	-- print( "Popover:insert" )
 	self._dg_main:insert( ... )
 end
 
-function Popover:show()
+function Popover:show( pos, params )
 	-- print( "Popover:show" )
+	assert( pos.x and pos.y )
+	--==--
+	self.x, self.y = pos.x, pos.y
 	self.view.isVisible = true
 	self._bg_touch.isHitTestable = true
-	self:_show()
 end
 function Popover:hide()
 	-- print( "Popover:hide" )
+	local d = self._delegate
 	self.view.isVisible = false
 	self._bg_touch.isHitTestable = false
-	self:_hide()
+	if d and d.isDismissed then
+		timer.performWithDelay( 1, function() d:isDismissed() end)
+	end
 end
 
 function Popover.__getters:x( )
@@ -301,7 +301,6 @@ function Popover.__setters:x( value )
 	self._dg_bg.x = value
 	self._dg_main.x = value
 	self._x = value
-	self:_updateView()
 end
 function Popover.__getters:y( )
 	-- print( "Popover.__getters y '" )
@@ -314,7 +313,6 @@ function Popover.__setters:y( value )
 	self._dg_bg.y = value
 	self._dg_main.y = value
 	self._y = value
-	self:_updateView()
 end
 
 function Popover.__setters:onDone( func )
@@ -334,30 +332,8 @@ end
 --== Private Methods
 
 
-function Popover:_show()
-	print( "OVERRIDE Popover:_show" )
-end
-
-function Popover:_hide()
-	print( "OVERRIDE Popover:_hide" )
-end
-
-function Popover:_updateView()
-	print( "OVERRIDE Popover:_updateView" )
-end
-
-function Popover:_doCancelCallback()
-	-- print( "Popover:_doCancelCallback" )
-	if type(self._onCancel)~='function' then return end
-	local event = {}
-	self._onCancel( event )
-end
-
-function Popover:_doDoneCallback()
-	-- print( "Popover:_doDoneCallback" )
-	if type(self._onDone)~='function' then return end
-	local event = {}
-	self._onDone( event )
+function Popover:_shouldDismiss()
+	return true
 end
 
 -- TODO: make fancier
@@ -380,21 +356,24 @@ function Popover:_bgTouchEvent_handler( event )
 	if event.phase == 'began' then
 		display.getCurrentStage():setFocus( target )
 		self._has_focus = true
+		return true
 	end
 
-	if not self._has_focus then return end
+	if not self._has_focus then return false end
 
 	if event.phase == 'ended' or event.phase == 'canceled' then
-		if self._outside_touch_action == Popover.TOUCH_DONE then
-			self:_doDoneCallback()
-		elseif self._outside_touch_action == Popover.TOUCH_CANCEL then
-			self:_doCancelCallback()
-		else
-			-- pass
-		end
+		display.getCurrentStage():setFocus( nil )
 		self._has_focus = false
+
+		local dismiss_f = self._shouldDismiss
+		local d = self._delegate
+		if d and d.shouldDismiss then
+			dismiss_f = d.shouldDismiss
+		end
+		if dismiss_f() then self:hide() end
 	end
 
+	return true
 end
 
 
