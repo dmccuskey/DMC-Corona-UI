@@ -149,14 +149,14 @@ function NavBar:__init__( params )
 
 end
 
-function NavBar:_undoInit()
-	-- print( "NavBar:_undoInit" )
+function NavBar:__undoInit__()
+	-- print( "NavBar:__undoInit__" )
 	self._root_item = nil
 	self._back_item = nil
 	self._top_item = nil
 	self._new_item = nil
 	--==--
-	self:superCall( "_undoInit" )
+	self:superCall( '__undoInit__' )
 end
 
 

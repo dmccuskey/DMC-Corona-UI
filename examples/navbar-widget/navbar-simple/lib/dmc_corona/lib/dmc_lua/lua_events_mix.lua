@@ -88,13 +88,14 @@ end
 
 
 -- obj,
--- event type
--- data
--- params
+-- event type, string
+-- data, anything
+-- params, table of params
+-- params.merge, boolean, if to merge data (table) in with event table
 --
 function _createDmcEvent( obj, e_type, data, params )
 	params = params or {}
-	if params.merge == nil then params.merge = true end
+	if params.merge==nil then params.merge=false end
 	--==--
 	local e
 
@@ -205,11 +206,24 @@ function Events.setEventFunc( self, func )
 end
 
 
+function Events.createEvent( self, ... )
+	return self.__event_func( self, ... )
+end
+
 function Events.dispatchEvent( self, ... )
 	-- print( "Events.dispatchEvent" )
 	local f = self.__event_func
 	self:_dispatchEvent( f( self, ... ) )
 end
+
+function Events.dispatchRawEvent( self, event )
+	-- print( "Events.dispatchRawEvent", event )
+	assert( type(event)=='table', "wrong type for event" )
+	assert( event.name, "event must have property 'name'")
+	--==--
+	self:_dispatchEvent( event )
+end
+
 
 
 -- addEventListener()

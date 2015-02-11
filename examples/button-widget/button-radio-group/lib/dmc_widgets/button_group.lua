@@ -128,7 +128,7 @@ end
 -- _initComplete()
 --
 function GroupBase:__initComplete__()
-	--print( "GroupBase:__initComplete__" )
+	print( "GroupBase:__initComplete__" )
 	self:superCall( '__initComplete__' )
 	--==--
 	self._button_handler = self:createCallback( self._buttonEvent_handler )
@@ -160,9 +160,9 @@ end
 
 -- we only want items inserted into proper layer
 function GroupBase:add( obj, params )
-	-- print( "GroupBase:add", obj.NAME, obj.EVENT )
+	print( "GroupBase:add", obj.NAME, obj.EVENT )
 	params = params or {}
-	params.set_active = params.set_active == nil and false or params.set_active
+	if params.set_active==nil then params.set_active=false end
 	--==--
 	local num = Utils.tableSize( self._buttons )
 
@@ -170,7 +170,7 @@ function GroupBase:add( obj, params )
 		obj:gotoState( obj.STATE_ACTIVE )
 		self._selected = obj
 	end
-
+	print("adding list", self._button_handler)
 	obj:addEventListener( obj.EVENT, self._button_handler )
 	local key = tostring( obj )
 	self._buttons[ key ] = obj
@@ -225,12 +225,11 @@ end
 function GroupBase:_dispatchChangeEvent( button )
 	-- print( "GroupBase:_dispatchChangeEvent" )
 	local evt = {
-		target=self,
 		button=button,
 		id=button.id,
 		state=button:getState()
 	}
-	self:dispatchEvent( self.CHANGED, evt )
+	self:dispatchEvent( self.CHANGED, evt, {merge=true} )
 end
 
 
@@ -297,9 +296,9 @@ end
 
 
 function RadioGroup:_buttonEvent_handler( event )
-	-- print( "RadioGroup:_buttonEvent_handler", event.phase )
+	print( "RadioGroup:_buttonEvent_handler", event.phase )
 	local button = event.target
-
+	print( event.id )
 	if self._selected == button then return end
 
 	if event.phase ~= button.RELEASED then return end
@@ -364,7 +363,7 @@ end
 
 
 function ToggleGroup:_buttonEvent_handler( event )
-	-- print( "ToggleGroup:_buttonEvent_handler", event.phase )
+	print( "ToggleGroup:_buttonEvent_handler", event.phase )
 	local button = event.target
 	local state = button:getState()
 

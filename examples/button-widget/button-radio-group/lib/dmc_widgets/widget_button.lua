@@ -333,15 +333,6 @@ function ButtonBase.__getters:is_active()
 	return ( self:getState() == self.STATE_ACTIVE )
 end
 
-function ButtonBase.__setters:is_active( value )
-	print( "ButtonBase.__setters:is_active", value )
-	if value then
-		self:gotoState( self.STATE_ACTIVE )
-	else
-		self:gotoState( self.STATE_INACTIVE )
-	end
-end
-
 
 function ButtonBase.__getters:id()
 	return self._id
