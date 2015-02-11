@@ -83,7 +83,7 @@ local ObjectBase = Objects.ObjectBase
 local tinsert = table.insert
 local tremove = table.remove
 
-local LOCAL_DEBUG = true
+local LOCAL_DEBUG = false
 
 
 
@@ -93,14 +93,6 @@ local LOCAL_DEBUG = true
 
 
 local NavItem = newClass( ObjectBase, {name="Nav Item"}  )
-
---== Class Constants
-
-NavItem.__WIDGET = nil -- widget manager
-
---== State Constants
-
---== Event Constants
 
 
 --======================================================--
@@ -150,9 +142,10 @@ function NavItem:__initComplete__()
 		width = 80,
 		height = 40,
 		id='button-back',
-
-		label = "Back",
-
+		label = {
+			text="Back",
+			color={0,0,0},
+		},
 		active = {
 			label = {
 				color={1,0,0},
@@ -165,8 +158,10 @@ function NavItem:__initComplete__()
 		width = 80,
 		height = 40,
 		id='button-title',
-
-		label = self._title,
+		label = {
+			text=self._title,
+			color={0,0,0},
+		}
 	}
 	self._txt_title = o
 
@@ -174,7 +169,7 @@ function NavItem:__initComplete__()
 end
 
 function NavItem:__undoInitComplete__()
-	print( "NavItem:__undoInitComplete__" )
+	-- print( "NavItem:__undoInitComplete__" )
 
 	local o
 
@@ -189,6 +184,8 @@ function NavItem:__undoInitComplete__()
 		o:removeSelf()
 		self._txt_title = nil
 	end
+
+	--== Though this aren't default, check them
 
 	o = self._btn_left
 	if o then
