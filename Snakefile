@@ -19,6 +19,9 @@ module_config = {
 			"dmc_widgets/widget_button/view_base.lua",
 			"dmc_widgets/widget_button/view_image.lua",
 			"dmc_widgets/widget_button/view_shape.lua",
+			"dmc_widgets/widget_navbar.lua",
+			"dmc_widgets/widget_navitem.lua",
+			"dmc_widgets/widget_popover.lua",
 			"dmc_widgets/widget_slideview.lua",
 			"dmc_widgets/widget_tableview.lua",
 			"dmc_widgets/widget_viewpager.lua",
@@ -75,6 +78,16 @@ module_config = {
 			},
 			{
 				"exp_dir": "button-widget/button-text-simple",
+				"requires": [],
+				"mod_dir_map": {
+					"default_dir": "",
+					"libs": {
+						"dmc-corona-boot":""
+					}
+				}
+			},
+			{
+				"exp_dir": "navbar-widget/navbar-simple",
 				"requires": [],
 				"mod_dir_map": {
 					"default_dir": "",
