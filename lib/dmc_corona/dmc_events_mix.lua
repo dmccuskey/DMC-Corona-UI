@@ -1,5 +1,5 @@
 --====================================================================--
--- dmc_corona/dmc_states_mix.lua
+-- dmc_corona/dmc_events_mix.lua
 --
 -- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
@@ -33,7 +33,7 @@ SOFTWARE.
 
 
 --====================================================================--
---== DMC Corona Library : DMC States Mix
+--== DMC Corona Library : DMC Events Mix
 --====================================================================--
 
 
@@ -125,12 +125,12 @@ dmc_lib_data = _G.__dmc_corona
 --== Configuration
 
 
-dmc_lib_data.dmc_states_mix = dmc_lib_data.dmc_states_mix or {}
+dmc_lib_data.dmc_events_mix = dmc_lib_data.dmc_events_mix or {}
 
-local DMC_STATES_MIX_DEFAULTS = {
+local DMC_EVENTS_MIX_DEFAULTS = {
 }
 
-local dmc_states_mix_data = Utils.extend( dmc_lib_data.dmc_states_mix, DMC_STATES_MIX_DEFAULTS )
+local dmc_events_mix_data = Utils.extend( dmc_lib_data.dmc_events_mix, DMC_EVENTS_MIX_DEFAULTS )
 
 
 
@@ -138,9 +138,9 @@ local dmc_states_mix_data = Utils.extend( dmc_lib_data.dmc_states_mix, DMC_STATE
 --== Imports
 
 
-local StatesMixModule = require 'lib.dmc_lua.lua_states_mix'
+local EventsMixModule = require 'lib.dmc_lua.lua_events_mix'
 
 
 
-return StatesMixModule
+return EventsMixModule
 

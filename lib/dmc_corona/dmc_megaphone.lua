@@ -1,5 +1,5 @@
 --====================================================================--
--- dmc_corona/dmc_states_mix.lua
+-- dmc_corona/dmc_megaphone.lua
 --
 -- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
@@ -33,7 +33,7 @@ SOFTWARE.
 
 
 --====================================================================--
---== DMC Corona Library : DMC States Mix
+--== DMC Corona Library : DMC Megaphone
 --====================================================================--
 
 
@@ -117,7 +117,7 @@ dmc_lib_data = _G.__dmc_corona
 
 
 --====================================================================--
---== DMC States Mix
+--== DMC Megaphone
 --====================================================================--
 
 
@@ -125,12 +125,12 @@ dmc_lib_data = _G.__dmc_corona
 --== Configuration
 
 
-dmc_lib_data.dmc_states_mix = dmc_lib_data.dmc_states_mix or {}
+dmc_lib_data.dmc_megaphone = dmc_lib_data.dmc_megaphone or {}
 
-local DMC_STATES_MIX_DEFAULTS = {
+local DMC_MEGAPHONE_DEFAULTS = {
 }
 
-local dmc_states_mix_data = Utils.extend( dmc_lib_data.dmc_states_mix, DMC_STATES_MIX_DEFAULTS )
+local dmc_megaphone_data = Utils.extend( dmc_lib_data.dmc_megaphone, DMC_MEGAPHONE_DEFAULTS )
 
 
 
@@ -138,9 +138,9 @@ local dmc_states_mix_data = Utils.extend( dmc_lib_data.dmc_states_mix, DMC_STATE
 --== Imports
 
 
-local StatesMixModule = require 'lib.dmc_lua.lua_states_mix'
+local Megaphone = require 'lib.dmc_lua.lua_megaphone'
 
 
 
-return StatesMixModule
+return Megaphone
 

@@ -1,5 +1,5 @@
 --====================================================================--
--- dmc_corona/dmc_states_mix.lua
+-- dmc_corona/dmc_promise.lua
 --
 -- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
@@ -33,7 +33,7 @@ SOFTWARE.
 
 
 --====================================================================--
---== DMC Corona Library : DMC States Mix
+--== DMC Corona Library : DMC Promise
 --====================================================================--
 
 
@@ -117,7 +117,7 @@ dmc_lib_data = _G.__dmc_corona
 
 
 --====================================================================--
---== DMC States Mix
+--== DMC Promise
 --====================================================================--
 
 
@@ -125,12 +125,12 @@ dmc_lib_data = _G.__dmc_corona
 --== Configuration
 
 
-dmc_lib_data.dmc_states_mix = dmc_lib_data.dmc_states_mix or {}
+dmc_lib_data.dmc_promise = dmc_lib_data.dmc_promise or {}
 
-local DMC_STATES_MIX_DEFAULTS = {
+local DMC_PROMISE_DEFAULTS = {
 }
 
-local dmc_states_mix_data = Utils.extend( dmc_lib_data.dmc_states_mix, DMC_STATES_MIX_DEFAULTS )
+local dmc_promise_data = Utils.extend( dmc_lib_data.dmc_promise, DMC_PROMISE_DEFAULTS )
 
 
 
@@ -138,9 +138,9 @@ local dmc_states_mix_data = Utils.extend( dmc_lib_data.dmc_states_mix, DMC_STATE
 --== Imports
 
 
-local StatesMixModule = require 'lib.dmc_lua.lua_states_mix'
+local Promise = require 'lib.dmc_lua.lua_promise'
 
 
 
-return StatesMixModule
+return Promise
 

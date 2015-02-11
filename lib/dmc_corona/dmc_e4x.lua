@@ -1,5 +1,5 @@
 --====================================================================--
--- dmc_corona/dmc_states_mix.lua
+-- dmc_corona/dmc_e4x.lua
 --
 -- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
@@ -125,12 +125,12 @@ dmc_lib_data = _G.__dmc_corona
 --== Configuration
 
 
-dmc_lib_data.dmc_states_mix = dmc_lib_data.dmc_states_mix or {}
+dmc_lib_data.dmc_e4x = dmc_lib_data.dmc_e4x or {}
 
-local DMC_STATES_MIX_DEFAULTS = {
+local DMC_E4X_DEFAULTS = {
 }
 
-local dmc_states_mix_data = Utils.extend( dmc_lib_data.dmc_states_mix, DMC_STATES_MIX_DEFAULTS )
+local dmc_e4x_data = Utils.extend( dmc_lib_data.dmc_e4x, DMC_E4X_DEFAULTS )
 
 
 
@@ -138,9 +138,9 @@ local dmc_states_mix_data = Utils.extend( dmc_lib_data.dmc_states_mix, DMC_STATE
 --== Imports
 
 
-local StatesMixModule = require 'lib.dmc_lua.lua_states_mix'
+local E4X = require 'lib.dmc_lua.lua_e4x'
 
 
 
-return StatesMixModule
+return E4X
 
