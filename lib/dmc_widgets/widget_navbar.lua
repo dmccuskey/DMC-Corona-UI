@@ -171,7 +171,7 @@ function NavBar:__createView__()
 	local W,H = self._width, self._height
 	local H_CENTER, V_CENTER = W*0.5, H*0.5
 
-	local o, dg, tmp  -- object, display group, tmp
+	local o
 
 	--== setup background
 
@@ -189,13 +189,17 @@ function NavBar:__createView__()
 
 end
 
---[[
 function NavBar:__undoCreateView__()
 	-- print( "NavBar:__undoCreateView__" )
+	local o
+
+	o = self._bg_touch
+	o:removeSelf()
+	self._bg_touch = nil
+
 	--==--
 	self:superCall( '__undoCreateView__' )
 end
---]]
 
 
 -- __initComplete__()
@@ -204,18 +208,12 @@ function NavBar:__initComplete__()
 	--print( "NavBar:__initComplete__" )
 	self:superCall( '__initComplete__' )
 	--==--
-
-	local o, f
-
 	self:setTouchBlock( self._bg_touch )
-
 end
 
 function NavBar:__undoInitComplete__()
 	--print( "NavBar:__undoInitComplete__" )
-
 	self:unsetTouchBlock( self._bg_touch )
-
 	--==--
 	self:superCall( '__undoInitComplete__' )
 end
