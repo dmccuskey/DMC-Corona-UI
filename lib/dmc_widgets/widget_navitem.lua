@@ -142,9 +142,10 @@ function NavItem:__initComplete__()
 		width = 80,
 		height = 40,
 		id='button-back',
-
-		label = "Back",
-
+		label = {
+			text="Back",
+			color={0,0,0},
+		},
 		active = {
 			label = {
 				color={1,0,0},
@@ -157,8 +158,10 @@ function NavItem:__initComplete__()
 		width = 80,
 		height = 40,
 		id='button-title',
-
-		label = self._title,
+		label = {
+			text=self._title,
+			color={0,0,0},
+		}
 	}
 	self._txt_title = o
 

@@ -84,7 +84,7 @@ local ComponentBase = Objects.ComponentBase
 local tinsert = table.insert
 local tremove = table.remove
 
-local LOCAL_DEBUG = true
+local LOCAL_DEBUG = false
 
 
 
@@ -102,16 +102,12 @@ NavBar.MARGINS = {x=5,y=0}
 
 NavBar.FORWARD = 'forward-trans'
 NavBar.REVERSE = 'reverse-trans'
+NavBar.TRANSITION_TIME = 400
 
-NavBar.TRANSITION_TIME = 300
-
-
---== State Constants
 
 --== Event Constants
 
 NavBar.EVENT = 'button-event'
-
 
 
 --======================================================--
@@ -121,6 +117,7 @@ function NavBar:__init__( params )
 	-- print( "NavBar:__init__" )
 	params = params or {}
 	if params.height==nil then params.height=NavBar.HEIGHT end
+	if params.transition_time==nil then params.transition_time=NavBar.TRANSITION_TIME end
 	self:superCall( '__init__', params )
 	--==--
 
@@ -130,15 +127,14 @@ function NavBar:__init__( params )
 
 	assert( params.width, "NavBar: requires param 'width'" )
 
-
 	--== Create Properties ==--
 
 	self._width = params.width
 	self._height = params.height
 
-	self._items = {} -- stack of nav items
+	self._trans_time = params.transition_time
 
-	--== Display Groups ==--
+	self._items = {} -- stack of nav items
 
 	--== Object References ==--
 
@@ -153,13 +149,15 @@ function NavBar:__init__( params )
 
 end
 
---[[
 function NavBar:_undoInit()
 	-- print( "NavBar:_undoInit" )
+	self._root_item = nil
+	self._back_item = nil
+	self._top_item = nil
+	self._new_item = nil
 	--==--
 	self:superCall( "_undoInit" )
 end
---]]
 
 
 -- __createView__()
@@ -169,11 +167,11 @@ function NavBar:__createView__()
 	self:superCall( '__createView__' )
 	--==--
 	local W,H = self._width, self._height
-	local H_CENTER, V_CENTER = W*0.5, H*0.5
+	-- local H_CENTER, V_CENTER = W*0.5, H*0.5
 
 	local o
 
-	--== setup background
+	-- setup background
 
 	o = display.newRect(0, 0, W, H)
 	o:setFillColor(1,1,1,1)
@@ -186,7 +184,6 @@ function NavBar:__createView__()
 
 	self.view:insert( o ) -- using view because of override
 	self._bg_touch = o
-
 end
 
 function NavBar:__undoCreateView__()
@@ -202,8 +199,8 @@ function NavBar:__undoCreateView__()
 end
 
 
--- __initComplete__()
---
+--== initComplete
+
 function NavBar:__initComplete__()
 	--print( "NavBar:__initComplete__" )
 	self:superCall( '__initComplete__' )
@@ -225,6 +222,7 @@ end
 
 --====================================================================--
 --== Static Methods
+
 
 function NavBar.__setWidgetManager( manager )
 	-- print( "NavBar.__setWidgetManager" )
@@ -257,25 +255,14 @@ function NavBar:pushNavItem( item, params )
 	-- print( "NavBar:pushNavItem", item )
 	params = params or {}
 	assert( type(item)=='table' and item.isa and item:isa( NavItem ), "pushNavItem: item must be a NavItem" )
-	if params.animate==nil then params.animate=true end
 	--==--
-
-	if self._root_item then
-		-- pass
-	else
-		self._root_item = item
-		self._top_item = nil
-		params.animate = false
-	end
-	self._new_item = item
-
+	self:_setNextItem( item, params )
 	self:_gotoNext( params.animate )
 end
 
 
 function NavBar:popNavItemAnimated()
 	-- print( "NavBar:popNavItemAnimated" )
-
 	self:_gotoPrev( true )
 end
 
@@ -285,8 +272,37 @@ end
 --== Private Methods
 
 
+-- private method used by dmc-navigator
+--
+function NavBar:_pushNavItemGetTransition( item, params )
+	self:_setNextItem( item, params )
+	return self:_getNextTrans()
+end
+
+-- private method used by dmc-navigator
+--
+function NavBar:_popNavItemGetTransition()
+	return self:_getPrevTrans()
+end
+
+
+function NavBar:_setNextItem( item, params )
+	params = params or {}
+	if params.animate==nil then params.animate=true end
+	--==--
+	if self._root_item then
+		-- pass
+	else
+		self._root_item = item
+		self._top_item = nil
+		params.animate = false
+	end
+	self._new_item = item
+end
+
 
 function NavBar:_addToView( item )
+	-- print( "NavBar:_addToView", item )
 	local W, H = self._width, self._height
 	local H_CENTER, V_CENTER = W*0.5, H*0.5
 
@@ -317,9 +333,9 @@ function NavBar:_addToView( item )
 end
 
 function NavBar:_removeFromView( item )
-	item:removeSelf()
+	-- print( "NavBar:_removeFromView", item )
+	if item.removeSelf then item:removeSelf() end
 end
-
 
 
 function NavBar:_startEnterFrame( func )
@@ -367,14 +383,14 @@ end
 
 
 -- can be retreived by another object (ie, NavBar)
-function NavBar:_getNext()
-	-- print( "NavBar:_getNext" )
+function NavBar:_getNextTrans()
+	-- print( "NavBar:_getNextTrans" )
 	return self:_getTransition( self._top_item, self._new_item, self.FORWARD )
 end
 
 function NavBar:_gotoNext( animate )
 	-- print( "NavBar:_gotoNext" )
-	local func = self:_getNext()
+	local func = self:_getNextTrans()
 	if not animate then
 		func(100)
 	else
@@ -384,15 +400,14 @@ end
 
 
 -- can be retreived by another object (ie, NavBar)
-function NavBar:_getPrev()
-	-- print( "NavBar:_getPrev" )
-	local item = self._new_item
+function NavBar:_getPrevTrans()
+	-- print( "NavBar:_getPrevTrans" )
 	return self:_getTransition( self._back_item, self._top_item, self.REVERSE )
 end
 
 function NavBar:_gotoPrev( animate )
 	-- print( "NavBar:_gotoPrev" )
-	local func = self:_getPrev()
+	local func = self:_getPrevTrans()
 	if not animate then
 		func( 0 )
 	else
@@ -446,11 +461,10 @@ function NavBar:_getTransition( from_item, to_item, direction )
 	local stack, stack_size = self._items, #self._items
 
 	callback = function( percent )
+		-- print( "NavBar:transition", percent )
 		local dec_p = percent/100
 		local from_a, to_a = 1-dec_p, dec_p
 		local X_OFF = H_CENTER*dec_p
-		local from_px = -X_OFF
-		local to_px = H_CENTER-X_OFF
 
 		if percent==0 then
 			--== edge of transition ==--
@@ -458,7 +472,6 @@ function NavBar:_getTransition( from_item, to_item, direction )
 			--== Finish up
 
 			if direction==self.REVERSE then
-				-- local stack = self._items
 				local item = tremove( stack )
 				self:_removeFromView( item )
 
@@ -469,16 +482,16 @@ function NavBar:_getTransition( from_item, to_item, direction )
 
 			--== Left/Back
 
+			if t_d then
+				t_d.isVisible = false
+			end
+
 			if f_l or #self._items>1 then
 				f_d.isVisible = true
 				f_d.x = -H_CENTER+f_d.width/2+MARGINS.x
 				f_d.alpha = 1
 			else
 				f_d.isVisible = false
-			end
-
-			if t_d then
-				t_d.isVisible = false
 			end
 
 			--== Title
