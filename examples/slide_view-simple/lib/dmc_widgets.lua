@@ -41,7 +41,7 @@ SOFTWARE.
 
 -- Semantic Versioning Specification: http://semver.org/
 
-local VERSION = "1.0.0"
+local VERSION = "1.1.0"
 
 
 
@@ -104,8 +104,23 @@ dmc_lib_info = dmc_lib_data.dmc_corona
 
 Widget.Button = require( PATH .. '.' .. 'widget_button' )
 Widget.ButtonGroup = require( PATH .. '.' .. 'button_group' )
--- Widget.Popover = require( PATH .. '.' .. 'widget_popover' )
-Widget.SlideView = require( PATH .. '.' .. 'widget_slideview' )
+Widget.NavBar = require( PATH .. '.' .. 'widget_navbar' )
+Widget.NavItem = require( PATH .. '.' .. 'widget_navitem' )
+Widget.Popover = require( PATH .. '.' .. 'widget_popover' )
+
+
+
+--===================================================================--
+--== Setup, Constants
+
+
+Widget.WIDTH = display.contentWidth
+Widget.HEIGHT = display.contentHeight
+
+-- set display content width/height
+Widget.NavBar.__setWidgetManager( Widget )
+Widget.NavItem.__setWidgetManager( Widget )
+Widget.Popover.__setWidgetManager( Widget )
 
 
 
@@ -126,8 +141,27 @@ end
 
 
 function Widget.newButtonGroup( options )
-	local widget = Widget.ButtonGroup
-	return widget.create( options )
+	return Widget.ButtonGroup.create( options )
+end
+
+
+
+--===================================================================--
+--== newNavBar widget
+
+
+function Widget.newNavBar( options )
+	return Widget.NavBar:new( options )
+end
+
+
+
+--===================================================================--
+--== newNavItem widget
+
+
+function Widget.newNavItem( options )
+	return Widget.NavItem:new( options )
 end
 
 
@@ -145,14 +179,28 @@ end
 
 
 --===================================================================--
+--== newPushButton widget
+
+
+function Widget.newPushButton( options )
+	options = options or {}
+	--==--
+	local theme = nil
+	options.type = Widget.Button.PushButton.TYPE
+	return Widget.Button.create( options, theme )
+end
+
+
+
+--===================================================================--
 --== newScroller widget
 
 
-function Widget.newScroller( options )
-	local theme = nil
-	local _library = require( PATH .. '.' .. 'widget_scroller' )
-	return _library:new( options, theme )
-end
+-- function Widget.newScroller( options )
+-- 	local theme = nil
+-- 	local _library = require( PATH .. '.' .. 'widget_scroller' )
+-- 	return _library:new( options, theme )
+-- end
 
 
 
@@ -162,8 +210,8 @@ end
 
 function Widget.newSlideView( options )
 	local theme = nil
-	local widget = Widget.SlideView
-	return widget:new( options, theme )
+	local _library = require( PATH .. '.' .. 'widget_slideview' )
+	return _library:new( options, theme )
 end
 
 
@@ -181,14 +229,28 @@ end
 
 
 --===================================================================--
+--== newToggleButton widget
+
+
+function Widget.newToggleButton( options )
+	options = options or {}
+	--==--
+	local theme = nil
+	options.type = Widget.Button.ToggleButton.TYPE
+	return Widget.Button.create( options, theme )
+end
+
+
+
+--===================================================================--
 --== newViewPager widget
 
 
-function Widget.newViewPager( options )
-	local theme = nil
-	local _library = require( PATH .. '.' .. 'widget_viewpager' )
-	return _library:new( options, theme )
-end
+-- function Widget.newViewPager( options )
+-- 	local theme = nil
+-- 	local _library = require( PATH .. '.' .. 'widget_viewpager' )
+-- 	return _library:new( options, theme )
+-- end
 
 
 

@@ -94,7 +94,7 @@ Item Data Record
 
 -- Semantic Versioning Specification: http://semver.org/
 
-local VERSION = "1.0.0"
+local VERSION = "1.1.0"
 
 
 
@@ -201,9 +201,11 @@ StatesMixModule.patch( ScrollerBase )
 -- pixel amount to edges of ScrollerBase in which rows are de-/rendered
 ScrollerBase.DEFAULT_RENDER_MARGIN = 100
 
+ScrollerBase.DEFAULT_BG_COLOR = {1,1,1,1}
+
 -- flags used when scroller hits top/bottom of scroll range
-ScrollerBase.HIT_TOP_LIMIT = "top_limit_hit"
-ScrollerBase.HIT_BOTTOM_LIMIT = "bottom_limit_hit"
+ScrollerBase.HIT_TOP_LIMIT = 'top_limit_hit'
+ScrollerBase.HIT_BOTTOM_LIMIT = 'bottom_limit_hit'
 
 -- delta pixel amount before touch event is given up
 ScrollerBase.X_TOUCH_LIMIT = 10
@@ -212,11 +214,11 @@ ScrollerBase.Y_TOUCH_LIMIT = 10
 
 --== State Constants
 
-ScrollerBase.STATE_CREATE = "state_create"
-ScrollerBase.STATE_AT_REST = "state_at_rest"
-ScrollerBase.STATE_TOUCH = "state_touch"
-ScrollerBase.STATE_RESTRAINT = "state_restraint"
-ScrollerBase.STATE_RESTORE = "state_restore"
+ScrollerBase.STATE_CREATE = 'state_create'
+ScrollerBase.STATE_AT_REST = 'state_at_rest'
+ScrollerBase.STATE_TOUCH = 'state_touch'
+ScrollerBase.STATE_RESTRAINT = 'state_restraint'
+ScrollerBase.STATE_RESTORE = 'state_restore'
 
 ScrollerBase.STATE_RESTRAINT_TRANS_TIME = 100
 ScrollerBase.STATE_RESTORE_TRANS_TIME = 400
@@ -224,7 +226,7 @@ ScrollerBase.STATE_RESTORE_TRANS_TIME = 400
 
 --== Event Constants
 
-ScrollerBase.EVENT = "scroller_view"
+ScrollerBase.EVENT = 'scroller_view'
 
 -- for scroll view
 ScrollerBase.ITEM_SELECTED = 'item_selected'
@@ -234,8 +236,8 @@ ScrollerBase.SCROLLED = 'view_scrolled_event'
 ScrollerBase.TAKE_FOCUS = 'take_focus_event'
 
 -- for scroll items
-ScrollerBase.ITEM_RENDER = "item_render_event"
-ScrollerBase.ITEM_UNRENDER = "item_unrender_event"
+ScrollerBase.ITEM_RENDER = 'item_render_event'
+ScrollerBase.ITEM_UNRENDER = 'item_unrender_event'
 
 
 
@@ -252,6 +254,7 @@ function ScrollerBase:__init__( params )
 	if params.x_offset == nil then params.x_offset = 0 end
 	if params.y_offset == nil then params.y_offset = 0 end
 	if params.automask == nil then params.automask = false end
+	if params.bgColor == nil then params.bgColor = self.DEFAULT_BG_COLOR end
 
 	--== Sanity Check ==--
 
@@ -307,6 +310,7 @@ function ScrollerBase:__init__( params )
 
 	-- this is the *stationary* background of the table view
 	self._bg_viewport = nil
+	self._bg_viewport_color = params.bgColor
 
 	-- this is the *moving* background of all items
 	self._bg = nil
@@ -370,7 +374,7 @@ function ScrollerBase:__createView__()
 
 	--== viewport background
 
-	o = display.newRect( 0,0, self._width, self._height )
+	o = display.newRect( 0, 0, self._width, self._height )
 	o:setFillColor( 0, 0, 0, 0 )
 	if LOCAL_DEBUG then
 		o:setFillColor( 0, 1, 1, 1 )
@@ -433,7 +437,7 @@ function ScrollerBase:__undoCreateView__()
 	self._dg_scroller = nil
 
 	--==--
-	self:superCall( "_undoCreateView" )
+	self:superCall( '__undoCreateView__' )
 end
 
 
@@ -451,6 +455,10 @@ function ScrollerBase:__initComplete__()
 
 	-- add touch capability to our scroller item
 	self._dg_scroller:addEventListener( 'touch', self )
+
+	-- set background color
+	self.bg_color = self._bg_viewport_color -- setter
+	self._bg_viewport_color = nil
 
 	self._is_rendered = true
 
@@ -484,6 +492,15 @@ end
 
 --====================================================================--
 --== Public Methods
+
+
+-- setter: set background color of table view
+--
+function ScrollerBase.__setters:bg_color( color )
+	-- print( "ScrollerBase.__setters:bg_color", color )
+	assert( type(color)=='table', "color must be a table of values" )
+	self._bg_viewport:setFillColor( unpack( color ) )
+end
 
 
 -- getter: return count of items
@@ -1570,6 +1587,8 @@ function ScrollerBase:touch( event )
 
 	if phase == 'began' then
 
+		local scr = self._dg_scroller
+
 		self._v_touch_lock = false
 		self._h_touch_lock = false
 
@@ -1581,12 +1600,12 @@ function ScrollerBase:touch( event )
 		self._tch_event_tmp = event
 
 		-- handle touch
-		display.getCurrentStage():setFocus( target )
-		target._has_focus = true
+		display.getCurrentStage():setFocus( scr.view )
+		self._has_focus = true
 
 	end
 
-	if not target._has_focus then return false end
+	if not self._has_focus then return false end
 
 	if phase == 'moved' then
 		-- Utils.print( event )
@@ -1681,7 +1700,7 @@ function ScrollerBase:touch( event )
 
 		-- clean up
 		display.getCurrentStage():setFocus( nil )
-		target._has_focus = false
+		self._has_focus = false
 		self._is_moving = false
 
 		-- add system time, we can re-use this event for Runtime

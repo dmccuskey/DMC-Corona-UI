@@ -287,6 +287,13 @@ function NineSliceView:__initComplete__()
 	--==--
 	self:_updateView()
 end
+--[[
+function NineSliceView:__undoInitComplete__()
+	-- print( "NineSliceView:__undoInitComplete__" )
+	--==--
+	self:superCall( '__undoInitComplete__' )
+end
+--]]
 
 
 -- END: Setup DMC Objects
