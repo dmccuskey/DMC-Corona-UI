@@ -202,14 +202,14 @@ end
 --== initComplete
 
 function NavBar:__initComplete__()
-	--print( "NavBar:__initComplete__" )
+	-- print( "NavBar:__initComplete__" )
 	self:superCall( '__initComplete__' )
 	--==--
 	self:setTouchBlock( self._bg_touch )
 end
 
 function NavBar:__undoInitComplete__()
-	--print( "NavBar:__undoInitComplete__" )
+	-- print( "NavBar:__undoInitComplete__" )
 	self:unsetTouchBlock( self._bg_touch )
 	--==--
 	self:superCall( '__undoInitComplete__' )

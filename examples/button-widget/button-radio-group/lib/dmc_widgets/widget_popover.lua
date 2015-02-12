@@ -67,8 +67,9 @@ dmc_widget_func = dmc_widget_data.func
 local Objects = require 'dmc_objects'
 local Utils = require 'dmc_utils'
 
-local Widgets -- set later
+local PopoverView = require( dmc_widget_func.find( 'widget_popover.popover_view' ) )
 
+local Widgets -- set later
 
 
 --====================================================================--
@@ -94,9 +95,12 @@ local Popover = newClass( ComponentBase, {name="Popover"} )
 --======================================================--
 -- Start: Setup DMC Objects
 
+--== Init
+
 function Popover:__init__( params )
 	-- print( "Popover:__init__" )
 	params = params or {}
+	if params.automask==nil then params.automask=true end
 	self:superCall( '__init__', params )
 	--==--
 
@@ -107,9 +111,8 @@ function Popover:__init__( params )
 	assert( params.delegate, "Popover: requires param 'delegate'" )
 
 	--== Create Properties ==--
-
-	self._width = params.delegate.width
-	self._height = params.delegate.height
+	self._width = Widgets.WIDTH
+	self._height = Widgets.HEIGHT
 
 	-- we don't move our core group
 	-- so we save x/y separately
@@ -131,30 +134,26 @@ function Popover:__init__( params )
 	--== Object References ==--
 
 	self._delegate = params.delegate
+	self._popover_view = nil
 
 	-- visual
 	self._bg_touch = nil  -- main touch background
-	self._bg_main = nil  -- main visual background
-	self._pointer = nil -- pointer element
-
 end
 
---[[
-function Popover:_undoInit()
-	-- print( "Popover:_undoInit" )
+function Popover:__undoInit__()
+	-- print( "Popover:__undoInit__" )
+	self._delegate = nil
 	--==--
-	self:superCall( "_undoInit" )
+	self:superCall( '__undoInit__' )
 end
---]]
 
 
--- __createView__()
---
+--== createView
+
 function Popover:__createView__()
 	-- print( "Popover:__createView__" )
 	self:superCall( '__createView__' )
 	--==--
-	local WIDTH, HEIGHT = Widgets.WIDTH, Widgets.HEIGHT
 	local W,H = self._width, self._height
 	local H_CENTER, V_CENTER = W*0.5, H*0.5
 
@@ -162,67 +161,45 @@ function Popover:__createView__()
 
 	--== setup background
 
-	o = display.newRect(0, 0, WIDTH, HEIGHT)
+	o = display.newRect(0, 0, W, H )
 	o:setFillColor(0,0,0,0)
 	if LOCAL_DEBUG then
-		o:setFillColor(1,0,0,0.5)
+		o:setFillColor(0.5,0.25,0.5,0.25)
 	end
 	o.isHitTestable = true
 	o.anchorX, o.anchorY = 0,0
 	o.x, o.y = 0,0
 
-	self.view:insert( o ) -- using view because of override
+	self:insert( o ) -- using view because of override
 	self._bg_touch = o
 
-	-- background group
-
-	dg = display.newGroup()
-	self.view:insert( dg ) -- using view because of override
-	self._dg_bg = dg
-
-	-- main group
-
-	dg = display.newGroup()
-	self.view:insert( dg )
-	self._dg_main = dg
-
-	-- delegate view
-
-	dg = self._dg_bg
-	dg:insert( self._delegate.view )
-
-	-- viewable background
-
-	dg = self._dg_bg
-	o = display.newRect(0, 0, W, H)
-	o:setFillColor(1,1,1,0.8)
-	if LOCAL_DEBUG then
-		o:setFillColor(0,1,0,0.5)
-	end
-	o.anchorX, o.anchorY = 0.5,0
-	o.x, o.y = 0,0
-
-	dg:insert( o )
-	self._bg_main = o
-
+	o = PopoverView:new{
+		delegate=self._delegate
+	}
+	self:insert( o.view )
+	self._popover_view = o
 end
 
---[[
 function Popover:__undoCreateView__()
 	-- print( "Popover:__undoCreateView__" )
+	self._popover_view:removeSelf()
+	self._popover_view = nil
+
+	self._bg_touch:removeSelf()
+	self._bg_touch = nil
 	--==--
 	self:superCall( '__undoCreateView__' )
 end
---]]
 
 
--- __initComplete__()
---
+--== initComplete
+
 function Popover:__initComplete__()
 	--print( "Popover:__initComplete__" )
 	self:superCall( '__initComplete__' )
 	--==--
 	local o
+
 	o = self._bg_touch
 	o._f = self:createCallback( self._bgTouchEvent_handler )
 	o:addEventListener( 'touch', o._f )
@@ -250,6 +227,7 @@ end
 function Popover.__setWidgetManager( manager )
 	-- print( "Popover.__setWidgetManager" )
 	Widgets = manager
+	PopoverView.__setWidgetManager( manager )
 end
 
 
@@ -258,72 +236,46 @@ end
 --== Public Methods
 
 
--- -- we only want items inserted into proper layer
--- function Popover.__setters:delegate( obj )
--- 	-- print( "Popover.__setters:delegate" )
--- 	self._dg_main:insert( obj.view )
--- 	self._delegate = obj
--- end
-
-
--- we only want items inserted into proper layer
-function Popover:insert( ... )
-	-- print( "Popover:insert" )
-	self._dg_main:insert( ... )
-end
-
 function Popover:show( pos, params )
 	-- print( "Popover:show" )
 	assert( pos.x and pos.y )
 	--==--
-	self.x, self.y = pos.x, pos.y
-	self.view.isVisible = true
+	self.isVisible = true
 	self._bg_touch.isHitTestable = true
+	self._popover_view:show( pos, params )
 end
+
 function Popover:hide()
 	-- print( "Popover:hide" )
-	local d = self._delegate
-	self.view.isVisible = false
+	self.isVisible = false
 	self._bg_touch.isHitTestable = false
-	if d and d.isDismissed then
-		timer.performWithDelay( 1, function() d:isDismissed() end)
-	end
+	self._popover_view:hide()
 end
+
 
 function Popover.__getters:x( )
 	-- print( "Popover.__getters x'" )
-	return self._x
-end
-function Popover.__setters:x( value )
-	-- print( "Popover.__settersx x'", value )
-	assert( type(value)=='number' )
-	--==--
-	self._dg_bg.x = value
-	self._dg_main.x = value
-	self._x = value
-end
-function Popover.__getters:y( )
-	-- print( "Popover.__getters y '" )
-	return self._y
-end
-function Popover.__setters:y( value )
-	-- print( "Popover.__setters y'", value )
-	assert( type(value)=='number' )
-	--==--
-	self._dg_bg.y = value
-	self._dg_main.y = value
-	self._y = value
+	return self._popover_view.x
 end
 
-function Popover.__setters:onDone( func )
-	assert( func==nil or type(func)=='function' )
+function Popover.__setters:x( value )
+	-- print( "Popover.__setters:x", value )
+	assert( type(value)=='number' )
 	--==--
-	self._onDone = func
+	self._popover_view.x = value
 end
-function Popover.__setters:onCancel( func )
-	assert( func==nil or type(func)=='function' )
+
+
+function Popover.__getters:y( )
+	-- print( "Popover.__getters y '" )
+	return self._popover_view.y
+end
+
+function Popover.__setters:y( value )
+	-- print( "Popover.__setters:y", value )
+	assert( type(value)=='number' )
 	--==--
-	self._onCancel = func
+	self._popover_view.y = value
 end
 
 
@@ -332,16 +284,7 @@ end
 --== Private Methods
 
 
-function Popover:_shouldDismiss()
-	return true
-end
-
--- TODO: make fancier
-function Popover:_calculatePosition()
-	local _x, _y = self._x_pos, self._y_pos
-
-	self.x, self.y = _x, _y
-end
+-- none
 
 
 
@@ -365,12 +308,9 @@ function Popover:_bgTouchEvent_handler( event )
 		display.getCurrentStage():setFocus( nil )
 		self._has_focus = false
 
-		local dismiss_f = self._shouldDismiss
-		local d = self._delegate
-		if d and d.shouldDismiss then
-			dismiss_f = d.shouldDismiss
+		if self._popover_view:shouldDismiss() then
+			self:hide()
 		end
-		if dismiss_f() then self:hide() end
 	end
 
 	return true

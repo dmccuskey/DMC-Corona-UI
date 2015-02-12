@@ -107,6 +107,7 @@ Widget.ButtonGroup = require( PATH .. '.' .. 'button_group' )
 Widget.NavBar = require( PATH .. '.' .. 'widget_navbar' )
 Widget.NavItem = require( PATH .. '.' .. 'widget_navitem' )
 Widget.Popover = require( PATH .. '.' .. 'widget_popover' )
+Widget.PopoverMixModule = require( PATH .. '.' .. 'widget_popover.popover_mix' )
 
 
 
@@ -121,6 +122,7 @@ Widget.HEIGHT = display.contentHeight
 Widget.NavBar.__setWidgetManager( Widget )
 Widget.NavItem.__setWidgetManager( Widget )
 Widget.Popover.__setWidgetManager( Widget )
+Widget.PopoverMixModule.__setWidgetManager( Widget )
 
 
 
