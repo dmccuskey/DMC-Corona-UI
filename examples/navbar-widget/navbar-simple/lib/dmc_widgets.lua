@@ -102,10 +102,13 @@ dmc_lib_info = dmc_lib_data.dmc_corona
 --== Imports
 
 
+Widget.FontMgr = require( PATH .. '.' .. 'font_manager' )
+
 Widget.Button = require( PATH .. '.' .. 'widget_button' )
 Widget.ButtonGroup = require( PATH .. '.' .. 'button_group' )
 Widget.NavBar = require( PATH .. '.' .. 'widget_navbar' )
 Widget.NavItem = require( PATH .. '.' .. 'widget_navitem' )
+Widget.Text = require( PATH .. '.' .. 'widget_text' )
 Widget.Popover = require( PATH .. '.' .. 'widget_popover' )
 Widget.PopoverMixModule = require( PATH .. '.' .. 'widget_popover.popover_mix' )
 
@@ -121,6 +124,7 @@ Widget.HEIGHT = display.contentHeight
 -- set display content width/height
 Widget.NavBar.__setWidgetManager( Widget )
 Widget.NavItem.__setWidgetManager( Widget )
+Widget.Text.__setWidgetManager( Widget )
 Widget.Popover.__setWidgetManager( Widget )
 Widget.PopoverMixModule.__setWidgetManager( Widget )
 
@@ -226,6 +230,17 @@ function Widget.newTableView( options )
 	local theme = nil
 	local _library = require( PATH .. '.' .. 'widget_tableview' )
 	return _library:new( options, theme )
+end
+
+
+
+--===================================================================--
+--== newText widget
+
+
+function Widget.newText( options )
+	local theme = nil
+	return Widget.Text:new( options )
 end
 
 

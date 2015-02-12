@@ -225,17 +225,6 @@ function MyPopover:show( params )
 end
 
 
-function MyPopover:isDismissed()
-	-- print( "MyPopover:isDismissed" )
-	self:removeSelf()
-end
-
-function MyPopover:shouldDismiss()
-	-- print( "MyPopover:shouldDismiss" )
-	return true
-end
-
-
 
 --====================================================================--
 --== Private Methods
