@@ -1,5 +1,5 @@
 --====================================================================--
--- dmc_widgets/widget_popover.lua
+-- dmc_widgets/widget_popover/popover_view.lua
 --
 -- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
@@ -8,7 +8,7 @@
 
 The MIT License (MIT)
 
-Copyright (c) 2014-2015 David McCuskey
+Copyright (c) 2015 David McCuskey
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -32,7 +32,7 @@ SOFTWARE.
 
 
 --====================================================================--
---== DMC Corona Widgets : Popover
+--== DMC Corona Widgets : PopoverView
 --====================================================================--
 
 
@@ -55,7 +55,7 @@ dmc_widget_func = dmc_widget_data.func
 
 
 --====================================================================--
---== DMC Widgets : newPopover
+--== DMC Widgets : newPopoverView
 --====================================================================--
 
 
@@ -67,9 +67,9 @@ dmc_widget_func = dmc_widget_data.func
 local Objects = require 'dmc_objects'
 local Utils = require 'dmc_utils'
 
-local PopoverView = require( dmc_widget_func.find( 'widget_popover.popover_view' ) )
 
 local Widgets -- set later
+
 
 
 --====================================================================--
@@ -80,25 +80,25 @@ local Widgets -- set later
 local newClass = Objects.newClass
 local ComponentBase = Objects.ComponentBase
 
-local LOCAL_DEBUG = true
+local LOCAL_DEBUG = false
 
 
 
 --====================================================================--
---== Popover Widget Class
+--== PopoverView Widget Class
 --====================================================================--
 
 
-local Popover = newClass( ComponentBase, {name="Popover"} )
+local PopoverView = newClass( ComponentBase, {name="PopoverView"} )
 
 
 --======================================================--
 -- Start: Setup DMC Objects
 
---== Init
+--== init
 
-function Popover:__init__( params )
-	-- print( "Popover:__init__" )
+function PopoverView:__init__( params )
+	-- print( "PopoverView:__init__" )
 	params = params or {}
 	if params.automask==nil then params.automask=true end
 	self:superCall( '__init__', params )
@@ -108,16 +108,12 @@ function Popover:__init__( params )
 
 	if self.is_class then return end
 
-	assert( params.delegate, "Popover: requires param 'delegate'" )
+	assert( params.delegate, "PopoverView: requires param 'delegate'" )
 
 	--== Create Properties ==--
-	self._width = Widgets.WIDTH
-	self._height = Widgets.HEIGHT
 
-	-- we don't move our core group
-	-- so we save x/y separately
-	self._x = 0
-	self._y = 0
+	self._width = params.delegate.width
+	self._height = params.delegate.height
 
 	-- this is the position of the activating button
 	self._x_pos = params.x_pos
@@ -134,59 +130,79 @@ function Popover:__init__( params )
 	--== Object References ==--
 
 	self._delegate = params.delegate
-	self._popover_view = nil
 
 	-- visual
-	self._bg_touch = nil  -- main touch background
+	self._bg_main = nil  -- main visual background
+	self._pointer = nil -- pointer element
+
+	-- auto masking
+	if params.automask then
+		self:_setView( display.newContainer( self._width, self._height ) )
+		self.view.anchorChildren = false
+		self.view.anchorX, self.view.anchorY = 0.5, 0
+	end
+
 end
 
-function Popover:__undoInit__()
-	-- print( "Popover:__undoInit__" )
+function PopoverView:__undoInit__()
+	-- print( "PopoverView:__undoInit__" )
 	self._delegate = nil
 	--==--
 	self:superCall( '__undoInit__' )
 end
 
-
 --== createView
 
-function Popover:__createView__()
-	-- print( "Popover:__createView__" )
+function PopoverView:__createView__()
+	-- print( "PopoverView:__createView__" )
 	self:superCall( '__createView__' )
 	--==--
 	local W,H = self._width, self._height
 	local H_CENTER, V_CENTER = W*0.5, H*0.5
 
-	local o, dg, tmp  -- object, display group, tmp
+	local o, dg  -- object, display group
 
-	--== setup background
+	-- group for background elements
 
-	o = display.newRect(0, 0, W, H )
-	o:setFillColor(0,0,0,0)
+	dg = display.newGroup()
+	self:insert( dg )
+	self._dg_bg = dg
+
+	-- group for main elements
+
+	dg = display.newGroup()
+	self:insert( dg )
+	self._dg_main = dg
+
+	-- viewable background
+
+	o = display.newRect(0, 0, W, H)
+	o:setFillColor(1,1,1,0.8)
 	if LOCAL_DEBUG then
-		o:setFillColor(0.5,0.25,0.5,0.25)
+		o:setFillColor(0,1,1,1)
 	end
-	o.isHitTestable = true
-	o.anchorX, o.anchorY = 0,0
+	o.anchorX, o.anchorY = 0.5,0
 	o.x, o.y = 0,0
 
-	self:insert( o ) -- using view because of override
-	self._bg_touch = o
+	self._dg_bg:insert( o )
+	self._bg_main = o
 
-	o = PopoverView:new{
-		delegate=self._delegate
-	}
-	self:insert( o.view )
-	self._popover_view = o
+	-- delegate view
+
+	self._dg_main:insert( self._delegate.view )
+
 end
 
-function Popover:__undoCreateView__()
-	-- print( "Popover:__undoCreateView__" )
-	self._popover_view:removeSelf()
-	self._popover_view = nil
+function PopoverView:__undoCreateView__()
+	-- print( "PopoverView:__undoCreateView__" )
+	self._bg_main:removeSelf()
+	self._bg_main = nil
 
-	self._bg_touch:removeSelf()
-	self._bg_touch = nil
+	self._dg_main:removeSelf()
+	self._dg_main = nil
+
+	self._dg_bg:removeSelf()
+	self._dg_bg = nil
 	--==--
 	self:superCall( '__undoCreateView__' )
 end
@@ -194,23 +210,16 @@ end
 
 --== initComplete
 
-function Popover:__initComplete__()
-	--print( "Popover:__initComplete__" )
+function PopoverView:__initComplete__()
+	--print( "PopoverView:__initComplete__" )
 	self:superCall( '__initComplete__' )
 	--==--
-	local o
-
-	o = self._bg_touch
-	o._f = self:createCallback( self._bgTouchEvent_handler )
-	o:addEventListener( 'touch', o._f )
+	self:setTouchBlock( self._bg_main )
 end
 
-function Popover:__undoInitComplete__()
-	--print( "Popover:__undoInitComplete__" )
-	local o
-	o = self._bg_touch
-	o:removeEventListener( 'touch', o._f )
-	o._f = nil
+function PopoverView:__undoInitComplete__()
+	--print( "PopoverView:__undoInitComplete__" )
+	self:unsetTouchBlock( self._bg_main )
 	--==--
 	self:superCall( '__undoInitComplete__' )
 end
@@ -224,10 +233,9 @@ end
 --== Static Methods
 
 
-function Popover.__setWidgetManager( manager )
-	-- print( "Popover.__setWidgetManager" )
+function PopoverView.__setWidgetManager( manager )
+	-- print( "PopoverView.__setWidgetManager" )
 	Widgets = manager
-	PopoverView.__setWidgetManager( manager )
 end
 
 
@@ -236,46 +244,21 @@ end
 --== Public Methods
 
 
-function Popover:show( pos, params )
-	-- print( "Popover:show" )
+function PopoverView:show( pos, params )
+	-- print( "PopoverView:show", pos )
 	assert( pos.x and pos.y )
 	--==--
+	self.x, self.y = pos.x, pos.y
 	self.isVisible = true
-	self._bg_touch.isHitTestable = true
-	self._popover_view:show( pos, params )
 end
 
-function Popover:hide()
-	-- print( "Popover:hide" )
+function PopoverView:hide()
+	-- print( "PopoverView:hide" )
+	local d = self._delegate
 	self.isVisible = false
-	self._bg_touch.isHitTestable = false
-	self._popover_view:hide()
-end
-
-
-function Popover.__getters:x( )
-	-- print( "Popover.__getters x'" )
-	return self._popover_view.x
-end
-
-function Popover.__setters:x( value )
-	-- print( "Popover.__setters:x", value )
-	assert( type(value)=='number' )
-	--==--
-	self._popover_view.x = value
-end
-
-
-function Popover.__getters:y( )
-	-- print( "Popover.__getters y '" )
-	return self._popover_view.y
-end
-
-function Popover.__setters:y( value )
-	-- print( "Popover.__setters:y", value )
-	assert( type(value)=='number' )
-	--==--
-	self._popover_view.y = value
+	if d and d.isDismissed then
+		timer.performWithDelay( 1, function() d:isDismissed() end)
+	end
 end
 
 
@@ -284,7 +267,22 @@ end
 --== Private Methods
 
 
--- none
+function PopoverView:shouldDismiss()
+	-- print( "PopoverView:shouldDismiss" )
+	local del = self._delegate
+	if del and del.shouldDismiss then
+		return del.shouldDismiss()
+	else
+		return true
+	end
+end
+
+-- TODO: make fancier
+function PopoverView:_calculatePosition()
+	-- print( "PopoverView:_calculatePosition'" )
+	local _x, _y = self._x_pos, self._y_pos
+	self.x, self.y = _x, _y
+end
 
 
 
@@ -292,31 +290,9 @@ end
 --== Event Handlers
 
 
-function Popover:_bgTouchEvent_handler( event )
-	-- print( "Popover:_bgTouchEvent_handler", event.phase )
-	local target = event.target
-
-	if event.phase == 'began' then
-		display.getCurrentStage():setFocus( target )
-		self._has_focus = true
-		return true
-	end
-
-	if not self._has_focus then return false end
-
-	if event.phase == 'ended' or event.phase == 'canceled' then
-		display.getCurrentStage():setFocus( nil )
-		self._has_focus = false
-
-		if self._popover_view:shouldDismiss() then
-			self:hide()
-		end
-	end
-
-	return true
-end
+-- none
 
 
 
 
-return Popover
+return PopoverView
