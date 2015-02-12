@@ -14,6 +14,7 @@ module_config = {
 			"dmc_widgets.lua",
 			"dmc_widgets/button_group.lua",
 			"dmc_widgets/font_manager.lua",
+			"dmc_widgets/lib/easingx.lua",
 			"dmc_widgets/scroller_view_base.lua",
 			"dmc_widgets/widget_button.lua",
 			"dmc_widgets/widget_button/view_9slice.lua",
@@ -22,15 +23,15 @@ module_config = {
 			"dmc_widgets/widget_button/view_shape.lua",
 			"dmc_widgets/widget_navbar.lua",
 			"dmc_widgets/widget_navitem.lua",
-			"dmc_widgets/widget_text.lua",
-			"dmc_widgets/widget_textfield.lua",
 			"dmc_widgets/widget_popover.lua",
 			"dmc_widgets/widget_popover/popover_mix.lua",
 			"dmc_widgets/widget_popover/popover_view.lua",
 			"dmc_widgets/widget_slideview.lua",
 			"dmc_widgets/widget_tableview.lua",
-			"dmc_widgets/widget_viewpager.lua",
-			"dmc_widgets/lib/easingx.lua"
+			"dmc_widgets/widget_text.lua",
+			"dmc_widgets/widget_textfield.lua",
+			"dmc_widgets/widget_utils.lua",
+			"dmc_widgets/widget_viewpager.lua"
 		],
 		"requires": [
 			"dmc-corona-boot",
