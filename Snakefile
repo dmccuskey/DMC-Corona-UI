@@ -23,6 +23,7 @@ module_config = {
 			"dmc_widgets/widget_navbar.lua",
 			"dmc_widgets/widget_navitem.lua",
 			"dmc_widgets/widget_text.lua",
+			"dmc_widgets/widget_textfield.lua",
 			"dmc_widgets/widget_popover.lua",
 			"dmc_widgets/widget_popover/popover_mix.lua",
 			"dmc_widgets/widget_popover/popover_view.lua",
@@ -132,6 +133,16 @@ module_config = {
 			},
 			{
 				"exp_dir": "text-widget/text-simple",
+				"requires": [],
+				"mod_dir_map": {
+					"default_dir": "",
+					"libs": {
+						"dmc-corona-boot":""
+					}
+				}
+			},
+			{
+				"exp_dir": "textfield-widget/textfield-simple",
 				"requires": [],
 				"mod_dir_map": {
 					"default_dir": "",
