@@ -97,6 +97,16 @@ module_config = {
 				}
 			},
 			{
+				"exp_dir": "popover-widget/popover-simple",
+				"requires": [],
+				"mod_dir_map": {
+					"default_dir": "",
+					"libs": {
+						"dmc-corona-boot":""
+					}
+				}
+			},
+			{
 				"exp_dir": "slide_view-simple",
 				"requires": [],
 				"mod_dir_map": {
