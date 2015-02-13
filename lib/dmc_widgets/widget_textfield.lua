@@ -68,7 +68,9 @@ local Objects = require 'dmc_objects'
 local Utils = require 'dmc_utils'
 local LifecycleMixModule = require 'dmc_lifecycle_mix'
 
-local Widgets = nil -- set later
+-- set later
+local Widgets = nil
+local ThemeMgr = nil
 
 
 
@@ -82,10 +84,8 @@ local ComponentBase = Objects.ComponentBase
 
 local LifecycleMix = LifecycleMixModule.LifecycleMix
 
-local tinsert = table.insert
-local tremove = table.remove
-
 local LOCAL_DEBUG = false
+
 
 
 --====================================================================--
@@ -97,18 +97,18 @@ local TextField = newClass( {ComponentBase,LifecycleMix}, {name="TextField"}  )
 
 --== Class Constants
 
-TextField.DEFAULT_HINTCOLOR = {0.4,0.4,0.4,1}
-TextField.DEFAULT_FILLCOLOR = {1,0,0,0.5}
-TextField.DEFAULT_TEXTCOLOR = {1,0,0,1}
+-- alignment
+TextField.LEFT = 'left'
+TextField.CENTER = 'center'
+TextField.RIGHT = 'right'
 
-TextField.DEFAULT_FONT = native.systemFont
-TextField.DEFAULT_FONTSIZE = 22
+-- background styles
+TextField.BORDER_STYLE_NONE = 'border-style-none'
+TextField.BORDER_STYLE_LINE = 'border-style-line'
+TextField.BORDER_STYLE_ROUNDED = 'border-style-rounded'
+TextField.BORDER_IMAGE = 'border-style-rounded'
 
-TextField.DEFAULT_HINTTEXT = ""
-
-TextField.DEFAULT_HEIGHT = 12
-
-
+-- keyboard
 TextField.INPUT_DEFAULT = 'default'
 TextField.INPUT_DECIMAL = 'decimal'
 TextField.INPUT_EMAIL = 'email'
@@ -117,6 +117,7 @@ TextField.INPUT_PASSWORD = 'password'
 TextField.INPUT_PHONE = 'phone'
 TextField.INPUT_URL = 'url'
 
+-- return key
 TextField.RETURN_DEFAULT = 'default'
 TextField.RETURN_DONE = 'done'
 TextField.RETURN_EMERGENCY = 'emergencyCall'
@@ -128,18 +129,10 @@ TextField.RETURN_ROUTE = 'route'
 TextField.RETURN_SEARCH = 'search'
 TextField.RETURN_SEND = 'send'
 
-TextField.BORDER_STYLE_NONE = 'left'
-TextField.BORDER_STYLE_LINE = 'center'
-TextField.BORDER_STYLE_ROUNDED = 'right'
-
-TextField.STYLE_NONE = {marginX=5, marginY=5}
-TextField.STYLE_LINE = {marginX=5, marginY=5}
-TextField.STYLE_ROUNDED = {marginX=5, marginY=5}
-
--- alignment
-TextField.LEFT = 'left'
-TextField.CENTER = 'center'
-TextField.RIGHT = 'right'
+-- visual styles
+TextField.STYLE_DEFAULT = 'default'
+TextField.STYLE_DISABLED = 'disabled'
+TextField.STYLE_INVALID = 'invalid'
 
 TextField.TOP = 'top'
 TextField.BOTTOM = 'bottom'
@@ -164,18 +157,6 @@ function TextField:__init__( params )
 	if params.x==nil then params.x=0 end
 	if params.y==nil then params.y=0 end
 	if params.align==nil then params.align=self.CENTER end
-	if params.textColor==nil then params.textColor=self.DEFAULT_TEXTCOLOR end
-	if params.font==nil then params.font=self.DEFAULT_FONT end
-	if params.fontSize==nil then params.fontSize=self.DEFAULT_FONTSIZE end
-	if params.fillColor==nil then params.fillColor=self.DEFAULT_FILLCOLOR end
-	if params.hintColor==nil then params.hintColor=self.DEFAULT_HINTCOLOR end
-	if params.hintFont==nil then params.hintFont=self.DEFAULT_FONT end
-	if params.hintFontSize==nil then params.hintFontSize=self.DEFAULT_FONTSIZE end
-	if params.placeholder==nil then params.placeholder=self.DEFAULT_HINTTEXT end
-	if params.hintText==nil then params.hintText=params.placeholder end
-	if params.style==nil then params.style=self.STYLE_ROUNDED end
-	if params.marginX==nil then params.marginX=params.style.marginX end
-	if params.marginY==nil then params.marginY=params.style.marginY end
 	self:superCall( LifecycleMix, '__init__', params )
 	self:superCall( ComponentBase, '__init__', params )
 	--==--
@@ -184,91 +165,100 @@ function TextField:__init__( params )
 
 	if self.is_class then return end
 
-	assert( params.width, "TextField: requires param 'width'" )
-	assert( params.height, "TextField: requires param 'height'" )
+	local style = params.style
+	if not style then
+		style = Widgets.Style.TextField:createDefaultStyle()
+		style:updateStyle( params )
+	end
+
+	assert( style.width, "TextField: requires param 'width'" )
+	assert( style.height, "TextField: requires param 'height'" )
 
 	--== Create Properties ==--
 
-	-- required params
-
-	self._width = params.width
-	self._width_dirty=true
-	self._height = params.height
-	self._height_dirty=true
-
-	-- optional params
-
+	--== Component-level
 	self._parent = params.parent
 
 	self._text = params.text
 	self._text_dirty=true
-	self._textColor = params.textColor
-	self._textColor_dirty = true
 
-	self._keyboardFocus=false
-	self._keyboardFocus_dirty=true
-	self._keyboardFocus_timer=nil
-
-	self._font = params.font
-	self._font_dirty=true
-	self._fontSize = params.fontSize
-	self._fontSize_dirty=true
+	self._hintText = params.hintText
+	self._hintText_dirty = true
 
 	self._x = params.x
 	self._x_dirty = true
 	self._y = params.y
 	self._y_dirty=true
 
-	self._align = params.align
+	--== Widget-level
+	self._width = style.width
+	self._width_dirty=true
+	self._height = style.height
+	self._height_dirty=true
+	self._align = style.align
 	self._hint_align_dirty=true
 	self._text_align_dirty=true
-
-	-- other
 	self._anchorX = 0.5
 	self._bg_anchorX_dirty=true
 	self._anchorY = 0.5
 	self._bg_anchorY_dirty=true
 
-	self._bg_width_dirty=true
-	self._bg_height_dirty=true
-
-	self._bg_marginX = params.marginX
-	self._bg_marginY = params.marginY
-
-	self._fillColor = params.fillColor
-	self._fillColor_dirty = true
-
-	self._hintText = params.hintText
-	self._hintText_dirty = true
-	self._hintColor = params.hintColor
-	self._hintColor_dirty = true
-	self._hintFont = params.hintFont
-	self._hintFont_dirty = true
-	self._hintFontSize = params.hintFontSize
-	self._hintFontSize_dirty = true
-
 	self._inputType = params.inputType
 	self._inputType_dirty = true
+	self._returnKey = params.returnKey
+	self._returnKey_dirty=true
 
+	self._clear_onBeginEdit = false
+	self._adjust_fontToFit = false
+	self._clearButton_mode = 'never'
+
+	-- hard coded
 	self._hasBackground = false -- <<
 	self._hasBackground_dirty = true
 
-	self._returnKey = params.returnKey
-	self._returnKey_dirty=true
+	--== Text-level
+	-- align
+	self._textColor = style.text.color
+	self._textColor_dirty = true
+	self._font = style.text.font
+	self._font_dirty=true
+	self._fontSize = style.text.fontSize
+	self._fontSize_dirty=true
+
+	--== Hint-level
+	-- align?
+	self._hintColor = style.hint.color
+	self._hintColor_dirty = true
+	self._hintFont = style.hint.font
+	self._hintFont_dirty = true
+	self._hintFontSize = style.hint.fontSize
+	self._hintFontSize_dirty = true
+
+	--== Background-level
+	self._bgMarginX = style.background.marginX
+	self._bgMarginY = style.background.marginY
+	self._bgColor = style.background.color
+	self._bgColor_dirty = true
+	self._bgWidth_dirty=true
+	self._bg_height_dirty=true
+
+	--== Internal
+
+	self._keyboardFocus=false
+	self._keyboardFocus_dirty=true
+	self._keyboardFocus_timer=nil
 
 	self._is_enabled = true
 	self._is_editing = false
 	self._is_valid = true
-	self._clear_onBeginEdit = false
-	self._adjust_fontToFit = false
-	self._clearButton_mode = 'never'
+	self._value = nil
+
+	self._styles = style
 
 	--== Object References ==--
 
 	self._delegate = nil -- delegate
 	self._formatter = nil -- data formatter
-	self._value = nil
-	self._is_valid = true
 
 	self._bg = nil -- background object
 	self._hint = nil -- text object
@@ -296,8 +286,8 @@ function TextField:__createView__()
 	self._bg.isHitTestable=true
 	self:insert( self._bg )
 
-	local hw = self._width-self._bg_marginX*2
-	local hh = self._height-self._bg_marginY*2
+	local hw = self._width-self._bgMarginX*2
+	local hh = self._height-self._bgMarginY*2
 	self._hint = Widgets.Text:new{
 		text=self._hintText,
 		font=self._hintFont,
@@ -380,60 +370,6 @@ end
 --== Public Methods
 
 
---== X
-
-function TextField.__setters:x( value )
-	-- print( 'TextField.__setters:x', value )
-	assert( type(value)=='number' )
-	--==--
-	if value == self._x then return end
-	self._x = value
-	self._x_dirty=true
-	self:__invalidateProperties__()
-end
-
-
---== Y
-
-function TextField.__setters:y( value )
-	-- print( 'TextField.__setters:y', value )
-	assert( type(value)=='number' )
-	--==--
-	if value == self._y then return end
-	self._y = value
-	self._y_dirty=true
-	self:__invalidateProperties__()
-end
-
-
---== marginX
-
-function TextField.__setters:marginX( value )
-	-- print( 'TextField.__setters:marginX', value )
-	assert( type(value)=='number' )
-	if value < 0 then value=0 end
-	--==--
-	if value == self._bg_marginX then return end
-	self._bg_marginX = value
-	self._bg_width_dirty=true
-	self:__invalidateProperties__()
-end
-
-
---== marginY
-
-function TextField.__setters:marginY( value )
-	-- print( 'TextField.__setters:marginY', value )
-	assert( type(value)=='number' )
-	if value < 0 then value=0 end
-	--==--
-	if value == self._bg_marginY then return end
-	self._bg_marginY = value
-	self._bg_height_dirty=true
-	self:__invalidateProperties__()
-end
-
-
 --== align
 
 function TextField.__getters:align()
@@ -483,24 +419,6 @@ function TextField.__setters:anchorY( value )
 end
 
 
---== setAnchor
-
-function TextField:setAnchor( ... )
-	-- print( 'TextField:setAnchor' )
-	local args = {...}
-
-	if type( args[1] ) == 'table' then
-		self.anchorX, self.anchorY = unpack( args[1] )
-	end
-	if type( args[1] ) == 'number' then
-		self.anchorX = args[1]
-	end
-	if type( args[2] ) == 'number' then
-		self.anchorY = args[2]
-	end
-end
-
-
 --== formatter
 
 function TextField.__setters:formatter( value )
@@ -544,6 +462,88 @@ function TextField.__setters:fontSize( value )
 end
 
 
+--== isValid
+
+function TextField.__setters:isValid( value )
+	-- print( 'TextField.__setters:isValid', value )
+	assert( type(value)=='boolean' )
+	--==--
+	if value == self._is_valid then return end
+	self._is_valid = value
+	self._valid_dirty=true
+	self:__invalidateProperties__()
+end
+
+
+--== marginX
+
+function TextField.__setters:marginX( value )
+	-- print( 'TextField.__setters:marginX', value )
+	assert( type(value)=='number' )
+	if value < 0 then value=0 end
+	--==--
+	if value == self._bgMarginX then return end
+	self._bgMarginX = value
+	self._bgWidth_dirty=true
+	self:__invalidateProperties__()
+end
+
+
+--== marginY
+
+function TextField.__setters:marginY( value )
+	-- print( 'TextField.__setters:marginY', value )
+	assert( type(value)=='number' )
+	if value < 0 then value=0 end
+	--==--
+	if value == self._bgMarginY then return end
+	self._bgMarginY = value
+	self._bg_height_dirty=true
+	self:__invalidateProperties__()
+end
+
+
+--== text
+
+function TextField.__getters:text()
+	return self._text
+end
+function TextField.__setters:text( value )
+	-- print( 'TextField.__setters:text', value )
+	if value == self._text then return end
+	self._text = value
+	self._text_dirty=true
+	self._hintText_dirty=true
+	self:__invalidateProperties__()
+end
+
+
+--== X
+
+function TextField.__setters:x( value )
+	-- print( 'TextField.__setters:x', value )
+	assert( type(value)=='number' )
+	--==--
+	if value == self._x then return end
+	self._x = value
+	self._x_dirty=true
+	self:__invalidateProperties__()
+end
+
+
+--== Y
+
+function TextField.__setters:y( value )
+	-- print( 'TextField.__setters:y', value )
+	assert( type(value)=='number' )
+	--==--
+	if value == self._y then return end
+	self._y = value
+	self._y_dirty=true
+	self:__invalidateProperties__()
+end
+
+
 --== width
 
 function TextField.__getters:width()
@@ -558,7 +558,7 @@ function TextField.__setters:width( value )
 	if value==self._width then return end
 	self._width = value
 	self._width_dirty=true
-	self._bg_width_dirty=true
+	self._bgWidth_dirty=true
 	self._text_posX_dirty=true
 	self:__invalidateProperties__()
 end
@@ -583,31 +583,23 @@ function TextField.__setters:height( value )
 end
 
 
---== text
 
-function TextField.__getters:text()
-	return self._text
+--== setAnchor
+
+function TextField:setAnchor( ... )
+	-- print( 'TextField:setAnchor' )
+	local args = {...}
+
+	if type( args[1] ) == 'table' then
+		self.anchorX, self.anchorY = unpack( args[1] )
+	end
+	if type( args[1] ) == 'number' then
+		self.anchorX = args[1]
+	end
+	if type( args[2] ) == 'number' then
+		self.anchorY = args[2]
+	end
 end
-function TextField.__setters:text( value )
-	-- print( 'TextField.__setters:text', value )
-	if value == self._text then return end
-	self._text = value
-	self._text_dirty=true
-	self._hintText_dirty=true
-	self:__invalidateProperties__()
-end
-
-
-function TextField.__setters:isValid( value )
-	-- print( 'TextField.__setters:isValid', value )
-	assert( type(value)=='boolean' )
-	--==--
-	if value == self._is_valid then return end
-	self._is_valid = value
-	self._valid_dirty=true
-	self:__invalidateProperties__()
-end
-
 
 
 --== setFillColor
@@ -615,8 +607,8 @@ end
 function TextField:setFillColor( ... )
 	-- print( 'TextField:setFillColor' )
 	--==--
-	self._fillColor = {...}
-	self._fillColor_dirty = true
+	self._bgColor = {...}
+	self._bgColor_dirty = true
 	self:__invalidateProperties__()
 end
 
@@ -627,18 +619,6 @@ function TextField:setHintColor( ... )
 	-- print( 'TextField:setHintColor' )
 	--==--
 	self._hintColor = {...}
-	self._hintColor_dirty = true
-	self:__invalidateProperties__()
-end
-
-
---== setTextColor
-
-function TextField:setTextColor( ... )
-	-- print( 'TextField:setTextColor' )
-	--==--
-	self._textColor = {...}
-	self._textColor_dirty = true
 	self._hintColor_dirty = true
 	self:__invalidateProperties__()
 end
@@ -675,6 +655,19 @@ function TextField:setReturnKey( value )
 end
 
 
+--== setTextColor
+
+function TextField:setTextColor( ... )
+	-- print( 'TextField:setTextColor' )
+	--==--
+	self._textColor = {...}
+	self._textColor_dirty = true
+	self._hintColor_dirty = true
+	self:__invalidateProperties__()
+end
+
+
+--======================================================--
 --== Delegate
 
 function TextField:shouldBeginEditing()
@@ -719,6 +712,7 @@ function TextField:_delegateShouldClearTextField()
 end
 
 
+--======================================================--
 --== Formatter
 
 function TextField:areCharactersValid( chars, text )
@@ -772,10 +766,11 @@ function TextField:_createTextField()
 	self:_removeTextField()
 	self:_updateTextFieldProperties()
 
-	local w = self._width-self._bg_marginX*2
-	local h = self._height-self._bg_marginY*2
+	local w = self._width-self._bgMarginX*2
+	local h = self._height-self._bgMarginY*2
 
 	self._newtextfield = native.newTextField(0,0,w,h)
+	assert( self._newtextfield )
 	self:insert( self._newtextfield )
 	self._newtextfield:addEventListener( 'userInput', self._newtextfield_f )
 
@@ -817,7 +812,6 @@ function TextField:__commitProperties__()
 	if self._x_dirty then
 		view.x = self._x
 		self._x_dirty = false
-
 		self._text_posX_dirty=true
 	end
 	if self._y_dirty then
@@ -829,9 +823,9 @@ function TextField:__commitProperties__()
 
 	--== Background
 
-	if self._fillColor_dirty then
-		bg:setFillColor( unpack( self._fillColor ))
-		self._fillColor_dirty=false
+	if self._bgColor_dirty then
+		bg:setFillColor( unpack( self._bgColor ))
+		self._bgColor_dirty=false
 	end
 
 	if self._bg_anchorX_dirty then
@@ -846,9 +840,9 @@ function TextField:__commitProperties__()
 		self._y_dirty=true
 		self._hintY_dirty=true
 	end
-	if self._bg_width_dirty then
+	if self._bgWidth_dirty then
 		bg.width = self.width
-		self._bg_width_dirty=false
+		self._bgWidth_dirty=false
 		self._text_posX_dirty=true
 		self._hint_alignX_dirty=true
 	end
@@ -869,11 +863,11 @@ function TextField:__commitProperties__()
 		local offset
 		if self._align==self.LEFT then
 			text.anchorX = 0
-			offset = -bg.width*(bg.anchorX)+self._bg_marginX
+			offset = -bg.width*(bg.anchorX)+self._bgMarginX
 			text.x=bg.x+offset
 		elseif self._align==self.RIGHT then
 			text.anchorX = 1
-			offset = bg.width*(1-bg.anchorX)-self._bg_marginX
+			offset = bg.width*(1-bg.anchorX)-self._bgMarginX
 			text.x=bg.x+offset
 		else
 			text.anchorX = 0.5
@@ -930,11 +924,11 @@ function TextField:__commitProperties__()
 		local offset
 		if self._align==self.LEFT then
 			hint.anchorX = 0
-			offset = -bg.width*(bg.anchorX)+self._bg_marginX
+			offset = -bg.width*(bg.anchorX)+self._bgMarginX
 			hint.x=bg.x+offset
 		elseif self._align==self.RIGHT then
 			hint.anchorX = 1
-			offset = bg.width*(1-bg.anchorX)-self._bg_marginX
+			offset = bg.width*(1-bg.anchorX)-self._bgMarginX
 			hint.x=bg.x+offset
 		else
 			text.anchorX = 0.5

@@ -103,6 +103,9 @@ dmc_lib_info = dmc_lib_data.dmc_corona
 
 
 Widget.FontMgr = require( PATH .. '.' .. 'font_manager' )
+Widget.ThemeMgr = require( PATH .. '.' .. 'theme_manager' )
+
+Widget.Style = require( PATH .. '.' .. 'theme_manager.base_style' )
 
 Widget.Button = require( PATH .. '.' .. 'widget_button' )
 Widget.ButtonGroup = require( PATH .. '.' .. 'button_group' )
@@ -128,6 +131,7 @@ Widget.NavBar.__setWidgetManager( Widget )
 Widget.NavItem.__setWidgetManager( Widget )
 Widget.Popover.__setWidgetManager( Widget )
 Widget.PopoverMixModule.__setWidgetManager( Widget )
+Widget.Style.__setWidgetManager( Widget )
 Widget.Text.__setWidgetManager( Widget )
 Widget.TextField.__setWidgetManager( Widget )
 
@@ -268,6 +272,18 @@ end
 function Widget.newTextField( options )
 	local theme = nil
 	return Widget.TextField:new( options )
+end
+
+
+
+--===================================================================--
+--== newTextFieldStyle
+
+
+function Widget.newTextFieldStyle( options )
+	print("Widget.newTextFieldStyle")
+	local theme = nil
+	return Widget.Style.TextField:new( options )
 end
 
 
