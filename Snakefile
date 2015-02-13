@@ -13,6 +13,7 @@ module_config = {
 		"files": [
 			"dmc_widgets.lua",
 			"dmc_widgets/button_group.lua",
+			"dmc_widgets/data_formatters.lua",
 			"dmc_widgets/font_manager.lua",
 			"dmc_widgets/lib/easingx.lua",
 			"dmc_widgets/scroller_view_base.lua",

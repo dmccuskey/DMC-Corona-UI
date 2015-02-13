@@ -85,7 +85,7 @@ local LifecycleMix = LifecycleMixModule.LifecycleMix
 local tinsert = table.insert
 local tremove = table.remove
 
-local LOCAL_DEBUG = true
+local LOCAL_DEBUG = false
 
 
 --====================================================================--
@@ -253,16 +253,19 @@ function TextField:__init__( params )
 	self._hasBackground = false -- <<
 	self._hasBackground_dirty = true
 
-	self._placeholder = params.placeholder
-	self._placeholder_dirty=true
-
 	self._returnKey = params.returnKey
 	self._returnKey_dirty=true
 
+	self._is_enabled = true
 	self._is_editing = false
+	self._is_valid = true
+	self._clear_onBeginEdit = false
+	self._adjust_fontToFit = false
+	self._clearButton_mode = 'never'
 
 	--== Object References ==--
 
+	self._delegate = nil -- delegate
 	self._formatter = nil -- data formatter
 	self._value = nil
 	self._is_valid = true
@@ -330,7 +333,9 @@ function TextField:__initComplete__()
 	--==--
 	self._newtextfield_f = self:createCallback( self._textFieldEvent_handler )
 
+	--[[
 	self._hint.onUpdate = self:createCallback( self._textOnUpdateEvent_handler )
+	--]]
 
 	self._bg_f = self:createCallback( self._backgroundTouch_handler )
 	self._bg:addEventListener( 'touch', self._bg_f )
@@ -496,6 +501,16 @@ function TextField:setAnchor( ... )
 end
 
 
+--== formatter
+
+function TextField.__setters:formatter( value )
+	-- print( 'TextField.__setters:formatter', value )
+	assert( value )
+	--==--
+	self._formatter = value
+end
+
+
 --== font
 
 function TextField.__getters:font()
@@ -583,6 +598,18 @@ function TextField.__setters:text( value )
 end
 
 
+function TextField.__setters:isValid( value )
+	-- print( 'TextField.__setters:isValid', value )
+	assert( type(value)=='boolean' )
+	--==--
+	if value == self._is_valid then return end
+	self._is_valid = value
+	self._valid_dirty=true
+	self:__invalidateProperties__()
+end
+
+
+
 --== setFillColor
 
 function TextField:setFillColor( ... )
@@ -645,6 +672,79 @@ function TextField:setReturnKey( value )
 	self._returnKey = value
 	self._returnKey_dirty = true
 	self:__invalidateProperties__()
+end
+
+
+--== Delegate
+
+function TextField:shouldBeginEditing()
+	return self._is_enabled
+end
+
+-- on tap
+function TextField:_delegateShouldBeginEditing()
+	local delegate = self._delegate or self
+	if not delegate or not delegate.shouldBeginEditing then
+		delegate = self
+	end
+	return delegate:shouldBeginEditing()
+end
+
+
+function TextField:shouldEndEditing( event )
+	return self._is_valid
+end
+
+-- after end/submit
+function TextField:_delegateShouldEndEditing()
+	local delegate = self._delegate or self
+	if not delegate or not delegate.shouldEndEditing then
+		delegate = self
+	end
+	return delegate:shouldEndEditing()
+end
+
+
+function TextField:shouldClearTextField()
+	return true
+end
+
+-- on button press
+function TextField:_delegateShouldClearTextField()
+	local delegate = self._delegate
+	if not delegate or not delegate.shouldClearTextField then
+		delegate = self
+	end
+	return delegate:shouldClearTextField()
+end
+
+
+--== Formatter
+
+function TextField:areCharactersValid( chars, text )
+	return true
+end
+
+function TextField:_formatterAreCharactersValid( chars, text )
+	local formatter = self._formatter or self
+	if not formatter or not formatter.areCharactersValid then
+		delegate = self
+	end
+	return formatter:areCharactersValid( chars, text )
+end
+
+
+function TextField:isTextValid( text )
+	return true
+end
+
+function TextField:_formatterIsTextValid( text )
+	-- print( "_formatterIsTextValid", text)
+	local formatter = self._formatter or self
+	if not formatter or not formatter.isTextValid then
+		delegate = self
+	end
+	return formatter:isTextValid( text )
 end
 
 
@@ -942,23 +1042,35 @@ function TextField:_stopEdit( set_focus )
 end
 
 
-function TextField:_doStateBegan()
-	-- print( 'TextField:_doStateBegan' )
+function TextField:_doStateBegan( event )
+	-- print( 'TextField:_doStateBegan', event )
 	self:_startEdit( false )
+
+	self._tmp_text = self._text -- start last ok state
+
+	event.target=self
+	event.text=self._text -- fix broken simulator
+	self:dispatchEvent( event )
 end
 
-function TextField:_doStateEditing()
-	-- print( 'TextField:_doStateEditing' )
+function TextField:_doStateEditing( event )
+	-- print( 'TextField:_doStateEditing', event )
+
+	self._tmp_text = event.text -- save for last ok state
+
+	event.target=self
+	self:dispatchEvent( event )
 end
 
-function TextField:_doStateEnded()
-	-- print( 'TextField:_doStateEnded' )
+function TextField:_doStateEnded( event )
+	-- print( 'TextField:_doStateEnded', event )
 	self:_stopEdit( false )
-end
 
-function TextField:_doStateSubmitted()
-	-- print( 'TextField:_doStateSubmitted' )
-	self:_stopEdit( false )
+	self._tmp_text = nil
+
+	event.target=self
+	event.text=self._text
+	self:dispatchEvent( event )
 end
 
 
@@ -970,89 +1082,82 @@ end
 function TextField:_backgroundTouch_handler( event )
 	-- print( 'TextField:_backgroundTouch_handler', event.phase )
 	local phase = event.phase
-	local textfield = event.target
+	local background = event.target
 
 	if self._is_editing==true then return end
 
-	if event.phase=='ended' then
-		self:_startEdit()
+	if phase=='began' then
+		display.getCurrentStage():setFocus( background )
+		self._has_focus = true
 	end
 
+	if not self._has_focus then return false end
+
+	if phase=='ended' or phase=='canceled' then
+		local bgCb = background.contentBounds
+		local isWithinBounds = ( bgCb.xMin <= event.x and bgCb.xMax >= event.x and bgCb.yMin <= event.y and bgCb.yMax >= event.y )
+		if isWithinBounds and self:_delegateShouldBeginEditing() then
+			self:_startEdit()
+		end
+
+		display.getCurrentStage():setFocus( nil )
+		self._has_focus = false
+	end
+
+	return true
 end
 
+
+--[[
+-- from our 'hint' text object
 function TextField:_textOnUpdateEvent_handler( event )
 	-- print( 'TextField:_textOnUpdateEvent_handler' )
 	local text = event.target
 	-- print( 'text height', text.textHeight )
 end
-
-
-
---[[
-shouldChangeCharactersInRange
-
-textFieldShouldBeginEditing (yes/no)
-
-textViewDidBeginEditing
-
-textFieldShouldClear (yes/no)
-
-textViewShouldEndEditing (yes/not)
-
-textViewDidEndEditing
-
-function or object
-if object:
-	isTextValid() -- entire string
-	isCharacterValid() -- per key stroke
-
-	input
-	textToValue() -- text to date
-	valueToText()	-- date to text (or number)
-	set invalid
 --]]
+
+
 
 function TextField:_textFieldEvent_handler( event )
 	-- print( '\n\nTextField:_textFieldEvent_handler', event.phase )
 	local phase = event.phase
 	local textfield = event.target
 
+	-- Utils.print( event )
+
 	if phase==self.BEGAN then
 		-- print( "text", event.text )
-		self:_doStateBegan()
+		self:_doStateBegan( event )
 
-		event.target=self
-		event.text=self._text -- fix broken simulator
-		self:dispatchEvent( event )
-
-	elseif phase==self.ENDED then
+	elseif phase==self.ENDED or phase==self.SUBMITTED then
 		-- print( "end text", textfield.text )
-		self.text = textfield.text -- << Use Setter
-		self:_doStateEnded()
+		local text = textfield.text
 
-		event.target=self
-		event.text=self._text
-		self:dispatchEvent( event )
-
-	elseif phase==self.SUBMITTED then
-		-- print( "sub text", textfield.text )
-		self.text = textfield.text
-		self:_doStateSubmitted()
-
-		event.target=self
-		self:dispatchEvent( event )
+		self.isValid = self:_formatterIsTextValid( text )
+		if self:_delegateShouldEndEditing( event ) then
+			-- this delegate call needs checking
+			self.text = textfield.text -- << Use Setter
+			self:_doStateEnded( event )
+		else
+			self:setKeyboardFocus()
+		end
 
 	elseif phase==self.EDITING then
+
 		--[[
 		print( "start", event.startPosition )
 		print( "delete", event.numDeleted )
 		print( "new", event.newCharacters )
 		print( "text", event.text )
 		--]]
-		self:_doStateEditing()
-
-		event.target=self
-		self:dispatchEvent( event )
+		local del = (event.numDeleted>0)
+		if del or self:_formatterAreCharactersValid( event.newCharacters, event.text ) then
+			self.isValid = self:_formatterIsTextValid( event.text )
+			self:_doStateEditing( event )
+		else
+			textfield.text = self._tmp_text
+		end
 
 	end
 end
