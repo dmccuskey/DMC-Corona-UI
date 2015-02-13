@@ -108,9 +108,10 @@ Widget.Button = require( PATH .. '.' .. 'widget_button' )
 Widget.ButtonGroup = require( PATH .. '.' .. 'button_group' )
 Widget.NavBar = require( PATH .. '.' .. 'widget_navbar' )
 Widget.NavItem = require( PATH .. '.' .. 'widget_navitem' )
-Widget.Text = require( PATH .. '.' .. 'widget_text' )
 Widget.Popover = require( PATH .. '.' .. 'widget_popover' )
 Widget.PopoverMixModule = require( PATH .. '.' .. 'widget_popover.popover_mix' )
+Widget.Text = require( PATH .. '.' .. 'widget_text' )
+Widget.TextField = require( PATH .. '.' .. 'widget_textfield' )
 
 
 
@@ -124,9 +125,10 @@ Widget.HEIGHT = display.contentHeight
 -- set display content width/height
 Widget.NavBar.__setWidgetManager( Widget )
 Widget.NavItem.__setWidgetManager( Widget )
-Widget.Text.__setWidgetManager( Widget )
 Widget.Popover.__setWidgetManager( Widget )
 Widget.PopoverMixModule.__setWidgetManager( Widget )
+Widget.Text.__setWidgetManager( Widget )
+Widget.TextField.__setWidgetManager( Widget )
 
 
 
@@ -241,6 +243,17 @@ end
 function Widget.newText( options )
 	local theme = nil
 	return Widget.Text:new( options )
+end
+
+
+
+--===================================================================--
+--== newTextField widget
+
+
+function Widget.newTextField( options )
+	local theme = nil
+	return Widget.TextField:new( options )
 end
 
 
