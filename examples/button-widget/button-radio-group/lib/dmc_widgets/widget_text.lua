@@ -204,17 +204,12 @@ function Text:__createView__()
 	-- print( "Text:__createView__" )
 	self:superCall( ComponentBase, '__createView__' )
 	--==--
-
 	self._bg = display.newRect( 0,0,0,0 )
 	self:insert( self._bg )
-
-	self:__commitProperties__()
 end
 
 function Text:__undoCreateView__()
 	-- print( "Text:__undoCreateView__" )
-	self:_removeNewText()
-
 	self._bg:removeSelf()
 	self._bg=nil
 	--==--
@@ -228,15 +223,15 @@ function Text:__initComplete__()
 	-- print( "Text:__initComplete__" )
 	self:superCall( ComponentBase, '__initComplete__' )
 	--==--
+	self:__commitProperties__()
 end
 
---[[
 function Text:__undoInitComplete__()
 	--print( "Text:__undoInitComplete__" )
+	self:_removeNewText()
 	--==--
 	self:superCall( ComponentBase, '__undoInitComplete__' )
 end
---]]
 
 --== END: Setup DMC Objects
 --======================================================--
@@ -483,8 +478,8 @@ end
 function Text:setFillColor( ... )
 	-- print( 'Text:setFillColor' )
 	--==--
-	self._setFillColor = {...}
-	self._setFillColor = true
+	self._fillColor = {...}
+	self._fillColor_dirty = true
 	self:__invalidateProperties__()
 end
 
