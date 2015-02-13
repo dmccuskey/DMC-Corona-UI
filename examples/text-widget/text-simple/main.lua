@@ -71,7 +71,7 @@ text.onUpdate = textOnUpdate_handler
 --== Make different changes
 
 text.width = 125
-text:setBgFillColor( 0.5, 0.2, 0.7 )
+text:setFillColor( 0.5, 0.2, 0.7 )
 
 text.x = H_CENTER
 text.y = V_CENTER
@@ -99,5 +99,5 @@ text.marginY = 5
 
 -- text.width = nil
 
-text:setFillColor( 1,0,0,0.5 )
-text:setFillColor( 0,1,1,0.5 )
+text:setTextColor( 1,0,0,0.5 )
+text:setTextColor( 0,1,1,0.5 )
