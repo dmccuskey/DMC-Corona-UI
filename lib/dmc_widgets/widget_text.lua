@@ -483,8 +483,8 @@ end
 function Text:setFillColor( ... )
 	-- print( 'Text:setFillColor' )
 	--==--
-	self._setFillColor = {...}
-	self._setFillColor = true
+	self._fillColor = {...}
+	self._fillColor_dirty = true
 	self:__invalidateProperties__()
 end
 
