@@ -336,7 +336,7 @@ function TextField:__initComplete__()
 	self._bg:addEventListener( 'touch', self._bg_f )
 
 	self:__commitProperties__()
-	self:_doStateEnded()
+	self:_stopEdit(false)
 end
 
 function TextField:__undoInitComplete__()
@@ -457,7 +457,7 @@ function TextField.__setters:anchorX( value )
 	if value==self._anchorX then return end
 	self._anchorX = value
 	self._bg_anchorX_dirty=true
-	self._text_alignX_dirty=true
+	self._text_posX_dirty=true
 	self:__invalidateProperties__()
 end
 
@@ -544,7 +544,7 @@ function TextField.__setters:width( value )
 	self._width = value
 	self._width_dirty=true
 	self._bg_width_dirty=true
-	self._text_alignX_dirty=true
+	self._text_posX_dirty=true
 	self:__invalidateProperties__()
 end
 
@@ -574,7 +574,7 @@ function TextField.__getters:text()
 	return self._text
 end
 function TextField.__setters:text( value )
-	print( 'TextField.__setters:text', value )
+	-- print( 'TextField.__setters:text', value )
 	if value == self._text then return end
 	self._text = value
 	self._text_dirty=true
@@ -597,7 +597,7 @@ end
 --== setHintColor
 
 function TextField:setHintColor( ... )
-	print( 'TextField:setHintColor' )
+	-- print( 'TextField:setHintColor' )
 	--==--
 	self._hintColor = {...}
 	self._hintColor_dirty = true
@@ -608,7 +608,7 @@ end
 --== setTextColor
 
 function TextField:setTextColor( ... )
-	print( 'TextField:setTextColor' )
+	-- print( 'TextField:setTextColor' )
 	--==--
 	self._textColor = {...}
 	self._textColor_dirty = true
@@ -649,24 +649,22 @@ end
 
 
 
-
 --====================================================================--
 --== Private Methods
 
 
 function TextField:_updateTextFieldProperties()
-	-- CAN OVERRIDE FOR CUSTOM TEXT HANDLING
+	-- CAN OVERRIDE FOR CUSTOM HANDLING
 end
 
 
 function TextField:_removeTextField()
 	-- print( 'TextField:_removeTextField' )
 	local o = self._newtextfield
-	if o then
-		o:removeEventListener( 'userInput', self._newtextfield_f )
-		o:removeSelf()
-		self._newtextfield = nil
-	end
+	if not o then return end
+	o:removeEventListener( 'userInput', self._newtextfield_f )
+	o:removeSelf()
+	self._newtextfield = nil
 end
 
 function TextField:_createTextField()
@@ -679,14 +677,20 @@ function TextField:_createTextField()
 
 	self._newtextfield = native.newTextField(0,0,w,h)
 	self:insert( self._newtextfield )
-
 	self._newtextfield:addEventListener( 'userInput', self._newtextfield_f )
+
+	self:_updateVisibility()
 
 	self._width_dirty=false
 	self._height_dirty=false
 
 	--== reset our text field object
 
+	self._text_align_dirty=true
+	self._text_posX_dirty=true
+	self._text_posY_dirty=true
+
+	self._text_dirty=true
 	self._textColor_dirty=true
 	self._font_dirty=true
 	self._fontSize_dirty=true
@@ -698,8 +702,8 @@ end
 function TextField:__commitProperties__()
 	-- print( 'TextField:__commitProperties__' )
 
-	-- create new text if necessary
 	if self._width_dirty or self._height_dirty then
+		-- create new text field
 		self:_createTextField()
 	end
 
@@ -708,24 +712,19 @@ function TextField:__commitProperties__()
 	local hint = self._hint
 	local text = self._newtextfield
 
-	assert( text )
-	-- set text string
-
 	--== View
 
 	if self._x_dirty then
 		view.x = self._x
 		self._x_dirty = false
 
-		self._text_alignX_dirty=true
-		self._textField_Pos_dirty=true
+		self._text_posX_dirty=true
 	end
 	if self._y_dirty then
 		view.y = self._y
 		self._y_dirty = false
 
-		self._text_alignY_dirty=true
-		self._textField_Pos_dirty=true
+		self._text_posY_dirty=true
 	end
 
 	--== Background
@@ -750,28 +749,23 @@ function TextField:__commitProperties__()
 	if self._bg_width_dirty then
 		bg.width = self.width
 		self._bg_width_dirty=false
-		self._text_alignX_dirty=true
+		self._text_posX_dirty=true
 		self._hint_alignX_dirty=true
 	end
 	if self._bg_height_dirty then
 		bg.height = self.height
 		self._bg_height_dirty=false
-		self._text_alignY_dirty=true
+		self._text_posY_dirty=true
 	end
-
 
 	--== text field
 
-	-- if self._textField_Pos_dirty then
-	-- 	local x_pos, y_pos = view:localToContent( 0,0 )
-	-- 	self._textField_Pos_dirty=false
-	-- end
 	if self._text_align_dirty then
 		text.align=self._align
 		self._text_align_dirty = false
 	end
 
-	if self._text_alignX_dirty then
+	if self._text_posX_dirty then
 		local offset
 		if self._align==self.LEFT then
 			text.anchorX = 0
@@ -786,19 +780,20 @@ function TextField:__commitProperties__()
 			offset = bg.width*(0.5-bg.anchorX)
 			text.x=bg.x+offset
 		end
-		self._text_alignX_dirty = false
+		self._text_posX_dirty = false
 	end
-	if self._text_alignY_dirty then
+	if self._text_posY_dirty then
 		local offset=bg.height/2+(-bg.height*bg.anchorY)
 		text.y=bg.y+offset
-		self._text_alignY_dirty=false
+		self._text_posY_dirty=false
 	end
 
 	if self._text_dirty then
 		text.text = self._text
+		self._text_dirty=false
+
 		self._bg_anchorX_dirty=true
 		self._bg_anchorY_dirty=true
-		self._text_dirty=false
 	end
 	if self._font_dirty or self._fontSize_dirty then
 		text.font=native.newFont( self._font, self._fontSize )
@@ -1018,11 +1013,9 @@ if object:
 --]]
 
 function TextField:_textFieldEvent_handler( event )
-	print( '\n\nTextField:_textFieldEvent_handler', event.phase )
+	-- print( '\n\nTextField:_textFieldEvent_handler', event.phase )
 	local phase = event.phase
 	local textfield = event.target
-
-	-- Utils.print( event )
 
 	if phase==self.BEGAN then
 		-- print( "text", event.text )
@@ -1033,15 +1026,16 @@ function TextField:_textFieldEvent_handler( event )
 		self:dispatchEvent( event )
 
 	elseif phase==self.ENDED then
-		-- print( "text", textfield.text )
+		-- print( "end text", textfield.text )
 		self.text = textfield.text -- << Use Setter
 		self:_doStateEnded()
 
 		event.target=self
+		event.text=self._text
 		self:dispatchEvent( event )
 
 	elseif phase==self.SUBMITTED then
-		-- print( "text", textfield.text )
+		-- print( "sub text", textfield.text )
 		self.text = textfield.text
 		self:_doStateSubmitted()
 
@@ -1049,13 +1043,13 @@ function TextField:_textFieldEvent_handler( event )
 		self:dispatchEvent( event )
 
 	elseif phase==self.EDITING then
+		--[[
+		print( "start", event.startPosition )
+		print( "delete", event.numDeleted )
+		print( "new", event.newCharacters )
+		print( "text", event.text )
+		--]]
 		self:_doStateEditing()
-		-- print( "start", event.startPosition )
-		-- print( "delete", event.numDeleted )
-		-- print( "new", event.newCharacters )
-		-- print( "text", event.text )
-
-		-- print( "old", event.oldText )
 
 		event.target=self
 		self:dispatchEvent( event )
