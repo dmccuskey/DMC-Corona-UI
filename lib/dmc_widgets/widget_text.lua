@@ -101,8 +101,8 @@ local Text = newClass( {ComponentBase,LifecycleMix}, {name="Text"}  )
 
 --== Class Constants
 
-Text.DEFAULT_TEXT_COLOR = {1,0,0,1}
-Text.DEFAULT_BG_COLOR = {0,0,0,0}
+Text.DEFAULT_TEXTCOLOR = {0,0,0,1}
+Text.DEFAULT_FILLCOLOR = {0,0,0,0}
 
 Text.RIGHT = 'right'
 Text.CENTER = 'center'
@@ -123,8 +123,8 @@ function Text:__init__( params )
 	if params.x==nil then params.x=0 end
 	if params.y==nil then params.y=0 end
 	if params.align==nil then params.align=self.CENTER end
-	if params.fillColor==nil then params.fillColor=self.DEFAULT_TEXT_COLOR end
-	if params.bgFillColor==nil then params.bgFillColor=self.DEFAULT_BG_COLOR end
+	if params.textColor==nil then params.textColor=self.DEFAULT_TEXTCOLOR end
+	if params.fillColor==nil then params.fillColor=self.DEFAULT_FILLCOLOR end
 	if params.marginX==nil then params.marginX=0 end
 	if params.marginY==nil then params.marginY=0 end
 	self:superCall( LifecycleMix, '__init__', params )
@@ -171,17 +171,17 @@ function Text:__init__( params )
 	self._anchorY = 0.5
 	self._anchorY_dirty=true
 
-	self._fillColor = params.fillColor
-	self._fillColor_dirty = true
-
 	self._bg_width_dirty=true
 	self._bg_height_dirty=true
 
-	self._bg_fillColor = params.bgFillColor
-	self._bg_fillColor_dirty = true
-
 	self._bg_marginX = params.marginX
 	self._bg_marginY = params.marginY
+
+	self._fillColor = params.fillColor
+	self._fillColor_dirty = true
+
+	self._textColor = params.textColor
+	self._textColor_dirty = true
 
 	--== Object References ==--
 
@@ -462,25 +462,29 @@ function Text.__setters:text( value )
 	self:__invalidateProperties__()
 end
 
+function Text.__getters:textHeight()
+	return self._newtext.height
+end
+
+
+--== setTextColor
+
+function Text:setTextColor( ... )
+	-- print( 'Text:setTextColor' )
+	--==--
+	self._textColor = {...}
+	self._textColor_dirty = true
+	self:__invalidateProperties__()
+end
+
 
 --== setFillColor
 
 function Text:setFillColor( ... )
 	-- print( 'Text:setFillColor' )
 	--==--
-	self._fillColor = {...}
-	self._fillColor_dirty = true
-	self:__invalidateProperties__()
-end
-
-
---== setBgFillColor
-
-function Text:setBgFillColor( ... )
-	-- print( 'Text:setBgFillColor' )
-	--==--
-	self._bg_fillColor = {...}
-	self._bg_fillColor_dirty = true
+	self._setFillColor = {...}
+	self._setFillColor = true
 	self:__invalidateProperties__()
 end
 
@@ -511,26 +515,23 @@ function Text:_createNewText()
 	self:_removeNewText()
 	self:_updateTextProperties()
 
-	local w, h = self._width, self._height
+	local w = self._width
 	if w~=nil then
 		w=w-self._bg_marginX*2
-	end
-	if h~=nil then
-		h=h-self._bg_marginY*2
 	end
 
 	o = display.newText{
 		parent=self._parent,
 
 		text=self._text,
-		font=self._font,
 		fontSize=self._fontSize,
 
 		x=0,
 		y=0,
 		width=w,
-		height = self._height,
-		align = self._align
+		height=nil,
+
+		align=self._align
 	}
 
 	self:insert( o )
@@ -548,7 +549,7 @@ function Text:_createNewText()
 
 	self._text_dirty=false
 
-	self._fillColor_dirty=true
+	self._textColor_dirty=true
 	self._anchorX_dirty=true
 	self._anchorY_dirty=true
 
@@ -577,15 +578,15 @@ function Text:__commitProperties__()
 		self._anchorY_dirty=true
 	end
 
-	-- fillColor
+	-- textColor/fillColor
 
-	if self._fillColor_dirty then
-		text:setFillColor( unpack( self._fillColor ) )
-		self._fillColor_dirty=false
+	if self._textColor_dirty then
+		text:setTextColor( unpack( self._textColor ) )
+		self._textColor_dirty=false
 	end
-	if self._bg_fillColor_dirty then
-		bg:setFillColor( unpack( self._bg_fillColor ))
-		self._bg_fillColor_dirty=false
+	if self._fillColor_dirty then
+		bg:setFillColor( unpack( self._fillColor ))
+		self._fillColor_dirty=false
 	end
 
 	-- anchorX/anchorY
@@ -625,12 +626,12 @@ function Text:__commitProperties__()
 	-- bg width/height
 
 	if self._bg_width_dirty then
-		bg.width = self.width+self._bg_marginX*2
+		bg.width = self.width
 		self._bg_width_dirty=false
 		self._text_alignX_dirty=true
 	end
 	if self._bg_height_dirty then
-		bg.height = self.height+self._bg_marginY*2
+		bg.height = self.height
 		self._bg_height_dirty=false
 		self._text_alignY_dirty=true
 	end
