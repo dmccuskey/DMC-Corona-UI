@@ -205,6 +205,10 @@ function TextField:__init__( params )
 	self._textColor = params.textColor
 	self._textColor_dirty = true
 
+	self._keyboardFocus=false
+	self._keyboardFocus_dirty=true
+	self._keyboardFocus_timer=nil
+
 	self._font = params.font
 	self._font_dirty=true
 	self._fontSize = params.fontSize
@@ -343,6 +347,8 @@ function TextField:__undoInitComplete__()
 	self._bg_f = nil
 
 	self._hint.onUpdate = nil
+
+	self:_stopKeyboardFocus()
 
 	self._newtextfield_f = nil
 	--==--
@@ -611,6 +617,23 @@ function TextField:setTextColor( ... )
 end
 
 
+--== setKeyboardFocus
+
+function TextField:setKeyboardFocus()
+	-- print( 'TextField:setKeyboardFocus' )
+	self._keyboardFocus = true
+	self._keyboardFocus_dirty = true
+	self:__invalidateProperties__()
+end
+
+function TextField:unsetKeyboardFocus()
+	-- print( 'TextField:unsetKeyboardFocus' )
+	self._keyboardFocus = false
+	self._keyboardFocus_dirty = true
+	self:__invalidateProperties__()
+end
+
+
 --== setReturnKey
 
 function TextField:setReturnKey( value )
@@ -668,6 +691,7 @@ function TextField:_createTextField()
 	self._font_dirty=true
 	self._fontSize_dirty=true
 	self._hasBackground_dirty=true
+	self._keyboardFocus_dirty=true
 end
 
 
@@ -786,9 +810,18 @@ function TextField:__commitProperties__()
 		self._textColor_dirty=false
 	end
 
-	if self._hasBackground_dirty then
-		text.hasBackground=false -- TEST true/(false)
-		self._hasBackground_dirty=false
+	if self._keyboardFocus_dirty then
+		local focus = nil
+		if self._keyboardFocus==true then
+			focus = text
+		end
+		self:_startKeyboardFocus( focus )
+		self._keyboardFocus_dirty=false
+	end
+
+	if self._text_align_dirty then
+		text.align=self._align
+		self._text_align_dirty = false
 	end
 
 	--== Hint
@@ -863,32 +896,50 @@ function TextField:__commitProperties__()
 end
 
 
+function TextField:_startKeyboardFocus( focus )
+	self:_stopKeyboardFocus()
+	local f = function()
+		native.setKeyboardFocus( focus )
+		self._keyboardFocus_timer=nil
+	end
+	self._keyboardFocus_timer = timer.performWithDelay( 1, f )
+end
+
+function TextField:_stopKeyboardFocus()
+	if not self._keyboardFocus_timer then return end
+	timer.cancel( self._keyboardFocus_timer)
+	self._keyboardFocus_timer = nil
+end
+
+
+function TextField:_updateVisibility()
+	local hint = self._hint
+	local text = self._newtextfield
+	local is_editing = self._is_editing
+
+	hint.isVisible=not is_editing
+	text.isVisible=is_editing
+end
+
 
 function TextField:_startEdit( set_focus )
 	-- print( 'TextField:_startEdit' )
 	if set_focus==nil then set_focus=true end
 	--==--
-	local hint = self._hint
-	local text = self._newtextfield
-
-	hint.isVisible=false
-	text.isVisible=true
-
 	self._is_editing=true
+	self:_updateVisibility()
 
 	if set_focus then
 		native.setKeyboardFocus( self._newtextfield )
 	end
 end
 
-function TextField:_stopEdit()
+function TextField:_stopEdit( set_focus )
 	-- print( 'TextField:_stopEdit' )
-	local hint = self._hint
-	local text = self._newtextfield
-
-	hint.isVisible=true
-	text.isVisible=false -- TEST false/(true)
+	if set_focus==nil then set_focus=true end
+	--==--
 	self._is_editing=false
+	self:_updateVisibility()
 
 	if set_focus then
 		native.setKeyboardFocus( nil )
