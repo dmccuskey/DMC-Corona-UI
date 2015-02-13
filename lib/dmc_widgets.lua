@@ -106,6 +106,7 @@ Widget.FontMgr = require( PATH .. '.' .. 'font_manager' )
 
 Widget.Button = require( PATH .. '.' .. 'widget_button' )
 Widget.ButtonGroup = require( PATH .. '.' .. 'button_group' )
+Widget.Formatter = require( PATH .. '.' .. 'data_formatters' )
 Widget.NavBar = require( PATH .. '.' .. 'widget_navbar' )
 Widget.NavItem = require( PATH .. '.' .. 'widget_navitem' )
 Widget.Popover = require( PATH .. '.' .. 'widget_popover' )
@@ -150,6 +151,19 @@ end
 
 function Widget.newButtonGroup( options )
 	return Widget.ButtonGroup.create( options )
+end
+
+
+
+--===================================================================--
+--== newFormatter widget
+
+
+function Widget.newFormatter( options )
+	if type(options)=='string' then
+		options = { type=options }
+	end
+	return Widget.Formatter.create( options )
 end
 
 
