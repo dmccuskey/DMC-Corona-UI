@@ -117,7 +117,6 @@ Widget.NavBar = require( PATH .. '.' .. 'widget_navbar' )
 Widget.NavItem = require( PATH .. '.' .. 'widget_navitem' )
 Widget.Popover = require( PATH .. '.' .. 'widget_popover' )
 Widget.PopoverMixModule = require( PATH .. '.' .. 'widget_popover.popover_mix' )
-Widget.Text = require( PATH .. '.' .. 'widget_text' )
 
 
 
@@ -129,10 +128,7 @@ Widget.WIDTH = display.contentWidth
 Widget.HEIGHT = display.contentHeight
 
 Widget.Style = {
-	Base=BaseStyle.Base,
-	Text=BaseStyle.TextStyle,
-	TextField=BaseStyle.TextFieldStyle,
-	Background=BaseStyle.BackgroundStyle,
+	Base=BaseStyle.Base
 }
 
 --== Give widgets access to Widget (do this last)
@@ -141,11 +137,7 @@ Widget.NavBar.__setWidgetManager( Widget )
 Widget.NavItem.__setWidgetManager( Widget )
 Widget.Popover.__setWidgetManager( Widget )
 Widget.PopoverMixModule.__setWidgetManager( Widget )
-Widget.Text.__setWidgetManager( Widget )
 
-
--- local loadTextSupport, loadImageSupport
--- local loadTextFieldSupport
 
 
 --===================================================================--
@@ -153,16 +145,15 @@ Widget.Text.__setWidgetManager( Widget )
 
 
 local function loadBackgroundSupport()
-	print("loadBackgroundSupport")
+	-- print("loadBackgroundSupport")
 
 	local Background = require( PATH .. '.' .. 'widget_background' )
 	local BackgroundStyle = require( PATH .. '.' .. 'theme_manager.background_style' )
-	assert( BackgroundStyle )
+
 	Widget.Background=Background
 	Widget.Style.Background=BackgroundStyle
 
 	Background.__setWidgetManager( Widget )
-	BackgroundStyle.__setWidgetManager( Widget )
 end
 
 
@@ -172,7 +163,7 @@ function Widget.newBackground( options )
 end
 
 function Widget.newBackgroundStyle( style )
-	print("Widget.newBackgroundStyle")
+	-- print("Widget.newBackgroundStyle")
 	if not Widget.Style.Background then loadBackgroundSupport() end
 	return Widget.Style.Background:new( style )
 end
@@ -301,8 +292,7 @@ end
 
 
 local function loadTextSupport()
-	print("loadTextSupport")
-
+	-- print("loadTextSupport")
 	local Text = require( PATH .. '.' .. 'widget_text' )
 	local TextStyle = require( PATH .. '.' .. 'theme_manager.text_style' )
 
@@ -310,17 +300,17 @@ local function loadTextSupport()
 	Widget.Style.Text=TextStyle
 
 	Text.__setWidgetManager( Widget )
-	TextStyle.__setWidgetManager( Widget )
 end
 
 
 function Widget.newText( options )
+	-- print("Widget.newText")
 	if not Widget.Text then loadTextSupport() end
 	return Widget.Text:new( options )
 end
 
 function Widget.newTextStyle( style )
-	print("Widget.newTextStyle")
+	-- print("Widget.newTextStyle")
 	if not Widget.Style.Text then loadTextSupport() end
 	return Widget.Style.Text:new( style )
 end
@@ -332,7 +322,7 @@ end
 
 
 local function loadTextFieldSupport()
-	print("loadTextFieldSupport")
+	-- print("loadTextFieldSupport")
 	TextField = require( PATH .. '.' .. 'widget_textfield' )
 	TextFieldStyle = require( PATH .. '.' .. 'theme_manager.textfield_style' )
 
@@ -340,18 +330,17 @@ local function loadTextFieldSupport()
 	Widget.Style.TextField=TextFieldStyle
 
 	TextField.__setWidgetManager( Widget )
-	TextFieldStyle.__setWidgetManager( Widget )
 end
 
 
 function Widget.newTextField( options )
-	print("Widget.newTextField")
+	-- print("Widget.newTextField")
 	if not Widget.TextField then loadTextFieldSupport() end
 	return Widget.TextField:new( options )
 end
 
 function Widget.newTextFieldStyle( style )
-	print("Widget.newTextFieldStyle")
+	-- print("Widget.newTextFieldStyle")
 	if not Widget.Style.TextField then loadTextFieldSupport() end
 	return Widget.Style.TextField:new( style )
 end
