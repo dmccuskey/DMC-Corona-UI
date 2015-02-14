@@ -17,6 +17,10 @@ module_config = {
 			"dmc_widgets/font_manager.lua",
 			"dmc_widgets/lib/easingx.lua",
 			"dmc_widgets/scroller_view_base.lua",
+			"dmc_widgets/theme_manager.lua",
+			"dmc_widgets/theme_manager/base_style.lua",
+			"dmc_widgets/theme_manager/background_style.lua",
+			"dmc_widgets/widget_background.lua",
 			"dmc_widgets/widget_button.lua",
 			"dmc_widgets/widget_button/view_9slice.lua",
 			"dmc_widgets/widget_button/view_base.lua",
@@ -31,6 +35,7 @@ module_config = {
 			"dmc_widgets/widget_tableview.lua",
 			"dmc_widgets/widget_text.lua",
 			"dmc_widgets/widget_textfield.lua",
+			"dmc_widgets/widget_theme_mix.lua",
 			"dmc_widgets/widget_utils.lua",
 			"dmc_widgets/widget_viewpager.lua"
 		],
@@ -43,6 +48,16 @@ module_config = {
 	"examples": {
 		"base_dir": "examples",
 		"apps": [
+			{
+				"exp_dir": "background-widget/background-themed",
+				"requires": [],
+				"mod_dir_map": {
+					"default_dir": "",
+					"libs": {
+						"dmc-corona-boot":""
+					}
+				}
+			},
 			{
 				"exp_dir": "button-widget/button-9slice-simple",
 				"requires": [],

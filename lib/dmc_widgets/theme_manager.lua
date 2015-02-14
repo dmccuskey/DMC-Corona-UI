@@ -1,5 +1,5 @@
 --====================================================================--
--- dmc_widgets/base_style.lua
+-- dmc_widgets/theme_manager.lua
 --
 -- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
@@ -33,7 +33,7 @@ SOFTWARE.
 
 
 --====================================================================--
---== DMC Corona Widgets : Base Widget Style
+--== DMC Corona Widgets : Theme Manager
 --====================================================================--
 
 
@@ -48,14 +48,14 @@ local VERSION = "0.1.0"
 --====================================================================--
 
 
-local dmc_widget_data = _G.__dmc_widget
-local dmc_widget_func = dmc_widget_data.func
-local widget_find = dmc_widget_func.find
+local dmc_widget_data, dmc_widget_func
+dmc_widget_data = _G.__dmc_widget
+dmc_widget_func = dmc_widget_data.func
 
 
 
 --====================================================================--
---== DMC Widgets : newStyle Base
+--== DMC Widgets : Theme Mgr
 --====================================================================--
 
 
@@ -72,40 +72,69 @@ local Objects = require 'dmc_objects'
 --== Setup, Constants
 
 
--- setup some aliases to make code cleaner
 local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
 
+local ThemeMgrSingleton = nil
+
+local LOCAL_DEBUG = true
+
 
 
 --====================================================================--
---== Style Base Class
+--== ThemeMgr Widget Class
 --====================================================================--
 
 
-local Style = newClass( ObjectBase, {name="Style Base"}  )
+local ThemeMgr = newClass( ObjectBase, {name="Font Manager"}  )
+
 
 --======================================================--
 --== Start: Setup DMC Objects
 
-function Style:__init__( params )
-	-- print( "Style:__init__", params )
+function ThemeMgr:__init__( params )
+	-- print( "ThemeMgr:__init__", params )
 	params = params or {}
 	self:superCall( '__init__', params )
 	--==--
-	self._inherit = nil
-	self._data = params
 
-	self._name = params.name
+	-- keyed on theme name
+	self._themes = {}
+
+	--[[
+		registered widgets and styles
+		keyed on widget theme id
+
+		textfield={
+		<TextField Style Class>
+		<TextField Class>
+	--]]
+	self._registered = {}
+
+end
+function ThemeMgr:__undoInit__()
+	-- print( "ThemeMgr:__undoInit__" )
+	--==--
+	self:superCall( '__undoInit__' )
 end
 
-function Style:__initComplete__()
-	-- print( "Style:__initComplete__", params )
+--[[
+function ThemeMgr:__initComplete__()
+	-- print( "ThemeMgr:__initComplete__" )
 	self:superCall( '__initComplete__' )
 	--==--
-	self:_parseData( self._data )
-	self:_checkProperties()
 end
+--]]
+--[[
+function ThemeMgr:__undoInitComplete__()
+	--print( "ThemeMgr:__undoInitComplete__" )
+	--==--
+	self:superCall( '__undoInitComplete__' )
+end
+--]]
+
+--== END: Setup DMC Objects
+--======================================================--
 
 
 
@@ -113,21 +142,12 @@ end
 --== Public Methods
 
 
---== name, getter/setter
-
-function Style.__getters:name()
-	local value = self._name
-	if value==nil and self._inherit then
-		value = self._inherit._name
-	end
-	return value
-end
-function Style.__setters:name( value )
-	-- print( 'Style.__setters:name', value )
-	assert( (value==nil and self._inherit) or type(value)=='string' )
+function ThemeMgr:registerWidget( name, widget )
+	-- print( 'ThemeMgr:registerWidget', name, widget )
+	assert( type(name)=='string' )
+	assert( widget )
 	--==--
-	if value == self._name then return end
-	self._name = value
+	self._registered[ name ] = widget
 end
 
 
@@ -136,18 +156,7 @@ end
 --== Private Methods
 
 
-function Style:_checkProperties()
-	assert( self.name, "Style: requires a name" )
-end
-
-
-function Style:_parseData( data )
-	-- print( "Style:_parseData", data )
-	for k,v in pairs( data ) do
-		-- print(k,v)
-		self[k]=v
-	end
-end
+-- none
 
 
 
@@ -159,4 +168,8 @@ end
 
 
 
-return Style
+
+ThemeMgrSingleton = ThemeMgr:new()
+
+
+return ThemeMgrSingleton
