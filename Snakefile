@@ -159,6 +159,16 @@ module_config = {
 				}
 			},
 			{
+				"exp_dir": "text-widget/text-themed",
+				"requires": [],
+				"mod_dir_map": {
+					"default_dir": "",
+					"libs": {
+						"dmc-corona-boot":""
+					}
+				}
+			},
+			{
 				"exp_dir": "textfield-widget/textfield-simple",
 				"requires": [],
 				"mod_dir_map": {
