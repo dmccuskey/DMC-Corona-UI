@@ -114,7 +114,6 @@ function ThemeMgr:__init__( params )
 end
 function ThemeMgr:__undoInit__()
 	-- print( "ThemeMgr:__undoInit__" )
-	self._font_metrix=nil
 	--==--
 	self:superCall( '__undoInit__' )
 end
@@ -157,21 +156,7 @@ end
 --== Private Methods
 
 
-function ThemeMgr:_getCacheKey( font, font_size )
-	return tostring(font).."::"..tostring(font_size)
-end
-
-function ThemeMgr:_addToCache( font, font_size, value )
-	-- print( 'ThemeMgr:setFontMetric', font, value )
-	local key = self:_getCacheKey( font, font_size )
-	self._font_cache[ key ] = value
-end
-
-function ThemeMgr:_getFromCache( font, font_size )
-	-- print( 'ThemeMgr:setFontMetric', font, value )
-	local key = self:_getCacheKey( font, font_size )
-	return self._font_cache[ key ]
-end
+-- none
 
 
 
