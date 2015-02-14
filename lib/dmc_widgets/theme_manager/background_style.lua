@@ -219,42 +219,6 @@ function BackgroundStyle.__setters:fillColor( value )
 	self:_dispatchChangeEvent( 'fillColor', value )
 end
 
---== X
-
-function BackgroundStyle.__getters:x()
-	local value = self._x
-	if value==nil and self._inherit then
-		value = self._inherit._x
-	end
-	return value
-end
-function BackgroundStyle.__setters:x( value )
-	-- print( "BackgroundStyle.__setters:x", value )
-	assert( type(value)=='number' or (value==nil and self._inherit) )
-	--==--
-	if value == self._x then return end
-	self._x = value
-	self:_dispatchChangeEvent( 'x', value )
-end
-
---== Y
-
-function BackgroundStyle.__getters:y()
-	local value = self._y
-	if value==nil and self._inherit then
-		value = self._inherit._y
-	end
-	return value
-end
-function BackgroundStyle.__setters:y( value )
-	-- print( "BackgroundStyle.__setters:y", value )
-	assert( type(value)=='number' or (value==nil and self._inherit) )
-	--==--
-	if value == self._y then return end
-	self._y = value
-	self:_dispatchChangeEvent( 'y', value )
-end
-
 --== isHitTestable
 
 function BackgroundStyle.__getters:isHitTestable()
@@ -378,18 +342,6 @@ function BackgroundStyle:_checkProperties()
 	assert( self.anchorY, "Style: requires 'anchory'" )
 end
 
-
-function BackgroundStyle:_dispatchChangeEvent( prop, value )
-	-- print( 'BackgroundStyle:_dispatchChangeEvent', prop, value )
-	--==--
-	local e = {
-		name=self.EVENT,
-		type=self.STYLE_UPDATED,
-		property=prop,
-		value=value
-	}
-	if self._onProperty then self._onProperty( e ) end
-end
 
 
 

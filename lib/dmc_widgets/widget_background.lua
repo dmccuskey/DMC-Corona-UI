@@ -132,8 +132,6 @@ Background.RELEASE = 'touch-release-event'
 function Background:__init__( params )
 	-- print( "Background:__init__", params )
 	params = params or {}
-	if params.x==nil then params.x=0 end
-	if params.y==nil then params.y=0 end
 	self:superCall( LifecycleMix, '__init__', params )
 	self:superCall( ThemeMix, '__init__', params )
 	self:superCall( ComponentBase, '__init__', params )
@@ -145,29 +143,19 @@ function Background:__init__( params )
 
 	local style = params.style
 	if not style then
-		style = Widgets.Style.Background.createDefaultStyle()
+		style = Widgets.Style.Background.copyStyle()
 	end
 	style:updateStyle( params )
 
-	assert( style.width, "Background: requires param 'width'" )
-	assert( style.height, "Background: requires param 'height'" )
-	assert( style.x, "Background: requires param 'x'" )
-	assert( style.y, "Background: requires param 'y'" )
-
 	--== Create Properties ==--
 
-	-- required params
 	self._x_dirty = true
 	self._y_dirty = true
+	self._width_dirty=true
+	self._height_dirty=true
 
-	-- other
 	self._anchorX_dirty=true
 	self._anchorY_dirty=true
-
-	self._fillColor_dirty = true
-
-	self._height_dirty=true
-	self._width_dirty=true
 
 	self._fillColor_dirty=true
 	self._strokeColor_dirty=true
@@ -179,9 +167,8 @@ function Background:__init__( params )
 
 	--== Object References ==--
 
-	self._style = style
-	self.curr_style = nil
-	self.curr_style_f = nil
+	self._style = style -- save
+	-- self.curr_style -- from inherit
 
 	self._bg = nil -- our background object – rect or image
 	self._bg_f = nil
@@ -224,9 +211,9 @@ function Background:__initComplete__()
 
 	local f  = self:createCallback( self._styleEvent_handler )
 	self:setStyleCallback( f )
-	self:setActiveStyle( self._style )
 
-	self:__commitProperties__()
+	-- calls __commitProperties__()
+	self:setActiveStyle( self._style )
 end
 
 function Background:__undoInitComplete__()
@@ -278,6 +265,27 @@ function Background.__setters:y( value )
 	self.curr_style.y = value
 end
 
+--== width
+
+function Background.__getters:width()
+	return self.curr_style.width
+end
+function Background.__setters:width( value )
+	-- print( 'Background.__setters:width', value )
+	self.curr_style.width = value
+end
+
+--== height
+
+function Background.__getters:height()
+	return self.curr_style.height
+end
+function Background.__setters:height( value )
+	-- print( 'Background.__setters:height', value )
+	self.curr_style.height = value
+end
+
+
 --== anchorX
 
 function Background.__getters:anchorX()
@@ -300,16 +308,6 @@ function Background.__setters:anchorY( value )
 	self.curr_style.anchorY = value
 end
 
---== strokeColor
-
-function Background.__getters:strokeColor()
-	return self.curr_style.strokeColor
-end
-function Background.__setters:strokeColor( value )
-	-- print( 'Background.__setters:strokeColor', value )
-	self.curr_style.strokeColor = value
-end
-
 --== strokeWidth
 
 function Background.__getters:strokeWidth()
@@ -319,6 +317,7 @@ function Background.__setters:strokeWidth( value )
 	-- print( 'Background.__setters:strokeWidth', value )
 	self.curr_style.strokeWidth = value
 end
+
 
 --== setAnchor
 
@@ -337,32 +336,18 @@ function Background:setAnchor( ... )
 	end
 end
 
---== width
-
-function Background.__getters:width()
-	return self.curr_style.width
-end
-function Background.__setters:width( value )
-	-- print( 'Background.__setters:width', value )
-	self.curr_style.width = value
-end
-
---== height
-
-function Background.__getters:height()
-	return self.curr_style.height
-end
-function Background.__setters:height( value )
-	-- print( 'Background.__setters:height', value )
-	self.curr_style.height = value
-end
-
 --== setFillColor
 
 function Background:setFillColor( ... )
 	-- print( 'Background:setFillColor' )
 	--==--
 	self.curr_style.fillColor = {...}
+end
+
+--== setStrokeColor
+
+function Background:setStrokeColor()
+	self.curr_style.strokeColor = {...}
 end
 
 
@@ -401,6 +386,7 @@ function Background:_createNewBackground()
 	self:insert( self._bg )
 	self._bg:addEventListener( 'touch', self._bg_f )
 
+	-- conditions for coming in here
 	self._bg_dirty = false
 
 	self._x_dirty=true
@@ -419,26 +405,28 @@ end
 
 function Background:__commitProperties__()
 	-- print( 'Background:__commitProperties__' )
+	local style = self.curr_style
 
 	-- create new text if necessary
 	if self._bg_dirty then
 		self:_createNewBackground()
 	end
 
-	local view = self.view
 	local bg = self._bg
-	local style = self.curr_style
+	local view = self.view
 
 	-- width/height
 
 	if self._bg_width_dirty then
 		bg.width = self.width
 		self._bg_width_dirty=false
+
 		self._text_alignX_dirty=true
 	end
 	if self._bg_height_dirty then
 		bg.height = self.height
 		self._bg_height_dirty=false
+
 		self._text_alignY_dirty=true
 	end
 
@@ -447,11 +435,13 @@ function Background:__commitProperties__()
 	if self._anchorX_dirty then
 		bg.anchorX = style.anchorX
 		self._anchorX_dirty=false
+
 		self._x_dirty=true
 	end
 	if self._anchorY_dirty then
 		bg.anchorY = style.anchorY
 		self._anchorY_dirty=false
+
 		self._y_dirty=true
 	end
 
@@ -465,6 +455,9 @@ function Background:__commitProperties__()
 		view.y = style.y
 		self._y_dirty = false
 	end
+
+
+	--== non-position sensitive
 
 	-- hit testable
 
@@ -480,15 +473,19 @@ function Background:__commitProperties__()
 		self._fillColor_dirty=false
 	end
 
-	if self._strokeWidth_dirty then
-		bg.strokeWidth = style.strokeWidth
-		self._strokeWidth_dirty=false
-	end
+	-- strokeColor
+
 	if self._strokeColor_dirty then
 		bg:setStrokeColor( unpack( style.strokeColor ))
 		self._strokeColor_dirty=false
 	end
 
+	-- strokeWidth
+
+	if self._strokeWidth_dirty then
+		bg.strokeWidth = style.strokeWidth
+		self._strokeWidth_dirty=false
+	end
 
 end
 
