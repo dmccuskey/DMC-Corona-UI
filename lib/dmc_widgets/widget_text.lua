@@ -67,10 +67,12 @@ dmc_widget_func = dmc_widget_data.func
 local Objects = require 'dmc_objects'
 local LifecycleMixModule = require 'dmc_lifecycle_mix'
 local Utils = require( dmc_widget_func.find( 'widget_utils' ) )
+local ThemeMixModule = require( dmc_widget_func.find( 'widget_theme_mix' ) )
 
 -- these are set later
 local Widgets = nil
 local FontMgr = nil
+local ThemeMgr = nil
 
 
 
@@ -83,13 +85,10 @@ local newClass = Objects.newClass
 local ComponentBase = Objects.ComponentBase
 
 local LifecycleMix = LifecycleMixModule.LifecycleMix
-
-local tinsert = table.insert
-local tremove = table.remove
+local ThemeMix = ThemeMixModule.ThemeMix
 
 local LOCAL_DEBUG = true
 
-assert( LifecycleMix )
 
 
 --====================================================================--
@@ -97,19 +96,27 @@ assert( LifecycleMix )
 --====================================================================--
 
 
-local Text = newClass( {ComponentBase,LifecycleMix}, {name="Text"}  )
+local Text = newClass( {ComponentBase,ThemeMix,LifecycleMix}, {name="Text"}  )
 
 --== Class Constants
 
-Text.DEFAULT_TEXTCOLOR = {0,0,0,1}
-Text.DEFAULT_FILLCOLOR = {0,0,0,0}
-
-Text.RIGHT = 'right'
-Text.CENTER = 'center'
 Text.LEFT = 'left'
+Text.CENTER = 'center'
+Text.RIGHT = 'right'
 
-Text.TOP = 'top'
-Text.BOTTOM = 'bottom'
+--== Theme Constants
+
+Text.THEME_ID = 'text'
+
+Text.DEFAULT = 'default'
+
+Text.THEME_STATES = {
+	Text.DEFAULT,
+}
+
+--== Event Constants
+
+Text.EVENT = 'background-widget-event'
 
 
 --======================================================--
@@ -120,14 +127,9 @@ Text.BOTTOM = 'bottom'
 function Text:__init__( params )
 	-- print( "Text:__init__", params )
 	params = params or {}
-	if params.x==nil then params.x=0 end
-	if params.y==nil then params.y=0 end
-	if params.align==nil then params.align=self.CENTER end
-	if params.textColor==nil then params.textColor=self.DEFAULT_TEXTCOLOR end
-	if params.fillColor==nil then params.fillColor=self.DEFAULT_FILLCOLOR end
-	if params.marginX==nil then params.marginX=0 end
-	if params.marginY==nil then params.marginY=0 end
+	if params.text==nil then params.text="" end
 	self:superCall( LifecycleMix, '__init__', params )
+	self:superCall( ThemeMix, '__init__', params )
 	self:superCall( ComponentBase, '__init__', params )
 	--==--
 
@@ -135,57 +137,47 @@ function Text:__init__( params )
 
 	if self.is_class then return end
 
-	assert( params.text, "Text: requires param 'text'" )
-	assert( params.font, "Text: requires param 'font'" )
-	assert( params.fontSize, "Text: requires param 'fontSize'" )
+	local style = params.style
+	if not style then
+		style = Widgets.Style.Text.copyStyle()
+	end
+	style:updateStyle( params )
 
 	--== Create Properties ==--
 
-	-- required params
 	self._text = params.text
-	self._text_dirty=true
-	self._font = params.font
-	self._font_dirty=true
-	self._fontSize = params.fontSize
-	self._fontSize_dirty=true
 
-	-- optional params
-	self._parent = params.parent
-
-	self._x = params.x
 	self._x_dirty = true
-	self._y = params.y
-	self._y_dirty=true
-
-	self._width = params.width
+	self._y_dirty = true
 	self._width_dirty=true
-	self._height = params.height
 	self._height_dirty=true
+	-- virtual
+	self._bgWidth_dirty=true
+	self._bgHeight_dirty=true
 
-	self._align = params.align
 	self._align_dirty=true
-
-	-- other
-	self._anchorX = 0.5
 	self._anchorX_dirty=true
-	self._anchorY = 0.5
 	self._anchorY_dirty=true
-
-	self._bg_width_dirty=true
-	self._bg_height_dirty=true
-
-	self._bg_marginX = params.marginX
-	self._bg_marginY = params.marginY
-
-	self._fillColor = params.fillColor
 	self._fillColor_dirty = true
+	self._font_dirty=true
+	self._fontSize_dirty=true
+	self._marginX_dirty=true
+	self._marginY_dirty=true
+	self._strokeColor_dirty=true
+	self._strokeWidth_dirty=true
 
-	self._textColor = params.textColor
-	self._textColor_dirty = true
+	self._text_dirty=true
+	self._textColor_dirty=true
+	-- virtual
+	self._textX_dirty=true
+	self._textY_dirty=true
 
 	--== Object References ==--
 
-	self._newtext = nil -- our text object
+	self._style = style -- save
+	-- self.curr_style -- from inherit
+
+	self._txt_text = nil -- our text object
 	self._bg = nil -- our background object
 
 end
@@ -194,6 +186,7 @@ function Text:__undoInit__()
 	-- print( "Text:__undoInit__" )
 	--==--
 	self:superCall( ComponentBase, '__undoInit__' )
+	self:superCall( ThemeMix, '__undoInit__' )
 	self:superCall( LifecycleMix, '__undoInit__' )
 end
 
@@ -223,12 +216,21 @@ function Text:__initComplete__()
 	-- print( "Text:__initComplete__" )
 	self:superCall( ComponentBase, '__initComplete__' )
 	--==--
-	self:__commitProperties__()
+
+	local f  = self:createCallback( self._styleEvent_handler )
+	self:setStyleCallback( f )
+
+	-- calls __commitProperties__()
+	self:setActiveStyle( self._style )
 end
 
 function Text:__undoInitComplete__()
 	--print( "Text:__undoInitComplete__" )
-	self:_removeNewText()
+	self:_removeText()
+
+	self:setActiveStyle( nil )
+
+	self:setStyleCallback( nil )
 	--==--
 	self:superCall( ComponentBase, '__undoInitComplete__' )
 end
@@ -246,6 +248,9 @@ function Text.__setWidgetManager( manager )
 	-- print( "Text.__setWidgetManager" )
 	Widgets = manager
 	FontMgr = Widgets.FontMgr
+	ThemeMgr = Widgets.ThemeMgr
+
+	ThemeMgr:registerWidget( Text.THEME_ID, Text )
 end
 
 
@@ -254,109 +259,154 @@ end
 --== Public Methods
 
 
+--== style
+
+function Text.__getters:style()
+	-- print( 'Text.__getters:style' )
+	return self.curr_style
+end
+function Text.__setters:style( value )
+	-- print( 'Text.__setters:style', value )
+	self:setActiveStyle( value )
+end
+
 --== X
 
 function Text.__setters:x( value )
 	-- print( 'Text.__setters:x', value )
-	assert( type(value)=='number' )
-	--==--
-	if value == self._x then return end
-	self._x = value
-	self._x_dirty=true
-	self:__invalidateProperties__()
+	self.curr_style.x = value
 end
-
 
 --== Y
 
 function Text.__setters:y( value )
 	-- print( 'Text.__setters:y', value )
-	assert( type(value)=='number' )
-	--==--
-	if value == self._y then return end
-	self._y = value
-	self._y_dirty=true
-	self:__invalidateProperties__()
+	self.curr_style.y = value
 end
 
+--== width
 
---== marginX
-
-function Text.__setters:marginX( value )
-	-- print( 'Text.__setters:marginX', value )
-	assert( type(value)=='number' )
-	if value < 0 then value=0 end
-	--==--
-	if value == self._bg_marginX then return end
-	self._bg_marginX = value
-	self._bg_width_dirty=true
-	self:__invalidateProperties__()
+function Text.__getters:width()
+	-- print( 'Text.__getters:width' )
+	local w, t = self.curr_style.width, self._txt_text
+	if w==nil and t then w=t.width end
+	return w
+end
+function Text.__setters:width( value )
+	-- print( 'Text.__setters:width', value )
+	self.curr_style.width = value
 end
 
+--== height
 
---== marginY
-
-function Text.__setters:marginY( value )
-	-- print( 'Text.__setters:marginY', value )
-	assert( type(value)=='number' )
-	if value < 0 then value=0 end
-	--==--
-	if value == self._bg_marginY then return end
-	self._bg_marginY = value
-	self._bg_height_dirty=true
-	self:__invalidateProperties__()
+function Text.__getters:height()
+	-- print( 'Text.__getters:height' )
+	local h, t = self.curr_style.height, self._txt_text
+	if h==nil and t then h=t.height end
+	return h
+end
+function Text.__setters:height( value )
+	-- print( 'Text.__setters:height', value )
+	self.curr_style.height = value
 end
 
 
 --== align
 
 function Text.__getters:align()
-	return self._align
+	return self.curr_style.align
 end
 function Text.__setters:align( value )
 	-- print( 'Text.__setters:align', value )
-	assert( type(value)=='string' )
-	if self._align == value then return end
-	self._align = value
-	self._align_dirty = true
-	self:__invalidateProperties__()
+	self.curr_style.align = value
 end
-
 
 --== anchorX
 
 function Text.__getters:anchorX()
-	return self._anchorX
+	return self.curr_style.anchorX
 end
 function Text.__setters:anchorX( value )
 	-- print( 'Text.__setters:anchorX', value )
-	assert( type(value)=='number' )
-	--==--
-	if value==self._anchorX then return end
-	self._anchorX = value
-	self._anchorX_dirty=true
-	self._text_alignX_dirty=true
-	self:__invalidateProperties__()
+	self.curr_style.anchorX = value
 end
-
 
 --== anchorY
 
 function Text.__getters:anchorY()
-	return self._anchorY
+	return self.curr_style.anchorY
 end
 function Text.__setters:anchorY( value )
 	-- print( 'Text.__setters:anchorY', value )
-	assert( type(value)=='number' )
+	self.curr_style.anchorY = value
+end
+
+--== font
+
+function Text.__getters:font()
+	return self.curr_style.font
+end
+function Text.__setters:font( value )
+	-- print( 'Text.__setters:font', value )
+	self.curr_style.font = value
+end
+
+--== fontSize
+
+function Text.__getters:fontSize()
+	return self.curr_style.fontSize
+end
+function Text.__setters:fontSize( value )
+	-- print( 'Text.__setters:fontSize', value )
+	self.curr_style.fontSize = value
+end
+
+--== marginX
+
+function Text.__getters:marginX()
+	return self.curr_style.marginX
+end
+function Text.__setters:marginX( value )
+	-- print( 'Text.__setters:marginX', value )
+	self.curr_style.marginX = value
+end
+
+--== marginY
+
+function Text.__getters:marginY()
+	return self.curr_style.marginY
+end
+function Text.__setters:marginY( value )
+	-- print( 'Text.__setters:marginY', value )
+	self.curr_style.marginY = value
+end
+
+--== strokeWidth
+
+function Text.__getters:strokeWidth()
+	return self.curr_style.strokeWidth
+end
+function Text.__setters:strokeWidth( value )
+	-- print( 'Text.__setters:strokeWidth', value )
+	self.curr_style.strokeWidth = value
+end
+
+--== text
+
+function Text.__getters:text()
+	return self._text
+end
+function Text.__setters:text( value )
+	-- print( 'Text.__setters:text', value )
+	assert( type(value)=='string' )
 	--==--
-	if value==self._anchorY then return end
-	self._anchorY = value
-	self._anchorY_dirty=true
+	if self._text == value then return end
+	self._text = value
+	self._text_dirty=true
 	self:__invalidateProperties__()
 end
 
-
---== setAnchor
+--== Text
 
 function Text:setAnchor( ... )
 	-- print( 'Text:setAnchor' )
@@ -373,114 +423,25 @@ function Text:setAnchor( ... )
 	end
 end
 
+--== setFillColor
 
---== font
-
-function Text.__getters:font()
-	return self._font
-end
-function Text.__setters:font( value )
-	-- print( 'Text.__setters:font', value )
-	assert( value )
-	--==--
-	if value==self._font then return end
-	self._font = value
-	self._font_dirty=true
-	self:__invalidateProperties__()
+function Text:setFillColor( ... )
+	-- print( 'Text:setFillColor' )
+	self.curr_style.fillColor = {...}
 end
 
---== fontSize
+--== setStrokeColor
 
-function Text.__getters:fontSize()
-	return self._fontSize
+function Text:setStrokeColor( ... )
+	-- print( 'Text:setStrokeColor' )
+	self.curr_style.strokeColor = {...}
 end
-function Text.__setters:fontSize( value )
-	-- print( 'Text.__setters:fontSize', value )
-	assert( type(value)=='number' )
-	--==--
-	if value==self._fontSize then return end
-	self._fontSize = value
-	self._fontSize_dirty=true
-	self:__invalidateProperties__()
-end
-
-
---== width
-
-function Text.__getters:width()
-	local t, w = self._newtext, self._width
-	if w==nil and t then w=t.width end
-	return w
-end
-function Text.__setters:width( value )
-	-- print( 'Text.__setters:width', value )
-	assert( value==nil or type(value)=='number' )
-	--==--
-	if value==self._width then return end
-	self._width = value
-	self._width_dirty=true
-	self._bg_width_dirty=true
-	self._text_alignX_dirty=true
-	self:__invalidateProperties__()
-end
-
-
---== height
-
-function Text.__getters:height()
-	local t, h = self._newtext, self._height
-	if h==nil and t then h=t.height end
-	return h
-end
-function Text.__setters:height( value )
-	-- print( 'Text.__setters:height', value )
-	assert( value==nil or type(value)=='number' )
-	--==--
-	if value==self._height then return end
-	self._height = value
-	self._height_dirty=true
-	self._bg_height_dirty=true
-	self:__invalidateProperties__()
-end
-
-
---== text
-
-function Text.__getters:text()
-	return self._text
-end
-function Text.__setters:text( value )
-	-- print( 'Text.__setters:text', value )
-	if value == self._text then return end
-	self._text = value
-	self._text_dirty=true
-	self:__invalidateProperties__()
-end
-
-function Text.__getters:textHeight()
-	return self._newtext.height
-end
-
 
 --== setTextColor
 
 function Text:setTextColor( ... )
 	-- print( 'Text:setTextColor' )
-	--==--
-	self._textColor = {...}
-	self._textColor_dirty = true
-	self:__invalidateProperties__()
-end
-
-
---== setFillColor
-
-function Text:setFillColor( ... )
-	-- print( 'Text:setFillColor' )
-	--==--
-	self._fillColor = {...}
-	self._fillColor_dirty = true
-	self:__invalidateProperties__()
+	self.curr_style.textColor = {...}
 end
 
 
@@ -490,169 +451,230 @@ end
 
 
 function Text:_updateTextProperties()
-	-- CAN OVERRIDE FOR CUSTOM TEXT HANDLING
+	-- CAN OVERRIDE FOR CUSTOM HANDLING
 end
 
-
-function Text:_removeNewText()
-	-- print( 'Text:_removeNewText' )
-	local o = self._newtext
+function Text:_removeText()
+	-- print( 'Text:_removeText' )
+	local o = self._txt_text
 	if o then
 		o:removeSelf()
-		self._newtext = nil
+		self._txt_text = nil
 	end
 end
 
-function Text:_createNewText()
-	-- print( 'Text:_createNewText' )
+function Text:_createText()
+	-- print( 'Text:_createText' )
+	local style = self.curr_style
 	local o -- object
 
-	self:_removeNewText()
+	self:_removeText()
 	self:_updateTextProperties()
 
-	local w = self._width
-	if w~=nil then
-		w=w-self._bg_marginX*2
+	local w, h = style.width, style.height
+	if w ~= nil then
+		w = w - style.marginX*2
 	end
 
 	o = display.newText{
-		parent=self._parent,
-
-		text=self._text,
-		fontSize=self._fontSize,
-
 		x=0,
 		y=0,
 		width=w,
-		height=nil,
+		height=nil, -- don't use height
 
-		align=self._align
+		align=style.align,
+		fontSize=style.fontSize,
+		text=self._text,
 	}
 
 	self:insert( o )
-	self._newtext = o
+	self._txt_text = o
 
-	-- can't reset these
+	-- conditions for coming in here
+	self._align_dirty=false
 	self._font_dirty=false
 	self._fontSize_dirty=false
-
-	self._width_dirty=false
-	self._height_dirty=false
-	self._align_dirty=false
+	self._fontSize_dirty=false
 
 	--== reset our text object
 
-	self._text_dirty=false
+	self._x_dirty=true
+	self._y_dirty=true
+	self._width_dirty=true
+	self._height_dirty=true
 
-	self._textColor_dirty=true
+	self._bgWidth_dirty=true
+	self._bgHeight_dirty=true
+
 	self._anchorX_dirty=true
 	self._anchorY_dirty=true
-
+	self._text_dirty=true
+	self._textColor_dirty=true
 end
 
 
 function Text:__commitProperties__()
 	-- print( 'Text:__commitProperties__' )
+	local style = self.curr_style
+	-- local metric = FontMgr:getFontMetric( style.font, style.fontSize )
+	metric={offsetX=0,offsetY=0}
 
 	-- create new text if necessary
-	if self._font_dirty or self._align_dirty or self._fontSize_dirty then
-		self:_createNewText()
+	if self._align_dirty or self._font_dirty or self._fontSize_dirty then
+		self:_createText()
 	end
 
 	local view = self.view
 	local bg = self._bg
-	local text = self._newtext
-	local metric = FontMgr:getFontMetric( self._font, self._fontSize )
+	local text = self._txt_text
+
+	--== position sensitive
+
+	if self._align_dirty then
+		text.align=style._align
+		self._align_dirty = false
+	end
 
 	-- set text string
 
 	if self._text_dirty then
 		text.text = self._text
 		self._text_dirty=false
+
+		self._bgWidth_dirty=true
+		self._bgHeight_dirty=true
 		self._anchorX_dirty=true
 		self._anchorY_dirty=true
 	end
 
-	-- textColor/fillColor
+	-- bg width/height
 
-	if self._textColor_dirty then
-		text:setTextColor( unpack( self._textColor ) )
-		self._textColor_dirty=false
+	if self._bgWidth_dirty then
+		bg.width = self.width
+		self._bgWidth_dirty=false
+
+		self._text_alignX_dirty=true
 	end
-	if self._fillColor_dirty then
-		bg:setFillColor( unpack( self._fillColor ))
-		self._fillColor_dirty=false
+	if self._bgHeight_dirty then
+		bg.height = self.height
+		self._bgHeight_dirty=false
+
+		self._text_alignY_dirty=true
 	end
 
 	-- anchorX/anchorY
 
 	if self._anchorX_dirty then
-		view.anchorX = self._anchorX
-		bg.anchorX = self._anchorX
+		-- view.anchorX = style.anchorX
+		bg.anchorX = style.anchorX
 		self._anchorX_dirty=false
+
 		self._x_dirty=true
 	end
 	if self._anchorY_dirty then
-		view.anchorY = self._anchorY
-		bg.anchorY = self._anchorY
+		-- view.anchorY = style.anchorY
+		bg.anchorY = style.anchorY
 		self._anchorY_dirty=false
+
 		self._y_dirty=true
 	end
 
 	-- x/y
 
 	if self._x_dirty then
-		view.x = self._x
-		bg.x = metric.offsetX
+		view.x = style.x
+		bg.x = 0
 		local offset = bg.width*(0.5-bg.anchorX)
 		text.x = bg.x+offset
 		self._x_dirty = false
-		self._text_alignX_dirty=true
+
+		self._textX_dirty=true
 	end
 	if self._y_dirty then
-		view.y = self._y
-		bg.y = metric.offsetY
+		view.y = style.y
+		bg.y = 0
 		local offset = bg.height*(0.5-bg.anchorY)
-		text.y = bg.y+offset
+		text.y = bg.y -- +offset
 		self._y_dirty = false
-		self._text_alignY_dirty=true
+
+		self._textY_dirty=true
 	end
 
-	-- bg width/height
+	-- text align x/y
 
-	if self._bg_width_dirty then
-		bg.width = self.width
-		self._bg_width_dirty=false
-		self._text_alignX_dirty=true
-	end
-	if self._bg_height_dirty then
-		bg.height = self.height
-		self._bg_height_dirty=false
-		self._text_alignY_dirty=true
-	end
-
-	if self._text_alignX_dirty then
+	if self._textX_dirty then
+		local align = self._align
+		local bgMarginX = style.marginX
 		local offset
-		if self._align == self.LEFT then
+		if align == self.LEFT then
 			text.anchorX = 0
-			offset = -bg.width*(bg.anchorX)+self._bg_marginX
+			offset = -bg.width*(bg.anchorX)+bgMarginX
 			text.x=bg.x+offset
-		elseif self._align == self.RIGHT then
+		elseif align == self.RIGHT then
 			text.anchorX = 1
-			offset = bg.width*(1-bg.anchorX)-self._bg_marginX
+			offset = bg.width*(1-bg.anchorX)-bgMarginX
 			text.x=bg.x+offset
 		else
 			text.anchorX = 0.5
 			offset = bg.width*(0.5-bg.anchorX)
 			text.x=bg.x+offset
 		end
-		self._text_alignX_dirty = false
+		self._textX_dirty = false
 	end
 
-	if self._text_alignX_dirty then
-		self._text_alignY_dirty=false
+	if self._textY_dirty then
+		local offset
+		text.anchorY = 0.5
+		offset = bg.height/2-bg.height*(bg.anchorY) -- 0
+		text.y=bg.y+offset
+		self._textY_dirty=false
 	end
 
+
+	--== non-position sensitive
+
+	-- textColor/fillColor
+
+	if self._fillColor_dirty then
+		bg:setFillColor( unpack( style.fillColor ))
+		self._fillColor_dirty=false
+	end
+	if self._strokeColor_dirty then
+		bg:setStrokeColor( unpack( style.strokeColor ))
+		self._strokeColor_dirty=false
+	end
+	if self._strokeWidth_dirty then
+		bg.strokeWidth = style.strokeWidth
+		self._strokeWidth_dirty=false
+	end
+	if self._textColor_dirty then
+		text:setTextColor( unpack( style.textColor ) )
+		self._textColor_dirty=false
+	end
+
+end
+
+
+function Text:_resetAllProperties()
+	-- print( "Text:_resetAllProperties" )
+	self._x_dirty = true
+	self._y_dirty = true
+	self._width_dirty=true
+	self._height_dirty=true
+
+	self._align_dirty=true
+	self._anchorX_dirty=true
+	self._anchorY_dirty=true
+	self._fillColor_dirty = true
+	self._font_dirty=true
+	self._fontSize_dirty=true
+	self._marginX_dirty=true
+	self._marginY_dirty=true
+	self._strokeColor_dirty=true
+	self._strokeWidth_dirty=true
+
+	self._text_dirty=true
+	self._textColor_dirty=true
 end
 
 
@@ -661,7 +683,59 @@ end
 --== Event Handlers
 
 
--- none
+function Text:_styleEvent_handler( event )
+	-- print( "Text:_styleEvent_handler", event )
+	local etype= event.type
+	local property= event.property
+	local value = event.value
+
+	-- print( "Style Changed", etype, property, value )
+
+	if etype=='reset-all' then
+		self:_resetAllProperties()
+
+	else
+
+		if property=='x' then
+			self._x_dirty=true
+		elseif property=='y' then
+			self._y_dirty=true
+		elseif property=='width' then
+			self._width_dirty=true
+		elseif property=='height' then
+			self._height_dirty=true
+
+		elseif property=='align' then
+			self._align_dirty=true
+		elseif property=='anchorX' then
+			self._anchorX_dirty=true
+		elseif property=='anchorY' then
+			self._anchorY_dirty=true
+		elseif property=='fillColor' then
+			self._fillColor_dirty=true
+		elseif property=='font' then
+			self._font_dirty=true
+		elseif property=='fontSize' then
+			self._fontSize_dirty=true
+		elseif property=='marginX' then
+			self._marginX_dirty=true
+		elseif property=='marginY' then
+			self._marginY_dirty=true
+		elseif property=='strokeColor' then
+			self._strokeColor_dirty=true
+		elseif property=='strokeWidth' then
+			self._strokeWidth_dirty=true
+		elseif property=='text' then
+			self._text_dirty=true
+		elseif property=='textColor' then
+			self._textColor_dirty=true
+		end
+	end
+
+	self:__invalidateProperties__()
+	self:__dispatchInvalidateNotification__( property, value )
+end
+
 
 
 

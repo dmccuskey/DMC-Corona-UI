@@ -115,14 +115,23 @@ end
 
 
 function Theme.setActiveStyle( self, style )
+	-- print( "Theme.setActiveStyle", style )
 	local o = self.__curr_style
+	local f = self.__curr_style_f
 	if o then
 		o.onProperty = nil
 	end
+
 	o = style
-	o.onProperty = self.__curr_style_f
+
+	-- set before calls
 	self.__curr_style = o
 	self.curr_style = o
+
+	if o and f then
+		o.onProperty = f
+		f({type='reset-all'})
+	end
 end
 
 function Theme.setStyleCallback( self, func )
