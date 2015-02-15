@@ -120,6 +120,7 @@ TextStyle.DEFAULT = {
 function TextStyle:__init__( params )
 	-- print( "TextStyle:__init__", params )
 	params = params or {}
+	if params.inherit==nil then params.inherit=TextStyle end
 	self:superCall( '__init__', params )
 	--==--
 

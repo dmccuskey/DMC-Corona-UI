@@ -115,6 +115,7 @@ BackgroundStyle.DEFAULT = {
 function BackgroundStyle:__init__( params )
 	-- print( "BackgroundStyle:__init__", params )
 	params = params or {}
+	if params.inherit==nil then params.inherit=BackgroundStyle end
 	self:superCall( '__init__', params )
 	--==--
 
