@@ -118,7 +118,7 @@ Text.STYLE_CLASS = nil -- added later
 
 --== Event Constants
 
-Text.EVENT = 'background-widget-event'
+Text.EVENT = 'text-widget-event'
 
 
 --======================================================--
