@@ -157,7 +157,7 @@ loadBackgroundSupport = function()
 	Widget.Style.Background=BackgroundStyle
 
 	Background.__setWidgetManager( Widget )
-	BackgroundStyle.__setWidgetManager( Widget )
+	BackgroundStyle.initialize( Widget )
 end
 
 

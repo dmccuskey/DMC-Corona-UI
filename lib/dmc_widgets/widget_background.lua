@@ -138,6 +138,7 @@ function Background:__init__( params )
 	params = params or {}
 	if params.x==nil then params.x=0 end
 	if params.y==nil then params.y=0 end
+
 	self:superCall( LifecycleMix, '__init__', params )
 	self:superCall( ComponentBase, '__init__', params )
 	self:superCall( ThemeMix, '__init__', params )
@@ -421,13 +422,14 @@ end
 
 function Background:stylePropertyChangeHandler( event )
 	-- print( "Background:stylePropertyChangeHandler", event )
+	local style = event.target
 	local etype= event.type
 	local property= event.property
 	local value = event.value
 
 	-- print( "Style Changed", etype, property, value )
 
-	if etype=='reset-all' then
+	if etype == style.STYLE_RESET then
 		self._width_dirty=true
 		self._height_dirty=true
 
