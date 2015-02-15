@@ -21,6 +21,7 @@ module_config = {
 			"dmc_widgets/theme_manager/base_style.lua",
 			"dmc_widgets/theme_manager/background_style.lua",
 			"dmc_widgets/theme_manager/text_style.lua",
+			"dmc_widgets/theme_manager/textfield_style.lua",
 			"dmc_widgets/widget_background.lua",
 			"dmc_widgets/widget_button.lua",
 			"dmc_widgets/widget_button/view_9slice.lua",
@@ -171,6 +172,16 @@ module_config = {
 			},
 			{
 				"exp_dir": "textfield-widget/textfield-simple",
+				"requires": [],
+				"mod_dir_map": {
+					"default_dir": "",
+					"libs": {
+						"dmc-corona-boot":""
+					}
+				}
+			},
+			{
+				"exp_dir": "textfield-widget/textfield-themed",
 				"requires": [],
 				"mod_dir_map": {
 					"default_dir": "",
