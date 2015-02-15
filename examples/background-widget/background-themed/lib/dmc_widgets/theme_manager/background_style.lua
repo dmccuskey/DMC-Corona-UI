@@ -77,6 +77,8 @@ local BaseStyle = require( widget_find( 'theme_manager.base_style' ) )
 local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
 
+local Widgets = nil -- set later
+
 
 
 --====================================================================--
@@ -87,6 +89,8 @@ local ObjectBase = Objects.ObjectBase
 local BackgroundStyle = newClass( BaseStyle, {name="Background Style"} )
 
 --== Class Constants
+
+BackgroundStyle.__base_style__ = nil
 
 BackgroundStyle.DEFAULT = {
 	name='background-default-style',
@@ -104,8 +108,9 @@ BackgroundStyle.DEFAULT = {
 
 --== Event Constants
 
+BackgroundStyle.EVENT = 'background-style-event'
+
 -- from super
--- Class.EVENT
 -- Class.STYLE_UPDATED
 
 
@@ -113,15 +118,17 @@ BackgroundStyle.DEFAULT = {
 --== Start: Setup DMC Objects
 
 function BackgroundStyle:__init__( params )
-	-- print( "BackgroundStyle:__init__", params )
+	print( "BackgroundStyle:__init__", params )
 	params = params or {}
 	self:superCall( '__init__', params )
 	--==--
 
 	--== Style Properties ==--
 
-	-- self._inherit
 	-- self._data
+	-- self._inherit
+	-- self._widget
+	-- self._parent
 
 	-- self._name
 	-- self._onProperty
@@ -146,21 +153,18 @@ end
 --== Static Methods
 
 
-function BackgroundStyle.setDefaults()
-	-- print( "BackgroundStyle.setDefaults" )
-	local def = BackgroundStyle.DEFAULT
 
-	BackgroundStyle._name=def.name
+function BackgroundStyle.initialize( manager )
+	-- print( "BackgroundStyle.initialize", manager )
+	Widgets = manager
 
-	BackgroundStyle._width=def.width
-	BackgroundStyle._height=def.height
-
-	BackgroundStyle._anchorX=def.anchorX
-	BackgroundStyle._anchorY=def.anchorY
-	BackgroundStyle._fillColor=def.fillColor
-	BackgroundStyle._strokeColor=def.strokeColor
-	BackgroundStyle._strokeWidth=def.strokeWidth
+	BackgroundStyle._setDefaults()
 end
+
+
+
+--====================================================================--
+--== Public Methods
 
 
 --== updateStyle
@@ -184,19 +188,24 @@ end
 
 
 --====================================================================--
---== Public Methods
-
-
--- none
-
-
-
---====================================================================--
 --== Private Methods
 
 
+function BackgroundStyle._setDefaults()
+	-- print( "BackgroundStyle._setDefaults" )
+	local style = BackgroundStyle:new{
+		data=BackgroundStyle.DEFAULT
+	}
+	BackgroundStyle.__base_style__ = style
+end
+
+
+
 function BackgroundStyle:_checkProperties()
+	-- print( "BackgroundStyle._checkProperties" )
+
 	BaseStyle._checkProperties( self )
+
 	assert( self.width, "Style: requires 'width'" )
 	assert( self.height, "Style: requires 'height'" )
 
@@ -209,17 +218,12 @@ end
 
 
 
-
 --====================================================================--
 --== Event Handlers
 
 
 -- none
 
-
---== Pre-Processing ==--
-
-BackgroundStyle.setDefaults()
 
 
 

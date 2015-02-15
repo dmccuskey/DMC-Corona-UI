@@ -87,21 +87,38 @@ local Style = newClass( ObjectBase, {name="Style Base"}  )
 
 Style.EVENT = 'style-event'
 
+Style.STYLE_RESET = 'style-reset-event'
 Style.STYLE_UPDATED = 'style-updated-event'
+
+-- Style.__base_style__  <instance of class>
 
 
 --======================================================--
 --== Start: Setup DMC Objects
 
 function Style:__init__( params )
-	-- print( "Style:__init__", params )
+	print( "Style:__init__", params )
 	params = params or {}
+	params.data = params.data
+	if params.inherit==nil then
+		params.inherit=self.class.__base_style__
+	end
+	params.name = params.name
+	params.widget = params.widget
+
 	self:superCall( '__init__', params )
 	--==--
+	-- Style inheritance tree
 	self._inherit = params.inherit
-	self._data = params
+	print( "in herit from ", params.inherit)
+	print( "self is ", self )
+	print( "base is ", self.__base_style__ )
+	-- widget delegate
+	self._parent = params.parent
+	self._widget = params.widget
 
-	self._onProperty = nil
+	self._data = params.data
+
 	self._name = params.name
 end
 
@@ -110,6 +127,7 @@ function Style:__initComplete__()
 	self:superCall( '__initComplete__' )
 	--==--
 	self:_parseData( self._data )
+	self:_checkChildren()
 	self:_checkProperties()
 end
 
@@ -119,12 +137,20 @@ end
 --== Public Methods
 
 
+function Style:_checkChildren()
+	print("OVERRIDE Style:_checkChildren")
+end
+
+
 -- make a copy of the current style setting
 -- same information and inheritance
 --
 function Style:cloneStyle()
-	local o = self.class:new({inherit=self._inherit})
-	o:updateStyle( self, true )
+	local params = {
+		inherit=self._inherit
+	}
+	local o = self.class:new( params )
+	o:updateStyle( self, true ) -- clone data, force
 	return o
 end
 
@@ -132,21 +158,80 @@ end
 -- create a new style, setting
 -- inheritance to current style
 --
-function Style:copyStyle()
-	local o = self.class:new({inherit=self})
-	return o
+function Style:copyStyle( params )
+	print( "Style:copyStyle", self )
+	params = params or {}
+	--==--
+	params.inherit = self
+	return self.class:new( params )
 end
 Style.inheritStyle=Style.copyStyle
 
 
---== onProperty
-
--- callback, on property change
---
-function Style.__setters:onProperty( value )
-	-- print( "Style.__setters:onProperty", value )
-	self._onProperty = value
+function Style:resetProperties()
+	self:_dispatchResetEvent()
 end
+
+
+-- params:
+-- data
+-- widget
+-- name
+function Style:createStyleFrom( params )
+	print( "Style:createStyleFrom", params )
+	params = params or {}
+	if params.copy==nil then params.copy=true end
+	--==--
+	local data = params.data
+	local copy = params.copy ; params.copy=nil
+
+	local StyleClass = self.class
+	local style
+	if data==nil then
+		print( "NO DATA HERE")
+		style = StyleClass:new( params )
+	elseif type(data.isa)=='function' then
+		print( "HAVE STYLE CLASS")
+		if not copy then
+			style = data
+		else
+			assert( data:isa( StyleClass ) )
+			params.data=nil
+			style = data:copyStyle( params )
+		end
+	else
+		print( "LUA STRUCTURE")
+		-- Lua structure
+		style = StyleClass:new( params )
+		-- style:updateStyle( data )
+	end
+
+	assert( style, "failed to create style" )
+
+	return style
+end
+
+
+--== inherit
+
+-- Style Class
+--
+function Style.__setters:inherit( value )
+	-- print( "Style.__setters:inherit", value )
+	assert( value:isa( self.class ) )
+	--==--
+	self._inherit = value
+end
+
+--== widget
+
+-- widget, to process events
+--
+function Style.__setters:widget( value )
+	-- print( "Style.__setters:widget", value )
+	self._widget = value
+end
+
 
 
 --[[
@@ -177,7 +262,7 @@ end
 function Style.__getters:x()
 	local value = self._x
 	if value==nil and self._inherit then
-		value = self._inherit._x
+		value = self._inherit.x
 	end
 	return value
 end
@@ -195,7 +280,7 @@ end
 function Style.__getters:y()
 	local value = self._y
 	if value==nil and self._inherit then
-		value = self._inherit._y
+		value = self._inherit.y
 	end
 	return value
 end
@@ -213,7 +298,7 @@ end
 function Style.__getters:width()
 	local value = self._width
 	if value==nil and self._inherit then
-		value = self._inherit._width
+		value = self._inherit.width
 	end
 	return value
 end
@@ -231,7 +316,7 @@ end
 function Style.__getters:height()
 	local value = self._height
 	if value==nil and self._inherit then
-		value = self._inherit._height
+		value = self._inherit.height
 	end
 	return value
 end
@@ -250,7 +335,7 @@ end
 function Style.__getters:align()
 	local value = self._align
 	if value==nil and self._inherit then
-		value = self._inherit._align
+		value = self._inherit.align
 	end
 	return value
 end
@@ -268,7 +353,7 @@ end
 function Style.__getters:anchorX()
 	local value = self._anchorX
 	if value==nil and self._inherit then
-		value = self._inherit._anchorX
+		value = self._inherit.anchorX
 	end
 	return value
 end
@@ -286,7 +371,7 @@ end
 function Style.__getters:anchorY()
 	local value = self._anchorY
 	if value==nil and self._inherit then
-		value = self._inherit._anchorY
+		value = self._inherit.anchorY
 	end
 	return value
 end
@@ -304,7 +389,7 @@ end
 function Style.__getters:fillColor()
 	local value = self._fillColor
 	if value==nil and self._inherit then
-		value = self._inherit._fillColor
+		value = self._inherit.fillColor
 	end
 	return value
 end
@@ -321,7 +406,7 @@ end
 function Style.__getters:font()
 	local value = self._font
 	if value==nil and self._inherit then
-		value = self._inherit._font
+		value = self._inherit.font
 	end
 	return value
 end
@@ -338,7 +423,7 @@ end
 function Style.__getters:fontSize()
 	local value = self._fontSize
 	if value==nil and self._inherit then
-		value = self._inherit._fontSize
+		value = self._inherit.fontSize
 	end
 	return value
 end
@@ -355,7 +440,7 @@ end
 function Style.__getters:isHitTestable()
 	local value = self._isHitTestable
 	if value==nil and self._inherit then
-		value = self._inherit._isHitTestable
+		value = self._inherit.isHitTestable
 	end
 	return value
 end
@@ -373,7 +458,7 @@ end
 function Style.__getters:marginX()
 	local value = self._marginX
 	if value==nil and self._inherit then
-		value = self._inherit._marginX
+		value = self._inherit.marginX
 	end
 	return value
 end
@@ -390,7 +475,7 @@ end
 function Style.__getters:marginY()
 	local value = self._marginY
 	if value==nil and self._inherit then
-		value = self._inherit._marginY
+		value = self._inherit.marginY
 	end
 	return value
 end
@@ -407,7 +492,7 @@ end
 function Style.__getters:strokeColor()
 	local value = self._strokeColor
 	if value==nil and self._inherit then
-		value = self._inherit._strokeColor
+		value = self._inherit.strokeColor
 	end
 	return value
 end
@@ -424,15 +509,16 @@ end
 function Style.__getters:strokeWidth( value )
 	local value = self._strokeWidth
 	if value==nil and self._inherit then
-		value = self._inherit._strokeWidth
+		value = self._inherit.strokeWidth
 	end
 	return value
 end
 function Style.__setters:strokeWidth( value )
-	-- print( "Style.__setters:strokeWidth", value )
+	print( "Style.__setters:strokeWidth", value )
 	assert( type(value)=='number' or (value==nil and self._inherit) )
 	--==--
 	if value == self._strokeWidth then return end
+	print( self.name )
 	self._strokeWidth = value
 	self:_dispatchChangeEvent( 'strokeWidth', value )
 
@@ -443,7 +529,7 @@ end
 function Style.__getters:textColor()
 	local value = self._textColor
 	if value==nil and self._inherit then
-		value = self._inherit._textColor
+		value = self._inherit.textColor
 	end
 	return value
 end
@@ -468,24 +554,50 @@ end
 
 
 function Style:_parseData( data )
-	-- print( "Style:_parseData", data )
+	print( "Style:_parseData", data )
+	if data==nil then return end
 	for k,v in pairs( data ) do
-		-- print(k,v)
+		print(k,v)
 		self[k]=v
 	end
 end
 
 
-function Style:_dispatchChangeEvent( prop, value )
-	-- print( 'Style:_dispatchChangeEvent', prop, value )
+function Style:_dispatchResetEvent()
+	-- print( 'Style:_dispatchResetEvent' )
 	--==--
+	local widget = self._widget
+	if not widget then return end
+
 	local e = {
 		name=self.EVENT,
+		target=self,
+		type=self.STYLE_RESET
+	}
+	if widget.stylePropertyChangeHandler then
+		widget:stylePropertyChangeHandler( e )
+	end
+end
+
+
+function Style:_dispatchChangeEvent( prop, value, substyle )
+	-- print( 'Style:_dispatchChangeEvent', prop, value, substyle )
+	local widget = self._widget
+	if not widget then return end
+
+	local e = {
+		name=self.EVENT,
+		target=self,
 		type=self.STYLE_UPDATED,
 		property=prop,
 		value=value
 	}
-	if self._onProperty then self._onProperty( e ) end
+	if widget.stylePropertyChangeHandler then
+		print( "WAS DISPATCHED UPDATE", self.name )
+		print( widget, widget.NAME )
+		widget:stylePropertyChangeHandler( e )
+	end
+
 end
 
 

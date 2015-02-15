@@ -105,7 +105,7 @@ style = Widgets.newBackgroundStyle{
 	name='background-style',
 	anchorX=0.5,
 	anchorY=0.5,
-	width=20,
+	width=100,
 	height=20,
 	strokeWidth=5,
 	strokeColor={0,0,1},
@@ -116,9 +116,9 @@ style = Widgets.newBackgroundStyle{
 -- create background widget, based on style
 
 bg2 = Widgets.newBackground{
-	style=style,
 	x=100,
-	y=100
+	y=100,
+	style=style,
 }
 
 
@@ -140,15 +140,15 @@ bg2 = Widgets.newBackground{
 
 bg3 = Widgets.newBackground{
 	style={
-		fillColor={1,0,0,1}
+		fillColor={1,1,0,1}
 	},
 }
 
--- bg3.x, bg3.y = 200, 100
-bg3:setAnchor( {0,0})
+-- -- bg3.x, bg3.y = 200, 100
+-- bg3:setAnchor( {0,0})
 
-bg3.strokeWidth = 2
+-- bg3.strokeWidth = 2
 
-bg3:setFillColor( 0,1,0,0.5 )
+-- bg3:setFillColor( 0,1,0,0.5 )
 
 
