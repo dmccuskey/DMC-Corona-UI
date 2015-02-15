@@ -20,6 +20,7 @@ module_config = {
 			"dmc_widgets/theme_manager.lua",
 			"dmc_widgets/theme_manager/base_style.lua",
 			"dmc_widgets/theme_manager/background_style.lua",
+			"dmc_widgets/theme_manager/text_style.lua",
 			"dmc_widgets/widget_background.lua",
 			"dmc_widgets/widget_button.lua",
 			"dmc_widgets/widget_button/view_9slice.lua",
