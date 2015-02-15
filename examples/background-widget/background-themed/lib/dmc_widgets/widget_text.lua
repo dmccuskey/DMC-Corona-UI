@@ -239,8 +239,8 @@ end
 --== Static Methods
 
 
-function Text.__setWidgetManager( manager )
-	-- print( "Text.__setWidgetManager" )
+function Text.initialize( manager )
+	-- print( "Text.initialize" )
 	Widgets = manager
 	FontMgr = Widgets.FontMgr
 	ThemeMgr = Widgets.ThemeMgr
@@ -535,15 +535,14 @@ end
 
 function Text:stylePropertyChangeHandler( event )
 	-- print( "Text:stylePropertyChangeHandler", event )
+	local style = event.target
 	local etype= event.type
 	local property= event.property
 	local value = event.value
 
 	-- print( "Style Changed", etype, property, value )
 
-	if etype=='reset-all' then
-		self._x_dirty = true
-		self._y_dirty = true
+	if etype == style.STYLE_RESET then
 		self._width_dirty=true
 		self._height_dirty=true
 
@@ -564,11 +563,7 @@ function Text:stylePropertyChangeHandler( event )
 		property = etype
 
 	else
-		if property=='x' then
-			self._x_dirty=true
-		elseif property=='y' then
-			self._y_dirty=true
-		elseif property=='width' then
+		if property=='width' then
 			self._width_dirty=true
 		elseif property=='height' then
 			self._height_dirty=true

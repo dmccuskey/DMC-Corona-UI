@@ -172,7 +172,7 @@ function TextField:__init__( params )
 	if params.x==nil then params.x=0 end
 	if params.y==nil then params.y=0 end
 	if params.text==nil then params.text="" end
-	if params.hintText==nil then params.hintText=params.text end
+	if params.hintText==nil then params.hintText="" end
 
 	self:superCall( LifecycleMix, '__init__', params )
 	self:superCall( ComponentBase, '__init__', params )

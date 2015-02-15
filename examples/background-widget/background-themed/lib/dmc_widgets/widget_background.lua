@@ -238,8 +238,8 @@ end
 --== Static Methods
 
 
-function Background.__setWidgetManager( manager )
-	-- print( "Background.__setWidgetManager" )
+function Background.initialize( manager )
+	-- print( "Background.initialize" )
 	Widgets = manager
 	ThemeMgr = Widgets.ThemeMgr
 	Background.STYLE_CLASS = Widgets.Style.Background

@@ -118,7 +118,7 @@ BackgroundStyle.EVENT = 'background-style-event'
 --== Start: Setup DMC Objects
 
 function BackgroundStyle:__init__( params )
-	print( "BackgroundStyle:__init__", params )
+	-- print( "BackgroundStyle:__init__", params )
 	params = params or {}
 	self:superCall( '__init__', params )
 	--==--
