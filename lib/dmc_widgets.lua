@@ -154,7 +154,6 @@ local function loadBackgroundSupport()
 	Widget.Style.Background=BackgroundStyle
 
 	Background.__setWidgetManager( Widget )
-	BackgroundStyle.__setWidgetManager( Widget )
 end
 
 
@@ -301,7 +300,6 @@ local function loadTextSupport()
 	Widget.Style.Text=TextStyle
 
 	Text.__setWidgetManager( Widget )
-	TextStyle.__setWidgetManager( Widget )
 end
 
 
@@ -332,7 +330,6 @@ local function loadTextFieldSupport()
 	Widget.Style.TextField=TextFieldStyle
 
 	TextField.__setWidgetManager( Widget )
-	TextFieldStyle.__setWidgetManager( Widget )
 end
 
 
