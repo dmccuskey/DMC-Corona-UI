@@ -124,7 +124,7 @@ function Theme.resetTheme( self, params )
 	self.__styles = {}
 	self.__debug_on = params.debug_on
 
-	self:_setActiveStyle( nil, {notify=false} )
+	self:setActiveStyle( nil )
 end
 
 
@@ -161,8 +161,57 @@ function Theme.__getters:style()
 end
 function Theme.__setters:style( value )
 	-- print( 'Theme.__setters:style', value )
-	self:_setActiveStyle( value )
+	self:setActiveStyle( value )
 end
+
+
+function Theme.setActiveStyle( self, data, params )
+	print( "Theme.setActiveStyle", style )
+	params = params or {}
+	if params.widget==nil then params.widget=self end
+	if params.copy==nil then params.copy=true end
+	-- name
+	assert( data==nil or type(data)=='table' )
+	--==--
+	local StyleClass = self.STYLE_CLASS
+	assert( StyleClass, "[ERROR] Widget is missing property 'STYLE_CLASS'" )
+
+	local style = self.__curr_style
+	local o = self.__curr_style
+
+	if style then
+		style.widget = nil
+		style:removeSelf()
+		self.__curr_style = nil
+		self.curr_style = nil
+	end
+
+	print( "\n\n>>> IN SET ACTIVE STYLE", self )
+
+	-- create copied style
+	if not params.copy and data then
+		assert( data.isa and data:isa(StyleClass) )
+		style = data
+	else
+		style = StyleClass:createStyleFrom{
+			data=data,
+			widget=params.widget,
+			name="my name here"
+		}
+	end
+
+	-- set before call to resetProperties()
+	self.__curr_style = style
+	self.curr_style = style
+
+	if style then
+		style.widget = params.widget
+		style:resetProperties()
+	end
+end
+
+
+
 
 
 --[[
@@ -317,50 +366,6 @@ end
 --== Private Methods
 
 
-function Theme._getWidgetStyle( self )
-	-- print( "Theme._getWidgetStyle" )
-	local o = self.STYLE_CLASS
-	assert( o, "[ERROR] Widget is missing property 'STYLE_CLASS'" )
-	return o:copyStyle()
-end
-
-
-function Theme._setActiveStyle( self, style, params )
-	-- print( "Theme._setActiveStyle", style )
-	params = params or {}
-	if params.notify==nil then params.notify=true end
-	assert( style==nil or type(style)=='table' )
-	--==--
-	local f = Utils.createObjectCallback( self, self.stylePropertyChangeHandler )
-	local o = self.__curr_style
-	if o then
-		o.onProperty = nil
-	end
-
-	-- create style
-	if style==nil then
-		style=self:_getWidgetStyle()
-	elseif type(style.isa)=='function' then
-		assert( style:isa(self.STYLE_CLASS), "[ERROR] setting incorrect style for Widget" )
-		style=style
-	else
-		-- Lua structure
-		local style_info = style
-		style=self:_getWidgetStyle()
-		style:updateStyle( style_info )
-	end
-
-	o = style
-
-	-- set before notify call
-	self.__curr_style = o
-	self.curr_style = o
-
-	if o and f and params.notify then
-		o.onProperty = f
-		f({type='reset-all'})
-	end
-end
 
 
 

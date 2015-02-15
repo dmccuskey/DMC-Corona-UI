@@ -66,8 +66,8 @@ local widget_find = dmc_widget_func.find
 
 local Objects = require 'dmc_objects'
 local LifecycleMixModule = require 'dmc_lifecycle_mix'
-local Utils = require( dmc_widget_func.find( 'widget_utils' ) )
 local ThemeMixModule = require( dmc_widget_func.find( 'widget_theme_mix' ) )
+local Utils = require( dmc_widget_func.find( 'widget_utils' ) )
 
 -- these are set later
 local Widgets = nil
@@ -87,7 +87,7 @@ local ComponentBase = Objects.ComponentBase
 local LifecycleMix = LifecycleMixModule.LifecycleMix
 local ThemeMix = ThemeMixModule.ThemeMix
 
-local LOCAL_DEBUG = true
+local LOCAL_DEBUG = false
 
 
 
@@ -118,7 +118,7 @@ Text.STYLE_CLASS = nil -- added later
 
 --== Event Constants
 
-Text.EVENT = 'background-widget-event'
+Text.EVENT = 'text-widget-event'
 
 
 --======================================================--
@@ -129,21 +129,19 @@ Text.EVENT = 'background-widget-event'
 function Text:__init__( params )
 	-- print( "Text:__init__", params )
 	params = params or {}
-	if params.text==nil then params.text="" end
 	if params.x==nil then params.x=0 end
 	if params.y==nil then params.y=0 end
+	if params.text==nil then params.text="" end
+
 	self:superCall( LifecycleMix, '__init__', params )
 	self:superCall( ComponentBase, '__init__', params )
 	self:superCall( ThemeMix, '__init__', params )
 	--==--
 
-	--== Sanity Check ==--
-
-	if self.is_class then return end
-
 	--== Create Properties ==--
 
 	-- properties in this class
+
 	self._text = params.text
 	self._text_dirty=true
 
@@ -153,6 +151,7 @@ function Text:__init__( params )
 	self._y_dirty = true
 
 	-- properties for style
+
 	self._width_dirty=true
 	self._height_dirty=true
 	-- virtual
@@ -188,8 +187,8 @@ end
 function Text:__undoInit__()
 	-- print( "Text:__undoInit__" )
 	--==--
-	self:superCall( ComponentBase, '__undoInit__' )
 	self:superCall( ThemeMix, '__undoInit__' )
+	self:superCall( ComponentBase, '__undoInit__' )
 	self:superCall( LifecycleMix, '__undoInit__' )
 end
 
@@ -240,8 +239,8 @@ end
 --== Static Methods
 
 
-function Text.__setWidgetManager( manager )
-	-- print( "Text.__setWidgetManager" )
+function Text.initialize( manager )
+	-- print( "Text.initialize" )
 	Widgets = manager
 	FontMgr = Widgets.FontMgr
 	ThemeMgr = Widgets.ThemeMgr
@@ -333,10 +332,9 @@ end
 function Text:_removeText()
 	-- print( 'Text:_removeText' )
 	local o = self._txt_text
-	if o then
-		o:removeSelf()
-		self._txt_text = nil
-	end
+	if not o then return end
+	o:removeSelf()
+	self._txt_text = nil
 end
 
 function Text:_createText()
@@ -537,15 +535,14 @@ end
 
 function Text:stylePropertyChangeHandler( event )
 	-- print( "Text:stylePropertyChangeHandler", event )
+	local style = event.target
 	local etype= event.type
 	local property= event.property
 	local value = event.value
 
 	-- print( "Style Changed", etype, property, value )
 
-	if etype=='reset-all' then
-		self._x_dirty = true
-		self._y_dirty = true
+	if etype == style.STYLE_RESET then
 		self._width_dirty=true
 		self._height_dirty=true
 
@@ -566,11 +563,7 @@ function Text:stylePropertyChangeHandler( event )
 		property = etype
 
 	else
-		if property=='x' then
-			self._x_dirty=true
-		elseif property=='y' then
-			self._y_dirty=true
-		elseif property=='width' then
+		if property=='width' then
 			self._width_dirty=true
 		elseif property=='height' then
 			self._height_dirty=true

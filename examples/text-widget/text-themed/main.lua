@@ -133,18 +133,20 @@ text:setAnchor( {1,1} )
 
 style = Widgets.newTextStyle{
 	name='my-text-style',
-	x=50,
-	y=100,
-	textColor={1,0,1}
+	fillColor={1,0,0},
+	textColor={1,1,1}
 }
 
--- style:cloneStyle()
+text2 = Widgets.newText{
+	text="hello there"
+}
+text2.style = style
+text2.x, text2.y = 150, 100
 
--- text2 = Widgets.newText{
--- 	text="hello there"
--- }
--- text2.style = style
-
+text2:setFillColor( 1,0.5,0.5,0.5 )
+text2:setTextColor( 1,0,0,0.5 )
+text2.align='left'
+text2.width=200
 
 -- text3 = Widgets.newText{
 -- 	text="one two",
