@@ -48,9 +48,9 @@ local VERSION = "0.1.0"
 --====================================================================--
 
 
-local dmc_widget_data, dmc_widget_func
-dmc_widget_data = _G.__dmc_widget
-dmc_widget_func = dmc_widget_data.func
+local dmc_widget_data = _G.__dmc_widget
+local dmc_widget_func = dmc_widget_data.func
+local widget_find = dmc_widget_func.find
 
 
 
@@ -66,10 +66,6 @@ dmc_widget_func = dmc_widget_data.func
 
 local Objects = require 'dmc_objects'
 
--- these are set later
-local Widgets = nil
-local TextField = nil
-
 
 
 --====================================================================--
@@ -81,40 +77,58 @@ local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
 
 
-local Style, TextStyle, TextFieldStyle
-local BackgroundStyle
-
-
 
 --====================================================================--
 --== Style Base Class
 --====================================================================--
 
 
-Style = newClass( ObjectBase, {name="Style Base"}  )
+local Style = newClass( ObjectBase, {name="Style Base"}  )
+
+Style.EVENT = 'style-event'
+
+Style.STYLE_RESET = 'style-reset-event'
+Style.STYLE_UPDATED = 'style-updated-event'
+
+-- Style.__base_style__  <instance of class>
+
+
+--======================================================--
+--== Start: Setup DMC Objects
 
 function Style:__init__( params )
-	-- print( "Style:__init__", params )
+	print( "Style:__init__", params )
 	params = params or {}
+	params.data = params.data
+	if params.inherit==nil then
+		params.inherit=self.class.__base_style__
+	end
+	params.name = params.name
+	params.widget = params.widget
+
 	self:superCall( '__init__', params )
 	--==--
+	-- Style inheritance tree
+	self._inherit = params.inherit
+	print( "in herit from ", params.inherit)
+	print( "self is ", self )
+	print( "base is ", self.__base_style__ )
+	-- widget delegate
+	self._parent = params.parent
+	self._widget = params.widget
 
-	if self.is_class then return end
-
-	assert( params.child==true or params.name, "Style: requires param 'name'" )
+	self._data = params.data
 
 	self._name = params.name
-	self._inherit = nil
-	self._data = params
-
-	--== Style Properties
-
 end
 
 function Style:__initComplete__()
+	-- print( "Style:__initComplete__" )
 	self:superCall( '__initComplete__' )
-
+	--==--
 	self:_parseData( self._data )
+	self:_checkChildren()
+	self:_checkProperties()
 end
 
 
@@ -123,457 +137,478 @@ end
 --== Public Methods
 
 
+function Style:_checkChildren()
+	print("OVERRIDE Style:_checkChildren")
+end
+
+
+-- make a copy of the current style setting
+-- same information and inheritance
+--
+function Style:cloneStyle()
+	local params = {
+		inherit=self._inherit
+	}
+	local o = self.class:new( params )
+	o:updateStyle( self, true ) -- clone data, force
+	return o
+end
+
+
+-- create a new style, setting
+-- inheritance to current style
+--
+function Style:copyStyle( params )
+	print( "Style:copyStyle", self )
+	params = params or {}
+	--==--
+	params.inherit = self
+	return self.class:new( params )
+end
+Style.inheritStyle=Style.copyStyle
+
+
+function Style:resetProperties()
+	self:_dispatchResetEvent()
+end
+
+
+-- params:
+-- data
+-- widget
+-- name
+function Style:createStyleFrom( params )
+	print( "Style:createStyleFrom", params )
+	params = params or {}
+	if params.copy==nil then params.copy=true end
+	--==--
+	local data = params.data
+	local copy = params.copy ; params.copy=nil
+
+	local StyleClass = self.class
+	local style
+	if data==nil then
+		print( "NO DATA HERE")
+		style = StyleClass:new( params )
+	elseif type(data.isa)=='function' then
+		print( "HAVE STYLE CLASS")
+		if not copy then
+			style = data
+		else
+			assert( data:isa( StyleClass ) )
+			params.data=nil
+			style = data:copyStyle( params )
+		end
+	else
+		print( "LUA STRUCTURE")
+		-- Lua structure
+		style = StyleClass:new( params )
+		-- style:updateStyle( data )
+	end
+
+	assert( style, "failed to create style" )
+
+	return style
+end
+
+
+--== inherit
+
+-- Style Class
+--
+function Style.__setters:inherit( value )
+	-- print( "Style.__setters:inherit", value )
+	assert( value:isa( self.class ) )
+	--==--
+	self._inherit = value
+end
+
+--== widget
+
+-- widget, to process events
+--
+function Style.__setters:widget( value )
+	-- print( "Style.__setters:widget", value )
+	self._widget = value
+end
+
+
+
+--[[
+override these getters/setters/methods if necesary
+--]]
+
 --== name, getter/setter
 
-function Style.__getters:name( value )
-	return self._name
+function Style.__getters:name()
+	-- print( 'Style.__getters:name', self._inherit )
+	local value = self._name
+	if value==nil and self._inherit then
+		value = self._inherit.name
+	end
+	return value
 end
 function Style.__setters:name( value )
 	-- print( 'Style.__setters:name', value )
-	assert( type(value)=='string' )
+	assert( (value==nil and self._inherit) or type(value)=='string' )
 	--==--
 	if value == self._name then return end
 	self._name = value
 end
 
-function Style:_parseData( data )
-	-- print( "Style:_parseData")
 
+--== X
+
+function Style.__getters:x()
+	local value = self._x
+	if value==nil and self._inherit then
+		value = self._inherit.x
+	end
+	return value
+end
+function Style.__setters:x( value )
+	-- print( "Style.__setters:x", value )
+	assert( type(value)=='number' or (value==nil and self._inherit) )
+	--==--
+	if value == self._x then return end
+	self._x = value
+	self:_dispatchChangeEvent( 'x', value )
+end
+
+--== Y
+
+function Style.__getters:y()
+	local value = self._y
+	if value==nil and self._inherit then
+		value = self._inherit.y
+	end
+	return value
+end
+function Style.__setters:y( value )
+	-- print( "Style.__setters:y", value )
+	assert( type(value)=='number' or (value==nil and self._inherit) )
+	--==--
+	if value == self._y then return end
+	self._y = value
+	self:_dispatchChangeEvent( 'y', value )
+end
+
+--== width
+
+function Style.__getters:width()
+	local value = self._width
+	if value==nil and self._inherit then
+		value = self._inherit.width
+	end
+	return value
+end
+function Style.__setters:width( value )
+	-- print( "Style.__setters:width", value )
+	assert( type(value)=='number' or (value==nil and self._inherit) )
+	--==--
+	if value == self._width then return end
+	self._width = value
+	self:_dispatchChangeEvent( 'width', value )
+end
+
+--== height
+
+function Style.__getters:height()
+	local value = self._height
+	if value==nil and self._inherit then
+		value = self._inherit.height
+	end
+	return value
+end
+function Style.__setters:height( value )
+	-- print( "Style.__setters:height", value )
+	assert( type(value)=='number' or (value==nil and self._inherit) )
+	--==--
+	if value == self._height then return end
+	self._height = value
+	self:_dispatchChangeEvent( 'height', value )
+end
+
+
+--== align
+
+function Style.__getters:align()
+	local value = self._align
+	if value==nil and self._inherit then
+		value = self._inherit.align
+	end
+	return value
+end
+function Style.__setters:align( value )
+	-- print( 'Style.__setters:align', value )
+	assert( type(value)=='string' or (value==nil and self._inherit) )
+	--==--
+	if value==self._align then return end
+	self._align = value
+	self:_dispatchChangeEvent( 'align', value )
+end
+
+--== anchorX
+
+function Style.__getters:anchorX()
+	local value = self._anchorX
+	if value==nil and self._inherit then
+		value = self._inherit.anchorX
+	end
+	return value
+end
+function Style.__setters:anchorX( value )
+	-- print( 'Style.__setters:anchorX', value )
+	assert( type(value)=='number' or (value==nil and self._inherit) )
+	--==--
+	if value==self._anchorX then return end
+	self._anchorX = value
+	self:_dispatchChangeEvent( 'anchorX', value )
+end
+
+--== anchorY
+
+function Style.__getters:anchorY()
+	local value = self._anchorY
+	if value==nil and self._inherit then
+		value = self._inherit.anchorY
+	end
+	return value
+end
+function Style.__setters:anchorY( value )
+	-- print( 'Style.__setters:anchorY', value )
+	assert( type(value)=='number' or (value==nil and self._inherit) )
+	--==--
+	if value==self._anchorY then return end
+	self._anchorY = value
+	self:_dispatchChangeEvent( 'anchorY', value )
+end
+
+--== fillColor
+
+function Style.__getters:fillColor()
+	local value = self._fillColor
+	if value==nil and self._inherit then
+		value = self._inherit.fillColor
+	end
+	return value
+end
+function Style.__setters:fillColor( value )
+	-- print( "Style.__setters:fillColor", value )
+	assert( value or (value==nil and self._inherit) )
+	--==--
+	self._fillColor = value
+	self:_dispatchChangeEvent( 'fillColor', value )
+end
+
+--== font
+
+function Style.__getters:font()
+	local value = self._font
+	if value==nil and self._inherit then
+		value = self._inherit.font
+	end
+	return value
+end
+function Style.__setters:font( value )
+	-- print( "Style.__setters:font", value )
+	assert( value or (value==nil and self._inherit) )
+	--==--
+	self._font = value
+	self:_dispatchChangeEvent( 'font', value )
+end
+
+--== fontSize
+
+function Style.__getters:fontSize()
+	local value = self._fontSize
+	if value==nil and self._inherit then
+		value = self._inherit.fontSize
+	end
+	return value
+end
+function Style.__setters:fontSize( value )
+	-- print( "Style.__setters:fontSize", value )
+	assert( type(value)=='number' or (value==nil and self._inherit) )
+	--==--
+	self._fontSize = value
+	self:_dispatchChangeEvent( 'fontSize', value )
+end
+
+--== isHitTestable
+
+function Style.__getters:isHitTestable()
+	local value = self._isHitTestable
+	if value==nil and self._inherit then
+		value = self._inherit.isHitTestable
+	end
+	return value
+end
+function Style.__setters:isHitTestable( value )
+	-- print( "Style.__setters:isHitTestable", value )
+	assert( type(value)=='boolean' or (value==nil and self._inherit) )
+	--==--
+	if value==self._isHitTestable then return end
+	self._isHitTestable = value
+	self:_dispatchChangeEvent( 'isHitTestable', value )
+end
+
+--== marginX
+
+function Style.__getters:marginX()
+	local value = self._marginX
+	if value==nil and self._inherit then
+		value = self._inherit.marginX
+	end
+	return value
+end
+function Style.__setters:marginX( value )
+	-- print( "Style.__setters:marginX", value )
+	assert( type(value)=='number' or (value==nil and self._inherit) )
+	--==--
+	self._marginX = value
+	self:_dispatchChangeEvent( 'marginX', value )
+end
+
+--== marginY
+
+function Style.__getters:marginY()
+	local value = self._marginY
+	if value==nil and self._inherit then
+		value = self._inherit.marginY
+	end
+	return value
+end
+function Style.__setters:marginY( value )
+	-- print( "Style.__setters:marginY", value )
+	assert( type(value)=='number' or (value==nil and self._inherit) )
+	--==--
+	self._marginY = value
+	self:_dispatchChangeEvent( 'marginY', value )
+end
+
+--== strokeColor
+
+function Style.__getters:strokeColor()
+	local value = self._strokeColor
+	if value==nil and self._inherit then
+		value = self._inherit.strokeColor
+	end
+	return value
+end
+function Style.__setters:strokeColor( value )
+	-- print( "Style.__setters:strokeColor", value )
+	assert( value or (value==nil and self._inherit) )
+	--==--
+	self._strokeColor = value
+	self:_dispatchChangeEvent( 'strokeColor', value )
+end
+
+--== strokeWidth
+
+function Style.__getters:strokeWidth( value )
+	local value = self._strokeWidth
+	if value==nil and self._inherit then
+		value = self._inherit.strokeWidth
+	end
+	return value
+end
+function Style.__setters:strokeWidth( value )
+	print( "Style.__setters:strokeWidth", value )
+	assert( type(value)=='number' or (value==nil and self._inherit) )
+	--==--
+	if value == self._strokeWidth then return end
+	print( self.name )
+	self._strokeWidth = value
+	self:_dispatchChangeEvent( 'strokeWidth', value )
+
+end
+
+--== textColor
+
+function Style.__getters:textColor()
+	local value = self._textColor
+	if value==nil and self._inherit then
+		value = self._inherit.textColor
+	end
+	return value
+end
+function Style.__setters:textColor( value )
+	-- print( "Style.__setters:textColor", value )
+	assert( value or (value==nil and self._inherit) )
+	--==--
+	if value == self._textColor then return end
+	self._textColor = value
+	self:_dispatchChangeEvent( 'textColor', value )
+end
+
+
+
+--====================================================================--
+--== Private Methods
+
+
+function Style:_checkProperties()
+	assert( self.name, "Style: requires a name" )
+end
+
+
+function Style:_parseData( data )
+	print( "Style:_parseData", data )
+	if data==nil then return end
 	for k,v in pairs( data ) do
-		-- print(k,v)
+		print(k,v)
 		self[k]=v
 	end
 end
 
 
-
-
---====================================================================--
---== TextStyle Widget Class
---====================================================================--
-
-
-TextStyle = newClass( Style, {name="TextStyle Style"}  )
-
-function TextStyle:__init__( params )
-	-- print( "TextStyle:__init__", params )
-	params = params or {}
-	self:superCall( '__init__', params )
+function Style:_dispatchResetEvent()
+	-- print( 'Style:_dispatchResetEvent' )
 	--==--
+	local widget = self._widget
+	if not widget then return end
 
-	--== Sanity Check ==--
-
-	if self.is_class then return end
-
-	-- assert( params.text, "TextStyle: requires param 'text'" )
-
-	--== Style Properties ==--
-	-- self._name
-	-- self._inherit
-	-- self._data
-
-	self._font = nil
-	self._fontSize = nil
-	self._color = nil
-	self._align = nil
-
-end
-
-
-
---====================================================================--
---== Public Methods
-
-
-function TextStyle.__getters:font()
-	return self._font
-end
-function TextStyle.__setters:font( value )
-	-- print( 'TextStyle.font:x', value )
-	assert( type(value)=='string' or type(value)=='userdata' )
-	--==--
-	if value == self._font then return end
-	self._font = value
-end
-
-
-function TextStyle.__getters:fontSize()
-	return self._fontSize
-end
-function TextStyle.__setters:fontSize( value )
-	-- print( 'TextStyle.__setters:fontSize:x', value )
-	assert( type(value)=='number' )
-	--==--
-	if value == self._fontSize then return end
-	self._fontSize = value
-end
-
-
-function TextStyle.__getters:color( value )
-	return self._color
-end
-function TextStyle.__setters:color( value )
-	-- print( 'TextStyle.color:x' )
-	self._color = value
-end
-
-
-function TextStyle.__getters:align( value )
-	return self._align
-end
-function TextStyle.__setters:align( value )
-	-- print( 'TextStyle.align:x', value )
-	assert( type(value)=='string' )
-	--==--
-	if value == self._align then return end
-	self._align = value
-end
-
-
-
-
-
-
-
-
---====================================================================--
---== TextField Style Class
---====================================================================--
-
-
-TextFieldStyle = newClass( Style, {name="TextField Style"} )
-
-
-function TextFieldStyle:__init__( params )
-	-- print( "TextFieldStyle:__init__", params )
-	params = params or {}
-	self:superCall( '__init__', params )
-	--==--
-
-	--== Sanity Check ==--
-
-	if self.is_class then return end
-
-	-- assert( params.text, "TextFieldStyle: requires param 'text'" )
-
-	-- self._name
-	-- self._inherit
-	-- self._data
-
-	self._align = nil
-	self._anchorX = nil
-	self._anchorY = nil
-
-	self._width = nil
-	self._height = nil
-
-	self._returnKey = nil
-	self._inputType = nil
-
-	self._hint = nil
-	self._text = nil
-	self._background = nil
-
-end
-
-
-
---====================================================================--
---== Public Methods
-
-
-function TextFieldStyle.__getters:walign( value )
-	return self._walign
-end
-function TextFieldStyle.__setters:walign( value )
-	-- print( 'TextFieldStyle.__setters:align', value )
-	assert( type(value)=='string' )
-	--==--
-	if value == self._align then return end
-	self._walign = value
-end
-
-
-function TextFieldStyle.__getters:width( value )
-	return self._width
-end
-function TextFieldStyle.__setters:width( value )
-	-- print( 'TextFieldStyle.__setters:widthx', value )
-	assert( type(value)=='number' )
-	--==--
-	if value == self._width then return end
-	self._width = value
-end
-
-function TextFieldStyle.__getters:height( value )
-	return self._height
-end
-function TextFieldStyle.__setters:height( value )
-	-- print( 'TextFieldStyle.__setters:widthx', value )
-	assert( type(value)=='number' )
-	--==--
-	if value == self._height then return end
-	self._height = value
-end
-
-
-function TextFieldStyle.__getters:hint( value )
-	return self._hint
-end
-function TextFieldStyle.__setters:hint( value )
-	-- print( 'TextFieldStyle.hint:x', value )
-	assert( type(value)=='table' )
-	--==--
-	if value.isa then
-		assert( value:isa( TextStyle ) )
-	else
-		value.child=true
-		TextStyle:new( value )
-	end
-	self._hint = value
-end
-
-
-function TextFieldStyle.__getters:text( value )
-	return self._text
-end
-function TextFieldStyle.__setters:text( value )
-	-- print( 'TextFieldStyle.text:x', value )
-	assert( type(value)=='table' )
-	--==--
-	if value.isa then
-		assert( value:isa( TextStyle ) )
-		self._text = value
-	else
-		value.child=true
-		self._text = TextStyle:new( value )
-	end
-end
-
-
-function TextFieldStyle.__getters:background( value )
-	return self._background
-end
-function TextFieldStyle.__setters:background( value )
-	-- print( 'TextFieldStyle.background:x', value )
-	assert( type(value)=='table' )
-	--==--
-	if value.isa then
-		assert( value:isa( BackgroundStyle ) )
-		self._background = value
-	else
-		value.child=true
-		self._background = BackgroundStyle:new( value )
-	end
-end
-
-
-function TextFieldStyle:updateStyle( params )
-	-- print( "TextFieldStyle:updateStyle" )
-
-	--== Widget-level
-	if params.width then self.width=params.width end
-	if params.height then self.height=params.height end
-	if params.align then self.align=params.align end
-	if params.returnKey then self.returnKey=params.returnKey end
-	if params.inputType then self.inputType=params.inputType end
-
-	--== Text-level
-	if params.textColor then self.text.color=params.textColor end
-	if params.textFont then self.text.font=params.textFont end
-	if params.textFontSize then self.text.fontSize=params.textFontSize end
-	--== Hint-level
-	if params.hintColor then self.hint.color=params.hintColor end
-	if params.hintFont then self.hint.font=params.hintFont end
-	if params.hintFontSize then self.hint.fontSize=params.hintFontSize end
-
-	--== Background-level
-	if params.marginX then self.background.marginX=params.marginX end
-	if params.marginY then self.background.marginY=params.marginY end
-
-end
-
-function TextFieldStyle:createDefaultStyle()
-	-- print( "TextFieldStyle:createDefaultStyle" )
-	local default = {
-		name="text-field-basic",
-
-		width=250,
-		height=40,
-		align=TextField.CENTER,
-		returnKey='done',
-		inputType='password',
-		anchorX=0.5,
-		anchorY=0.5,
-		bgStyle=TextField.BG_STYLE_NONE,
-
-		hint={
-			align=TextField.CENTER,
-			color={0.4,0.4,0.4,1},
-			font=native.systemFont,
-			fontSize=22,
-		},
-		text={
-			align=TextField.CENTER,
-			color={0,0,0,1},
-			font=native.systemFont,
-			fontSize=22,
-		},
-		background={
-			strokeWidth=0,
-			strokeColor={1,1,0,0.5},
-			color={1,0,0,0.5},
-			marginX=5,
-			marginY=5
-		}
+	local e = {
+		name=self.EVENT,
+		target=self,
+		type=self.STYLE_RESET
 	}
-
-	return TextFieldStyle:new( default )
+	if widget.stylePropertyChangeHandler then
+		widget:stylePropertyChangeHandler( e )
+	end
 end
 
 
+function Style:_dispatchChangeEvent( prop, value, substyle )
+	print( 'Style:_dispatchChangeEvent', prop, value, substyle )
 
---====================================================================--
---== Background Style Class
---====================================================================--
+	local widget = self._widget
+	if not widget then return end
 
-
-BackgroundStyle = newClass( Style, {name="Background Style"}  )
-
-function BackgroundStyle:__init__( params )
-	-- print( "BackgroundStyle:__init__", params )
-	params = params or {}
-	self:superCall( '__init__', params )
-	--==--
-
-	--== Sanity Check ==--
-
-	if self.is_class then return end
-
-	-- assert( params.text, "BackgroundStyle: requires param 'text'" )
-
-	--== Style Properties ==--
-	-- self._name
-	-- self._inherit
-	-- self._data
-
-	self._color = nil
-	self._marginX = nil
-	self._marginY = nil
-	self._style = nil
-	self._strokeColor = nil
-	self._strokeWidth = nil
+	local e = {
+		name=self.EVENT,
+		target=self,
+		type=self.STYLE_UPDATED,
+		property=prop,
+		value=value
+	}
+	if widget.stylePropertyChangeHandler then
+		print( "WAS DISPATCHED UPDATE", self.name )
+		print( widget, widget.NAME )
+		widget:stylePropertyChangeHandler( e )
+	end
 
 end
 
 
 
 --====================================================================--
---== Public Methods
+--== Event Handlers
 
 
-function BackgroundStyle.__getters:align( value )
-	return self._align
-end
-function BackgroundStyle.__setters:align( value )
-	-- print( 'BackgroundStyle.__setters:x', value )
-	assert( type(value)=='string' )
-	--==--
-	if value == self._align then return end
-	self._align = value
-end
+-- none
 
 
 
-function BackgroundStyle.__getters:color()
-	return self._color
-end
-function BackgroundStyle.__setters:color( value )
-	-- print( 'BackgroundStyle.fillColor:x', value )
-	--==--
-	self._color = value
-end
-
-
-function BackgroundStyle.__getters:marginX()
-	return self._marginX
-end
-function BackgroundStyle.__setters:marginX( value )
-	-- print( 'BackgroundStyle.marginX:x', value )
-	assert( type(value)=='number' )
-	--==--
-	if value == self._marginX then return end
-	self._marginX = value
-end
-
-
-
-function BackgroundStyle.__getters:marginY()
-	return self._marginY
-end
-function BackgroundStyle.__setters:marginY( value )
-	-- print( 'BackgroundStyle.marginY:x', value )
-	assert( type(value)=='number' )
-	--==--
-	if value == self._marginY then return end
-	self._marginY = value
-end
-
-
-
-function BackgroundStyle.__getters:style()
-	return self._style
-end
-function BackgroundStyle.__setters:style( value )
-	-- print( 'BackgroundStyle.__setters:x', value )
-	assert( type(value)=='string' )
-	--==--
-	if value == self._style then return end
-	self._style = value
-end
-
-
-function BackgroundStyle.__getters:strokeWidth( value )
-	return self._strokeWidth
-end
-function BackgroundStyle.__setters:strokeWidth( value )
-	-- print( 'BackgroundStyle.__setters:x', value )
-	assert( type(value)=='number' )
-	--==--
-	if value == self._strokeWidth then return end
-	self._strokeWidth = value
-end
-
-
-function BackgroundStyle.__getters:strokeColor()
-	return self._strokeColor
-end
-function BackgroundStyle.__setters:strokeColor( value )
-	-- print( 'BackgroundStyle.__setters:x', value )
-	--==--
-	self._strokeColor = value
-end
-
-
-
-
-
-local function setWidgetManager( manager )
-
-	Widgets = manager
-	TextField = Widgets.TextField
-end
-
-
-
-
-return {
-	__setWidgetManager=setWidgetManager,
-
-
-	Base=Style,
-	Text=TextStyle,
-	TextField=TextFieldStyle,
-	Background=BackgroundStyle,
-
-}
+return Style

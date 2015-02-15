@@ -101,12 +101,15 @@ dmc_lib_info = dmc_lib_data.dmc_corona
 --===================================================================--
 --== Imports
 
-
+-- Managers
 Widget.FontMgr = require( PATH .. '.' .. 'font_manager' )
 Widget.ThemeMgr = require( PATH .. '.' .. 'theme_manager' )
 
-Widget.Style = require( PATH .. '.' .. 'theme_manager.base_style' )
+-- Styles
+local BaseStyle = require( PATH .. '.' .. 'theme_manager.base_style' )
 
+
+-- Widgets
 Widget.Button = require( PATH .. '.' .. 'widget_button' )
 Widget.ButtonGroup = require( PATH .. '.' .. 'button_group' )
 Widget.Formatter = require( PATH .. '.' .. 'data_formatters' )
@@ -114,8 +117,6 @@ Widget.NavBar = require( PATH .. '.' .. 'widget_navbar' )
 Widget.NavItem = require( PATH .. '.' .. 'widget_navitem' )
 Widget.Popover = require( PATH .. '.' .. 'widget_popover' )
 Widget.PopoverMixModule = require( PATH .. '.' .. 'widget_popover.popover_mix' )
-Widget.Text = require( PATH .. '.' .. 'widget_text' )
-Widget.TextField = require( PATH .. '.' .. 'widget_textfield' )
 
 
 
@@ -126,14 +127,50 @@ Widget.TextField = require( PATH .. '.' .. 'widget_textfield' )
 Widget.WIDTH = display.contentWidth
 Widget.HEIGHT = display.contentHeight
 
--- set display content width/height
+Widget.Style = {
+	Base=BaseStyle.Base
+}
+
+--== Give widgets access to Widget (do this last)
+
 Widget.NavBar.__setWidgetManager( Widget )
 Widget.NavItem.__setWidgetManager( Widget )
 Widget.Popover.__setWidgetManager( Widget )
 Widget.PopoverMixModule.__setWidgetManager( Widget )
-Widget.Style.__setWidgetManager( Widget )
-Widget.Text.__setWidgetManager( Widget )
-Widget.TextField.__setWidgetManager( Widget )
+
+
+local loadBackgroundSupport, loadTextSupport, loadTextFieldSupport
+
+
+
+--===================================================================--
+--== newText widget
+
+
+loadBackgroundSupport = function()
+	-- print("loadBackgroundSupport")
+
+	local Background = require( PATH .. '.' .. 'widget_background' )
+	local BackgroundStyle = require( PATH .. '.' .. 'theme_manager.background_style' )
+
+	Widget.Background=Background
+	Widget.Style.Background=BackgroundStyle
+
+	Background.__setWidgetManager( Widget )
+	BackgroundStyle.__setWidgetManager( Widget )
+end
+
+
+function Widget.newBackground( options )
+	if not Widget.Background then loadBackgroundSupport() end
+	return Widget.Background:new( options )
+end
+
+function Widget.newBackgroundStyle( style_info )
+	-- print("Widget.newBackgroundStyle")
+	if not Widget.Style.Background then loadBackgroundSupport() end
+	return Widget.Style.Background:copyStyle{ data=style_info }
+end
 
 
 
@@ -258,33 +295,71 @@ end
 --== newText widget
 
 
+loadTextSupport = function()
+	-- print("loadTextSupport")
+	local Text = require( PATH .. '.' .. 'widget_text' )
+	local TextStyle = require( PATH .. '.' .. 'theme_manager.text_style' )
+
+	Widget.Text=Text
+	Widget.Style.Text=TextStyle
+
+	Text.__setWidgetManager( Widget )
+	TextStyle.__setWidgetManager( Widget )
+end
+
+
 function Widget.newText( options )
-	local theme = nil
+	-- print("Widget.newText")
+	if not Widget.Text then loadTextSupport() end
 	return Widget.Text:new( options )
+end
+
+function Widget.newTextStyle( style_info )
+	-- print("Widget.newTextStyle")
+	if not Widget.Style.Text then loadTextSupport() end
+	return Widget.Style.Text:copyStyle{ data=style_info }
 end
 
 
 
 --===================================================================--
---== newTextField widget
+--== TextField support
+
+
+loadTextFieldSupport = function()
+	-- print("loadTextFieldSupport")
+	-- dependencies
+	loadBackgroundSupport()
+	loadTextSupport()
+
+	TextField = require( PATH .. '.' .. 'widget_textfield' )
+	TextFieldStyle = require( PATH .. '.' .. 'theme_manager.textfield_style' )
+
+	Widget.TextField=TextField
+	Widget.Style.TextField=TextFieldStyle
+
+	TextField.__setWidgetManager( Widget )
+	TextFieldStyle.__setWidgetManager( Widget )
+end
 
 
 function Widget.newTextField( options )
-	local theme = nil
+	-- print("Widget.newTextField")
+	if not Widget.TextField then loadTextFieldSupport() end
 	return Widget.TextField:new( options )
 end
 
+function Widget.newTextFieldStyle( style_info )
+	-- print("Widget.newTextFieldStyle")
+	if not Widget.Style.TextField then loadTextFieldSupport() end
+	return Widget.Style.TextField:copyStyle{ data=style_info }
+end
 
 
 --===================================================================--
 --== newTextFieldStyle
 
 
-function Widget.newTextFieldStyle( options )
-	print("Widget.newTextFieldStyle")
-	local theme = nil
-	return Widget.Style.TextField:new( options )
-end
 
 
 
