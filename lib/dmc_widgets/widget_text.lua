@@ -143,8 +143,9 @@ function Text:__init__( params )
 
 	--== Create Properties ==--
 
-	-- propeties in this class
+	-- properties in this class
 	self._text = params.text
+	self._text_dirty=true
 
 	self._x = params.x
 	self._x_dirty = true
@@ -169,7 +170,6 @@ function Text:__init__( params )
 	self._strokeColor_dirty=true
 	self._strokeWidth_dirty=true
 
-	self._text_dirty=true
 	self._textColor_dirty=true
 	-- virtual
 	self._textX_dirty=true
@@ -311,6 +311,20 @@ function Text.__setters:height( value )
 end
 
 
+--== Text
+
+function Text.__getters:text()
+	return self._text
+end
+function Text.__setters:text( value )
+	-- print( 'Text.__setters:text', value )
+	assert( type(value)=='string' )
+	--==--
+	self._text = value
+	self._text_dirty=true
+	self:__invalidateProperties__()
+end
+
 
 --====================================================================--
 --== Private Methods
@@ -443,7 +457,7 @@ function Text:__commitProperties__()
 	-- x/y
 
 	if self._x_dirty then
-		view.x = style.x
+		view.x = self._x
 		bg.x = 0
 		local offset = bg.width*(0.5-bg.anchorX)
 		text.x = bg.x+offset
@@ -452,7 +466,7 @@ function Text:__commitProperties__()
 		self._textX_dirty=true
 	end
 	if self._y_dirty then
-		view.y = style.y
+		view.y = self._y
 		bg.y = 0
 		local offset = bg.height*(0.5-bg.anchorY)
 		text.y = bg.y -- +offset

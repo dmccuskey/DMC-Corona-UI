@@ -163,8 +163,6 @@ function TextStyle.setDefaults()
 
 	TextStyle._name=def.name
 
-	TextStyle._x=def.x
-	TextStyle._y=def.y
 	TextStyle._width=def.width
 	TextStyle._height=def.height
 
@@ -224,14 +222,13 @@ end
 
 function TextStyle:_checkProperties()
 	BaseStyle._checkProperties( self )
-	assert( self.x, "Style: requires 'x'" )
-	assert( self.y, "Style: requires 'y'" )
 	--[[
 	we don't check for width/height because we'll
 	just use width/height of the text object
 	-- assert( self.width, "Style: requires 'width'" )
 	-- assert( self.height, "Style: requires 'height'" )
 	--]]
+
 	assert( self.align, "Style: requires 'align'" )
 	assert( self.anchorY, "Style: requires 'anchory'" )
 	assert( self.anchorX, "Style: requires 'anchorX'" )
