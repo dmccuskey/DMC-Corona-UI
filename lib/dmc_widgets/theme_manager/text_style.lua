@@ -133,8 +133,10 @@ function TextStyle:__init__( params )
 	-- self._data
 	-- self._inherit
 	-- self._widget
+	-- self._parent
 
 	-- self._name
+	-- self._onProperty
 
 	self._width = nil
 	self._height = nil
@@ -161,37 +163,11 @@ end
 --== Static Methods
 
 
-function TextStyle.__setWidgetManager( manager )
-	-- print( "TextStyle.__setWidgetManager", manager )
+function TextStyle.initialize( manager )
+	-- print( "TextStyle.initialize", manager )
 	Widgets = manager
 
-	TextStyle.setDefaults()
-end
-
-
-function TextStyle.setDefaults()
-	-- print( "TextStyle.setDefaults" )
-	local def = TextStyle.DEFAULT
-
-	local style = TextStyle:new{ data=def }
-	TextStyle.__base_style__ = style
-
-	-- TextStyle._name=def.name
-
-	-- TextStyle._width=def.width
-	-- TextStyle._height=def.height
-
-	-- TextStyle._align=def.align
-	-- TextStyle._anchorX=def.anchorX
-	-- TextStyle._anchorY=def.anchorY
-	-- TextStyle._fillColor=def.fillColor
-	-- TextStyle._font=def.font
-	-- TextStyle._fontSize=def.fontSize
-	-- TextStyle._marginX=def.marginX
-	-- TextStyle._marginY=def.marginY
-	-- TextStyle._strokeColor=def.strokeColor
-	-- TextStyle._strokeWidth=def.strokeWidth
-	-- TextStyle._textColor=def.textColor
+	TextStyle._setDefaults()
 end
 
 
@@ -228,6 +204,15 @@ end
 
 --====================================================================--
 --== Private Methods
+
+
+function TextStyle._setDefaults()
+	-- print( "TextStyle._setDefaults" )
+	local style = TextStyle:new{
+		data=TextStyle.DEFAULT
+	}
+	TextStyle.__base_style__ = style
+end
 
 
 function TextStyle:_checkProperties()

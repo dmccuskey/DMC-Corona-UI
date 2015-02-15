@@ -303,8 +303,8 @@ loadTextSupport = function()
 	Widget.Text=Text
 	Widget.Style.Text=TextStyle
 
-	Text.__setWidgetManager( Widget )
-	TextStyle.__setWidgetManager( Widget )
+	Text.initialize( Widget )
+	TextStyle.initialize( Widget )
 end
 
 
@@ -317,7 +317,7 @@ end
 function Widget.newTextStyle( style_info )
 	-- print("Widget.newTextStyle")
 	if not Widget.Style.Text then loadTextSupport() end
-	return Widget.Style.Text:copyStyle{ data=style_info }
+	return Widget.Style.Text:createStyleFrom{ data=style_info }
 end
 
 
