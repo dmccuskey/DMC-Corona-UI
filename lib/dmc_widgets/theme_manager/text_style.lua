@@ -77,6 +77,8 @@ local BaseStyle = require( widget_find( 'theme_manager.base_style' ) )
 local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
 
+local Widgets = nil -- set later
+
 
 
 --====================================================================--
@@ -87,6 +89,8 @@ local ObjectBase = Objects.ObjectBase
 local TextStyle = newClass( BaseStyle, {name="Text Style"} )
 
 --== Class Constants
+
+TextStyle.__base_style__ = nil
 
 TextStyle.DEFAULT = {
 	name='text-default-style',
@@ -109,8 +113,9 @@ TextStyle.DEFAULT = {
 
 --== Event Constants
 
+TextStyle.EVENT = 'text-style-event'
+
 -- from super
--- Class.EVENT
 -- Class.STYLE_UPDATED
 
 
@@ -118,9 +123,8 @@ TextStyle.DEFAULT = {
 --== Start: Setup DMC Objects
 
 function TextStyle:__init__( params )
-	-- print( "TextStyle:__init__", params )
+	print( "TextStyle:__init__", params )
 	params = params or {}
-	if params.inherit==nil then params.inherit=TextStyle end
 	self:superCall( '__init__', params )
 	--==--
 
@@ -128,9 +132,9 @@ function TextStyle:__init__( params )
 
 	-- self._data
 	-- self._inherit
+	-- self._widget
 
 	-- self._name
-	-- self._onProperty
 
 	self._width = nil
 	self._height = nil
@@ -157,27 +161,43 @@ end
 --== Static Methods
 
 
+function TextStyle.__setWidgetManager( manager )
+	-- print( "TextStyle.__setWidgetManager", manager )
+	Widgets = manager
+
+	TextStyle.setDefaults()
+end
+
+
 function TextStyle.setDefaults()
 	-- print( "TextStyle.setDefaults" )
 	local def = TextStyle.DEFAULT
 
-	TextStyle._name=def.name
+	local style = TextStyle:new{ data=def }
+	TextStyle.__base_style__ = style
 
-	TextStyle._width=def.width
-	TextStyle._height=def.height
+	-- TextStyle._name=def.name
 
-	TextStyle._align=def.align
-	TextStyle._anchorX=def.anchorX
-	TextStyle._anchorY=def.anchorY
-	TextStyle._fillColor=def.fillColor
-	TextStyle._font=def.font
-	TextStyle._fontSize=def.fontSize
-	TextStyle._marginX=def.marginX
-	TextStyle._marginY=def.marginY
-	TextStyle._strokeColor=def.strokeColor
-	TextStyle._strokeWidth=def.strokeWidth
-	TextStyle._textColor=def.textColor
+	-- TextStyle._width=def.width
+	-- TextStyle._height=def.height
+
+	-- TextStyle._align=def.align
+	-- TextStyle._anchorX=def.anchorX
+	-- TextStyle._anchorY=def.anchorY
+	-- TextStyle._fillColor=def.fillColor
+	-- TextStyle._font=def.font
+	-- TextStyle._fontSize=def.fontSize
+	-- TextStyle._marginX=def.marginX
+	-- TextStyle._marginY=def.marginY
+	-- TextStyle._strokeColor=def.strokeColor
+	-- TextStyle._strokeWidth=def.strokeWidth
+	-- TextStyle._textColor=def.textColor
 end
+
+
+
+--====================================================================--
+--== Public Methods
 
 
 --== updateStyle
@@ -188,8 +208,6 @@ function TextStyle:updateStyle( info, force )
 	-- print( "TextStyle:updateStyle" )
 	if force==nil then force=true end
 	--==--
-	if info.x~=nil or force then self.x=info.x end
-	if info.y~=nil or force then self.y=info.y end
 	if info.width~=nil or force then self.width=info.width end
 	if info.height~=nil or force then self.height=info.height end
 
@@ -205,14 +223,6 @@ function TextStyle:updateStyle( info, force )
 	if info.strokeWidth~=nil or force then self.strokeWidth=info.strokeWidth end
 	if info.textColor~=nil or force then self.textColor=info.textColor end
 end
-
-
-
---====================================================================--
---== Public Methods
-
-
--- none
 
 
 
@@ -249,11 +259,6 @@ end
 
 
 -- none
-
-
---== Pre-Processing ==--
-
-TextStyle.setDefaults()
 
 
 

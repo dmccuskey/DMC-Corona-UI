@@ -168,7 +168,6 @@ function Background:__init__( params )
 
 	self._isHitTestable_dirty = true
 
-	self._bg_dirty = true
 
 	--== Object References ==--
 
@@ -177,6 +176,7 @@ function Background:__init__( params )
 
 	self._bg = nil -- our background object – rect or image
 	self._bg_f = nil
+	self._bg_dirty = true
 
 end
 
