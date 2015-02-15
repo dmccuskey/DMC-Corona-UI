@@ -187,149 +187,7 @@ end
 --== Public Methods
 
 
---== anchorX
-
-function BackgroundStyle.__getters:anchorX()
-	local value = self._anchorX
-	if value==nil and self._inherit then
-		value = self._inherit._anchorX
-	end
-	return value
-end
-function BackgroundStyle.__setters:anchorX( value )
-	-- print( 'BackgroundStyle.__setters:anchorX', value )
-	assert( type(value)=='number' or (value==nil and self._inherit) )
-	--==--
-	if value==self._anchorX then return end
-	self._anchorX = value
-	self:_dispatchChangeEvent( 'anchorX', value )
-end
-
---== anchorY
-
-function BackgroundStyle.__getters:anchorY()
-	local value = self._anchorY
-	if value==nil and self._inherit then
-		value = self._inherit._anchorY
-	end
-	return value
-end
-function BackgroundStyle.__setters:anchorY( value )
-	-- print( 'BackgroundStyle.__setters:anchorY', value )
-	assert( type(value)=='number' or (value==nil and self._inherit) )
-	--==--
-	if value==self._anchorY then return end
-	self._anchorY = value
-	self:_dispatchChangeEvent( 'anchorY', value )
-end
-
---== fillColor
-
-function BackgroundStyle.__getters:fillColor()
-	local value = self._fillColor
-	if value==nil and self._inherit then
-		value = self._inherit._fillColor
-	end
-	return value
-end
-function BackgroundStyle.__setters:fillColor( value )
-	-- print( "BackgroundStyle.__setters:fillColor", value )
-	assert( value or (value==nil and self._inherit) )
-	--==--
-	self._fillColor = value
-	self:_dispatchChangeEvent( 'fillColor', value )
-end
-
---== isHitTestable
-
-function BackgroundStyle.__getters:isHitTestable()
-	local value = self._isHitTestable
-	if value==nil and self._inherit then
-		value = self._inherit._isHitTestable
-	end
-	return value
-end
-function BackgroundStyle.__setters:isHitTestable( value )
-	-- print( "BackgroundStyle.__setters:isHitTestable", value )
-	assert( type(value)=='boolean' or (value==nil and self._inherit) )
-	--==--
-	if value==self._isHitTestable then return end
-	self._isHitTestable = value
-	self:_dispatchChangeEvent( 'isHitTestable', value )
-end
-
-
---== width
-
-function BackgroundStyle.__getters:width()
-	local value = self._width
-	if value==nil and self._inherit then
-		value = self._inherit._width
-	end
-	return value
-end
-function BackgroundStyle.__setters:width( value )
-	-- print( "BackgroundStyle.__setters:width", value )
-	assert( type(value)=='number' or (value==nil and self._inherit) )
-	--==--
-	if value == self._width then return end
-	self._width = value
-	self:_dispatchChangeEvent( 'width', value )
-end
-
---== height
-
-function BackgroundStyle.__getters:height()
-	local value = self._height
-	if value==nil and self._inherit then
-		value = self._inherit._height
-	end
-	return value
-end
-function BackgroundStyle.__setters:height( value )
-	-- print( "BackgroundStyle.__setters:height", value )
-	assert( type(value)=='number' or (value==nil and self._inherit) )
-	--==--
-	if value == self._height then return end
-	self._height = value
-	self:_dispatchChangeEvent( 'height', value )
-end
-
---== strokeColor
-
-function BackgroundStyle.__getters:strokeColor()
-	local value = self._strokeColor
-	if value==nil and self._inherit then
-		value = self._inherit._strokeColor
-	end
-	return value
-end
-function BackgroundStyle.__setters:strokeColor( value )
-	-- print( "BackgroundStyle.__setters:strokeColor", value )
-	assert( value or (value==nil and self._inherit) )
-	--==--
-	self._strokeColor = value
-	self:_dispatchChangeEvent( 'strokeColor', value )
-end
-
---== strokeWidth
-
-function BackgroundStyle.__getters:strokeWidth( value )
-	local value = self._strokeWidth
-	if value==nil and self._inherit then
-		value = self._inherit._strokeWidth
-	end
-	return value
-end
-function BackgroundStyle.__setters:strokeWidth( value )
-	-- print( "BackgroundStyle.__setters:strokeWidth", value )
-	assert( type(value)=='number' or (value==nil and self._inherit) )
-	--==--
-	if value == self._strokeWidth then return end
-	self._strokeWidth = value
-	self:_dispatchChangeEvent( 'strokeWidth', value )
-
-end
+-- none
 
 
 
@@ -344,6 +202,9 @@ function BackgroundStyle:_checkProperties()
 
 	assert( self.anchorX, "Style: requires 'anchorX'" )
 	assert( self.anchorY, "Style: requires 'anchory'" )
+	assert( self.fillColor, "Style: requires 'fillColor'" )
+	assert( self.strokeColor, "Style: requires 'strokeColor'" )
+	assert( self.strokeWidth, "Style: requires 'strokeWidth'" )
 end
 
 
@@ -353,8 +214,12 @@ end
 --== Event Handlers
 
 
-BackgroundStyle.setDefaults()
+-- none
 
+
+--== Pre-Processing ==--
+
+BackgroundStyle.setDefaults()
 
 
 

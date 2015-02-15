@@ -89,7 +89,7 @@ Theme.__setters = {}
 -- START: Mixin Setup for DMC Objects
 
 function Theme.__init__( self, params )
-	print( 'Theme.__init__x', params )
+	-- print( 'Theme.__init__x', params )
 	params = params or {}
 	--==--
 	Theme.resetTheme( self, params )
@@ -129,7 +129,7 @@ end
 
 
 function Theme.stylePropertyChangeHandler( self, event )
-	print( "Theme.stylePropertyChangeHandler", event )
+	-- print( "Theme.stylePropertyChangeHandler", event )
 	error("class must have event method: stylePropertyChangeHandler")
 end
 
