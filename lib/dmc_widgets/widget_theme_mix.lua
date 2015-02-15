@@ -44,6 +44,15 @@ local VERSION = "0.1.0"
 
 
 --====================================================================--
+--== Imports
+
+
+local Utils = require 'dmc_utils'
+
+-- local Widgets = require 'dmc_utils'
+
+
+--====================================================================--
 --== Support Functions
 
 
@@ -73,14 +82,18 @@ local Theme = {}
 
 Theme.NAME = "Theme Mixin"
 
+Theme.__getters = {}
+Theme.__setters = {}
+
 --======================================================--
 -- START: Mixin Setup for DMC Objects
 
 function Theme.__init__( self, params )
-	-- print( "Theme.__init__" )
+	-- print( 'Theme.__init__x', params )
 	params = params or {}
 	--==--
 	Theme.resetTheme( self, params )
+
 end
 
 function Theme.__undoInit__( self )
@@ -111,42 +124,25 @@ function Theme.resetTheme( self, params )
 	self.__styles = {}
 	self.__debug_on = params.debug_on
 
+	self:_setActiveStyle( nil, {notify=false} )
 end
 
 
-function Theme.setActiveStyle( self, style )
-	-- print( "Theme.setActiveStyle", style )
-	local o = self.__curr_style
-	local f = self.__curr_style_f
-	if o then
-		o.onProperty = nil
-	end
-
-	o = style
-
-	-- set before calls
-	self.__curr_style = o
-	self.curr_style = o
-
-	if o and f then
-		o.onProperty = f
-		f({type='reset-all'})
-	end
+function Theme.stylePropertyChangeHandler( self, event )
+	-- print( "Theme.stylePropertyChangeHandler", event )
+	error("class must have event method: stylePropertyChangeHandler")
 end
 
-function Theme.setStyleCallback( self, func )
-	-- print( "Theme.setStyleCallback", func )
-	self.__curr_style_f = func
-end
-
+-- TODO
 function Theme.resetStyles( self )
 	self.__styles = {}
 end
 
-
+-- TODO
 function Theme.addTheme( self )
 end
 
+-- TODO
 function Theme.removeTheme( self )
 end
 
@@ -155,6 +151,217 @@ end
 function Theme.setDebug( self, value )
 	self.__debug_on = value
 end
+
+
+--== Style Getters/Setters ==--
+
+function Theme.__getters:style()
+	-- print( 'Theme.__getters:style' )
+	return self.curr_style
+end
+function Theme.__setters:style( value )
+	-- print( 'Theme.__setters:style', value )
+	self:_setActiveStyle( value )
+end
+
+
+--[[
+override these getters/setters/methods if necesary
+--]]
+
+--== width
+
+function Theme.__getters:width()
+	return self.curr_style.width
+end
+function Theme.__setters:width( value )
+	-- print( 'Theme.__setters:width', value )
+	self.curr_style.width = value
+end
+
+--== height
+
+function Theme.__getters:height()
+	return self.curr_style.height
+end
+function Theme.__setters:height( value )
+	-- print( 'Theme.__setters:height', value )
+	self.curr_style.height = value
+end
+
+--== align
+
+function Theme.__getters:align()
+	return self.curr_style.align
+end
+function Theme.__setters:align( value )
+	-- print( 'Theme.__setters:align', value )
+	self.curr_style.align = value
+end
+
+--== anchorX
+
+function Theme.__getters:anchorX()
+	return self.curr_style.anchorX
+end
+function Theme.__setters:anchorX( value )
+	-- print( 'Theme.__setters:anchorX', value )
+	self.curr_style.anchorX = value
+end
+
+--== anchorY
+
+function Theme.__getters:anchorY()
+	return self.curr_style.anchorY
+end
+function Theme.__setters:anchorY( value )
+	-- print( 'Theme.__setters:anchorY', value )
+	self.curr_style.anchorY = value
+end
+
+--== font
+
+function Theme.__getters:font()
+	return self.curr_style.font
+end
+function Theme.__setters:font( value )
+	-- print( 'Theme.__setters:font', value )
+	self.curr_style.font = value
+end
+
+--== fontSize
+
+function Theme.__getters:fontSize()
+	return self.curr_style.fontSize
+end
+function Theme.__setters:fontSize( value )
+	-- print( 'Theme.__setters:fontSize', value )
+	self.curr_style.fontSize = value
+end
+
+--== marginX
+
+function Theme.__getters:marginX()
+	return self.curr_style.marginX
+end
+function Theme.__setters:marginX( value )
+	-- print( 'Theme.__setters:marginX', value )
+	self.curr_style.marginX = value
+end
+
+--== marginY
+
+function Theme.__getters:marginY()
+	return self.curr_style.marginY
+end
+function Theme.__setters:marginY( value )
+	-- print( 'Theme.__setters:marginY', value )
+	self.curr_style.marginY = value
+end
+
+--== strokeWidth
+
+function Theme.__getters:strokeWidth()
+	return self.curr_style.strokeWidth
+end
+function Theme.__setters:strokeWidth( value )
+	-- print( 'Theme.__setters:strokeWidth', value )
+	self.curr_style.strokeWidth = value
+end
+
+
+
+--== Style Methods ==--
+
+--== setAnchor
+
+function Theme:setAnchor( ... )
+	-- print( 'Theme:setAnchor' )
+	local args = {...}
+
+	if type( args[1] ) == 'table' then
+		self.anchorX, self.anchorY = unpack( args[1] )
+	end
+	if type( args[1] ) == 'number' then
+		self.anchorX = args[1]
+	end
+	if type( args[2] ) == 'number' then
+		self.anchorY = args[2]
+	end
+end
+
+--== setFillColor
+
+function Theme:setFillColor( ... )
+	-- print( 'Theme:setFillColor' )
+	self.curr_style.fillColor = {...}
+end
+
+--== setStrokeColor
+
+function Theme:setStrokeColor( ... )
+	-- print( 'Theme:setStrokeColor' )
+	self.curr_style.strokeColor = {...}
+end
+
+--== setTextColor
+
+function Theme:setTextColor( ... )
+	-- print( 'Theme:setTextColor' )
+	self.curr_style.textColor = {...}
+end
+
+
+
+--====================================================================--
+--== Private Methods
+
+
+function Theme._getWidgetStyle( self )
+	-- print( "Theme._getWidgetStyle" )
+	local o = self.STYLE_CLASS
+	assert( o, "[ERROR] Widget is missing property 'STYLE_CLASS'" )
+	return o:copyStyle()
+end
+
+
+function Theme._setActiveStyle( self, style, params )
+	-- print( "Theme._setActiveStyle", style )
+	params = params or {}
+	if params.notify==nil then params.notify=true end
+	assert( style==nil or type(style)=='table' )
+	--==--
+	local f = Utils.createObjectCallback( self, self.stylePropertyChangeHandler )
+	local o = self.__curr_style
+	if o then
+		o.onProperty = nil
+	end
+
+	-- create style
+	if style==nil then
+		style=self:_getWidgetStyle()
+	elseif type(style.isa)=='function' then
+		assert( style:isa(self.STYLE_CLASS), "[ERROR] setting incorrect style for Widget" )
+		style=style
+	else
+		-- Lua structure
+		local style_info = style
+		style=self:_getWidgetStyle()
+		style:updateStyle( style_info )
+	end
+
+	o = style
+
+	-- set before notify call
+	self.__curr_style = o
+	self.curr_style = o
+
+	if o and f and params.notify then
+		o.onProperty = f
+		f({type='reset-all'})
+	end
+end
+
 
 
 
