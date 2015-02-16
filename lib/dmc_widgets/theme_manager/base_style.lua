@@ -97,7 +97,7 @@ Style.STYLE_UPDATED = 'style-updated-event'
 --== Start: Setup DMC Objects
 
 function Style:__init__( params )
-	print( "Style:__init__", params )
+	-- print( "Style:__init__", params )
 	params = params or {}
 	params.data = params.data
 	if params.inherit==nil then
@@ -110,9 +110,6 @@ function Style:__init__( params )
 	--==--
 	-- Style inheritance tree
 	self._inherit = params.inherit
-	print( "in herit from ", params.inherit)
-	print( "self is ", self )
-	print( "base is ", self.__base_style__ )
 	-- widget delegate
 	self._parent = params.parent
 	self._widget = params.widget
@@ -138,7 +135,7 @@ end
 
 
 function Style:_checkChildren()
-	print("OVERRIDE Style:_checkChildren")
+	-- print("OVERRIDE Style:_checkChildren")
 end
 
 
@@ -159,7 +156,7 @@ end
 -- inheritance to current style
 --
 function Style:copyStyle( params )
-	print( "Style:copyStyle", self )
+	-- print( "Style:copyStyle", self )
 	params = params or {}
 	--==--
 	params.inherit = self
@@ -178,7 +175,7 @@ end
 -- widget
 -- name
 function Style:createStyleFrom( params )
-	print( "Style:createStyleFrom", params )
+	-- print( "Style:createStyleFrom", params )
 	params = params or {}
 	if params.copy==nil then params.copy=true end
 	--==--
@@ -188,10 +185,8 @@ function Style:createStyleFrom( params )
 	local StyleClass = self.class
 	local style
 	if data==nil then
-		print( "NO DATA HERE")
 		style = StyleClass:new( params )
 	elseif type(data.isa)=='function' then
-		print( "HAVE STYLE CLASS")
 		if not copy then
 			style = data
 		else
@@ -200,7 +195,6 @@ function Style:createStyleFrom( params )
 			style = data:copyStyle( params )
 		end
 	else
-		print( "LUA STRUCTURE")
 		-- Lua structure
 		style = StyleClass:new( params )
 		-- style:updateStyle( data )
@@ -514,11 +508,10 @@ function Style.__getters:strokeWidth( value )
 	return value
 end
 function Style.__setters:strokeWidth( value )
-	print( "Style.__setters:strokeWidth", value )
+	-- print( "Style.__setters:strokeWidth", value )
 	assert( type(value)=='number' or (value==nil and self._inherit) )
 	--==--
 	if value == self._strokeWidth then return end
-	print( self.name )
 	self._strokeWidth = value
 	self:_dispatchChangeEvent( 'strokeWidth', value )
 
@@ -554,10 +547,10 @@ end
 
 
 function Style:_parseData( data )
-	print( "Style:_parseData", data )
+	-- print( "Style:_parseData", data )
 	if data==nil then return end
 	for k,v in pairs( data ) do
-		print(k,v)
+		-- print(k,v)
 		self[k]=v
 	end
 end
@@ -581,8 +574,7 @@ end
 
 
 function Style:_dispatchChangeEvent( prop, value, substyle )
-	print( 'Style:_dispatchChangeEvent', prop, value, substyle )
-
+	-- print( 'Style:_dispatchChangeEvent', prop, value, substyle )
 	local widget = self._widget
 	if not widget then return end
 
@@ -594,8 +586,7 @@ function Style:_dispatchChangeEvent( prop, value, substyle )
 		value=value
 	}
 	if widget.stylePropertyChangeHandler then
-		print( "WAS DISPATCHED UPDATE", self.name )
-		print( widget, widget.NAME )
+		-- print( widget, widget.NAME )
 		widget:stylePropertyChangeHandler( e )
 	end
 
