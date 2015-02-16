@@ -107,6 +107,7 @@ TextFieldStyle.DEFAULT = {
 	align='center',
 	anchorX=0.5,
 	anchorY=0.5,
+	debugOn=false,
 	backgroundStyle='none',
 	inputType='password',
 	marginX=0,
@@ -178,9 +179,12 @@ function TextFieldStyle:__init__( params )
 
 	-- self._data
 	-- self._inherit
+	-- self._widget
+	-- self._parent
+	-- self._onProperty
 
 	-- self._name
-	-- self._onProperty
+	-- self._debugOn
 
 	-- these are ones which we save locally, others are
 	-- stored in component styles
@@ -380,6 +384,8 @@ end
 --
 function TextFieldStyle:updateStyle( params )
 	-- print( "TextFieldStyle:updateStyle" )
+
+	if info.debugOn~=nil or force then self.debugOn=info.debugOn end
 
 	--== Widget-level
 	if params.width then self.width=params.width end

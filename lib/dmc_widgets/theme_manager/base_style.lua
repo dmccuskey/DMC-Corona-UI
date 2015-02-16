@@ -118,6 +118,7 @@ function Style:__init__( params )
 	self._data = params.data
 
 	self._name = params.name
+	self._debugOn = params.debugOn
 end
 
 function Style:__initComplete__()
@@ -262,6 +263,25 @@ function Style.__setters:name( value )
 	--==--
 	if value == self._name then return end
 	self._name = value
+end
+
+
+--== debugOn
+
+function Style.__getters:debugOn()
+	local value = self._debugOn
+	if value==nil and self._inherit then
+		value = self._inherit.debugOn
+	end
+	return value
+end
+function Style.__setters:debugOn( value )
+	-- print( "Style.__setters:debugOn", value )
+	assert( type(value)=='boolean' or (value==nil and self._inherit) )
+	--==--
+	if value == self._debugOn then return end
+	self._debugOn = value
+	self:_dispatchChangeEvent( 'debugOn', value )
 end
 
 
@@ -556,7 +576,8 @@ end
 
 
 function Style:_checkProperties()
-	assert( self.name, "Style: requires a name" )
+	assert( self.name, "Style: requires property 'name'" )
+	assert( self.debugOn~=nil , "Style: requires a property 'debugOn'" )
 end
 
 

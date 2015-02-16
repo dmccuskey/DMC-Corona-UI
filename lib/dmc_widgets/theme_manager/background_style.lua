@@ -100,6 +100,7 @@ BackgroundStyle.DEFAULT = {
 
 	anchorX=0.5,
 	anchorY=0.5,
+	debugOn=false,
 	fillColor={1,1,1,1},
 	isHitTestable=true,
 	strokeColor={0,0,0,1},
@@ -129,9 +130,10 @@ function BackgroundStyle:__init__( params )
 	-- self._inherit
 	-- self._widget
 	-- self._parent
+	-- self._onProperty
 
 	-- self._name
-	-- self._onProperty
+	-- self._debugOn
 
 	self._width = nil
 	self._height = nil
@@ -175,6 +177,9 @@ function BackgroundStyle:updateStyle( info, force )
 	-- print( "BackgroundStyle:updateStyle", info )
 	if force==nil then force=true end
 	--==--
+
+	if info.debugOn~=nil or force then self.debugOn=info.debugOn end
+
 	if info.width~=nil or force then self.width=info.width end
 	if info.height~=nil or force then self.height=info.height end
 

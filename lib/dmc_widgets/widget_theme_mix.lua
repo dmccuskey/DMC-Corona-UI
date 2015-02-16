@@ -216,6 +216,17 @@ end
 override these getters/setters/methods if necesary
 --]]
 
+--== debugOn
+
+function Theme.__getters:debugOn()
+	return self.curr_style.debugOn
+end
+function Theme.__setters:debugOn( value )
+	-- print( 'Theme.__setters:debugOn', value )
+	self.curr_style.debugOn = value
+end
+
+
 --== width
 
 function Theme.__getters:width()

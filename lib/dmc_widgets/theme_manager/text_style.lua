@@ -101,6 +101,7 @@ TextStyle.DEFAULT = {
 	align='center',
 	anchorX=0.5,
 	anchorY=0.5,
+	debugOn=false,
 	fillColor={1,1,1,0},
 	font=native.systemFont,
 	fontSize=24,
@@ -136,6 +137,7 @@ function TextStyle:__init__( params )
 	-- self._parent
 
 	-- self._name
+	-- self._debugOn
 
 	self._width = nil
 	self._height = nil
@@ -183,6 +185,8 @@ function TextStyle:updateStyle( info, force )
 	-- print( "TextStyle:updateStyle" )
 	if force==nil then force=true end
 	--==--
+	if info.debugOn~=nil or force then self.debugOn=info.debugOn end
+
 	if info.width~=nil or force then self.width=info.width end
 	if info.height~=nil or force then self.height=info.height end
 
