@@ -120,10 +120,10 @@ TextFieldStyle.DEFAULT = {
 		* height
 		* anchorX/Y
 		--]]
-		fillColor={0,0,0,0},
+		fillColor={0.5,0.5,0.2,1},
 		isHitTestable=true,
 		strokeWidth=2,
-		strokeColor={1,0,0,0.5},
+		strokeColor={0,0,0,0},
 	},
 	hint={
 		--[[
@@ -135,9 +135,9 @@ TextFieldStyle.DEFAULT = {
 		* marginX/Y
 		--]]
 		fillColor={0,0,0,0},
-		font=native.systemFontBold,
+		font=native.systemFont,
 		fontSize=24,
-		textColor={1,1,0.4,1},
+		textColor={0.3,0.3,0.3,1},
 	},
 	text={
 		--[[
@@ -149,9 +149,9 @@ TextFieldStyle.DEFAULT = {
 		* marginX/Y
 		--]]
 		fillColor={0,0,0,0},
-		font=native.systemFont,
-		fontSize=26,
-		textColor={0,0,0,1},
+		font=native.systemFontBold,
+		fontSize=24,
+		textColor={0.1,0.1,0.1,1},
 	},
 
 }

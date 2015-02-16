@@ -321,6 +321,16 @@ function Text.__setters:height( value )
 	self.curr_style.height = value
 end
 
+-- get just the text height
+function Text:getTextHeight()
+	-- print( "Text:getTextHeight" )
+	local val = 0
+	if self._txt_text then
+		val = self._txt_text.height
+	end
+	return val
+end
+
 
 --== Text
 
@@ -369,7 +379,7 @@ function Text:_createText()
 		-- don't use height, turns into multi-line
 		height=nil,
 
-		text="",
+		text=self._text,
 		align=style.align,
 		font=style.font,
 		fontSize=style.fontSize,
@@ -546,7 +556,7 @@ end
 
 
 function Text:stylePropertyChangeHandler( event )
-	-- print( ">>>>>>>Text:stylePropertyChangeHandler", event )
+	-- print( "Text:stylePropertyChangeHandler", event )
 	local style = event.target
 	local etype= event.type
 	local property= event.property

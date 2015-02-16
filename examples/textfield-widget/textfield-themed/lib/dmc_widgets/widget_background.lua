@@ -295,7 +295,7 @@ function Background:_removeBackground()
 end
 
 function Background:_createBackground()
-	print( 'Background:_createBackground' )
+	-- print( 'Background:_createBackground' )
 	local style = self.curr_style
 	local o -- object
 
@@ -326,7 +326,7 @@ end
 
 
 function Background:__commitProperties__()
-	print( 'Background:__commitProperties__' )
+	-- print( 'Background:__commitProperties__' )
 	local style = self.curr_style
 
 	-- create new background if necessary
@@ -414,13 +414,13 @@ end
 
 
 function Background:stylePropertyChangeHandler( event )
-	print( ">>>>> Background:stylePropertyChangeHandler", event )
+	-- print( "Background:stylePropertyChangeHandler", event )
 	local style = event.target
 	local etype= event.type
 	local property= event.property
 	local value = event.value
 
-	print( "Style Changed", etype, property, value )
+	-- print( "Style Changed", etype, property, value )
 
 	if etype == style.STYLE_RESET then
 		self._width_dirty=true

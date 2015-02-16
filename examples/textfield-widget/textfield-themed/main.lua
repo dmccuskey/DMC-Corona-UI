@@ -89,20 +89,20 @@ o.x, o.y = H_CENTER, V_CENTER
 --== Setup Widgets ==--
 
 
-print("\n\n\n create widget")
 --======================================================--
 --== create textfield widget, default style
 
 
 tf1 = Widgets.newTextField{
 	text="",
-	hintText="Zipcode"
+	hintText="Pizza Topping:"
 }
-tf1:addEventListener( tf1.EVENT, widgetEvent_handler )
-tf1.onProperty = widgetOnPropertyEvent_handler
+-- tf1:addEventListener( tf1.EVENT, widgetEvent_handler )
+-- tf1.onProperty = widgetOnPropertyEvent_handler
 
 tf1.x = H_CENTER
 tf1.y = V_CENTER
+tf1.y = V_CENTER-100
 
 -- tf1:setAnchor( {0,0} )
 -- tf1:setAnchor( {0.5,0.5} )
@@ -110,7 +110,11 @@ tf1.y = V_CENTER
 
 -- tf1.y = 300
 
--- tf1.width = 200
+
+tf1.width=250
+tf1.height=60
+tf1.align='center'
+tf1.marginX=10
 
 
 -- timer.performWithDelay( 1000, function()
@@ -127,9 +131,9 @@ tf1.y = V_CENTER
 
 -- 	-- tf1:setAnchor( {0,1} )
 
--- 	tf1:setBackgroundFillColor( 1,0.5,0.2,0.5 )
--- 	tf1:setBackgroundStrokeColor( 2,0,0,1 )
--- 	tf1.backgroundStrokeWidth = 1
+-- 	-- tf1:setBackgroundFillColor( 1,0.5,0.2,0.5 )
+-- 	-- tf1:setBackgroundStrokeColor( 2,0,0,1 )
+-- 	-- tf1.backgroundStrokeWidth = 1
 
 -- end)
 
@@ -163,39 +167,79 @@ tf1.y = V_CENTER
 -- end)
 
 
-tf1.text="hamburger"
+-- tf1.text="hamburger"
 
 
-timer.performWithDelay( 1000, function()
-	print("\n\n Update Properties")
-	-- test hint-text props
+-- timer.performWithDelay( 1000, function()
+-- 	print("\n\n Update Properties")
+-- 	-- test hint-text props
 
-	tf1.x = H_CENTER
-	tf1.y = V_CENTER
+-- 	tf1.x = H_CENTER
+-- 	tf1.y = V_CENTER
 
-	-- testing text properties
+-- 	-- testing text properties
 
-	tf1.align='right'
+-- 	tf1.align='right'
 
-	tf1.marginX=5
-	tf1.marginY=10
+-- 	tf1.marginX=5
+-- 	tf1.marginY=10
 
-	tf1.width=200
-	tf1.height=60
+-- 	tf1.width=200
+-- 	tf1.height=60
 
-	tf1:setAnchor( {0,0} )
-	-- tf1:setAnchor( {0,1} )
-	-- tf1:setAnchor( {1,1} )
+-- 	tf1:setAnchor( {0,0} )
+-- 	-- tf1:setAnchor( {0,1} )
+-- 	-- tf1:setAnchor( {1,1} )
 
-		tf1:setBackgroundFillColor( 1,0.5,0.2,0.5 )
-		tf1:setBackgroundStrokeColor( 2,0,0,1 )
-		tf1.backgroundStrokeWidth = 1
+-- 		tf1:setBackgroundFillColor( 1,0.5,0.2,0.5 )
+-- 		tf1:setBackgroundStrokeColor( 2,0,0,1 )
+-- 		tf1.backgroundStrokeWidth = 1
 
-	tf1.textFont = native.systemFontBold
-	tf1.textFontSize = 20
-	tf1:setTextColor( 0.5,0.5,0.5, 1)
+-- 	tf1.textFont = native.systemFontBold
+-- 	tf1.textFontSize = 20
+-- 	tf1:setTextColor( 0.5,0.5,0.5, 1)
 
-end)
+-- end)
+
+
+-- tf1.text="hamburger"
+-- tf1:_startEdit()
+-- tf1:setAnchor( {0,0} )
+-- tf1:setAnchor( {0.5,0.5} )
+-- tf1:setAnchor( {1,1} )
+
+-- timer.performWithDelay( 1000, function()
+-- 	print("\n\n Update Properties")
+-- 	-- test input-text props
+
+-- 	-- tf1.x = H_CENTER
+-- 	-- tf1.y = V_CENTER
+
+-- 	-- testing text properties
+
+-- 	-- tf1.text="hotdog"
+-- 	tf1.align='center'
+
+-- 	-- tf1.marginX=5
+-- 	-- tf1.marginY=10
+
+-- 	-- tf1.width=200
+-- 	-- tf1.height=60
+
+-- 	-- tf1:setAnchor( {0,0} )
+-- 	-- tf1:setAnchor( {0,1} )
+-- 	tf1:setAnchor( {1,1} )
+
+-- 	tf1:setBackgroundFillColor( 1,0.5,0.2,0.5 )
+-- 		-- tf1:setBackgroundStrokeColor( 2,0,0,1 )
+-- 		-- tf1.backgroundStrokeWidth = 1
+
+-- 	tf1.textFont = native.systemFontBold
+-- 	tf1.textFontSize = 24
+-- 	tf1:setTextColor( 1,0.5,0.5, 1)
+
+
+-- end)
 
 
 
@@ -211,67 +255,32 @@ end)
 
 
 
-
+--======================================================--
+--== create textfield widget, zipcode formatter
 
 -- create formatter
 
--- formatter = Widgets.newFormatter( Widgets.Formatter.US_ZIPCODE )
+formatter = Widgets.newFormatter( Widgets.Formatter.US_ZIPCODE )
 
-
-
--- timer.performWithDelay( 1, function() textfield.width( 0.5, 0.2, 0.1 ) end)
-
-
--- style = Widgets.newTextFieldStyle{
--- 	name="text-field-default",
-
--- 	width=300,
--- 	height=40,
--- 	align='left',
--- 	returnKey='done',
--- 	inputType='password',
--- 	anchorX=0.5,
--- 	anchorY=0.5,
--- 	backgroundStyle='none',
--- 	marginX=0,
--- 	marginY=0,
-
--- 	hint={
--- 		align='left',
--- 		font=native.systemFontBold,
--- 		fontSize=20,
--- 		textColor={1,0,1},
--- 	},
--- 	text={
--- 		align='left',
--- 		font=native.systemFontBold,
--- 		fontSize=40,
--- 		textColor={1,0,0},
--- 	},
--- 	background={
--- 		fillColor={1,0.5,0.5},
--- 		strokeWidth=2,
--- 		strokeColor={0,0,1},
--- 	}
--- }
+style = Widgets.newTextFieldStyle{
+	name="text-field-default",
+	width=200,
+	height=40,
+}
 
 -- create text field
 
--- print( ">>>>> my text field ")
--- textfield = Widgets.newTextField{
--- 	-- x,y
+textfield = Widgets.newTextField{
 
--- 	text="89121",
--- 	hintText = "Zipcode",
+	text="",
+	hintText = "Zipcode",
+	style=nil,
+	formatter=formatter
+}
 
--- 	-- style=style,
-
--- }
-
--- -- print( "\n\n>>>>> making chnages ")
-
--- textfield.x = H_CENTER
--- textfield.y = V_CENTER ---100
+-- textfield.formatter = formatter
+textfield.x = H_CENTER
+textfield.y = V_CENTER
 
 
 -- --== Main Text Field Tests
