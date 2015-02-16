@@ -95,8 +95,8 @@ BackgroundStyle.__base_style__ = nil
 BackgroundStyle.DEFAULT = {
 	name='background-default-style',
 
-	width=100,
-	height=50,
+	width=75,
+	height=30,
 
 	anchorX=0.5,
 	anchorY=0.5,
