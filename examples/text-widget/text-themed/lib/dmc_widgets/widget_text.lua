@@ -150,7 +150,7 @@ function Text:__init__( params )
 	self._y = params.y
 	self._y_dirty = true
 
-	-- properties for style
+	-- properties from style
 
 	self._width_dirty=true
 	self._height_dirty=true
@@ -199,8 +199,10 @@ function Text:__createView__()
 	-- print( "Text:__createView__" )
 	self:superCall( ComponentBase, '__createView__' )
 	--==--
-	self._bg = display.newRect( 0,0,0,0 )
-	self:insert( self._bg )
+	local o = display.newRect( 0,0,0,0 )
+	o.x, o.y = 0, 0
+	self:insert( o )
+	self._bg = o
 end
 
 function Text:__undoCreateView__()
@@ -264,6 +266,7 @@ function Text.__setters:x( value )
 	-- print( 'Text.__setters:x', value )
 	assert( type(value)=='number' )
 	--==--
+	if self._x == value then return end
 	self._x = value
 	self._x_dirty=true
 	self:__invalidateProperties__()
@@ -278,12 +281,21 @@ function Text.__setters:y( value )
 	-- print( 'Text.__setters:y', value )
 	assert( type(value)=='number' )
 	--==--
+	if self._y == value then return end
 	self._y = value
 	self._y_dirty=true
 	self:__invalidateProperties__()
 end
 
+
+--[[
+we use custom getters for width/height
+without width/height, we just use dimensions
+from text object after creation
+--]]
+
 --== width (custom)
+
 
 function Text.__getters:width()
 	-- print( 'Text.__getters:width' )
@@ -319,6 +331,7 @@ function Text.__setters:text( value )
 	-- print( 'Text.__setters:text', value )
 	assert( type(value)=='string' )
 	--==--
+	if self._text == value then return end
 	self._text = value
 	self._text_dirty=true
 	self:__invalidateProperties__()
@@ -350,14 +363,16 @@ function Text:_createText()
 	end
 
 	o = display.newText{
-		x=0,
-		y=0,
-		width=w,
-		height=nil, -- don't use height
+		x=0, y=0,
 
-		align=style.align,
-		fontSize=style.fontSize,
+		width=w,
+		-- don't use height, turns into multi-line
+		height=nil,
+
 		text=self._text,
+		align=style.align,
+		font=style.font,
+		fontSize=style.fontSize,
 	}
 
 	self:insert( o )
@@ -366,7 +381,6 @@ function Text:_createText()
 	-- conditions for coming in here
 	self._align_dirty=false
 	self._font_dirty=false
-	self._fontSize_dirty=false
 	self._fontSize_dirty=false
 
 	--== reset our text object
@@ -423,13 +437,13 @@ function Text:__commitProperties__()
 	-- bg width/height
 
 	if self._bgWidth_dirty then
-		bg.width = self.width
+		bg.width = self.width -- use getter, it's smart
 		self._bgWidth_dirty=false
 
 		self._text_alignX_dirty=true
 	end
 	if self._bgHeight_dirty then
-		bg.height = self.height
+		bg.height = self.height -- use getter, it's smart
 		self._bgHeight_dirty=false
 
 		self._text_alignY_dirty=true
@@ -438,14 +452,12 @@ function Text:__commitProperties__()
 	-- anchorX/anchorY
 
 	if self._anchorX_dirty then
-		-- view.anchorX = style.anchorX
 		bg.anchorX = style.anchorX
 		self._anchorX_dirty=false
 
 		self._x_dirty=true
 	end
 	if self._anchorY_dirty then
-		-- view.anchorY = style.anchorY
 		bg.anchorY = style.anchorY
 		self._anchorY_dirty=false
 
@@ -456,18 +468,12 @@ function Text:__commitProperties__()
 
 	if self._x_dirty then
 		view.x = self._x
-		bg.x = 0
-		local offset = bg.width*(0.5-bg.anchorX)
-		text.x = bg.x+offset
 		self._x_dirty = false
 
 		self._textX_dirty=true
 	end
 	if self._y_dirty then
 		view.y = self._y
-		bg.y = 0
-		local offset = bg.height*(0.5-bg.anchorY)
-		text.y = bg.y -- +offset
 		self._y_dirty = false
 
 		self._textY_dirty=true
@@ -476,30 +482,31 @@ function Text:__commitProperties__()
 	-- text align x/y
 
 	if self._textX_dirty then
-		local align = self._align
-		local bgMarginX = style.marginX
+		local align = style.align
+		local width = self.width -- use getter, it's smart
 		local offset
 		if align == self.LEFT then
 			text.anchorX = 0
-			offset = -bg.width*(bg.anchorX)+bgMarginX
-			text.x=bg.x+offset
+			offset = -width*(style.anchorX)+style.marginX
+			text.x=offset
 		elseif align == self.RIGHT then
 			text.anchorX = 1
-			offset = bg.width*(1-bg.anchorX)-bgMarginX
-			text.x=bg.x+offset
+			offset = width*(1-style.anchorX)-style.marginX
+			text.x=offset
 		else
 			text.anchorX = 0.5
-			offset = bg.width*(0.5-bg.anchorX)
-			text.x=bg.x+offset
+			offset = width*(0.5-style.anchorX)
+			text.x=offset
 		end
 		self._textX_dirty = false
 	end
 
 	if self._textY_dirty then
+		local height = self.height -- use getter, it's smart
 		local offset
 		text.anchorY = 0.5
-		offset = bg.height/2-bg.height*(bg.anchorY) -- 0
-		text.y=bg.y+offset
+		offset = height/2-height*(style.anchorY)
+		text.y=offset
 		self._textY_dirty=false
 	end
 
@@ -526,6 +533,7 @@ function Text:__commitProperties__()
 	end
 
 end
+
 
 
 
