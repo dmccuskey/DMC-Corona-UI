@@ -1127,7 +1127,7 @@ function TextField:_backgroundTouch_handler( event )
 
 	if self._is_editing.state==true then return end
 
-	if etype == background.RELEASE then
+	if etype == background.RELEASED then
 		self:_startEdit()
 	end
 end
