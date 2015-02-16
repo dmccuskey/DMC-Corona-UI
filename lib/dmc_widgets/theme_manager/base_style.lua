@@ -171,6 +171,13 @@ function Style:resetProperties()
 	self:_dispatchResetEvent()
 end
 
+-- this would clear any local modifications
+--
+function Style:clear()
+	self:updateStyle( {}, {force=true} )
+	self:_dispatchResetEvent()
+end
+
 
 -- params:
 -- data
