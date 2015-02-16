@@ -113,6 +113,7 @@ function Style:__init__( params )
 	-- widget delegate
 	self._parent = params.parent
 	self._widget = params.widget
+	self._onPropertyChange_f = params.onPropertyChange
 
 	self._data = params.data
 
@@ -226,6 +227,15 @@ function Style.__setters:widget( value )
 	self._widget = value
 end
 
+
+-- onPropertyChange
+--
+function Style.__setters:onPropertyChange( func )
+	-- print( "Style.__setters:onPropertyChange", func )
+	assert( type(func)=='function' )
+	--==--
+	self._onPropertyChange_f = func
+end
 
 
 --[[
@@ -557,26 +567,31 @@ end
 
 
 function Style:_dispatchResetEvent()
-	-- print( 'Style:_dispatchResetEvent' )
+	-- print( 'Style:_dispatchResetEvent', self )
 	--==--
 	local widget = self._widget
-	if not widget then return end
+	local callback = self._onPropertyChange_f
+
+	if not widget and not callback then return end
 
 	local e = {
 		name=self.EVENT,
 		target=self,
 		type=self.STYLE_RESET
 	}
-	if widget.stylePropertyChangeHandler then
+	if widget and widget.stylePropertyChangeHandler then
 		widget:stylePropertyChangeHandler( e )
 	end
+	if callback then callback( e ) end
 end
 
 
 function Style:_dispatchChangeEvent( prop, value, substyle )
-	-- print( 'Style:_dispatchChangeEvent', prop, value, substyle )
+	-- print( 'Style:_dispatchChangeEvent', prop, value, self )
 	local widget = self._widget
-	if not widget then return end
+	local callback = self._onPropertyChange_f
+
+	if not widget and not callback then return end
 
 	local e = {
 		name=self.EVENT,
@@ -585,10 +600,11 @@ function Style:_dispatchChangeEvent( prop, value, substyle )
 		property=prop,
 		value=value
 	}
-	if widget.stylePropertyChangeHandler then
+	if widget and widget.stylePropertyChangeHandler then
 		-- print( widget, widget.NAME )
 		widget:stylePropertyChangeHandler( e )
 	end
+	if callback then callback( e ) end
 
 end
 
