@@ -321,6 +321,16 @@ function Text.__setters:height( value )
 	self.curr_style.height = value
 end
 
+-- get just the text height
+function Text:getTextHeight()
+	-- print( "Text:getTextHeight" )
+	local val = 0
+	if self._txt_text then
+		val = self._txt_text.height
+	end
+	return val
+end
+
 
 --== Text
 
