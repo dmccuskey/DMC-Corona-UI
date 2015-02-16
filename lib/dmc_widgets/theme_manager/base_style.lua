@@ -463,24 +463,6 @@ function Style.__setters:fontSize( value )
 	self:_dispatchChangeEvent( 'fontSize', value )
 end
 
---== isHitTestable
-
-function Style.__getters:isHitTestable()
-	local value = self._isHitTestable
-	if value==nil and self._inherit then
-		value = self._inherit.isHitTestable
-	end
-	return value
-end
-function Style.__setters:isHitTestable( value )
-	-- print( "Style.__setters:isHitTestable", value )
-	assert( type(value)=='boolean' or (value==nil and self._inherit) )
-	--==--
-	if value==self._isHitTestable then return end
-	self._isHitTestable = value
-	self:_dispatchChangeEvent( 'isHitTestable', value )
-end
-
 --== marginX
 
 function Style.__getters:marginX()
