@@ -222,6 +222,10 @@ end
 
 -- widget, to process events
 --
+function Style.__getters:widget()
+	-- print( "Style.__getters:widget" )
+	return self._widget
+end
 function Style.__setters:widget( value )
 	-- print( "Style.__setters:widget", value )
 	self._widget = value
