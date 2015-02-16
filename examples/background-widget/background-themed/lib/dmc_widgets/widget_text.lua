@@ -321,6 +321,16 @@ function Text.__setters:height( value )
 	self.curr_style.height = value
 end
 
+-- get just the text height
+function Text:getTextHeight()
+	-- print( "Text:getTextHeight" )
+	local val = 0
+	if self._txt_text then
+		val = self._txt_text.height
+	end
+	return val
+end
+
 
 --== Text
 
@@ -390,11 +400,6 @@ function Text:_createText()
 	self._width_dirty=true
 	self._height_dirty=true
 
-	self._bgWidth_dirty=true
-	self._bgHeight_dirty=true
-
-	self._anchorX_dirty=true
-	self._anchorY_dirty=true
 	self._text_dirty=true
 	self._textColor_dirty=true
 end
@@ -413,25 +418,38 @@ function Text:__commitProperties__()
 
 	local view = self.view
 	local bg = self._bg
-	local text = self._txt_text
+	local display = self._txt_text
 
 	--== position sensitive
-
-	if self._align_dirty then
-		text.align=style._align
-		self._align_dirty = false
-	end
 
 	-- set text string
 
 	if self._text_dirty then
-		text.text = self._text
+		display.text = self._text
 		self._text_dirty=false
 
-		self._bgWidth_dirty=true
-		self._bgHeight_dirty=true
+		self._width_dirty=true
+		self._height_dirty=true
+	end
+
+	if self._align_dirty then
+		display.align=style.align
+		self._align_dirty = false
+	end
+
+	if self._width_dirty then
+		display.width=self.width
+		self._width_dirty=false
+
 		self._anchorX_dirty=true
+		self._bgWidth_dirty=true
+	end
+	if self._height_dirty then
+		-- reminder, we don't set text height
+		self._height_dirty=false
+
 		self._anchorY_dirty=true
+		self._bgHeight_dirty=true
 	end
 
 	-- bg width/height
@@ -439,14 +457,10 @@ function Text:__commitProperties__()
 	if self._bgWidth_dirty then
 		bg.width = self.width -- use getter, it's smart
 		self._bgWidth_dirty=false
-
-		self._text_alignX_dirty=true
 	end
 	if self._bgHeight_dirty then
 		bg.height = self.height -- use getter, it's smart
 		self._bgHeight_dirty=false
-
-		self._text_alignY_dirty=true
 	end
 
 	-- anchorX/anchorY
@@ -486,17 +500,17 @@ function Text:__commitProperties__()
 		local width = self.width -- use getter, it's smart
 		local offset
 		if align == self.LEFT then
-			text.anchorX = 0
+			display.anchorX = 0
 			offset = -width*(style.anchorX)+style.marginX
-			text.x=offset
+			display.x=offset
 		elseif align == self.RIGHT then
-			text.anchorX = 1
+			display.anchorX = 1
 			offset = width*(1-style.anchorX)-style.marginX
-			text.x=offset
+			display.x=offset
 		else
-			text.anchorX = 0.5
+			display.anchorX = 0.5
 			offset = width*(0.5-style.anchorX)
-			text.x=offset
+			display.x=offset
 		end
 		self._textX_dirty = false
 	end
@@ -504,9 +518,9 @@ function Text:__commitProperties__()
 	if self._textY_dirty then
 		local height = self.height -- use getter, it's smart
 		local offset
-		text.anchorY = 0.5
+		display.anchorY = 0.5
 		offset = height/2-height*(style.anchorY)
-		text.y=offset
+		display.y=offset
 		self._textY_dirty=false
 	end
 
@@ -528,7 +542,7 @@ function Text:__commitProperties__()
 		self._strokeWidth_dirty=false
 	end
 	if self._textColor_dirty then
-		text:setTextColor( unpack( style.textColor ) )
+		display:setTextColor( unpack( style.textColor ) )
 		self._textColor_dirty=false
 	end
 

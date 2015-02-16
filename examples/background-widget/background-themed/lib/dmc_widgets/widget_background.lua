@@ -162,13 +162,10 @@ function Background:__init__( params )
 
 	self._anchorX_dirty=true
 	self._anchorY_dirty=true
-
 	self._fillColor_dirty=true
+	self._isHitTestable_dirty = true
 	self._strokeColor_dirty=true
 	self._strokeWidth_dirty=true
-
-	self._isHitTestable_dirty = true
-
 
 	--== Object References ==--
 
@@ -342,17 +339,13 @@ function Background:__commitProperties__()
 
 	-- width/height
 
-	if self._bg_width_dirty then
-		bg.width = self.width
-		self._bg_width_dirty=false
-
-		self._text_alignX_dirty=true
+	if self._width_dirty then
+		bg.width = style.width
+		self._width_dirty=false
 	end
-	if self._bg_height_dirty then
-		bg.height = self.height
-		self._bg_height_dirty=false
-
-		self._text_alignY_dirty=true
+	if self._height_dirty then
+		bg.height = style.height
+		self._height_dirty=false
 	end
 
 	-- anchorX/anchorY
