@@ -172,7 +172,7 @@ function TextField:__init__( params )
 	if params.x==nil then params.x=0 end
 	if params.y==nil then params.y=0 end
 	if params.text==nil then params.text="" end
-	if params.hintText==nil then params.hintText=params.text end
+	if params.hintText==nil then params.hintText="" end
 
 	self:superCall( LifecycleMix, '__init__', params )
 	self:superCall( ComponentBase, '__init__', params )
@@ -186,11 +186,11 @@ function TextField:__init__( params )
 	self._text = params.text
 	self._text_dirty=true
 
-	self._txt_hintText = params.hintText
-	self._txt_hintText_dirty = true
+	self._hint_text = params.hintText
+	self._displayText_dirty=true
 
 	self._x = params.x
-	self._x_dirty = true
+	self._x_dirty=true
 	self._y = params.y
 	self._y_dirty=true
 
@@ -198,14 +198,10 @@ function TextField:__init__( params )
 
 	self._width_dirty=true
 	self._height_dirty=true
-	-- virtual
-	self._bgWidth_dirty=true
-	self._bgHeight_dirty=true
 
 	self._align_dirty=true
 	-- virtual
-	self._hintAlign_dirty=true
-	self._textAlign_dirty=true
+	self._inputAlign_dirty=true
 
 	self._bgAnchorX_dirty=true
 	self._bgAnchorY_dirty=true
@@ -229,14 +225,12 @@ function TextField:__init__( params )
 
 	--== Hint-level
 	-- align?
-	self._txt_hintFont_dirty = true
-	self._txt_hintFontSize_dirty = true
-	self._hintColor_dirty = true
+	self._textDisplayFont_dirty = true
+	self._textDisplayFontSize_dirty = true
+	self._textDisplayColor_dirty = true
 
 	--== Background-level
-	self._bgfillColor_dirty = true
-	self._bgWidth_dirty=true
-	self._bg_height_dirty=true
+	self._bgStyle_dirty=true
 
 	--== Internal
 
@@ -245,7 +239,10 @@ function TextField:__init__( params )
 	self._keyboardFocus_timer=nil
 
 	self._is_enabled = true
-	self._is_editing = false
+
+	self._is_editing = { state=false, set_focus=nil }
+	self._editActive_dirty = true
+
 	self._is_valid = true
 	self._value = nil
 
@@ -258,8 +255,8 @@ function TextField:__init__( params )
 
 	self._bg = nil -- background object
 	self._bg_dirty = true
-	self._txt_hint = nil -- text object (for both hint and value display)
-	self._txt_hint_dirty = true
+	self._textDisplay = nil -- text object (for both hint and value display)
+	self._textDisplay_dirty = true
 	self._textfield = nil -- textfield object
 	self._textfield_f = nil -- textfield handler
 
@@ -280,35 +277,11 @@ function TextField:__createView__()
 	-- print( "TextField:__createView__" )
 	self:superCall( ComponentBase, '__createView__' )
 	--==--
-
-	self._bg = display.newRect( 0,0,0,0 )
-	self._bg.isHitTestable=true
-	self:insert( self._bg )
-
-	-- local hw = self._width-self._marginX*2
-	-- local hh = self._height-self._marginY*2
-	-- self._txt_hint = Widgets.newText{
-	-- 	text=self._txt_hintText,
-	-- 	font=self._txt_hintFont,
-	-- 	fontSize=self._txt_hintFontSize,
-	-- 	textColor=self._txt_hintColor,
-	-- 	fillColor={0,0,0,0},
-	-- 	width=hw,
-	-- 	height=hh,
-	-- 	marginX=0,
-	-- 	marginY=0,
-	-- 	hasBackground=false
-	-- }
-	-- self:insert( self._txt_hint.view )
-
 end
 
 function TextField:__undoCreateView__()
 	-- print( "TextField:__undoCreateView__" )
 	self:_removeNewTextField()
-
-	self._bg:removeSelf()
-	self._bg=nil
 	--==--
 	self:superCall( ComponentBase, '__undoCreateView__' )
 end
@@ -323,11 +296,10 @@ function TextField:__initComplete__()
 	self._textfield_f = self:createCallback( self._textFieldEvent_handler )
 
 	--[[
-	self._txt_hint.onUpdate = self:createCallback( self._textOnUpdateEvent_handler )
+	self._textDisplay.onUpdate = self:createCallback( self._textOnUpdateEvent_handler )
 	--]]
 
 	self._bg_f = self:createCallback( self._backgroundTouch_handler )
-	self._bg:addEventListener( 'touch', self._bg_f )
 
 	print("\n\n another setup here\n")
 	self.style = self._tmp_style
@@ -342,10 +314,9 @@ function TextField:__undoInitComplete__()
 
 	self:_removeTextField()
 
-	self._bg:removeEventListener( 'touch', self._bg_f )
 	self._bg_f = nil
 
-	self._txt_hint.onUpdate = nil
+	self._textDisplay.onUpdate = nil
 
 	self:_stopKeyboardFocus()
 
@@ -366,8 +337,8 @@ end
 --== Static Methods
 
 
-function TextField.__setWidgetManager( manager )
-	-- print( "TextField.__setWidgetManager" )
+function TextField.initialize( manager )
+	-- print( "TextField.initialize" )
 	Widgets = manager
 	ThemeMgr = Widgets.ThemeMgr
 	ThemeMgr = Widgets.ThemeMgr
@@ -413,31 +384,87 @@ function TextField.__setters:y( value )
 end
 
 
--- --== width (custom)
+--== width (custom)
 
--- function Text.__getters:width()
--- 	-- print( 'Text.__getters:width' )
--- 	local w, t = self.curr_style.width, self._text
--- 	if w==nil and t then w=t.width end
--- 	return w
--- end
--- function Text.__setters:width( value )
--- 	-- print( 'Text.__setters:width', value )
--- 	self.curr_style.width = value
--- end
+function TextField.__getters:width()
+	-- print( 'TextField.__getters:width' )
+	return self.curr_style.width
+end
+function TextField.__setters:width( value )
+	print( 'TextField.__setters:width', value )
+	local style=self.curr_style
+	style.width = value
+	style.background.width=value
+	style.hint.width = value
+	style.text.width = value
+	self._width_dirty=true
+	self:__invalidateProperties__()
+end
 
--- --== height (custom)
+--== height (custom)
 
--- function Text.__getters:height()
--- 	-- print( 'Text.__getters:height' )
--- 	local h, t = self.curr_style.height, self._text
--- 	if h==nil and t then h=t.height end
--- 	return h
--- end
--- function Text.__setters:height( value )
--- 	-- print( 'Text.__setters:height', value )
--- 	self.curr_style.height = value
--- end
+function TextField.__getters:height()
+	-- print( 'TextField.__getters:height' )
+	return self.curr_style.height
+end
+function TextField.__setters:height( value )
+	print( 'TextField.__setters:height', value )
+	local style=self.curr_style
+	style.height = value
+	style.background.height=value
+	style.hint.height = value
+	style.text.height = value
+	self._height_dirty=true
+	self:__invalidateProperties__()
+end
+
+
+--== align
+
+function TextField.__getters:align()
+	-- print( 'TextField.__getters:align' )
+	return self.curr_style.align
+end
+function TextField.__setters:align( value )
+	-- print( 'TextField.__setters:align', value )
+	local style=self.curr_style
+	style.align = value
+	style.hint.align = value
+	style.text.align = value
+end
+
+--== anchorX
+
+function TextField.__getters:anchorX()
+	-- print( 'TextField.__getters:anchorX' )
+	return self.curr_style.anchorX
+end
+function TextField.__setters:anchorX( value )
+	-- print( 'TextField.__setters:anchorX', value )
+	local style=self.curr_style
+	style.anchorX = value
+	style.background.anchorX = value
+	style.hint.anchorX = value
+	style.text.anchorX = value
+end
+
+--== anchorY
+
+function TextField.__getters:anchorY()
+	-- print( 'TextField.__getters:anchorY' )
+	return self.curr_style.anchorY
+end
+function TextField.__setters:anchorY( value )
+	-- print( 'TextField.__setters:anchorY', value )
+	local style=self.curr_style
+	style.anchorY = value
+	style.background.anchorY = value
+	style.hint.anchorY = value
+	style.text.anchorY = value
+end
+
+
+
 
 
 --== TextField
@@ -446,11 +473,31 @@ function TextField.__getters:text()
 	return self._text
 end
 function TextField.__setters:text( value )
-	-- print( 'TextField.__setters:text', value )
+	print( 'TextField.__setters:text', value )
 	assert( type(value)=='string' )
 	--==--
 	self._text = value
 	self._text_dirty=true
+	self._displayStyle_dirty=true
+	self:__invalidateProperties__()
+end
+
+
+--== TextField
+
+function TextField.__getters:isEditing()
+	return self._is_editing.state
+end
+
+function TextField:setEditActive( value, params )
+	print( 'TextField:setEditActive', value )
+	params = params or {}
+	if params.set_focus==nil then params.set_focus=true end
+	assert( type(value)=='boolean' )
+	--==--
+	params.state=value
+	self._is_editing = params
+	self._editActive_dirty = true
 	self:__invalidateProperties__()
 end
 
@@ -480,33 +527,31 @@ function TextField.__setters:isValid( value )
 	self:__invalidateProperties__()
 end
 
+--== marginX
 
--- --== marginX
+function TextField.__getters:marginX( value )
+	return self.curr_style.marginX
+end
+function TextField.__setters:marginX( value )
+	-- print( 'TextField.__setters:marginX', value )
+	local style=self.curr_style
+	style.marginX = value
+	style.hint.marginX = value
+	style.text.marginX = value
+end
 
--- function TextField.__setters:marginX( value )
--- 	-- print( 'TextField.__setters:marginX', value )
--- 	assert( type(value)=='number' )
--- 	if value < 0 then value=0 end
--- 	--==--
--- 	if value == self._bgMarginX then return end
--- 	self._bgMarginX = value
--- 	self._bgWidth_dirty=true
--- 	self:__invalidateProperties__()
--- end
+--== marginY
 
-
--- --== marginY
-
--- function TextField.__setters:marginY( value )
--- 	-- print( 'TextField.__setters:marginY', value )
--- 	assert( type(value)=='number' )
--- 	if value < 0 then value=0 end
--- 	--==--
--- 	if value == self._bgMarginY then return end
--- 	self._bgMarginY = value
--- 	self._bg_height_dirty=true
--- 	self:__invalidateProperties__()
--- end
+function TextField.__getters:marginY( value )
+	return self.curr_style.marginY
+end
+function TextField.__setters:marginY( value )
+	-- print( 'TextField.__setters:marginY', value )
+	local style=self.curr_style
+	style.marginY = value
+	style.hint.marginY = value
+	style.text.marginY = value
+end
 
 
 --== text
@@ -519,7 +564,18 @@ function TextField.__setters:text( value )
 	if value == self._text then return end
 	self._text = value
 	self._text_dirty=true
-	self._txt_hintText_dirty=true
+	self._displayText_dirty=true
+	self:__invalidateProperties__()
+end
+
+function TextField.__getters:hintText()
+	return self._hint_text
+end
+function TextField.__setters:hintText( value )
+	-- print( 'TextField.__setters:hintText', value )
+	if value == self._hint_text then return end
+	self._hint_text = value
+	self._displayText_dirty=true
 	self:__invalidateProperties__()
 end
 
@@ -564,7 +620,7 @@ function TextField.__getters:backgroundStrokeWidth()
 	return self.curr_style.background.strokeWidth
 end
 function TextField.__setters:backgroundStrokeWidth( value )
-	print( 'TextField.__setters:backgroundStrokeWidth', value )
+	-- print( 'TextField.__setters:backgroundStrokeWidth', value )
 	self.curr_style.background.strokeWidth = value
 end
 
@@ -587,12 +643,12 @@ end
 --== Hint Style Methods ==--
 
 function TextField.__setters:hintFont( value )
-	print( 'TextField.__setters:hintFont', value )
+	-- print( 'TextField.__setters:hintFont', value )
 	self.curr_style.hint.font = value
 end
 
 function TextField.__setters:hintFontSize( value )
-	print( 'TextField.__setters:hintFontSize', value )
+	-- print( 'TextField.__setters:hintFontSize', value )
 	self.curr_style.hint.fontSize = value
 end
 
@@ -605,12 +661,12 @@ end
 --== Text Style Methods ==--
 
 function TextField.__setters:textFont( value )
-	print( 'TextField.__setters:textFont', value )
+	-- print( 'TextField.__setters:textFont', value )
 	self.curr_style.text.font = value
 end
 
 function TextField.__setters:textFontSize( value )
-	print( 'TextField.__setters:textFontSize', value )
+	-- print( 'TextField.__setters:textFontSize', value )
 	self.curr_style.text.fontSize = value
 end
 
@@ -703,72 +759,70 @@ end
 
 
 function TextField:_removeBackground()
-	print( '######## TextField:_removeBackground' )
+	-- print( "TextField:_removeBackground" )
 	local o = self._bg
 	if not o then return end
+	o:removeEventListener( o.EVENT, self._bg_f )
 	o:removeSelf()
 	self._bg = nil
 end
 
 function TextField:_createBackground()
-	print( '######## TextField:_createBackground' )
-	local o = self._bg
-	if not o then return end
-	o:removeSelf()
-	self._bg = nil
-end
+	-- print( "TextField:_createBackground" )
 
+	self:_removeBackground()
 
-
-
-function TextField:_removeText()
-	print( '######## TextField:_removeText' )
-	local o = self._txt_hint
-	if not o then return end
-	o:removeSelf()
-	self._txt_hint = nil
-end
-
-function TextField:_createText()
-	print( '##### TextField:_createText' )
-	local style = self.curr_style
-	local o -- object
-
-	self:_removeText()
-
-	local w, h = style.width, style.height
-	w = w - style.marginX*2
-	h = h - style.marginY*2
-
-	o = Widgets.newText{
-		width=w,
-		height=h,
-		text=self._txt_hintText,
-		fillColor={0,0,0,0},
-		marginX=0,
-		marginY=0,
-	}
+	local o = Widgets.newBackground{}
+	o:addEventListener( o.EVENT, self._bg_f )
 	self:insert( o.view )
-	self._txt_hint = o
-
-	assert( o )
-
+	self._bg = o
 
 	-- conditions for coming in here
-	self._txt_hint_dirty=false
+	self._bg_dirty = false
 
 	--== reset our text field object
 
-	self._txt_hintFont_dirty=true
-	self._txt_hintFontSize_dirty=true
-	self._hintColor_dirty=true
+	self._bgStyle_dirty = true
+	-- self._bgX_dirty = true
+	-- self._bgY_dirty = true
+
+end
+
+
+function TextField:_removeText()
+	-- print( "TextField:_removeText" )
+	local o = self._textDisplay
+	if not o then return end
+	o:removeSelf()
+	self._textDisplay = nil
+end
+
+function TextField:_createText()
+	-- print( "TextField:_createText" )
+
+	self:_removeText()
+
+	local o = Widgets.newText()
+	self:insert( o.view )
+	self._textDisplay = o
+
+	-- conditions for coming in here
+	self._textDisplay_dirty=false
+
+	--== reset our text field object
+
+	self._displayStyle_dirty=true
+	self._textDisplayIsVisible_dirty=true
+
+	self._editActive_dirty = true
+
 
 	-- self._x_dirty=true
 	-- self._y_dirty=true
 
 	-- self._text_dirty=true
 	-- self._textColor_dirty=true
-	-- self._textAlign_dirty=true
+	-- self._inputAlign_dirty=true
 	-- self._textX_dirty=true
 	-- self._textY_dirty=true
 
@@ -779,7 +833,7 @@ end
 
 
 function TextField:_removeTextField()
-	print( 'TextField:_removeTextField' )
+	-- print( "TextField:_removeTextField" )
 	local o = self._textfield
 	if not o then return end
 	o:removeEventListener( 'userInput', self._textfield_f )
@@ -788,7 +842,7 @@ function TextField:_removeTextField()
 end
 
 function TextField:_createTextField()
-	print( 'TextField:_createTextField' )
+	-- print( "TextField:_createTextField" )
 	local style = self.curr_style
 	local o -- object
 
@@ -803,9 +857,6 @@ function TextField:_createTextField()
 	o:addEventListener( 'userInput', self._textfield_f )
 	self._textfield = o
 
-	assert( o )
-	self:_updateVisibility()
-
 	-- conditions for coming in here
 	self._width_dirty=false
 	self._height_dirty=false
@@ -815,9 +866,13 @@ function TextField:_createTextField()
 	self._x_dirty=true
 	self._y_dirty=true
 
+	self._editActive_dirty = true
+
+	self._bgWidth_dirty=true
+
 	self._text_dirty=true
 	self._textColor_dirty=true
-	self._textAlign_dirty=true
+	self._inputAlign_dirty=true
 	self._textX_dirty=true
 	self._textY_dirty=true
 
@@ -829,10 +884,14 @@ end
 
 
 function TextField:__commitProperties__()
-	print( 'TextField:__commitProperties__' )
+	-- print( 'TextField:__commitProperties__' )
 	local style = self.curr_style
 
-	if self._txt_hint_dirty then
+	if self._bg_dirty then
+		self:_createBackground()
+	end
+
+	if self._textDisplay_dirty then
 		self:_createText()
 	end
 
@@ -842,8 +901,8 @@ function TextField:__commitProperties__()
 
 	local view = self.view
 	local bg = self._bg
-	local hint = self._txt_hint
-	local text = self._textfield
+	local display = self._textDisplay
+	local input = self._textfield
 
 	--== position sensitive
 
@@ -865,8 +924,8 @@ function TextField:__commitProperties__()
 	if self._align_dirty then
 		self._align_dirty = false
 
-		self._hintAlign_dirty=true
-		self._textAlign_dirty=true
+		self._displayAlign_dirty=true
+		self._inputAlign_dirty=true
 	end
 
 	if self._anchorX_dirty then
@@ -884,184 +943,217 @@ function TextField:__commitProperties__()
 		self._textY_dirty=true
 	end
 
+	self._editActive_dirty = true
+
+	if self._editActive_dirty then
+		local is_editing = self._is_editing
+		local edit, set_focus = is_editing.state, is_editing.set_focus
+		display.isVisible=not edit
+		input.isVisible=edit
+		if set_focus then
+			local focus = input
+			if not edit then focus=nil end
+			native.setKeyboardFocus( focus )
+		end
+		self._editActive_dirty=false
+	end
+
 	--== Background
 
-	if self._bgfillColor_dirty then
-		local color = style.background.fillColor
-		bg:setFillColor( unpack( style.background.fillColor ))
-		self._bgfillColor_dirty=false
+	if self._bgX_dirty then
+		error("HERE IN _bgX_dirty")
+		bg.x = self._x
+		self._bgX_dirty=false
 	end
-	if self._bgStrokeWidth_dirty then
-		bg.strokeWidth = style.background.strokeWidth
-		self._bgStrokeWidth_dirty=false
+	if self._bgStyle_dirty then
+		print( "\n\n BACK STYLE SET", style.background, bg )
+		bg:setActiveStyle( style.background, {copy=false} )
+		print( ">>1", style.background.widget, bg )
+		-- error("here")
+		self._bgStyle_dirty=false
 	end
 
-	if self._bgAnchorX_dirty then
-		bg.anchorX = style.background.anchorX
-		self._bgAnchorX_dirty=false
 
-		self._hintX_dirty=true
-	end
-	if self._bgAnchorY_dirty then
-		bg.anchorY = style.background.anchorY
-		self._bgAnchorY_dirty=false
+	-- if self._bgfillColor_dirty then
+	-- 	local color = style.background.fillColor
+	-- 	bg:setFillColor( unpack( style.background.fillColor ))
+	-- 	self._bgfillColor_dirty=false
+	-- end
+	-- if self._bgStrokeWidth_dirty then
+	-- 	bg.strokeWidth = style.background.strokeWidth
+	-- 	self._bgStrokeWidth_dirty=false
+	-- end
 
-		self._txt_hintY_dirty=true
-	end
-	if self._bgWidth_dirty then
-		bg.width = style.width
-		self._bgWidth_dirty=false
+	-- if self._bgAnchorX_dirty then
+	-- 	bg.anchorX = style.background.anchorX
+	-- 	self._bgAnchorX_dirty=false
 
-		self._textX_dirty=true
-		self._hintAlignX_dirty=true
-	end
-	if self._bg_height_dirty then
-		bg.height = style.height
-		self._bg_height_dirty=false
+	-- 	self._hintX_dirty=true
+	-- end
+	-- if self._bgAnchorY_dirty then
+	-- 	bg.anchorY = style.background.anchorY
+	-- 	self._bgAnchorY_dirty=false
 
-		self._textY_dirty=true
-	end
+	-- 	self._textDisplayY_dirty=true
+	-- end
+	-- -- if self._bgWidth_dirty then
+	-- 	bg.width = style.width
+	-- 	self._bgWidth_dirty=false
+
+	-- 	self._textX_dirty=true
+	-- 	self._hintAlignX_dirty=true
+	-- end
+	-- if self._bg_height_dirty then
+	-- 	bg.height = style.height
+	-- 	self._bg_height_dirty=false
+
+	-- 	self._textY_dirty=true
+	-- end
 
 	--== text field
 
-	if self._textAlign_dirty then
-		text.align=self._align
-		self._textAlign_dirty = false
+	if self._inputAlign_dirty then
+		input.align=self._align
+		self._inputAlign_dirty = false
 	end
 	if self._hasBackground_dirty then
-		text.hasBackground=false
+		-- hard-code, no background
+		input.hasBackground=false
 		self._hasBackground_dirty = false
 	end
 
-	if self._textX_dirty then
-		local align = style.align
-		local marginX = style.marginX
-		local offset
-		if align==self.LEFT then
-			text.anchorX = 0
-			offset = -bg.width*(bg.anchorX)+marginX
-			text.x=bg.x+offset
-		elseif align==self.RIGHT then
-			text.anchorX = 1
-			offset = bg.width*(1-bg.anchorX)-marginX
-			text.x=bg.x+offset
-		else
-			text.anchorX = 0.5
-			offset = bg.width*(0.5-bg.anchorX)
-			text.x=bg.x+offset
-		end
-		self._textX_dirty = false
-	end
-	if self._textY_dirty then
-		local offset=bg.height/2+(-bg.height*bg.anchorY)
-		text.y=bg.y+offset
-		self._textY_dirty=false
-	end
+	-- if self._textX_dirty then
+	-- 	local align = style.align
+	-- 	local marginX = style.marginX
+	-- 	local offset
+	-- 	if align==self.LEFT then
+	-- 		text.anchorX = 0
+	-- 		offset = -bg.width*(bg.anchorX)+marginX
+	-- 		text.x=bg.x+offset
+	-- 	elseif align==self.RIGHT then
+	-- 		text.anchorX = 1
+	-- 		offset = bg.width*(1-bg.anchorX)-marginX
+	-- 		text.x=bg.x+offset
+	-- 	else
+	-- 		text.anchorX = 0.5
+	-- 		offset = bg.width*(0.5-bg.anchorX)
+	-- 		text.x=bg.x+offset
+	-- 	end
+	-- 	self._textX_dirty = false
+	-- end
+	-- if self._textY_dirty then
+	-- 	local offset=bg.height/2+(-bg.height*bg.anchorY)
+	-- 	text.y=bg.y+offset
+	-- 	self._textY_dirty=false
+	-- end
 
-	if self._text_dirty then
-		text.text = self._text
-		self._text_dirty=false
+	-- if self._text_dirty then
+	-- 	text.text = self._text
+	-- 	self._text_dirty=false
 
-		self._bgAnchorX_dirty=true
-		self._bgAnchorY_dirty=true
-	end
-	if self._font_dirty or self._fontSize_dirty then
-		text.font=native.newFont( style.text.font, style.text.fontSize )
-		self._font_dirty=false
-		self._fontSize_dirty=false
-	end
-	if self._textColor_dirty then
-		text:setTextColor( unpack( style.text.textColor ) )
-		self._textColor_dirty=false
-	end
+	-- 	self._bgAnchorX_dirty=true
+	-- 	self._bgAnchorY_dirty=true
+	-- end
+	-- if self._font_dirty or self._fontSize_dirty then
+	-- 	text.font=native.newFont( style.text.font, style.text.fontSize )
+	-- 	self._font_dirty=false
+	-- 	self._fontSize_dirty=false
+	-- end
+	-- if self._textColor_dirty then
+	-- 	text:setTextColor( unpack( style.text.textColor ) )
+	-- 	self._textColor_dirty=false
+	-- end
 
 	if self._keyboardFocus_dirty then
 		local focus = nil
 		if self._keyboardFocus==true then
-			focus = text
+			focus = input
 		end
 		self:_startKeyboardFocus( focus )
 		self._keyboardFocus_dirty=false
 	end
 
-	if self._textAlign_dirty then
-		text.align=style.align
-		self._textAlign_dirty = false
-	end
+	-- if self._inputAlign_dirty then
+	-- 	text.align=style.align
+	-- 	self._inputAlign_dirty = false
+	-- end
 
 	--== Hint
 
-	if self._hintAlign_dirty then
-		hint.align=style.align
-		self._hintAlign_dirty = false
+	-- if self._hintX_dirty then
+	-- 	local align = style.align
+	-- 	local marginX = style.marginX
+	-- 	local offset
+	-- 	if align==self.LEFT then
+	-- 		hint.anchorX = 0
+	-- 		offset = -bg.width*(bg.anchorX)+marginX
+	-- 		hint.x=bg.x+offset
+	-- 	elseif align==self.RIGHT then
+	-- 		hint.anchorX = 1
+	-- 		offset = bg.width*(1-bg.anchorX)-marginX
+	-- 		hint.x=bg.x+offset
+	-- 	else
+	-- 		text.anchorX = 0.5
+	-- 		offset = bg.width*(0.5-bg.anchorX)
+	-- 		hint.x=bg.x+offset
+	-- 	end
+	-- 	self._hintX_dirty = false
+	-- end
+	-- if self._textDisplayY_dirty then
+	-- 	local offset
+	-- 	hint.anchorY = 0.5
+	-- 	offset = bg.height/2-bg.height*(bg.anchorY) -- 0
+	-- 	hint.y=bg.y+offset
+	-- 	self._textDisplayY_dirty = false
+	-- end
+
+	if self._displayText_dirty then
+		if self._text=="" then
+			display.text=self._hint_text
+		else
+			display.text=self._text
+		end
+		self._displayText_dirty=false
 	end
 
-	if self._hintX_dirty then
-		local align = style.align
-		local marginX = style.marginX
-		local offset
-		if align==self.LEFT then
-			hint.anchorX = 0
-			offset = -bg.width*(bg.anchorX)+marginX
-			hint.x=bg.x+offset
-		elseif align==self.RIGHT then
-			hint.anchorX = 1
-			offset = bg.width*(1-bg.anchorX)-marginX
-			hint.x=bg.x+offset
+	if self._displayStyle_dirty then
+		if self._text=="" then
+			display:setActiveStyle( style.hint, {copy=false} )
 		else
-			text.anchorX = 0.5
-			offset = bg.width*(0.5-bg.anchorX)
-			hint.x=bg.x+offset
+			display:setActiveStyle( style.text, {copy=false} )
 		end
-		self._hintX_dirty = false
-	end
-	if self._txt_hintY_dirty then
-		local offset
-		hint.anchorY = 0.5
-		offset = bg.height/2-bg.height*(bg.anchorY) -- 0
-		hint.y=bg.y+offset
-		self._txt_hintY_dirty = false
+		self._displayStyle_dirty=false
 	end
 
-	if self._txt_hintText_dirty then
-		if self._text=="" then
-			hint.text=self._txt_hintText
-		else
-			hint.text=self._text
-		end
-		self._txt_hintText_dirty=false
 
-		self._txt_hintFont_dirty=true
-		self._txt_hintFontSize_dirty=true
-		self._hintColor_dirty=true
-	end
-	if self._txt_hintFont_dirty then
-		if self._text=="" then
-			hint.font=style.hint.font
-		else
-			hint.font=style.text.font
-		end
-		self._txt_hintFont_dirty=false
-	end
-	if self._txt_hintFontSize_dirty then
-		if self._text=="" then
-			hint.fontSize=style.hint.fontSize
-		else
-			hint.fontSize=style.text.fontSize
-		end
-		self._txt_hintFontSize_dirty=false
-	end
-	if self._hintColor_dirty then
-		-- error("here in color")
-		Utils.print( style.hint.textColor )
-		Utils.print( style.text.textColor )
-		if self._text=="" then
-			hint:setTextColor( unpack( style.hint.textColor ) )
-		else
-			hint:setTextColor( unpack( style.text.textColor ) )
-		end
-		self._hintColor_dirty=false
-	end
+
+	-- if self._textDisplayFont_dirty then
+	-- 	if self._text=="" then
+	-- 		hint.font=style.hint.font
+	-- 	else
+	-- 		hint.font=style.text.font
+	-- 	end
+	-- 	self._textDisplayFont_dirty=false
+	-- end
+	-- if self._textDisplayFontSize_dirty then
+	-- 	if self._text=="" then
+	-- 		hint.fontSize=style.hint.fontSize
+	-- 	else
+	-- 		hint.fontSize=style.text.fontSize
+	-- 	end
+	-- 	self._textDisplayFontSize_dirty=false
+	-- end
+	-- if self._textDisplayColor_dirty then
+	-- 	-- error("here in color")
+	-- 	Utils.print( style.hint.textColor )
+	-- 	Utils.print( style.text.textColor )
+	-- 	if self._text=="" then
+	-- 		hint:setTextColor( unpack( style.hint.textColor ) )
+	-- 	else
+	-- 		hint:setTextColor( unpack( style.text.textColor ) )
+	-- 	end
+	-- 	self._textDisplayColor_dirty=false
+	-- end
 
 end
 
@@ -1082,41 +1174,14 @@ function TextField:_stopKeyboardFocus()
 end
 
 
-function TextField:_updateVisibility()
-
-	local hint = self._txt_hint
-	local text = self._textfield
-	local is_editing = self._is_editing
-
-	if not self._is_rendered then return end
-
-	hint.isVisible=not is_editing
-	text.isVisible=is_editing
-end
-
-
 function TextField:_startEdit( set_focus )
 	-- print( 'TextField:_startEdit' )
-	if set_focus==nil then set_focus=true end
-	--==--
-	self._is_editing=true
-	self:_updateVisibility()
-
-	if set_focus then
-		native.setKeyboardFocus( self._textfield )
-	end
+	self:setEditActive( true, {set_focus=set_focus} )
 end
 
 function TextField:_stopEdit( set_focus )
 	-- print( 'TextField:_stopEdit' )
-	if set_focus==nil then set_focus=true end
-	--==--
-	self._is_editing=false
-	self:_updateVisibility()
-
-	if set_focus then
-		native.setKeyboardFocus( nil )
-	end
+	self:setEditActive( false, {set_focus=set_focus} )
 end
 
 
@@ -1158,31 +1223,15 @@ end
 
 
 function TextField:_backgroundTouch_handler( event )
-	print( 'TextField:_backgroundTouch_handler', event.phase )
-	local phase = event.phase
+	print( 'TextField:_backgroundTouch_handler', event.type )
+	local etype = event.type
 	local background = event.target
 
-	if self._is_editing==true then return end
+	if self._is_editing.state==true then return end
 
-	if phase=='began' then
-		display.getCurrentStage():setFocus( background )
-		self._has_focus = true
+	if etype == background.RELEASE then
+		self:_startEdit()
 	end
-
-	if not self._has_focus then return false end
-
-	if phase=='ended' or phase=='canceled' then
-		local bgCb = background.contentBounds
-		local isWithinBounds = ( bgCb.xMin <= event.x and bgCb.xMax >= event.x and bgCb.yMin <= event.y and bgCb.yMax >= event.y )
-		if isWithinBounds and self:_delegateShouldBeginEditing() then
-			self:_startEdit()
-		end
-
-		display.getCurrentStage():setFocus( nil )
-		self._has_focus = false
-	end
-
-	return true
 end
 
 
@@ -1242,18 +1291,17 @@ end
 
 
 function TextField:stylePropertyChangeHandler( event )
-	print( "TextField:stylePropertyChangeHandler", event )
+	-- print( "TextField:stylePropertyChangeHandler", event )
 	local target = event.target
 	local etype= event.type
-	local trigger=event.trigger
 	local property= event.property
 	local value = event.value
 
-	Utils.print( event )
+	-- Utils.print( event )
 
 	if etype == target.STYLE_RESET then
 
-		print( "Style Changed", etype, property, value )
+		-- print( "Style Changed", etype, property, value )
 
 		self._x_dirty = true
 		self._y_dirty = true
@@ -1277,71 +1325,39 @@ function TextField:stylePropertyChangeHandler( event )
 		property = etype
 
 	else
+			-- if property=='x' then
+			-- 	self._x_dirty=true
+			-- elseif property=='y' then
+			-- 	self._y_dirty=true
+		if property=='width' then
+			self._width_dirty=true
+		elseif property=='height' then
+			self._height_dirty=true
 
-		if trigger.name == target.BACKGROUND then
-			print(">>> Processing background event", property)
-			if property=='fillColor' then
-				self._bgFillColor_dirty=true
-			elseif property=='strokeColor' then
-				self._bgStrokeColor_dirty=true
-			elseif property=='strokeWidth' then
-				self._bgStrokeWidth_dirty=true
-			end
-
-		elseif trigger.name == target.HINT then
-			if property=='font' then
-				self._font_dirty=true
-			elseif property=='fontSize' then
-				self._fontSize_dirty=true
-			elseif property=='textColor' then
-				self._textColor_dirty=true
-			end
-
-		elseif trigger.name == target.TEXT then
-			if property=='font' then
-				self._font_dirty=true
-			elseif property=='fontSize' then
-				self._fontSize_dirty=true
-			elseif property=='textColor' then
-				self._textColor_dirty=true
-			end
-
-		else
-			if property=='x' then
-				self._x_dirty=true
-			elseif property=='y' then
-				self._y_dirty=true
-			elseif property=='width' then
-				self._width_dirty=true
-			elseif property=='height' then
-				self._height_dirty=true
-
-			elseif property=='align' then
-				self._align_dirty=true
-			elseif property=='anchorX' then
-				self._anchorX_dirty=true
-			elseif property=='anchorY' then
-				self._anchorY_dirty=true
-			elseif property=='fillColor' then
-				self._fillColor_dirty=true
-			elseif property=='font' then
-				self._font_dirty=true
-			elseif property=='fontSize' then
-				self._fontSize_dirty=true
-			elseif property=='marginX' then
-				self._marginX_dirty=true
-			elseif property=='marginY' then
-				self._marginY_dirty=true
-			elseif property=='strokeColor' then
-				self._strokeColor_dirty=true
-			elseif property=='strokeWidth' then
-				self._strokeWidth_dirty=true
-			elseif property=='text' then
-				self._text_dirty=true
-			elseif property=='textColor' then
-				self._textColor_dirty=true
-			end
-
+		elseif property=='align' then
+			self._align_dirty=true
+		elseif property=='anchorX' then
+			self._anchorX_dirty=true
+		elseif property=='anchorY' then
+			self._anchorY_dirty=true
+		elseif property=='fillColor' then
+			self._fillColor_dirty=true
+		elseif property=='font' then
+			self._font_dirty=true
+		elseif property=='fontSize' then
+			self._fontSize_dirty=true
+		elseif property=='marginX' then
+			self._marginX_dirty=true
+		elseif property=='marginY' then
+			self._marginY_dirty=true
+		elseif property=='strokeColor' then
+			self._strokeColor_dirty=true
+		elseif property=='strokeWidth' then
+			self._strokeWidth_dirty=true
+		elseif property=='text' then
+			self._text_dirty=true
+		elseif property=='textColor' then
+			self._textColor_dirty=true
 		end
 
 	end

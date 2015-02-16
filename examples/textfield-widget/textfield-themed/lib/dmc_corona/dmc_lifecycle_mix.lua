@@ -116,6 +116,9 @@ end
 
 Lifecycle = {}
 
+Lifecycle.__getters = {}
+Lifecycle.__setters = {}
+
 Lifecycle.NAME = "Lifecycle Mixin"
 
 Lifecycle.LIFECYCLE_UPDATED = 'lifecycle-updated-event'
@@ -174,7 +177,7 @@ function Lifecycle.onUpdate( self, func )
 	self.__onUpdate = func
 end
 
-function Lifecycle.onProperty( self, func )
+function Lifecycle.__setters.onProperty( self, func )
 	-- print( 'Lifecycle.onProperty', func )
 	assert( func==nil or type(func)=='function' )
 	--==--

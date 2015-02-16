@@ -123,7 +123,7 @@ TextStyle.EVENT = 'text-style-event'
 --== Start: Setup DMC Objects
 
 function TextStyle:__init__( params )
-	print( "TextStyle:__init__", params )
+	-- print( "TextStyle:__init__", params )
 	params = params or {}
 	self:superCall( '__init__', params )
 	--==--
@@ -133,6 +133,7 @@ function TextStyle:__init__( params )
 	-- self._data
 	-- self._inherit
 	-- self._widget
+	-- self._parent
 
 	-- self._name
 
@@ -161,37 +162,11 @@ end
 --== Static Methods
 
 
-function TextStyle.__setWidgetManager( manager )
-	-- print( "TextStyle.__setWidgetManager", manager )
+function TextStyle.initialize( manager )
+	-- print( "TextStyle.initialize", manager )
 	Widgets = manager
 
-	TextStyle.setDefaults()
-end
-
-
-function TextStyle.setDefaults()
-	-- print( "TextStyle.setDefaults" )
-	local def = TextStyle.DEFAULT
-
-	local style = TextStyle:new{ data=def }
-	TextStyle.__base_style__ = style
-
-	-- TextStyle._name=def.name
-
-	-- TextStyle._width=def.width
-	-- TextStyle._height=def.height
-
-	-- TextStyle._align=def.align
-	-- TextStyle._anchorX=def.anchorX
-	-- TextStyle._anchorY=def.anchorY
-	-- TextStyle._fillColor=def.fillColor
-	-- TextStyle._font=def.font
-	-- TextStyle._fontSize=def.fontSize
-	-- TextStyle._marginX=def.marginX
-	-- TextStyle._marginY=def.marginY
-	-- TextStyle._strokeColor=def.strokeColor
-	-- TextStyle._strokeWidth=def.strokeWidth
-	-- TextStyle._textColor=def.textColor
+	TextStyle._setDefaults()
 end
 
 
@@ -202,7 +177,7 @@ end
 
 --== updateStyle
 
--- force is used when making exact copy of data
+-- force is used when making exact copy of data, incl 'nil's
 --
 function TextStyle:updateStyle( info, force )
 	-- print( "TextStyle:updateStyle" )
@@ -230,11 +205,20 @@ end
 --== Private Methods
 
 
+function TextStyle._setDefaults()
+	-- print( "TextStyle._setDefaults" )
+	local style = TextStyle:new{
+		data=TextStyle.DEFAULT
+	}
+	TextStyle.__base_style__ = style
+end
+
+
 function TextStyle:_checkProperties()
 	BaseStyle._checkProperties( self )
 	--[[
-	we don't check for width/height because we'll
-	just use width/height of the text object
+	we don't check for width/height because nil is valid value
+	sometimes we just use width/height of the text object
 	-- assert( self.width, "Style: requires 'width'" )
 	-- assert( self.height, "Style: requires 'height'" )
 	--]]

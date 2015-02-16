@@ -156,8 +156,8 @@ loadBackgroundSupport = function()
 	Widget.Background=Background
 	Widget.Style.Background=BackgroundStyle
 
-	Background.__setWidgetManager( Widget )
-	BackgroundStyle.__setWidgetManager( Widget )
+	Background.initialize( Widget )
+	BackgroundStyle.initialize( Widget )
 end
 
 
@@ -169,7 +169,7 @@ end
 function Widget.newBackgroundStyle( style_info )
 	-- print("Widget.newBackgroundStyle")
 	if not Widget.Style.Background then loadBackgroundSupport() end
-	return Widget.Style.Background:copyStyle{ data=style_info }
+	return Widget.Style.Background:createStyleFrom{ data=style_info }
 end
 
 
@@ -303,8 +303,8 @@ loadTextSupport = function()
 	Widget.Text=Text
 	Widget.Style.Text=TextStyle
 
-	Text.__setWidgetManager( Widget )
-	TextStyle.__setWidgetManager( Widget )
+	Text.initialize( Widget )
+	TextStyle.initialize( Widget )
 end
 
 
@@ -317,7 +317,7 @@ end
 function Widget.newTextStyle( style_info )
 	-- print("Widget.newTextStyle")
 	if not Widget.Style.Text then loadTextSupport() end
-	return Widget.Style.Text:copyStyle{ data=style_info }
+	return Widget.Style.Text:createStyleFrom{ data=style_info }
 end
 
 
@@ -338,8 +338,8 @@ loadTextFieldSupport = function()
 	Widget.TextField=TextField
 	Widget.Style.TextField=TextFieldStyle
 
-	TextField.__setWidgetManager( Widget )
-	TextFieldStyle.__setWidgetManager( Widget )
+	TextField.initialize( Widget )
+	TextFieldStyle.initialize( Widget )
 end
 
 
@@ -352,7 +352,7 @@ end
 function Widget.newTextFieldStyle( style_info )
 	-- print("Widget.newTextFieldStyle")
 	if not Widget.Style.TextField then loadTextFieldSupport() end
-	return Widget.Style.TextField:copyStyle{ data=style_info }
+	return Widget.Style.TextField:createStyleFrom{ data=style_info }
 end
 
 

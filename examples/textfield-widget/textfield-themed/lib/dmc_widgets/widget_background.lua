@@ -138,6 +138,7 @@ function Background:__init__( params )
 	params = params or {}
 	if params.x==nil then params.x=0 end
 	if params.y==nil then params.y=0 end
+
 	self:superCall( LifecycleMix, '__init__', params )
 	self:superCall( ComponentBase, '__init__', params )
 	self:superCall( ThemeMix, '__init__', params )
@@ -161,13 +162,10 @@ function Background:__init__( params )
 
 	self._anchorX_dirty=true
 	self._anchorY_dirty=true
-
 	self._fillColor_dirty=true
+	self._isHitTestable_dirty = true
 	self._strokeColor_dirty=true
 	self._strokeWidth_dirty=true
-
-	self._isHitTestable_dirty = true
-
 
 	--== Object References ==--
 
@@ -237,8 +235,8 @@ end
 --== Static Methods
 
 
-function Background.__setWidgetManager( manager )
-	-- print( "Background.__setWidgetManager" )
+function Background.initialize( manager )
+	-- print( "Background.initialize" )
 	Widgets = manager
 	ThemeMgr = Widgets.ThemeMgr
 	Background.STYLE_CLASS = Widgets.Style.Background
@@ -297,7 +295,7 @@ function Background:_removeBackground()
 end
 
 function Background:_createBackground()
-	-- print( 'Background:_createBackground' )
+	print( 'Background:_createBackground' )
 	local style = self.curr_style
 	local o -- object
 
@@ -328,7 +326,7 @@ end
 
 
 function Background:__commitProperties__()
-	-- print( 'Background:__commitProperties__' )
+	print( 'Background:__commitProperties__' )
 	local style = self.curr_style
 
 	-- create new background if necessary
@@ -341,17 +339,13 @@ function Background:__commitProperties__()
 
 	-- width/height
 
-	if self._bg_width_dirty then
-		bg.width = self.width
-		self._bg_width_dirty=false
-
-		self._text_alignX_dirty=true
+	if self._width_dirty then
+		bg.width = style.width
+		self._width_dirty=false
 	end
-	if self._bg_height_dirty then
-		bg.height = self.height
-		self._bg_height_dirty=false
-
-		self._text_alignY_dirty=true
+	if self._height_dirty then
+		bg.height = style.height
+		self._height_dirty=false
 	end
 
 	-- anchorX/anchorY
@@ -420,14 +414,15 @@ end
 
 
 function Background:stylePropertyChangeHandler( event )
-	-- print( "Background:stylePropertyChangeHandler", event )
+	print( ">>>>> Background:stylePropertyChangeHandler", event )
+	local style = event.target
 	local etype= event.type
 	local property= event.property
 	local value = event.value
 
-	-- print( "Style Changed", etype, property, value )
+	print( "Style Changed", etype, property, value )
 
-	if etype=='reset-all' then
+	if etype == style.STYLE_RESET then
 		self._width_dirty=true
 		self._height_dirty=true
 
