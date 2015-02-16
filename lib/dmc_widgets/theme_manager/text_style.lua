@@ -135,6 +135,7 @@ function TextStyle:__init__( params )
 	-- self._inherit
 	-- self._widget
 	-- self._parent
+	-- self._onProperty
 
 	-- self._name
 	-- self._debugOn
@@ -181,10 +182,13 @@ end
 
 -- force is used when making exact copy of data, incl 'nil's
 --
-function TextStyle:updateStyle( info, force )
+function TextStyle:updateStyle( info, params )
 	-- print( "TextStyle:updateStyle" )
-	if force==nil then force=true end
+	params = params or {}
+	if params.force==nil then params.force=true end
 	--==--
+	local force=params.force
+
 	if info.debugOn~=nil or force then self.debugOn=info.debugOn end
 
 	if info.width~=nil or force then self.width=info.width end

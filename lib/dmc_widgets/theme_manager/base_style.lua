@@ -149,7 +149,7 @@ function Style:cloneStyle()
 		inherit=self._inherit
 	}
 	local o = self.class:new( params )
-	o:updateStyle( self, true ) -- clone data, force
+	o:updateStyle( self, {force=true} ) -- clone data, force
 	return o
 end
 
@@ -206,7 +206,6 @@ function Style:createStyleFrom( params )
 	else
 		-- Lua structure
 		style = StyleClass:new( params )
-		-- style:updateStyle( data )
 	end
 
 	assert( style, "failed to create style" )
