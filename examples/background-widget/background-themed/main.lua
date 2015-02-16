@@ -48,11 +48,18 @@ local function widgetOnPropertyEvent_handler( event )
 
 end
 
+-- handles button-type taps
+--
 local function widgetEvent_handler( event )
-	print( 'Main: widgetEvent_handler', event.id, event.phase )
+	-- print( 'Main: widgetEvent_handler', event.type )
 	local etype= event.type
+	local target=event.target
 
-	print( "Widget Event", etype )
+	if etype==target.PRESSED then
+		print( "Background: touch started" )
+	elseif etype==target.RELEASED then
+		print( "Background: touch ended" )
+	end
 
 end
 
@@ -82,8 +89,6 @@ o = display.newRect( 0,0,10,10)
 o:setFillColor(1,0,0)
 o.x, o.y = H_CENTER, V_CENTER
 
-
---== Setup Widgets ==--
 
 
 --======================================================--
@@ -188,5 +193,43 @@ timer.performWithDelay( 2000, function()
 	bg3.y=100
 	bg3:setFillColor( 0.7, 0.5, 0.6, 1)
 end)
+
+
+--======================================================--
+--== create background widget, test hit area
+
+bg4 = Widgets.newBackground{}
+bg4:addEventListener( bg4.EVENT, widgetEvent_handler )
+
+bg4.x = H_CENTER
+bg4.y = V_CENTER-100
+
+bg4:setFillColor( 0.2,0.6,1, 0.5 )
+
+bg4:setAnchor( {0,0} )
+-- bg4:setAnchor( {0.5,0.5} )
+-- bg4:setAnchor( {1,1} )
+
+bg4.hitMarginX=5
+bg4.hitMarginY=10
+-- bg4:setHitMargin( {0,8} )
+
+bg4.isHitActive=true
+bg4.debugOn = true
+
+timer.performWithDelay( 1000, function()
+	print("\n\nUpdate Properties")
+	bg4.hitMarginX=5
+	bg4.hitMarginY=10
+	bg4:setHitMargin( {3,5} )
+end)
+
+
+timer.performWithDelay( 2000, function()
+	bg4.style:clear()
+end)
+
+
+
 
 

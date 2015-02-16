@@ -95,6 +95,8 @@ local LOCAL_DEBUG = false
 --====================================================================--
 
 
+-- ! put ThemeMix first !
+
 local TextField = newClass( {ThemeMix,ComponentBase,LifecycleMix}, {name="TextField"}  )
 
 --== Class Constants
@@ -979,9 +981,7 @@ function TextField:__commitProperties__()
 	end
 	if self._inputY_dirty then
 		local height = style.height
-
-		local offset=height/2+(-height*style.anchorY)
-		input.y=offset
+		input.y=height/2+(-height*style.anchorY)
 		self._inputY_dirty=false
 	end
 

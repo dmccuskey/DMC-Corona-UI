@@ -101,6 +101,7 @@ TextStyle.DEFAULT = {
 	align='center',
 	anchorX=0.5,
 	anchorY=0.5,
+	debugOn=false,
 	fillColor={1,1,1,0},
 	font=native.systemFont,
 	fontSize=24,
@@ -134,8 +135,10 @@ function TextStyle:__init__( params )
 	-- self._inherit
 	-- self._widget
 	-- self._parent
+	-- self._onProperty
 
 	-- self._name
+	-- self._debugOn
 
 	self._width = nil
 	self._height = nil
@@ -179,10 +182,15 @@ end
 
 -- force is used when making exact copy of data, incl 'nil's
 --
-function TextStyle:updateStyle( info, force )
+function TextStyle:updateStyle( info, params )
 	-- print( "TextStyle:updateStyle" )
-	if force==nil then force=true end
+	params = params or {}
+	if params.force==nil then params.force=true end
 	--==--
+	local force=params.force
+
+	if info.debugOn~=nil or force then self.debugOn=info.debugOn end
+
 	if info.width~=nil or force then self.width=info.width end
 	if info.height~=nil or force then self.height=info.height end
 

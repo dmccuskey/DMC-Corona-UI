@@ -107,6 +107,7 @@ TextFieldStyle.DEFAULT = {
 	align='center',
 	anchorX=0.5,
 	anchorY=0.5,
+	debugOn=false,
 	backgroundStyle='none',
 	inputType='password',
 	marginX=0,
@@ -178,9 +179,12 @@ function TextFieldStyle:__init__( params )
 
 	-- self._data
 	-- self._inherit
+	-- self._widget
+	-- self._parent
+	-- self._onProperty
 
 	-- self._name
-	-- self._onProperty
+	-- self._debugOn
 
 	-- these are ones which we save locally, others are
 	-- stored in component styles
@@ -373,39 +377,44 @@ function TextFieldStyle.__setters:text( data )
 end
 
 
-
 --== updateStyle
 
 -- force is used when making exact copy of data
 --
-function TextFieldStyle:updateStyle( params )
+function TextFieldStyle:updateStyle( info, params )
 	-- print( "TextFieldStyle:updateStyle" )
+	params = params or {}
+	if params.force==nil then params.force=true end
+	--==--
+	local force=params.force
+
+	if info.debugOn~=nil or force then self.debugOn=info.debugOn end
 
 	--== Widget-level
-	if params.width then self.width=params.width end
-	if params.height then self.height=params.height end
+	if info.width or force then self.width=info.width end
+	if info.height or force then self.height=info.height end
 
-	if params.align then self.align=params.align end
-	if params.anchorX then self.anchorX=params.anchorX end
-	if params.anchorY then self.anchorY=params.anchorY end
-	if params.backgroundStyle then self.backgroundStyle=params.backgroundStyle end
-	if params.inputType then self.inputType=params.inputType end
-	if params.marginX then self.marginX=params.marginX end
-	if params.marginY then self.marginY=params.marginY end
-	if params.returnKey then self.returnKey=params.returnKey end
+	if info.align or force then self.align=info.align end
+	if info.anchorX or force then self.anchorX=info.anchorX end
+	if info.anchorY or force then self.anchorY=info.anchorY end
+	if info.backgroundStyle or force then self.backgroundStyle=info.backgroundStyle end
+	if info.inputType or force then self.inputType=info.inputType end
+	if info.marginX or force then self.marginX=info.marginX end
+	if info.marginY or force then self.marginY=info.marginY end
+	if info.returnKey or force then self.returnKey=info.returnKey end
 
 	--== Text-level
-	if params.textColor then self.text.color=params.textColor end
-	if params.textFont then self.text.font=params.textFont end
-	if params.textFontSize then self.text.fontSize=params.textFontSize end
+	if info.textColor or force then self.text.color=info.textColor end
+	if info.textFont or force then self.text.font=info.textFont end
+	if info.textFontSize or force then self.text.fontSize=info.textFontSize end
 	--== Hint-level
-	if params.hintColor then self.hint.color=params.hintColor end
-	if params.hintFont then self.hint.font=params.hintFont end
-	if params.hintFontSize then self.hint.fontSize=params.hintFontSize end
+	if info.hintColor or force then self.hint.color=info.hintColor end
+	if info.hintFont or force then self.hint.font=info.hintFont end
+	if info.hintFontSize or force then self.hint.fontSize=info.hintFontSize end
 
 	--== Background-level
-	if params.marginX then self.background.marginX=params.marginX end
-	if params.marginY then self.background.marginY=params.marginY end
+	if info.marginX or force then self.background.marginX=info.marginX end
+	if info.marginY or force then self.background.marginY=info.marginY end
 
 end
 
