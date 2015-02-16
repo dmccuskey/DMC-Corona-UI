@@ -123,7 +123,7 @@ TextStyle.EVENT = 'text-style-event'
 --== Start: Setup DMC Objects
 
 function TextStyle:__init__( params )
-	print( "TextStyle:__init__", params )
+	-- print( "TextStyle:__init__", params )
 	params = params or {}
 	self:superCall( '__init__', params )
 	--==--
@@ -136,7 +136,6 @@ function TextStyle:__init__( params )
 	-- self._parent
 
 	-- self._name
-	-- self._onProperty
 
 	self._width = nil
 	self._height = nil
@@ -178,7 +177,7 @@ end
 
 --== updateStyle
 
--- force is used when making exact copy of data
+-- force is used when making exact copy of data, incl 'nil's
 --
 function TextStyle:updateStyle( info, force )
 	-- print( "TextStyle:updateStyle" )
@@ -218,8 +217,8 @@ end
 function TextStyle:_checkProperties()
 	BaseStyle._checkProperties( self )
 	--[[
-	we don't check for width/height because we'll
-	just use width/height of the text object
+	we don't check for width/height because nil is valid value
+	sometimes we just use width/height of the text object
 	-- assert( self.width, "Style: requires 'width'" )
 	-- assert( self.height, "Style: requires 'height'" )
 	--]]

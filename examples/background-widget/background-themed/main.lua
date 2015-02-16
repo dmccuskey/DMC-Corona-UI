@@ -83,72 +83,110 @@ o:setFillColor(1,0,0)
 o.x, o.y = H_CENTER, V_CENTER
 
 
---== Setup Widget
+--== Setup Widgets ==--
 
 
--- create background widget, default style
+--======================================================--
+--== create background widget, default style
 
--- background = Widgets.newBackground{}
+bg1 = Widgets.newBackground{}
+bg1:addEventListener( bg1.EVENT, widgetEvent_handler )
+bg1.onProperty = widgetOnPropertyEvent_handler
 
--- background.x = H_CENTER
--- background.y = V_CENTER
+bg1.x = H_CENTER
+bg1.y = V_CENTER
 
--- background:setAnchor( {0,0} )
--- background:setAnchor( {0.5,0.5} )
--- background:setAnchor( {1,1} )
+-- bg1:setAnchor( {0,0} )
+bg1:setAnchor( {0.5,0.5} )
+-- bg1:setAnchor( {1,1} )
 
--- background.y = 400
-
--- create a style
-
-style = Widgets.newBackgroundStyle{
-	name='background-style',
-	anchorX=0.5,
-	anchorY=0.5,
-	width=100,
-	height=20,
-	strokeWidth=5,
-	strokeColor={0,0,1},
-	fillColor={0.5,0.5,0.5}
-}
+bg1.y = 400
 
 
--- create background widget, based on style
+timer.performWithDelay( 1000, function()
+	bg1.style=nil -- shouldn't change, already default
+end)
+
+
+--======================================================--
+--== create background, inline style
 
 bg2 = Widgets.newBackground{
 	x=100,
 	y=100,
-	style=style,
+
+	style={
+		width=100,
+		height=20,
+
+		anchorX=1,
+		anchorY=0.5,
+		strokeWidth=5,
+		strokeColor={0,0,1},
+		fillColor={0.5,1,0.5,0.5}
+	}
+}
+bg2:addEventListener( bg2.EVENT, widgetEvent_handler )
+bg2.onProperty = widgetOnPropertyEvent_handler
+
+
+timer.performWithDelay( 1000, function()
+	print( "\n\nUpdate properties" )
+
+	bg2.x = H_CENTER
+	bg2.y = V_CENTER
+
+	bg2.width=300
+	bg2.height=70
+
+	bg2:setAnchor( {0,1} )
+
+	bg2:setFillColor( 1,0.5,0.2,0.5 )
+	bg2:setStrokeColor( 2,0,0,1 )
+	bg2.strokeWidth = 1
+end)
+
+
+timer.performWithDelay( 2000, function()
+	print( "\n\nUpdate properties" )
+	bg2.style=nil
+end)
+
+
+--======================================================--
+--== Create Style, add to Widget
+
+-- create a style
+
+style = Widgets.newBackgroundStyle{
+	name='my-background-style',
+
+	width=20,
+	height=20,
+
+	anchorX=1,
+	anchorY=0.5,
+	strokeWidth=5,
+	strokeColor={0,0,0},
+	fillColor={1,1,0.5,0.5}
 }
 
-
-
-
--- background:addEventListener( background.EVENT, widgetEvent_handler )
--- background.onProperty = widgetOnPropertyEvent_handler
-
--- background.x = H_CENTER
--- background.y = V_CENTER
-
--- background:setAnchor( {0,0})
--- background:setAnchor( {0.5,0.5})
--- background:setAnchor( {1,1})
-
--- background.y = 400
-
-
+-- add to widget
 
 bg3 = Widgets.newBackground{
-	style={
-		fillColor={1,1,0,1}
-	},
+	x=H_CENTER,
+	y=50,
+	style=style
 }
+bg3:addEventListener( bg3.EVENT, widgetEvent_handler )
+bg3.onProperty = widgetOnPropertyEvent_handler
 
--- -- bg3.x, bg3.y = 200, 100
--- bg3:setAnchor( {0,0})
 
--- bg3.strokeWidth = 2
-
--- bg3:setFillColor( 0,1,0,0.5 )
+timer.performWithDelay( 2000, function()
+	print( "\n\nUpdate properties" )
+	bg3.style=nil
+	bg3.y=100
+	bg3:setFillColor( 0.7, 0.5, 0.6, 1)
+end)
 
 

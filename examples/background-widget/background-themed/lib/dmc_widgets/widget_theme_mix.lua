@@ -93,11 +93,12 @@ function Theme.__init__( self, params )
 	params = params or {}
 	--==--
 	Theme.resetTheme( self, params )
-
+	Theme._createDefaultStyle( self )
 end
 
 function Theme.__undoInit__( self )
 	-- print( "Theme.__undoInit__" )
+	Theme._destroyDefaultStyle( self )
 	Theme.resetTheme( self )
 end
 
@@ -120,6 +121,7 @@ function Theme.resetTheme( self, params )
 	self.__collection_name = nil -- 'navbar-home'
 	self.__curr_style_collection = nil -- <style collection obj>
 	self.__curr_style = nil -- <style obj>
+	self.__default_style = nil
 	self.__curr_style_f = nil
 	self.__styles = {}
 	self.__debug_on = params.debug_on
@@ -166,7 +168,7 @@ end
 
 
 function Theme.setActiveStyle( self, data, params )
-	print( "Theme.setActiveStyle", style )
+	-- print( "Theme.setActiveStyle", style )
 	params = params or {}
 	if params.widget==nil then params.widget=self end
 	if params.copy==nil then params.copy=true end
@@ -174,30 +176,26 @@ function Theme.setActiveStyle( self, data, params )
 	assert( data==nil or type(data)=='table' )
 	--==--
 	local StyleClass = self.STYLE_CLASS
-	assert( StyleClass, "[ERROR] Widget is missing property 'STYLE_CLASS'" )
 
 	local style = self.__curr_style
 	local o = self.__curr_style
 
 	if style then
 		style.widget = nil
-		style:removeSelf()
+		self:_destroyStyle( style )
 		self.__curr_style = nil
 		self.curr_style = nil
 	end
 
-	print( "\n\n>>> IN SET ACTIVE STYLE", self )
-
-	-- create copied style
-	if not params.copy and data then
+	if data==nil then
+		-- use our default style
+		style=self.__default_style
+	elseif not params.copy then
+		-- use style handed to us
 		assert( data.isa and data:isa(StyleClass) )
 		style = data
 	else
-		style = StyleClass:createStyleFrom{
-			data=data,
-			widget=params.widget,
-			name="my name here"
-		}
+		style = self:_createStyle( StyleClass, data )
 	end
 
 	-- set before call to resetProperties()
@@ -366,8 +364,46 @@ end
 --== Private Methods
 
 
+function Theme._createStyle( self, StyleClass, data )
+	-- create copied style
+	local name = string.format( "copied-style-%s", tostring( self ) )
+	local style = StyleClass:createStyleFrom{
+		data=data,
+		name=name
+	}
+	-- tag style, to remove later
+	style.__active_create=true
+	return style
+end
+
+function Theme._destroyStyle( self, style )
+	if style.__active_create==true then
+		-- remove it if we created it
+		style:removeSelf()
+	end
+	return nil
+end
 
 
+function Theme._createDefaultStyle( self )
+	local StyleClass = self.STYLE_CLASS
+	assert( StyleClass, "[ERROR] Widget is missing property 'STYLE_CLASS'" )
+	local name = string.format( "default-style-%s", tostring( self ) )
+	local o = StyleClass:createStyleFrom{
+		name=name,
+		data=nil,
+	}
+	assert( o, "[ERROR] Creating default style class" )
+	self.__default_style = o
+end
+
+function Theme._destroyDefaultStyle( self )
+	local o = self.__default_style
+	if not o then return end
+	o:removeSelf()
+	self.__default_style = nil
+	return nil
+end
 
 
 --====================================================================--
