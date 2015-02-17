@@ -104,7 +104,6 @@ textfield = Widgets.newTextField{
 		-- fontSize = 24,
 
 		returnKey='done',
-		hasBackground=false,
 		inputType='password',
 		-- backgroundStyle=Widgets.TextField.BORDER_STYLE_ROUNDED
 		fillColor = nil,
