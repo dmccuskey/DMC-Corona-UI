@@ -139,12 +139,15 @@ Widget.Popover.__setWidgetManager( Widget )
 Widget.PopoverMixModule.__setWidgetManager( Widget )
 
 
+local loadBackgroundSupport, loadTextSupport, loadTextFieldSupport
+
+
 
 --===================================================================--
 --== newText widget
 
 
-local function loadBackgroundSupport()
+loadBackgroundSupport = function()
 	-- print("loadBackgroundSupport")
 
 	local Background = require( PATH .. '.' .. 'widget_background' )
@@ -153,8 +156,8 @@ local function loadBackgroundSupport()
 	Widget.Background=Background
 	Widget.Style.Background=BackgroundStyle
 
-	Background.__setWidgetManager( Widget )
-	BackgroundStyle.__setWidgetManager( Widget )
+	Background.initialize( Widget )
+	BackgroundStyle.initialize( Widget )
 end
 
 
@@ -163,10 +166,10 @@ function Widget.newBackground( options )
 	return Widget.Background:new( options )
 end
 
-function Widget.newBackgroundStyle( style )
+function Widget.newBackgroundStyle( style_info )
 	-- print("Widget.newBackgroundStyle")
 	if not Widget.Style.Background then loadBackgroundSupport() end
-	return Widget.Style.Background:new( style )
+	return Widget.Style.Background:createStyleFrom{ data=style_info }
 end
 
 
@@ -292,7 +295,7 @@ end
 --== newText widget
 
 
-local function loadTextSupport()
+loadTextSupport = function()
 	-- print("loadTextSupport")
 	local Text = require( PATH .. '.' .. 'widget_text' )
 	local TextStyle = require( PATH .. '.' .. 'theme_manager.text_style' )
@@ -300,8 +303,8 @@ local function loadTextSupport()
 	Widget.Text=Text
 	Widget.Style.Text=TextStyle
 
-	Text.__setWidgetManager( Widget )
-	TextStyle.__setWidgetManager( Widget )
+	Text.initialize( Widget )
+	TextStyle.initialize( Widget )
 end
 
 
@@ -311,10 +314,10 @@ function Widget.newText( options )
 	return Widget.Text:new( options )
 end
 
-function Widget.newTextStyle( style )
+function Widget.newTextStyle( style_info )
 	-- print("Widget.newTextStyle")
 	if not Widget.Style.Text then loadTextSupport() end
-	return Widget.Style.Text:new( style )
+	return Widget.Style.Text:createStyleFrom{ data=style_info }
 end
 
 
@@ -323,16 +326,20 @@ end
 --== TextField support
 
 
-local function loadTextFieldSupport()
+loadTextFieldSupport = function()
 	-- print("loadTextFieldSupport")
+	-- dependencies
+	loadBackgroundSupport()
+	loadTextSupport()
+
 	TextField = require( PATH .. '.' .. 'widget_textfield' )
 	TextFieldStyle = require( PATH .. '.' .. 'theme_manager.textfield_style' )
 
 	Widget.TextField=TextField
 	Widget.Style.TextField=TextFieldStyle
 
-	TextField.__setWidgetManager( Widget )
-	TextFieldStyle.__setWidgetManager( Widget )
+	TextField.initialize( Widget )
+	TextFieldStyle.initialize( Widget )
 end
 
 
@@ -342,10 +349,10 @@ function Widget.newTextField( options )
 	return Widget.TextField:new( options )
 end
 
-function Widget.newTextFieldStyle( style )
+function Widget.newTextFieldStyle( style_info )
 	-- print("Widget.newTextFieldStyle")
 	if not Widget.Style.TextField then loadTextFieldSupport() end
-	return Widget.Style.TextField:new( style )
+	return Widget.Style.TextField:createStyleFrom{ data=style_info }
 end
 
 
