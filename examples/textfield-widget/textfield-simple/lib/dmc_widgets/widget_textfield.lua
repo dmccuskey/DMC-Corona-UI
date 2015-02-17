@@ -640,20 +640,20 @@ function TextField:setHintColor( ... )
 end
 
 
---== Text Style Methods ==--
+--== Display Style Methods ==--
 
-function TextField.__setters:textFont( value )
-	-- print( 'TextField.__setters:textFont', value )
+function TextField.__setters:displayFont( value )
+	-- print( 'TextField.__setters:displayFont', value )
 	self.curr_style.display.font = value
 end
 
-function TextField.__setters:textFontSize( value )
-	-- print( 'TextField.__setters:textFontSize', value )
+function TextField.__setters:displayFontSize( value )
+	-- print( 'TextField.__setters:displayFontSize', value )
 	self.curr_style.display.fontSize = value
 end
 
-function TextField:setTextColor( ... )
-	-- print( 'TextField:setTextColor' )
+function TextField:setDisplayColor( ... )
+	-- print( 'TextField:setDisplayColor' )
 	self.curr_style.display.textColor = {...}
 end
 
@@ -815,12 +815,12 @@ end
 function TextField:_createTextField()
 	-- print( "TextField:_createTextField" )
 	local style = self.curr_style
-	local display = self._wgtText
+	local text = self._wgtText
 	local o -- object
 
 	self:_removeTextField()
 
-	local height = display:getTextHeight()
+	local height = text:getTextHeight()
 	if not height or height <=0 then
 		height = style.height
 	end
@@ -875,7 +875,7 @@ function TextField:__commitProperties__()
 
 	local view = self.view
 	local bg = self._bg
-	local display = self._wgtText
+	local text = self._wgtText
 	local input = self._textInput
 
 	--== position sensitive
@@ -928,7 +928,7 @@ function TextField:__commitProperties__()
 	if self._editActive_dirty then
 		local is_editing = self._is_editing
 		local edit, set_focus = is_editing.state, is_editing.set_focus
-		display.isVisible=not edit
+		text.isVisible=not edit
 		input.isVisible=edit
 		if set_focus then
 			local focus = input
@@ -991,18 +991,18 @@ function TextField:__commitProperties__()
 
 	if self._wgtTextText_dirty then
 		if self._text=="" then
-			display.text=self._hint_text
+			text.text=self._hint_text
 		else
-			display.text=self._text
+			text.text=self._text
 		end
 		self._wgtTextText_dirty=false
 	end
 
 	if self._wgtTextStyle_dirty then
 		if self._text=="" then
-			display:setActiveStyle( style.hint, {copy=false} )
+			text:setActiveStyle( style.hint, {copy=false} )
 		else
-			display:setActiveStyle( style.display, {copy=false} )
+			text:setActiveStyle( style.display, {copy=false} )
 		end
 		self._wgtTextStyle_dirty=false
 	end

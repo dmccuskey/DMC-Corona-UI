@@ -90,8 +90,8 @@ formatter = Widgets.newFormatter( Widgets.Formatter.US_ZIPCODE )
 
 textfield = Widgets.newTextField{
 
-	-- text = "",
-	-- hintText = "Zipcode",
+	text = "",
+	hintText = "Zipcode",
 
 	style={
 		width=width,
@@ -118,7 +118,7 @@ textfield.formatter = formatter
 --== Make different changes
 
 textfield:setFillColor( 0.5, 0.2, 0.1 )
-textfield:setTextColor( 1, 0, 0 )
+textfield:setDisplayColor( 1, 0, 0 )
 textfield:setHintColor( 0.7, 0.2, 0.7 )
 
 -- textfield.x = H_CENTER
@@ -158,7 +158,7 @@ textfield.height = 50
 -- -- textfield.width = nil
 
 -- textfield:setFillColor( 1,0,0,0.5 )
--- textfield:setTextColor( 0,1,1,0.5 )
+-- textfield:setDisplayColor( 0,1,1,0.5 )
 
 
 -- transition.to( textfield, {time=500, x=100})
