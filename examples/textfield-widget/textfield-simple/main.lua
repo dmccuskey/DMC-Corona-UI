@@ -89,20 +89,26 @@ formatter = Widgets.newFormatter( Widgets.Formatter.US_ZIPCODE )
 -- create text field
 
 textfield = Widgets.newTextField{
-	width=width,
-	height=height,
-	align = nil,
-	text = "",
-	textColor = nil,
-	-- font = native.systemFontBold,
-	-- fontSize = 24,
-	placeholder = "Zipcode",
 
-	returnKey='done',
-	hasBackground=false,
-	inputType=Widgets.TextField.INPUT_PASSWORD,
-	-- style=Widgets.TextField.BORDER_STYLE_ROUNDED
-	fillColor = nil,
+	-- text = "",
+	-- hintText = "Zipcode",
+
+	style={
+		width=width,
+		height=height,
+
+		align = nil,
+		textColor = nil,
+
+		-- font = native.systemFontBold,
+		-- fontSize = 24,
+
+		returnKey='done',
+		hasBackground=false,
+		inputType='password',
+		-- backgroundStyle=Widgets.TextField.BORDER_STYLE_ROUNDED
+		fillColor = nil,
+	}
 }
 textfield.onEvent = textFieldOnEvent_handler
 textfield:addEventListener( textfield.EVENT, textFieldOnEvent_handler )
