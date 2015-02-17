@@ -85,12 +85,18 @@ local ObjectBase = Objects.ObjectBase
 
 local Style = newClass( ObjectBase, {name="Style Base"}  )
 
+--== Class Constants
+
+-- Style.__base_style__  <instance of class>
+
+Style.EXCLUDE_PROPERTY_CHECK = {}
+
+--== Event Constants
+
 Style.EVENT = 'style-event'
 
 Style.STYLE_RESET = 'style-reset-event'
 Style.STYLE_UPDATED = 'style-updated-event'
-
--- Style.__base_style__  <instance of class>
 
 
 --======================================================--
@@ -118,6 +124,7 @@ function Style:__init__( params )
 	self._data = params.data
 
 	self._name = params.name
+	self._debugOn = params.debugOn
 end
 
 function Style:__initComplete__()
@@ -148,7 +155,7 @@ function Style:cloneStyle()
 		inherit=self._inherit
 	}
 	local o = self.class:new( params )
-	o:updateStyle( self, true ) -- clone data, force
+	o:updateStyle( self, {force=true} ) -- clone data, force
 	return o
 end
 
@@ -167,6 +174,13 @@ Style.inheritStyle=Style.copyStyle
 
 
 function Style:resetProperties()
+	self:_dispatchResetEvent()
+end
+
+-- this would clear any local modifications
+--
+function Style:clear()
+	self:updateStyle( {}, {force=true} )
 	self:_dispatchResetEvent()
 end
 
@@ -198,7 +212,6 @@ function Style:createStyleFrom( params )
 	else
 		-- Lua structure
 		style = StyleClass:new( params )
-		-- style:updateStyle( data )
 	end
 
 	assert( style, "failed to create style" )
@@ -262,6 +275,25 @@ function Style.__setters:name( value )
 	--==--
 	if value == self._name then return end
 	self._name = value
+end
+
+
+--== debugOn
+
+function Style.__getters:debugOn()
+	local value = self._debugOn
+	if value==nil and self._inherit then
+		value = self._inherit.debugOn
+	end
+	return value
+end
+function Style.__setters:debugOn( value )
+	-- print( "Style.__setters:debugOn", value )
+	assert( type(value)=='boolean' or (value==nil and self._inherit) )
+	--==--
+	if value == self._debugOn then return end
+	self._debugOn = value
+	self:_dispatchChangeEvent( 'debugOn', value )
 end
 
 
@@ -443,24 +475,6 @@ function Style.__setters:fontSize( value )
 	self:_dispatchChangeEvent( 'fontSize', value )
 end
 
---== isHitTestable
-
-function Style.__getters:isHitTestable()
-	local value = self._isHitTestable
-	if value==nil and self._inherit then
-		value = self._inherit.isHitTestable
-	end
-	return value
-end
-function Style.__setters:isHitTestable( value )
-	-- print( "Style.__setters:isHitTestable", value )
-	assert( type(value)=='boolean' or (value==nil and self._inherit) )
-	--==--
-	if value==self._isHitTestable then return end
-	self._isHitTestable = value
-	self:_dispatchChangeEvent( 'isHitTestable', value )
-end
-
 --== marginX
 
 function Style.__getters:marginX()
@@ -556,15 +570,21 @@ end
 
 
 function Style:_checkProperties()
-	assert( self.name, "Style: requires a name" )
+	assert( self.name, "Style: requires property 'name'" )
+	assert( self.debugOn~=nil , "Style: requires a property 'debugOn'" )
 end
 
 
 function Style:_parseData( data )
 	-- print( "Style:_parseData", data )
 	if data==nil then return end
+	local DEF = self.DEFAULT
+	local EXCL = self.EXCLUDE_PROPERTY_CHECK
 	for k,v in pairs( data ) do
 		-- print(k,v)
+		if DEF[k]==nil and not EXCL[k] then
+			error( string.format( "Style: invalid property style found '%s'", tostring(k) ) )
+		end
 		self[k]=v
 	end
 end

@@ -168,7 +168,7 @@ end
 
 
 function Theme.setActiveStyle( self, data, params )
-	-- print( "Theme.setActiveStyle", self, data )
+	-- print( "Theme.setActiveStyle", style )
 	params = params or {}
 	if params.widget==nil then params.widget=self end
 	if params.copy==nil then params.copy=true end
@@ -215,6 +215,17 @@ end
 --[[
 override these getters/setters/methods if necesary
 --]]
+
+--== debugOn
+
+function Theme.__getters:debugOn()
+	return self.curr_style.debugOn
+end
+function Theme.__setters:debugOn( value )
+	-- print( 'Theme.__setters:debugOn', value )
+	self.curr_style.debugOn = value
+end
+
 
 --== width
 
