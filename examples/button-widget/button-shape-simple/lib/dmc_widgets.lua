@@ -106,7 +106,7 @@ Widget.FontMgr = require( PATH .. '.' .. 'font_manager' )
 Widget.ThemeMgr = require( PATH .. '.' .. 'theme_manager' )
 
 -- Styles
-local BaseStyle = require( PATH .. '.' .. 'theme_manager.base_style' )
+local BaseStyle = require( PATH .. '.' .. 'widget_style.base_style' )
 
 
 -- Widgets
@@ -151,7 +151,7 @@ loadBackgroundSupport = function()
 	-- print("loadBackgroundSupport")
 
 	local Background = require( PATH .. '.' .. 'widget_background' )
-	local BackgroundStyle = require( PATH .. '.' .. 'theme_manager.background_style' )
+	local BackgroundStyle = require( PATH .. '.' .. 'widget_style.background_style' )
 
 	Widget.Background=Background
 	Widget.Style.Background=BackgroundStyle
@@ -298,7 +298,7 @@ end
 loadTextSupport = function()
 	-- print("loadTextSupport")
 	local Text = require( PATH .. '.' .. 'widget_text' )
-	local TextStyle = require( PATH .. '.' .. 'theme_manager.text_style' )
+	local TextStyle = require( PATH .. '.' .. 'widget_style.text_style' )
 
 	Widget.Text=Text
 	Widget.Style.Text=TextStyle
@@ -333,7 +333,7 @@ loadTextFieldSupport = function()
 	loadTextSupport()
 
 	TextField = require( PATH .. '.' .. 'widget_textfield' )
-	TextFieldStyle = require( PATH .. '.' .. 'theme_manager.textfield_style' )
+	TextFieldStyle = require( PATH .. '.' .. 'widget_style.textfield_style' )
 
 	Widget.TextField=TextField
 	Widget.Style.TextField=TextFieldStyle
