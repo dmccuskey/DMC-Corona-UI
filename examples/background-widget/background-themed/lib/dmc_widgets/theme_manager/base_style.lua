@@ -85,12 +85,18 @@ local ObjectBase = Objects.ObjectBase
 
 local Style = newClass( ObjectBase, {name="Style Base"}  )
 
+--== Class Constants
+
+-- Style.__base_style__  <instance of class>
+
+Style.EXCLUDE_PROPERTY_CHECK = {}
+
+--== Event Constants
+
 Style.EVENT = 'style-event'
 
 Style.STYLE_RESET = 'style-reset-event'
 Style.STYLE_UPDATED = 'style-updated-event'
-
--- Style.__base_style__  <instance of class>
 
 
 --======================================================--
@@ -572,8 +578,13 @@ end
 function Style:_parseData( data )
 	-- print( "Style:_parseData", data )
 	if data==nil then return end
+	local DEF = self.DEFAULT
+	local EXCL = self.EXCLUDE_PROPERTY_CHECK
 	for k,v in pairs( data ) do
 		-- print(k,v)
+		if DEF[k]==nil and not EXCL[k] then
+			error( string.format( "Style: invalid property style found '%s'", tostring(k) ) )
+		end
 		self[k]=v
 	end
 end

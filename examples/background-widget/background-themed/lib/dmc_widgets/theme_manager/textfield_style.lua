@@ -95,8 +95,7 @@ TextFieldStyle.__base_style__ = nil
 -- child styles
 TextFieldStyle.BACKGROUND = 'textfield-background'
 TextFieldStyle.HINT = 'textfield-hint'
-TextFieldStyle.TEXT = 'textfield-text'
-
+TextFieldStyle.DISPLAY = 'textfield-display'
 
 TextFieldStyle.DEFAULT = {
 	name='textfield-default-style',
@@ -140,7 +139,7 @@ TextFieldStyle.DEFAULT = {
 		fontSize=24,
 		textColor={0.3,0.3,0.3,1},
 	},
-	text={
+	display={
 		--[[
 		from TextField
 		* width
@@ -199,8 +198,6 @@ function TextFieldStyle:__init__( params )
 	self._inputType = nil
 	self._marginX = nil
 	self._marginY = nil
-	self._text_textColor = nil
-	self._hint_textColor = nil
 	self._returnKey = nil
 
 	--== Object Refs ==--
@@ -208,7 +205,7 @@ function TextFieldStyle:__init__( params )
 	-- these are other style objects
 	self._background = nil
 	self._hint = nil
-	self._text = nil
+	self._display = nil
 
 end
 
@@ -235,7 +232,7 @@ function TextFieldStyle:_checkChildren()
 	-- using setters !!!
 	if self._background==nil then self.background=nil end
 	if self._hint==nil then self.hint=nil end
-	if self._text==nil then self.text=nil end
+	if self._display==nil then self.display=nil end
 end
 
 
@@ -256,7 +253,7 @@ function TextFieldStyle.__setters:inherit( value )
 
 	self._background.inherit = value.background
 	self._hint.inherit = value.hint
-	self._text.inherit = value.text
+	self._display.inherit = value.display
 end
 
 
@@ -358,17 +355,17 @@ function TextFieldStyle.__setters:hint( data )
 end
 
 
-function TextFieldStyle.__getters:text()
-	return self._text
+function TextFieldStyle.__getters:display()
+	return self._display
 end
-function TextFieldStyle.__setters:text( data )
-	-- print( 'TextFieldStyle.__setters:text', data )
+function TextFieldStyle.__setters:display( data )
+	-- print( 'TextFieldStyle.__setters:display', data )
 	assert( data==nil or type( data )=='table' )
 	--==--
 	local StyleClass = Widgets.Style.Text
-	local inherit = self._inherit and self._inherit._text
+	local inherit = self._inherit and self._inherit._display
 
-	self._text = StyleClass:createStyleFrom{
+	self._display = StyleClass:createStyleFrom{
 		name=TextFieldStyle.TEXT,
 		data=data,
 		inherit=inherit,
@@ -404,11 +401,11 @@ function TextFieldStyle:updateStyle( info, params )
 	if info.returnKey or force then self.returnKey=info.returnKey end
 
 	--== Text-level
-	if info.textColor or force then self.text.color=info.textColor end
-	if info.textFont or force then self.text.font=info.textFont end
-	if info.textFontSize or force then self.text.fontSize=info.textFontSize end
+	if info.displayColor or force then self.display.textColor=info.displayColor end
+	if info.displayFont or force then self.display.font=info.displayFont end
+	if info.displayFontSize or force then self.display.fontSize=info.displayFontSize end
 	--== Hint-level
-	if info.hintColor or force then self.hint.color=info.hintColor end
+	if info.hintColor or force then self.hint.textColor=info.hintColor end
 	if info.hintFont or force then self.hint.font=info.hintFont end
 	if info.hintFontSize or force then self.hint.fontSize=info.hintFontSize end
 
@@ -450,7 +447,7 @@ function TextFieldStyle._setDefaults()
 	tmp.marginY=defaults.marginY
 
 	-- text
-	tmp = defaults.text
+	tmp = defaults.display
 	tmp.width=defaults.width
 	tmp.height=defaults.height
 	tmp.align=defaults.align
@@ -495,9 +492,9 @@ function TextFieldStyle:_checkProperties()
 	assert( self.hint.fontSize, "Style: requires 'hint.fontSize'" )
 	assert( self.hint.textColor, "Style: requires 'hint.textColor'" )
 
-	assert( self.text.font, "Style: requires 'text.font'" )
-	assert( self.text.fontSize, "Style: requires 'text.fontSize'" )
-	assert( self.text.textColor, "Style: requires 'text.textColor'" )
+	assert( self.display.font, "Style: requires 'display.font'" )
+	assert( self.display.fontSize, "Style: requires 'display.fontSize'" )
+	assert( self.display.textColor, "Style: requires 'display.textColor'" )
 
 end
 
