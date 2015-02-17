@@ -95,12 +95,16 @@ BackgroundStyle.__base_style__ = nil
 BackgroundStyle.DEFAULT = {
 	name='background-default-style',
 
-	width=100,
-	height=50,
+	width=75,
+	height=30,
 
 	anchorX=0.5,
 	anchorY=0.5,
+	debugOn=false,
 	fillColor={1,1,1,1},
+	hitMarginX=0,
+	hitMarginY=0,
+	isHitActive=true,
 	isHitTestable=true,
 	strokeColor={0,0,0,1},
 	strokeWidth=0
@@ -129,9 +133,10 @@ function BackgroundStyle:__init__( params )
 	-- self._inherit
 	-- self._widget
 	-- self._parent
+	-- self._onProperty
 
 	-- self._name
-	-- self._onProperty
+	-- self._debugOn
 
 	self._width = nil
 	self._height = nil
@@ -139,6 +144,9 @@ function BackgroundStyle:__init__( params )
 	self._anchorX = nil
 	self._anchorY = nil
 	self._fillColor = nil
+	self._hitMarginX = nil
+	self._hitMarginY = nil
+	self._isHitActive = nil
 	self._isHitTestable = nil
 	self._strokeColor = nil
 	self._strokeWidth = nil
@@ -167,20 +175,106 @@ end
 --== Public Methods
 
 
+
+--== hitMarginX
+
+function BackgroundStyle.__getters:hitMarginX()
+	-- print( "BackgroundStyle.__getters:hitMarginX" )
+	local value = self._hitMarginX
+	if value==nil and self._inherit then
+		value = self._inherit.hitMarginX
+	end
+	return value
+end
+function BackgroundStyle.__setters:hitMarginX( value )
+	-- print( "BackgroundStyle.__setters:hitMarginX", value )
+	assert( (type(value)=='number' and value>=0) or (value==nil and self._inherit) )
+	--==--
+	if value == self._hitMarginX then return end
+	self._hitMarginX = value
+	self:_dispatchChangeEvent( 'hitMarginX', value )
+end
+
+--== hitMarginY
+
+function BackgroundStyle.__getters:hitMarginY()
+	-- print( "BackgroundStyle.__getters:hitMarginY" )
+	local value = self._hitMarginY
+	if value==nil and self._inherit then
+		value = self._inherit.hitMarginY
+	end
+	return value
+end
+function BackgroundStyle.__setters:hitMarginY( value )
+	-- print( "BackgroundStyle.__setters:hitMarginY", value )
+	assert( (type(value)=='number' and value>=0) or (value==nil and self._inherit) )
+	--==--
+	if value == self._hitMarginY then return end
+	self._hitMarginY = value
+	self:_dispatchChangeEvent( 'hitMarginY', value )
+end
+
+--== isHitActive
+
+function BackgroundStyle.__getters:isHitActive()
+	-- print( "BackgroundStyle.__getters:isHitActive" )
+	local value = self._isHitActive
+	if value==nil and self._inherit then
+		value = self._inherit.isHitActive
+	end
+	return value
+end
+function BackgroundStyle.__setters:isHitActive( value )
+	-- print( "BackgroundStyle.__setters:isHitActive", value )
+	assert( type(value)=='boolean' or (value==nil and self._inherit) )
+	--==--
+	if value == self._isHitActive then return end
+	self._isHitActive = value
+	self:_dispatchChangeEvent( 'isHitActive', value )
+end
+
+--== isHitTestable
+
+function BackgroundStyle.__getters:isHitTestable()
+	local value = self._isHitTestable
+	if value==nil and self._inherit then
+		value = self._inherit.isHitTestable
+	end
+	return value
+end
+function BackgroundStyle.__setters:isHitTestable( value )
+	-- print( "BackgroundStyle.__setters:isHitTestable", value )
+	assert( type(value)=='boolean' or (value==nil and self._inherit) )
+	--==--
+	if value==self._isHitTestable then return end
+	self._isHitTestable = value
+	self:_dispatchChangeEvent( 'isHitTestable', value )
+end
+
+
 --== updateStyle
 
 -- force is used when making exact copy of data
 --
-function BackgroundStyle:updateStyle( info, force )
+function BackgroundStyle:updateStyle( info, params )
 	-- print( "BackgroundStyle:updateStyle", info )
-	if force==nil then force=true end
+	params = params or {}
+	if params.force==nil then params.force=true end
 	--==--
+	local force=params.force
+
+	if info.debugOn~=nil or force then self.debugOn=info.debugOn end
+
 	if info.width~=nil or force then self.width=info.width end
 	if info.height~=nil or force then self.height=info.height end
 
 	if info.anchorX~=nil or force then self.anchorX=info.anchorX end
 	if info.anchorY~=nil or force then self.anchorY=info.anchorY end
 	if info.fillColor~=nil or force then self.fillColor=info.fillColor end
+	if info.hitMarginX~=nil or force then self.hitMarginX=info.hitMarginX end
+	if info.hitMarginY~=nil or force then self.hitMarginY=info.hitMarginY end
+	if info.isHitActive~=nil or force then self.isHitActive=info.isHitActive end
+	if info.isHitTestable~=nil or force then self.isHitTestable=info.isHitTestable end
 	if info.strokeColor~=nil or force then self.strokeColor=info.strokeColor end
 	if info.strokeWidth~=nil or force then self.strokeWidth=info.strokeWidth end
 end
@@ -206,14 +300,18 @@ function BackgroundStyle:_checkProperties()
 
 	BaseStyle._checkProperties( self )
 
-	assert( self.width, "Style: requires 'width'" )
-	assert( self.height, "Style: requires 'height'" )
+	assert( self.width, "Style: requires property'width'" )
+	assert( self.height, "Style: requires property 'height'" )
 
-	assert( self.anchorX, "Style: requires 'anchorX'" )
-	assert( self.anchorY, "Style: requires 'anchory'" )
-	assert( self.fillColor, "Style: requires 'fillColor'" )
-	assert( self.strokeColor, "Style: requires 'strokeColor'" )
-	assert( self.strokeWidth, "Style: requires 'strokeWidth'" )
+	assert( self.anchorX, "Style: requires property'anchorX'" )
+	assert( self.anchorY, "Style: requires property 'anchory'" )
+	assert( self.fillColor, "Style: requires property 'fillColor'" )
+	assert( self.hitMarginX, "Style: requires property 'hitMarginX'" )
+	assert( self.hitMarginY, "Style: requires property 'hitMarginY'" )
+	assert( self.isHitActive, "Style: requires property 'isHitActive'" )
+	assert( self.isHitTestable, "Style: requires property 'isHitTestable'" )
+	assert( self.strokeColor, "Style: requires property 'strokeColor'" )
+	assert( self.strokeWidth, "Style: requires property 'strokeWidth'" )
 end
 
 

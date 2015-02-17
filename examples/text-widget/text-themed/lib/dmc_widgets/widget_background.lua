@@ -84,8 +84,6 @@ local ComponentBase = Objects.ComponentBase
 local LifecycleMix = LifecycleMixModule.LifecycleMix
 local ThemeMix = ThemeMixModule.ThemeMix
 
-local LOCAL_DEBUG = true
-
 
 
 --====================================================================--
@@ -93,7 +91,7 @@ local LOCAL_DEBUG = true
 --====================================================================--
 
 
--- put ThemeMix first
+-- ! put ThemeMix first !
 
 local Background = newClass( {ThemeMix,ComponentBase,LifecycleMix}, {name="Background"} )
 
@@ -125,7 +123,8 @@ Background.STYLE_CLASS = nil -- added later
 
 Background.EVENT = 'background-widget-event'
 
-Background.RELEASE = 'touch-release-event'
+Background.PRESSED = 'touch-press-event'
+Background.RELEASED = 'touch-release-event'
 
 
 --======================================================--
@@ -150,7 +149,7 @@ function Background:__init__( params )
 
 	--== Create Properties ==--
 
-	-- propeties in this class
+	-- properties in this class
 	self._x = params.x
 	self._x_dirty = true
 	self._y = params.y
@@ -162,22 +161,31 @@ function Background:__init__( params )
 
 	self._anchorX_dirty=true
 	self._anchorY_dirty=true
-
+	self._debugOn_dirty=true
 	self._fillColor_dirty=true
+	self._hitMarginX_dirty=true
+	self._hitMarginY_dirty=true
+	self._isHitActive_dirty=true
+	self._isHitTestable_dirty=true
 	self._strokeColor_dirty=true
 	self._strokeWidth_dirty=true
 
-	self._isHitTestable_dirty = true
-
+	-- virtual
+	self._hitX_dirty = true
+	self._hitY_dirty = true
+	self._hitWidth_dirty = true
+	self._hitHeight_dirty = true
 
 	--== Object References ==--
 
 	self._tmp_style = params.style -- save
 	-- self.curr_style -- from inherit
 
-	self._bg = nil -- our background object – rect or image
-	self._bg_f = nil
-	self._bg_dirty = true
+	self._rct_bgHit = nil -- our hit area
+	self._rct_bgHit_f = nil
+
+	self._bgView = nil -- background view
+	self._bgView_dirty = true
 
 end
 
@@ -191,19 +199,23 @@ end
 
 
 --== createView
---[[
 function Background:__createView__()
 	-- print( "Background:__createView__" )
 	self:superCall( ComponentBase, '__createView__' )
 	--==--
+	local o = display.newRect( 0,0,0,0 )
+	o.anchorX, o.anchorY = 0.5,0.5
+	self:insert( o )
+	self._rct_bgHit = o
 end
 
 function Background:__undoCreateView__()
 	-- print( "Background:__undoCreateView__" )
+	self._rct_bgHit:removeSelf()
+	self._rct_bgHit=nil
 	--==--
 	self:superCall( ComponentBase, '__undoCreateView__' )
 end
---]]
 
 
 --== initComplete
@@ -212,8 +224,8 @@ function Background:__initComplete__()
 	-- print( "Background:__initComplete__" )
 	self:superCall( ComponentBase, '__initComplete__' )
 	--==--
-
-	self._bg_f = self:createCallback( self._backgroundTouch_handler )
+	self._rct_bgHit_f = self:createCallback( self._hitAreaTouch_handler )
+	self._rct_bgHit:addEventListener( 'touch', self._rct_bgHit_f )
 
 	self.style = self._tmp_style
 end
@@ -224,7 +236,8 @@ function Background:__undoInitComplete__()
 
 	self.style = nil
 
-	self._bg_f = nil
+	self._rct_bgHit:removeEventListener( 'touch', self._rct_bgHit_f )
+	self._rct_bgHit_f = nil
 	--==--
 	self:superCall( ComponentBase, '__undoInitComplete__' )
 end
@@ -283,20 +296,75 @@ end
 
 
 
+--== hitMarginX
+
+function Background.__getters:hitMarginX()
+	-- print( 'Background.__getters:hitMarginX' )
+	return self.curr_style.hitMarginX
+end
+function Background.__setters:hitMarginX( value )
+	-- print( 'Background.__setters:hitMarginX', value )
+	self.curr_style.hitMarginX = value
+end
+
+--== hitMarginY
+
+function Background.__getters:hitMarginY()
+	-- print( 'Background.__getters:hitMarginY' )
+	return self.curr_style.hitMarginY
+end
+function Background.__setters:hitMarginY( value )
+	-- print( 'Background.__setters:hitMarginY', value )
+	self.curr_style.hitMarginY = value
+end
+
+--== isHitActive
+
+function Background.__getters:isHitActive()
+	-- print( 'Background.__getters:isHitActive' )
+	return self.curr_style.isHitActive
+end
+function Background.__setters:isHitActive( value )
+	-- print( 'Background.__setters:isHitActive', value )
+	self.curr_style.isHitActive = value
+end
+
+
+
+--== setHitMargin
+
+function Background:setHitMargin( ... )
+	-- print( 'Background:setHitMargin' )
+	local args = {...}
+
+	if type( args[1] ) == 'table' then
+		self.hitMarginX, self.hitMarginY = unpack( args[1] )
+	end
+	if type( args[1] ) == 'number' then
+		self.hitMarginX = args[1]
+	end
+	if type( args[2] ) == 'number' then
+		self.hitMarginY = args[2]
+	end
+end
+
+
+
 --====================================================================--
 --== Private Methods
 
 
 function Background:_removeBackground()
 	-- print( 'Background:_removeBackground' )
-	local o = self._bg
+	local o = self._bgView
 	if o then
-		o:removeEventListener( 'touch', self._bg_f )
 		o:removeSelf()
-		self._bg = nil
+		self._bgView = nil
 	end
 end
 
+-- TODO: future will have different types of backgrounds
+--
 function Background:_createBackground()
 	-- print( 'Background:_createBackground' )
 	local style = self.curr_style
@@ -306,12 +374,11 @@ function Background:_createBackground()
 
 	local w, h = style.width, style.height
 
-	self._bg = display.newRect( 0,0,w,h )
-	self:insert( self._bg )
-	self._bg:addEventListener( 'touch', self._bg_f )
+	self._bgView = display.newRect( 0,0,w,h )
+	self:insert( self._bgView )
 
 	-- conditions for coming in here
-	self._bg_dirty = false
+	self._bgView_dirty = false
 
 	self._height_dirty=false
 	self._width_dirty=false
@@ -333,26 +400,27 @@ function Background:__commitProperties__()
 	local style = self.curr_style
 
 	-- create new background if necessary
-	if self._bg_dirty then
+	if self._bgView_dirty then
 		self:_createBackground()
 	end
 
 	local view = self.view
-	local bg = self._bg
+	local hit = self._rct_bgHit
+	local bg = self._bgView
 
 	-- width/height
 
-	if self._bg_width_dirty then
-		bg.width = self.width
-		self._bg_width_dirty=false
+	if self._width_dirty then
+		bg.width = style.width
+		self._width_dirty=false
 
-		self._text_alignX_dirty=true
+		self._hitWidth_dirty=true
 	end
-	if self._bg_height_dirty then
-		bg.height = self.height
-		self._bg_height_dirty=false
+	if self._height_dirty then
+		bg.height = style.height
+		self._height_dirty=false
 
-		self._text_alignY_dirty=true
+		self._hitHeight_dirty=true
 	end
 
 	-- anchorX/anchorY
@@ -375,19 +443,55 @@ function Background:__commitProperties__()
 	if self._x_dirty then
 		view.x = self._x
 		self._x_dirty = false
+
+		self._hitX_dirty=true
 	end
 	if self._y_dirty then
 		view.y = self._y
 		self._y_dirty = false
+
+		self._hitY_dirty=true
+	end
+
+	-- Hit Area
+
+	if self._hitWidth_dirty then
+		hit.width = style.width+style.hitMarginX*2
+		self._hitWidth_dirty=false
+	end
+	if self._hitHeight_dirty then
+		hit.height = style.height+style.hitMarginY*2
+		self._hitHeight_dirty=false
+	end
+
+	if self._hitX_dirty then
+		local width = style.width
+		hit.x = width/2+(-width*style.anchorX)
+		self._hitX_dirty=false
+	end
+	if self._hitY_dirty then
+		local height = style.height
+		hit.y = height/2+(-height*style.anchorY)
+		self._hitY_dirty=false
 	end
 
 
 	--== non-position sensitive
 
+	-- debug on
+
+	if self._debugOn_dirty then
+		if style.debugOn then
+			hit:setFillColor( 1,0,0,0.5 )
+		else
+			hit:setFillColor( 0,0,0,0 )
+		end
+	end
+
 	-- hit testable
 
 	if self._isHitTestable_dirty then
-		bg.isHitTestable = style.isHitTestable
+		hit.isHitTestable = style.isHitTestable
 		self._isHitTestable_dirty=false
 	end
 
@@ -435,7 +539,11 @@ function Background:stylePropertyChangeHandler( event )
 
 		self._anchorX_dirty=true
 		self._anchorY_dirty=true
+		self._debugOn_dirty = true
 		self._fillColor_dirty = true
+		self._hitMarginX_dirty = true
+		self._hitMarginX_dirty = true
+		self._isHitActive_dirty=true
 		self._isHitTestable_dirty=true
 		self._strokeColor_dirty=true
 		self._strokeWidth_dirty=true
@@ -452,8 +560,16 @@ function Background:stylePropertyChangeHandler( event )
 			self._anchorX_dirty=true
 		elseif property=='anchorY' then
 			self._anchorY_dirty=true
+		elseif property=='debugActive' then
+			self._debugOn_dirty=true
 		elseif property=='fillColor' then
 			self._fillColor_dirty=true
+		elseif property=='hitMarginX' then
+			self._hitMarginX_dirty=true
+		elseif property=='hitMarginY' then
+			self._hitMarginY_dirty=true
+		elseif property=='isHitActive' then
+			self._isHitActive_dirty=true
 		elseif property=='isHitTestable' then
 			self._isHitTestable_dirty=true
 		elseif property=='strokeWidth' then
@@ -469,14 +585,17 @@ function Background:stylePropertyChangeHandler( event )
 end
 
 
-function Background:_backgroundTouch_handler( event )
-	-- print( 'Background:_backgroundTouch_handler', event.phase )
+function Background:_hitAreaTouch_handler( event )
+	-- print( 'Background:_hitAreaTouch_handler', event.phase )
 	local phase = event.phase
 	local background = event.target
+
+	if not self.curr_style.isHitActive then return false end
 
 	if phase=='began' then
 		display.getCurrentStage():setFocus( background )
 		self._has_focus = true
+		self:dispatchEvent( self.PRESSED )
 	end
 
 	if not self._has_focus then return false end
@@ -485,7 +604,7 @@ function Background:_backgroundTouch_handler( event )
 		local bgCb = background.contentBounds
 		local isWithinBounds = ( bgCb.xMin <= event.x and bgCb.xMax >= event.x and bgCb.yMin <= event.y and bgCb.yMax >= event.y )
 		if isWithinBounds then
-			self:dispatchEvent( self.RELEASE )
+			self:dispatchEvent( self.RELEASED )
 		end
 
 		display.getCurrentStage():setFocus( nil )
