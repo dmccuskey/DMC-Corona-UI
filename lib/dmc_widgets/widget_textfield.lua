@@ -190,8 +190,8 @@ function TextField:__init__( params )
 	self._hint_text = params.hintText
 
 	-- virtual (text changes)
-	self._displayText_dirty=true
-	self._displayStyle_dirty=true
+	self._wgtTextText_dirty=true
+	self._wgtTextStyle_dirty=true
 
 	self._inputText_dirty=true
 
@@ -231,9 +231,9 @@ function TextField:__init__( params )
 
 	--== Hint-level
 	-- align?
-	self._displayFont_dirty = true
-	self._textDisplayFontSize_dirty = true
-	self._textDisplayColor_dirty = true
+	self._wgtTextFont_dirty = true
+	self._wgtTextFontSize_dirty = true
+	self._wgtTextColor_dirty = true
 
 	--== Background-level
 	self._bgStyle_dirty=true
@@ -261,9 +261,10 @@ function TextField:__init__( params )
 
 	self._bg = nil -- background object
 	self._bg_dirty = true
-	self._textDisplay = nil -- text object (for both hint and value display)
-	self._textDisplay_f = nil -- text object (for both hint and value display)
-	self._textDisplay_dirty = true
+
+	self._wgtText = nil -- text object (for both hint and value display)
+	self._wgtText_f = nil -- text object (for both hint and value display)
+	self._wgtText_dirty = true
 	self._textInput = nil -- textfield object
 	self._textInput_f = nil -- textfield handler
 
@@ -305,7 +306,7 @@ function TextField:__initComplete__()
 	self._textInput_f = self:createCallback( self._textFieldEvent_handler )
 	self._textStyle_f = self:createCallback( self.textStyleChange_handler )
 	self._bg_f = self:createCallback( self._backgroundTouch_handler )
-	self._textDisplay_f = self:createCallback( self._displayWidgetUpdate_handler )
+	self._wgtText_f = self:createCallback( self._wgtTextWidgetUpdate_handler )
 
 	self.formatter = self._formatter -- use setter
 
@@ -397,7 +398,7 @@ function TextField.__setters:width( value )
 	style.width = value
 	style.background.width=value
 	style.hint.width = value
-	style.text.width = value
+	style.display.width = value
 	self._width_dirty=true
 	self:__invalidateProperties__()
 end
@@ -414,7 +415,7 @@ function TextField.__setters:height( value )
 	style.height = value
 	style.background.height=value
 	style.hint.height = value
-	style.text.height = value
+	style.display.height = value
 	self._height_dirty=true
 	self:__invalidateProperties__()
 end
@@ -431,7 +432,7 @@ function TextField.__setters:align( value )
 	local style=self.curr_style
 	style.align = value
 	style.hint.align = value
-	style.text.align = value
+	style.display.align = value
 end
 
 --== anchorX
@@ -446,7 +447,7 @@ function TextField.__setters:anchorX( value )
 	style.anchorX = value
 	style.background.anchorX = value
 	style.hint.anchorX = value
-	style.text.anchorX = value
+	style.display.anchorX = value
 end
 
 --== anchorY
@@ -461,7 +462,7 @@ function TextField.__setters:anchorY( value )
 	style.anchorY = value
 	style.background.anchorY = value
 	style.hint.anchorY = value
-	style.text.anchorY = value
+	style.display.anchorY = value
 end
 
 
@@ -518,7 +519,7 @@ function TextField.__setters:marginX( value )
 	local style=self.curr_style
 	style.marginX = value
 	style.hint.marginX = value
-	style.text.marginX = value
+	style.display.marginX = value
 end
 
 --== marginY
@@ -531,7 +532,7 @@ function TextField.__setters:marginY( value )
 	local style=self.curr_style
 	style.marginY = value
 	style.hint.marginY = value
-	style.text.marginY = value
+	style.display.marginY = value
 end
 
 --== text
@@ -546,8 +547,8 @@ function TextField.__setters:text( value )
 	if value == self._text then return end
 	self._text = value
 	self._text_dirty=true
-	self._displayText_dirty=true
-	self._displayStyle_dirty=true
+	self._wgtTextText_dirty=true
+	self._wgtTextStyle_dirty=true
 	self:__invalidateProperties__()
 end
 
@@ -558,8 +559,8 @@ function TextField.__setters:hintText( value )
 	-- print( 'TextField.__setters:hintText', value )
 	if value == self._hint_text then return end
 	self._hint_text = value
-	self._displayText_dirty=true
-	self._displayStyle_dirty=true
+	self._wgtTextText_dirty=true
+	self._wgtTextStyle_dirty=true
 	self:__invalidateProperties__()
 end
 
@@ -639,21 +640,21 @@ function TextField:setHintColor( ... )
 end
 
 
---== Text Style Methods ==--
+--== Display Style Methods ==--
 
-function TextField.__setters:textFont( value )
-	-- print( 'TextField.__setters:textFont', value )
-	self.curr_style.text.font = value
+function TextField.__setters:displayFont( value )
+	-- print( 'TextField.__setters:displayFont', value )
+	self.curr_style.display.font = value
 end
 
-function TextField.__setters:textFontSize( value )
-	-- print( 'TextField.__setters:textFontSize', value )
-	self.curr_style.text.fontSize = value
+function TextField.__setters:displayFontSize( value )
+	-- print( 'TextField.__setters:displayFontSize', value )
+	self.curr_style.display.fontSize = value
 end
 
-function TextField:setTextColor( ... )
-	-- print( 'TextField:setTextColor' )
-	self.curr_style.text.textColor = {...}
+function TextField:setDisplayColor( ... )
+	-- print( 'TextField:setDisplayColor' )
+	self.curr_style.display.textColor = {...}
 end
 
 
@@ -772,11 +773,11 @@ end
 
 function TextField:_removeText()
 	-- print( "TextField:_removeText" )
-	local o = self._textDisplay
+	local o = self._wgtText
 	if not o then return end
 	o.onUpdate=nil
 	o:removeSelf()
-	self._textDisplay = nil
+	self._wgtText = nil
 end
 
 function TextField:_createText()
@@ -785,16 +786,16 @@ function TextField:_createText()
 	self:_removeText()
 
 	local o = Widgets.newText()
-	o.onUpdate = self._textDisplay_f
+	o.onUpdate = self._wgtText_f
 	self:insert( o.view )
-	self._textDisplay = o
+	self._wgtText = o
 
 	-- conditions for coming in here
-	self._textDisplay_dirty=false
+	self._wgtText_dirty=false
 
 	--== reset our text field object
 
-	self._displayStyle_dirty=true
+	self._wgtTextStyle_dirty=true
 
 	self._editActive_dirty = true
 end
@@ -814,12 +815,12 @@ end
 function TextField:_createTextField()
 	-- print( "TextField:_createTextField" )
 	local style = self.curr_style
-	local display = self._textDisplay
+	local text = self._wgtText
 	local o -- object
 
 	self:_removeTextField()
 
-	local height = display:getTextHeight()
+	local height = text:getTextHeight()
 	if not height or height <=0 then
 		height = style.height
 	end
@@ -864,7 +865,7 @@ function TextField:__commitProperties__()
 		self:_createBackground()
 	end
 
-	if self._textDisplay_dirty then
+	if self._wgtText_dirty then
 		self:_createText()
 	end
 
@@ -874,7 +875,7 @@ function TextField:__commitProperties__()
 
 	local view = self.view
 	local bg = self._bg
-	local display = self._textDisplay
+	local text = self._wgtText
 	local input = self._textInput
 
 	--== position sensitive
@@ -897,15 +898,15 @@ function TextField:__commitProperties__()
 	if self._text_dirty then
 		self._text_dirty = false
 
-		self._displayText_dirty=true
-		self._displayStyle_dirty=true
+		self._wgtTextText_dirty=true
+		self._wgtTextStyle_dirty=true
 		self._inputText_dirty=true
 	end
 
 	if self._align_dirty then
 		self._align_dirty = false
 
-		self._displayAlign_dirty=true
+		self._wgtTextAlign_dirty=true
 		self._inputAlign_dirty=true
 	end
 
@@ -927,7 +928,7 @@ function TextField:__commitProperties__()
 	if self._editActive_dirty then
 		local is_editing = self._is_editing
 		local edit, set_focus = is_editing.state, is_editing.set_focus
-		display.isVisible=not edit
+		text.isVisible=not edit
 		input.isVisible=edit
 		if set_focus then
 			local focus = input
@@ -988,40 +989,40 @@ function TextField:__commitProperties__()
 	--== Non-positional
 
 
-	if self._displayText_dirty then
+	if self._wgtTextText_dirty then
 		if self._text=="" then
-			display.text=self._hint_text
+			text.text=self._hint_text
 		else
-			display.text=self._text
+			text.text=self._text
 		end
-		self._displayText_dirty=false
+		self._wgtTextText_dirty=false
 	end
 
-	if self._displayStyle_dirty then
+	if self._wgtTextStyle_dirty then
 		if self._text=="" then
-			display:setActiveStyle( style.hint, {copy=false} )
+			text:setActiveStyle( style.hint, {copy=false} )
 		else
-			display:setActiveStyle( style.text, {copy=false} )
+			text:setActiveStyle( style.display, {copy=false} )
 		end
-		self._displayStyle_dirty=false
+		self._wgtTextStyle_dirty=false
 	end
 
 
 
 	if self._inputStyle_dirty then
-		style.text.onPropertyChange = self._textStyle_f
-		style.text:resetProperties()
+		style.display.onPropertyChange = self._textStyle_f
+		style.display:resetProperties()
 		self._inputStyle_dirty=false
 	end
 
 	if self._inputFont_dirty or self._inputFontSize_dirty then
-		input.font=native.newFont( style.text.font, style.text.fontSize )
+		input.font=native.newFont( style.display.font, style.display.fontSize )
 		self._inputFont_dirty=false
 		self._inputFontSize_dirty=false
 	end
 
 	if self._inputTextColor_dirty then
-		input:setTextColor( unpack( style.text.textColor ) )
+		input:setTextColor( unpack( style.display.textColor ) )
 		self._inputTextColor_dirty=false
 	end
 
@@ -1184,10 +1185,10 @@ right now we only need this one time through
 later, when backgrounds get more complex (ie, they redraw)
 then we'll need a new strategy
 --]]
--- _displayWidgetUpdate_handler()
+-- _wgtTextWidgetUpdate_handler()
 --
-function TextField:_displayWidgetUpdate_handler( event )
-	-- print( "TextField:_displayWidgetUpdate_handler", event )
+function TextField:_wgtTextWidgetUpdate_handler( event )
+	-- print( "TextField:_wgtTextWidgetUpdate_handler", event )
 	local widget = event.target
 	local etype = event.type
 
