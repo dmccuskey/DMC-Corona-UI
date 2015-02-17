@@ -92,6 +92,11 @@ local TextStyle = newClass( BaseStyle, {name="Text Style"} )
 
 TextStyle.__base_style__ = nil
 
+TextStyle.EXCLUDE_PROPERTY_CHECK = {
+	width=true,
+	height=true
+}
+
 TextStyle.DEFAULT = {
 	name='text-default-style',
 
