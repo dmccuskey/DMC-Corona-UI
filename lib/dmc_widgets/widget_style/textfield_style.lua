@@ -66,7 +66,7 @@ local widget_find = dmc_widget_func.find
 
 local Objects = require 'dmc_objects'
 
-local BaseStyle = require( widget_find( 'theme_manager.base_style' ) )
+local BaseStyle = require( widget_find( 'widget_style.base_style' ) )
 
 
 
