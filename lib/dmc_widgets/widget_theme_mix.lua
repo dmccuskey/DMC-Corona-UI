@@ -225,6 +225,9 @@ function Theme.setActiveStyle( self, data, params )
 	end
 end
 
+function Theme:clearStyle()
+	return self.curr_style:clearProperties()
+end
 
 
 
