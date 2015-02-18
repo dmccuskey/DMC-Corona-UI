@@ -51,6 +51,16 @@ module_config = {
 		"base_dir": "examples",
 		"apps": [
 			{
+				"exp_dir": "background-widget/background-styled",
+				"requires": [],
+				"mod_dir_map": {
+					"default_dir": "",
+					"libs": {
+						"dmc-corona-boot":""
+					}
+				}
+			},
+			{
 				"exp_dir": "background-widget/background-themed",
 				"requires": [],
 				"mod_dir_map": {
