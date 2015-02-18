@@ -230,12 +230,25 @@ function TextFieldStyle.initialize( manager )
 end
 
 
-
-
 function TextFieldStyle._setDefaults()
 	-- print( "TextFieldStyle._setDefaults" )
 
-	local src = TextFieldStyle.DEFAULT
+	local defaults = TextFieldStyle.DEFAULT
+
+	defaults = TextFieldStyle.pushMissingProperties( defaults )
+
+	local style = TextFieldStyle:new{
+		data=defaults
+	}
+	TextFieldStyle.__base_style__ = style
+
+end
+
+
+function TextFieldStyle.pushMissingProperties( src )
+	-- print("TextFieldStyle.pushMissingProperties", src )
+	if not src then return end
+
 	local StyleClass, dest
 
 	-- copy properties to Background substyle 'background'
@@ -253,92 +266,16 @@ function TextFieldStyle._setDefaults()
 	dest = src[ TextFieldStyle.DISPLAY_KEY ]
 	StyleClass.copyMissingProperties( dest, src )
 
-	local style = TextFieldStyle:new{
-		data=defaults
-	}
-	TextFieldStyle.__base_style__ = style
-
+	return src
 end
-
 
 
 --====================================================================--
 --== Public Methods
 
 
---== inherit
-
--- Style Class
---
-function TextFieldStyle.__setters:inherit( value )
-	-- print( "TextFieldStyle.__setters:inherit", value )
-	assert( value:isa(TextFieldStyle) )
-	--==--
-	self._inherit = value
-
-	self._background.inherit = value.background
-	self._hint.inherit = value.hint
-	self._display.inherit = value.display
-end
-
-
---== backgroundStyle
-
-function TextFieldStyle.__getters:backgroundStyle()
-	-- print( "TextFieldStyle.__getters:backgroundStyle" )
-	local value = self._bgStyle
-	if value==nil and self._inherit then
-		value = self._inherit.backgroundStyle
-	end
-	return value
-end
-function TextFieldStyle.__setters:backgroundStyle( value )
-	-- print( "TextFieldStyle.__setters:backgroundStyle", value )
-	assert( (value==nil and self._inherit) or type(value)=='string' )
-	--==--
-	if value == self._bgStyle then return end
-	self._bgStyle = value
-end
-
---== inputType
-
-function TextFieldStyle.__getters:inputType()
-	-- print( "TextFieldStyle.__getters:inputType" )
-	local value = self._inputType
-	if value==nil and self._inherit then
-		value = self._inherit.inputType
-	end
-	return value
-end
-function TextFieldStyle.__setters:inputType( value )
-	-- print( "TextFieldStyle.__setters:inputType", value )
-	assert( (value==nil and self._inherit) or type(value)=='string' )
-	--==--
-	if value == self._inputType then return end
-	self._inputType = value
-end
-
---== returnKey
-
-function TextFieldStyle.__getters:returnKey()
-	-- print( "TextFieldStyle.__getters:returnKey" )
-	local value = self._returnKey
-	if value==nil and self._inherit then
-		value = self._inherit.returnKey
-	end
-	return value
-end
-function TextFieldStyle.__setters:returnKey( value )
-	-- print( "TextFieldStyle.__setters:returnKey", value )
-	assert( (value==nil and self._inherit) or type(value)=='string' )
-	--==--
-	if value == self._inputType then return end
-	self._returnKey = value
-end
-
-
-
---== other styles
+--======================================================--
+-- Access to sub-styles
 
 function TextFieldStyle.__getters:background()
 	-- print( 'TextFieldStyle.__getters:background', self._background )
@@ -399,6 +336,81 @@ function TextFieldStyle.__setters:display( data )
 end
 
 
+--======================================================--
+-- Access to style properties
+
+--== backgroundStyle
+
+function TextFieldStyle.__getters:backgroundStyle()
+	-- print( "TextFieldStyle.__getters:backgroundStyle" )
+	local value = self._bgStyle
+	if value==nil and self._inherit then
+		value = self._inherit.backgroundStyle
+	end
+	return value
+end
+function TextFieldStyle.__setters:backgroundStyle( value )
+	-- print( "TextFieldStyle.__setters:backgroundStyle", value )
+	assert( (value==nil and self._inherit) or type(value)=='string' )
+	--==--
+	if value == self._bgStyle then return end
+	self._bgStyle = value
+end
+
+--== inputType
+
+function TextFieldStyle.__getters:inputType()
+	-- print( "TextFieldStyle.__getters:inputType" )
+	local value = self._inputType
+	if value==nil and self._inherit then
+		value = self._inherit.inputType
+	end
+	return value
+end
+function TextFieldStyle.__setters:inputType( value )
+	-- print( "TextFieldStyle.__setters:inputType", value )
+	assert( (value==nil and self._inherit) or type(value)=='string' )
+	--==--
+	if value == self._inputType then return end
+	self._inputType = value
+end
+
+--== returnKey
+
+function TextFieldStyle.__getters:returnKey()
+	-- print( "TextFieldStyle.__getters:returnKey" )
+	local value = self._returnKey
+	if value==nil and self._inherit then
+		value = self._inherit.returnKey
+	end
+	return value
+end
+function TextFieldStyle.__setters:returnKey( value )
+	-- print( "TextFieldStyle.__setters:returnKey", value )
+	assert( (value==nil and self._inherit) or type(value)=='string' )
+	--==--
+	if value == self._inputType then return end
+	self._returnKey = value
+end
+
+
+--======================================================--
+-- Misc
+
+--== inherit
+
+function TextFieldStyle.__setters:inherit( value )
+	-- print( "TextFieldStyle.__setters:inherit", value )
+	assert( value:isa(TextFieldStyle) )
+	--==--
+	self._inherit = value
+
+	self._background.inherit = value.background
+	self._hint.inherit = value.hint
+	self._display.inherit = value.display
+end
+
+
 --== updateStyle
 
 -- force is used when making exact copy of data
@@ -450,22 +462,17 @@ function TextFieldStyle:_prepareData( data )
 	-- print("TextFieldStyle:_prepareData", data )
 	if not data then return end
 
-	-- copy down data elements to subviews
-	local src, dest = data, data.view
-	TextFieldStyle.pushMissingProperties( src, dest )
-
-	return data
+	return TextFieldStyle.pushMissingProperties( data )
 end
-
 
 function TextFieldStyle:_checkChildren()
 	-- print( "TextFieldStyle:_checkChildren" )
+
 	-- using setters !!!
 	if self._background==nil then self.background=nil end
 	if self._hint==nil then self.hint=nil end
 	if self._display==nil then self.display=nil end
 end
-
 
 function TextFieldStyle:_checkProperties()
 	-- print( "TextFieldStyle:_checkProperties" )

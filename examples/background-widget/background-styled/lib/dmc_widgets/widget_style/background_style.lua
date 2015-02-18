@@ -200,16 +200,20 @@ end
 function BackgroundBase._setDefaults()
 	-- print( "BackgroundBase._setDefaults" )
 
-	local src = BackgroundBase.DEFAULT
-	local StyleClass, dest
+	local defaults = BackgroundBase.DEFAULT
 
-	-- copy items to substyle 'view'
-	dest = src[ BackgroundBase.VIEW_KEY ]
-	StyleClass = StyleFactory.getClass( dest.type )
-	StyleClass.copyMissingProperties( dest, src )
+	defaults = BackgroundBase.pushMissingProperties( defaults )
+
+	-- local src = BackgroundBase.DEFAULT
+	-- local StyleClass, dest
+
+	-- -- copy items to substyle 'view'
+	-- dest = src[ BackgroundBase.VIEW_KEY ]
+	-- StyleClass = StyleFactory.getClass( dest.type )
+	-- StyleClass.copyMissingProperties( dest, src )
 
 	local style = BackgroundBase:new{
-		data=src
+		data=defaults
 	}
 	BackgroundBase.__base_style__ = style
 end
@@ -232,6 +236,21 @@ function BackgroundBase.copyMissingProperties( dest, src )
 	if dest.fillColor==nil then dest.fillColor=src.fillColor end
 	if dest.strokeColor==nil then dest.strokeColor=src.strokeColor end
 	if dest.strokeWidth==nil then dest.strokeWidth=src.strokeWidth end
+end
+
+
+function BackgroundBase.pushMissingProperties( src )
+	-- print("BackgroundBase.pushMissingProperties", src )
+	if not src then return end
+
+	local StyleClass, dest
+
+	-- copy items to substyle 'view'
+	dest = src[ BackgroundBase.VIEW_KEY ]
+	StyleClass = StyleFactory.getClass( dest.type )
+	StyleClass.copyMissingProperties( dest, src )
+
+	return src
 end
 
 
@@ -354,28 +373,29 @@ function BackgroundBase.__setters:inherit( value )
 	self._view.inherit = value.view
 end
 
+
 --== updateStyle
 
 -- force is used when making exact copy of data
 --
-function BackgroundBase:updateStyle( info, params )
-	-- print( "BackgroundBase:updateStyle", info )
+function BackgroundBase:updateStyle( src, params )
+	-- print( "BackgroundBase:updateStyle", src )
 	params = params or {}
 	if params.force==nil then params.force=true end
 	--==--
 	local force=params.force
 
-	if info.debugOn~=nil or force then self.debugOn=info.debugOn end
+	if src.debugOn~=nil or force then self.debugOn=src.debugOn end
 
-	if info.width~=nil or force then self.width=info.width end
-	if info.height~=nil or force then self.height=info.height end
+	if src.width~=nil or force then self.width=src.width end
+	if src.height~=nil or force then self.height=src.height end
 
-	if info.anchorX~=nil or force then self.anchorX=info.anchorX end
-	if info.anchorY~=nil or force then self.anchorY=info.anchorY end
-	if info.hitMarginX~=nil or force then self.hitMarginX=info.hitMarginX end
-	if info.hitMarginY~=nil or force then self.hitMarginY=info.hitMarginY end
-	if info.isHitActive~=nil or force then self.isHitActive=info.isHitActive end
-	if info.isHitTestable~=nil or force then self.isHitTestable=info.isHitTestable end
+	if src.anchorX~=nil or force then self.anchorX=src.anchorX end
+	if src.anchorY~=nil or force then self.anchorY=src.anchorY end
+	if src.hitMarginX~=nil or force then self.hitMarginX=src.hitMarginX end
+	if src.hitMarginY~=nil or force then self.hitMarginY=src.hitMarginY end
+	if src.isHitActive~=nil or force then self.isHitActive=src.isHitActive end
+	if src.isHitTestable~=nil or force then self.isHitTestable=src.isHitTestable end
 end
 
 
@@ -388,12 +408,7 @@ function BackgroundBase:_prepareData( data )
 	-- print("BackgroundBase:_prepareData", data )
 	if not data then return end
 
-	-- copy down data elements to subviews
-	local src, dest = data, data.view
-	local StyleClass = StyleFactory.getClass( dest.type )
-	StyleClass.copyMissingProperties( dest, src )
-
-	return data
+	return BackgroundBase.pushMissingProperties( data )
 end
 
 function BackgroundBase:_checkChildren()
@@ -405,7 +420,6 @@ end
 
 function BackgroundBase:_checkProperties()
 	-- print( "BackgroundBase._checkProperties" )
-
 
 	BaseStyle._checkProperties( self )
 

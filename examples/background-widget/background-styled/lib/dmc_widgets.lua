@@ -149,7 +149,7 @@ local loadTextSupport, loadTextFieldSupport
 
 
 loadBackgroundSupport = function()
-	print("loadBackgroundSupport")
+	-- print("loadBackgroundSupport")
 
 	local Background = require( PATH .. '.' .. 'widget_background' )
 	local BackgroundStyle = require( PATH .. '.' .. 'widget_style.background_style' )
@@ -190,7 +190,7 @@ end
 
 
 loadButtonSupport = function()
-	print("loadButtonSupport")
+	-- print("loadButtonSupport")
 	local Button = require( PATH .. '.' .. 'widget_button' )
 	local ButtonStyle = require( PATH .. '.' .. 'theme_manager.button_style' )
 
@@ -210,24 +210,24 @@ end
 function Widget.newPushButton( options )
 	if not Widget.Button then loadButtonSupport() end
 	options = options or {}
-	--==--
 	options.action = Widget.Button.PushButton.TYPE
+	--==--
 	return Widget.Button.create( options )
 end
 
 function Widget.newRadioButton( options )
 	if not Widget.Button then loadButtonSupport() end
 	options = options or {}
-	--==--
 	options.action = Widget.Button.RadioButton.TYPE
+	--==--
 	return Widget.Button.create( options )
 end
 
 function Widget.newToggleButton( options )
 	if not Widget.Button then loadButtonSupport() end
 	options = options or {}
-	--==--
 	options.action = Widget.Button.ToggleButton.TYPE
+	--==--
 	return Widget.Button.create( options )
 end
 

@@ -82,18 +82,17 @@ setupBackground()
 
 local st1, bw1
 
+bw1 = Widgets.newBackground{
+}
+bw1.x, bw1.y = H_CENTER, V_CENTER-100
 
--- bw1 = Widgets.newBackground{
--- }
--- bw1.x, bw1.y = H_CENTER, V_CENTER-100
+bw1:setViewFillColor( 1, 1, 0 )
+bw1:setViewStrokeColor( 1, 0, 0 )
+bw1.viewStrokeWidth = 5
 
--- bw1:setViewFillColor( 1, 1, 0 )
--- bw1:setViewStrokeColor( 1, 0, 0 )
--- bw1.viewStrokeWidth = 5
-
--- timer.performWithDelay( 1000, function()
--- 	bw1.y=100
--- end)
+timer.performWithDelay( 1000, function()
+	bw1.y=100
+end)
 
 
 --======================================================--
@@ -105,11 +104,11 @@ st2 = Widgets.newBackgroundStyle{
 	debugOn=true,
 
 	width = 125,
-	height = 100,
+	height = 50,
 
-	anchorX=0,
+	anchorX=1,
 	anchorY=1,
-	hitMarginX=5,
+	hitMarginX=0,
 	hitMarginY=20,
 
 	view={
@@ -126,26 +125,24 @@ bw2 = Widgets.newBackground{
 -- bw2.x, bw2.y = H_CENTER-100, V_CENTER+100
 bw2.x, bw2.y = H_CENTER, V_CENTER
 
--- bw2:setAnchor( {1,1})
+bw2:setAnchor( {1,1})
 
--- bw2.width=124
+bw2.width=124
 
--- timer.performWithDelay( 1000, function()
--- 	print( "\n\nUpdate Properties" )
--- 	print( bw2)
--- 	bw2:setAnchor( {0,0})
--- 	bw2:setAnchor( {0.5,0.5})
--- 	bw2:setAnchor( {1,1})
--- 	bw2.viewStrokeWidth = 1
--- 	bw2:setViewFillColor( 1,0,0,1)
--- 	bw2:setViewStrokeColor( 0,1,0,1)
+timer.performWithDelay( 1000, function()
+	bw2:setAnchor( {0,0})
+	bw2:setAnchor( {0.5,0.5})
+	bw2:setAnchor( {1,1})
+	bw2.viewStrokeWidth = 1
+	bw2:setViewFillColor( 1,0,0,1)
+	bw2:setViewStrokeColor( 0,1,0,1)
 
--- 	-- bw2.width=100
--- 	-- bw2.height=40
+	-- bw2.width=100
+	-- bw2.height=40
 
--- 	bw2.x, bw2.y = H_CENTER, V_CENTER
+	bw2.x, bw2.y = H_CENTER, V_CENTER
 
--- end)
+end)
 
 
 
