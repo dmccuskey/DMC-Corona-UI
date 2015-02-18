@@ -319,6 +319,14 @@ function Background.__setters:height( value )
 end
 
 
+function Background:clearStyle()
+	local style=self.curr_style
+	style:clearProperties()
+	style.view:clearProperties()
+end
+
+
+
 --== anchorX
 
 function Background.__getters:anchorX()

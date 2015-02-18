@@ -55,16 +55,32 @@ local function setupBackground()
 	o.x, o.y = H_CENTER, V_CENTER
 end
 
-local function onPress_handler( event )
-	print( 'Main: onPress_handler: id', event.id )
+
+local function widgetOnPropertyEvent_handler( event )
+	print( 'Main: widgetOnPropertyEvent_handler', event.id, event.phase )
+	local etype= event.type
+	local property= event.property
+	local value = event.value
+
+	print( "Widget Property Changed", etype, property, value )
+
 end
 
-local function onRelease_handler( event )
-	print( 'Main: onRelease_handler: id', event.id )
-end
+-- handles button-type taps
+--
+local function widgetEvent_handler( event )
+	print( 'Main: widgetEvent_handler', event.type )
+	local etype= event.type
+	local target=event.target
 
-local function onEvent_handler( event )
-	print( 'Main: onEvent_handler: id', event.id )
+	if etype==target.PRESSED then
+		print( "Background: touch started" )
+	elseif etype==target.MOVED then
+		print( "Background: moved ", event.isWithinBounds )
+	elseif etype==target.RELEASED then
+		print( "Background: touch ended" )
+	end
+
 end
 
 
@@ -80,132 +96,174 @@ setupBackground()
 --======================================================--
 --== create background, default style
 
-local st1, bw1
+function run_example1()
 
--- bw1 = Widgets.newBackground{
--- }
--- bw1.x, bw1.y = H_CENTER, V_CENTER-100
+	local bw1
 
--- bw1:setViewFillColor( 1, 1, 0 )
--- bw1:setViewStrokeColor( 1, 0, 0 )
--- bw1.viewStrokeWidth = 5
+	bw1 = Widgets.newBackground{}
+	bw1.x, bw1.y = H_CENTER, V_CENTER-100
 
--- timer.performWithDelay( 1000, function()
--- 	bw1.y=100
--- end)
+	bw1:setViewFillColor( 1, 1, 0 )
+	bw1:setViewStrokeColor( 1, 0, 0 )
+	bw1.viewStrokeWidth = 5
+
+	timer.performWithDelay( 1000, function()
+		bw1.y=100
+	end)
+
+end
+
+-- run_example1()
 
 
 --======================================================--
 --== create background rectangle style
 
-local st2, bw2
+function run_example2()
 
-st2 = Widgets.newBackgroundStyle{
-	debugOn=true,
+	local st2, bw2
 
-	width = 125,
-	height = 50,
+	st2 = Widgets.newBackgroundStyle{
+		debugOn=true,
 
-	anchorX=0.5,
-	anchorY=0.5,
-	hitMarginX=0,
-	hitMarginY=20,
+		width = 125,
+		height = 50,
 
-	view={
-		type='rectangle',
-		fillColor={ 0,1,0.5,0.5},
-		strokeWidth=4,
-		strokeColor={ 0,0,0,1 },
+		anchorX=0.5,
+		anchorY=0.5,
+		hitMarginX=0,
+		hitMarginY=20,
+
+		view={
+			type='rectangle',
+			fillColor={ 0,1,0.5,0.5},
+			strokeWidth=4,
+			strokeColor={ 0,0,0,1 },
+		}
 	}
-}
 
--- bw2 = Widgets.newBackground{
--- 	style=st2
--- }
--- -- bw2.x, bw2.y = H_CENTER-100, V_CENTER+100
--- bw2.x, bw2.y = H_CENTER, V_CENTER
+	-- apply style to widgete
 
--- bw2:setAnchor( {1,1})
+	bw2 = Widgets.newBackground{
+		style=st2
+	}
 
--- bw2.width=124
+	-- make some updates
 
--- timer.performWithDelay( 1000, function()
--- 	bw2:setAnchor( {0,0})
--- 	bw2:setAnchor( {0.5,0.5})
--- 	bw2:setAnchor( {1,1})
--- 	bw2.viewStrokeWidth = 1
--- 	bw2:setViewFillColor( 1,0,0,1)
--- 	bw2:setViewStrokeColor( 0,1,0,1)
+	-- bw2.x, bw2.y = H_CENTER-100, V_CENTER+100
+	bw2.x, bw2.y = H_CENTER, V_CENTER
 
--- 	-- bw2.width=100
--- 	-- bw2.height=40
+	bw2:setAnchor( {1,1})
+	bw2.width=124
 
--- 	bw2.x, bw2.y = H_CENTER, V_CENTER
 
--- end)
+	-- make more updates after time
 
+	timer.performWithDelay( 1000, function()
+		bw2:setAnchor( {0,0} )
+		bw2:setAnchor( {0.5,0.5} )
+		bw2:setAnchor( {1,1} )
+		bw2.viewStrokeWidth = 1
+		bw2:setViewFillColor( 1,0,0,1 )
+		bw2:setViewStrokeColor( 0,1,0,1 )
+
+		-- bw2.width=100
+		-- bw2.height=40
+
+		bw2.x, bw2.y = H_CENTER, V_CENTER
+
+	end)
+
+end
+
+-- run_example2()
 
 
 --======================================================--
 --== create background rounded background style
 
-local st3, bw3
+function run_example3()
 
-st3 = Widgets.newBackgroundStyle{
-	debugOn=true,
+	local st2, st3, bw3
 
-	width = 90,
-	height = 50,
+	st2 = Widgets.newBackgroundStyle{
+		debugOn=true,
 
-	-- anchorX=1,
-	-- anchorY=1,
+		width = 125,
+		height = 50,
 
-	view = {
-		type='rounded',
-		cornerRadius=4,
-		fillColor={ 0,1,0.5,0.5},
-		strokeWidth=4,
-		strokeColor={ 0,0,0,1 },
+		hitMarginX=0,
+		hitMarginY=20,
+
+		anchorX=1,
+		anchorY=1,
+
+		view={
+			type='rectangle',
+			fillColor={ 0,1,0.5,0.5},
+			strokeWidth=4,
+			strokeColor={ 0,0,0,1 },
+		}
 	}
-}
+
+	st3 = Widgets.newBackgroundStyle{
+		debugOn=true,
+
+		width = 125,
+		height = 50,
+
+		anchorX=1,
+		anchorY=1,
+
+		view = {
+			type='rounded',
+			cornerRadius=4,
+			fillColor={ 0,1,0.5,0.5},
+			strokeWidth=4,
+			strokeColor={ 0,0,0,1 },
+		}
+	}
 
 
-bw3 = Widgets.newBackground{
-	style=st3
-}
--- bw3.x, bw3.y = H_CENTER-100, V_CENTER+100
-bw3.x, bw3.y = H_CENTER, V_CENTER
+	bw3 = Widgets.newBackground{
+		style=st3
+	}
+	-- bw3.x, bw3.y = H_CENTER-100, V_CENTER+100
+	bw3.x, bw3.y = H_CENTER, V_CENTER
 
--- bw3:setAnchor( {1,1})
+	-- bw3:setAnchor( {1,1})
+	-- bw3.width=124
 
--- bw3.width=124
+	transition.to( bw3, {time=5000, x=10})
 
--- timer.performWithDelay( 1000, function()
--- 	bw3:setAnchor( {0,0})
--- 	-- bw3:setAnchor( {0.5,0.5})
--- 	-- bw3:setAnchor( {1,1})
--- 	-- bw3.viewStrokeWidth = 1
--- 	bw3:setViewFillColor( 1,0,0,1)
--- 	bw3:setViewStrokeColor( 0,1,0,1)
--- 	bw3.cornerRadius = 20
+	timer.performWithDelay( 1000, function()
+		bw3:setAnchor( {0,0})
+		-- bw3:setAnchor( {0.5,0.5})
+		-- bw3:setAnchor( {1,1})
+		-- bw3.viewStrokeWidth = 1
+		bw3:setViewFillColor( 1,0,0,1)
+		bw3:setViewStrokeColor( 0,1,0,1)
+		bw3.cornerRadius = 20
 
--- 	bw3.width=100
--- 	bw3.height=40
+		-- bw3.width=100
+		-- bw3.height=40
 
--- 	bw3.x, bw3.y = H_CENTER, V_CENTER-100
+		-- bw3.x, bw3.y = H_CENTER, V_CENTER-100
 
--- end)
+	end)
 
-transition.to( bw3, {time=5000, x=10})
-
-timer.performWithDelay( 1500, function()
-	print("\n\nUpdate New Style")
-	bw3.style = st2
-end)
+	timer.performWithDelay( 1500, function()
+		print("\n\nUpdate New Style")
+		bw3.style = st2
+	end)
 
 
-timer.performWithDelay( 3000, function()
-	print("\n\nUpdate New Style")
-	bw3.style = st3
-end)
+	timer.performWithDelay( 3000, function()
+		print("\n\nUpdate New Style")
+		bw3.style = st3
+	end)
+
+end
+
+run_example3()
 

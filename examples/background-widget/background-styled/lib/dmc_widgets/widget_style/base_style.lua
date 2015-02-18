@@ -96,6 +96,8 @@ Style.__base_style__ = nil  -- <instance of class>
 --
 Style.EXCLUDE_PROPERTY_CHECK = {} -- d
 
+Style._STYLE_DEFAULTS = nil
+
 --== Event Constants
 
 Style.EVENT = 'style-event'
@@ -142,7 +144,7 @@ function Style:__initComplete__()
 
 	self:_parseData( data )
 	self:_checkChildren()
-	self:_checkProperties()
+	assert( self:_checkProperties(), "Style: missing properties"..tostring(self.class) )
 end
 
 -- End: Setup DMC Objects
@@ -190,14 +192,14 @@ end
 
 -- this would clear any local modifications on style class
 --
-function Style:clear()
+function Style:clearProperties()
 	self:updateStyle( {}, {force=true} )
 	self:_dispatchResetEvent()
 end
 
 function Style:getDefaultStyles()
 	-- TODO: make a copy
-	return self.DEFAULT
+	return self._STYLE_DEFAULTS
 end
 
 
@@ -615,8 +617,13 @@ end
 -- ability to check properties to make sure everything went well
 --
 function Style:_checkProperties()
-	assert( self.name, "Style: requires property 'name'" )
-	assert( self.debugOn~=nil , "Style: requires a property 'debugOn'" )
+	-- print( "Style:_checkProperties" )
+	local emsg = "Style: requires property '%s'"
+	local is_valid = true
+
+	if not self.name then print(sformat(emsg,'name')) ; is_valid=false end
+	if self.debugOn==nil then print(sformat(emsg,'debugOn')) ; is_valid=false end
+	return is_valid
 end
 
 -- _parseData()
@@ -628,7 +635,7 @@ function Style:_parseData( data )
 	if data==nil then return end
 
 	-- prep tables of things to exclude, etc
-	local DEF = self.DEFAULT
+	local DEF = self._STYLE_DEFAULTS
 	local EXCL = self.EXCLUDE_PROPERTY_CHECK
 
 	for k,v in pairs( data ) do

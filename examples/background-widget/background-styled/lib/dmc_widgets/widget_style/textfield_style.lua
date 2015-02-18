@@ -100,7 +100,7 @@ TextFieldStyle.HINT_NAME = 'textfield-hint'
 TextFieldStyle.DISPLAY_KEY = 'display'
 TextFieldStyle.DISPLAY_NAME = 'textfield-display'
 
-TextFieldStyle.DEFAULT = {
+TextFieldStyle._STYLE_DEFAULTS = {
 	name='textfield-default-style',
 	debugOn=false,
 
@@ -233,7 +233,7 @@ end
 function TextFieldStyle._setDefaults()
 	-- print( "TextFieldStyle._setDefaults" )
 
-	local defaults = TextFieldStyle.DEFAULT
+	local defaults = TextFieldStyle._STYLE_DEFAULTS
 
 	defaults = TextFieldStyle.pushMissingProperties( defaults )
 
@@ -479,34 +479,37 @@ end
 
 function TextFieldStyle:_checkProperties()
 	-- print( "TextFieldStyle:_checkProperties" )
-	BaseStyle._checkProperties( self )
+	local emsg = "Style: requires property '%s'"
+	local is_valid = BaseStyle._checkProperties( self )
 
 	-- TODO: add more tests
 
-	assert( self.width, "Style: requires 'width'" )
-	assert( self.height, "Style: requires 'height'" )
+	if not self.width then print(sformat(emsg,'width')) ; is_valid=false end
+	if not self.height then print(sformat(emsg,'height')) ; is_valid=false end
 
-	assert( self.align, "Style: requires 'align'" )
-	assert( self.anchorY, "Style: requires 'anchory'" )
-	assert( self.anchorX, "Style: requires 'anchorX'" )
-	assert( self.backgroundStyle, "Style: requires 'backgroundStyle'" )
-	assert( self.inputType, "Style: requires 'inputType'" )
-	assert( self.marginX, "Style: requires 'marginX'" )
-	assert( self.marginY, "Style: requires 'marginY'" )
-	assert( self.returnKey, "Style: requires 'returnKey'" )
+	if not self.align then print(sformat(emsg,'align')) ; is_valid=false end
+	if not self.anchorX then print(sformat(emsg,'anchorX')) ; is_valid=false end
+	if not self.anchorY then print(sformat(emsg,'anchorY')) ; is_valid=false end
+	if not self.backgroundStyle then print(sformat(emsg,'backgroundStyle')) ; is_valid=false end
+	if not self.inputType then print(sformat(emsg,'inputType')) ; is_valid=false end
+	if not self.marginX then print(sformat(emsg,'marginX')) ; is_valid=false end
+	if not self.marginY then print(sformat(emsg,'marginY')) ; is_valid=false end
+	if not self.returnKey then print(sformat(emsg,'returnKey')) ; is_valid=false end
 
-	assert( self._background.strokeWidth, "Style: requires 'background.strokeWidth'" )
-	assert( self._background.fillColor, "Style: requires 'background.fillColor'" )
-	assert( self._background.strokeColor, "Style: requires 'background.strokeColor'" )
+	-- check sub-styles
 
-	assert( self.hint.font, "Style: requires 'hint.font'" )
-	assert( self.hint.fontSize, "Style: requires 'hint.fontSize'" )
-	assert( self.hint.textColor, "Style: requires 'hint.textColor'" )
+	local StyleClass
 
-	assert( self.display.font, "Style: requires 'display.font'" )
-	assert( self.display.fontSize, "Style: requires 'display.fontSize'" )
-	assert( self.display.textColor, "Style: requires 'display.textColor'" )
+	StyleClass = self._background.class
+	if not StyleClass._checkProperties( self._background ) then is_valid=false end
 
+	StyleClass = self._hint.class
+	if not StyleClass._checkProperties( self._hint ) then is_valid=false end
+
+	StyleClass = self._display.class
+	if not StyleClass._checkProperties( self._display ) then is_valid=false end
+
+	return is_valid
 end
 
 

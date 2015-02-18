@@ -101,7 +101,7 @@ BackgroundBase.__base_style__ = nil
 BackgroundBase.VIEW_KEY = 'view'
 BackgroundBase.VIEW_NAME = 'background-view'
 
-BackgroundBase.DEFAULT = {
+BackgroundBase._STYLE_DEFAULTS = {
 	name='background-default-style',
 	debugOn=false,
 
@@ -125,9 +125,9 @@ BackgroundBase.DEFAULT = {
 		anchorY
 		--]]
 		type='rectangle',
-		fillColor={0.5,0.5,0.2,1},
-		strokeWidth=2,
-		strokeColor={1,0,0,0},
+		fillColor={1,1,1,1},
+		strokeWidth=1,
+		strokeColor={0,0,0,1},
 	},
 
 }
@@ -211,7 +211,7 @@ end
 function BackgroundBase._setDefaults()
 	-- print( "BackgroundBase._setDefaults" )
 
-	local defaults = BackgroundBase.DEFAULT
+	local defaults = BackgroundBase._STYLE_DEFAULTS
 
 	defaults = BackgroundBase.pushMissingProperties( defaults )
 
@@ -251,12 +251,6 @@ function BackgroundBase.pushMissingProperties( src )
 
 	-- copy items to substyle 'view'
 	dest = src[ BackgroundBase.VIEW_KEY ]
-	-- if no property 'view', then choose default
-	if type(dest)~='table' then
-		print( "[WARNING] Defaulting to Rectangle style", type(dest) )
-		dest = { type=StyleFactory.Rectangle.TYPE }
-		src[ BackgroundBase.VIEW_KEY ] = dest
-	end
 	StyleClass = StyleFactory.getClass( dest.type )
 	StyleClass.copyMissingProperties( dest, src )
 
@@ -379,7 +373,7 @@ function BackgroundBase.__setters:inherit( value )
 	assert( value:isa(BackgroundBase) )
 	--==--
 	self._inherit = value
-
+	assert( value.view )
 	self._view.inherit = value.view
 end
 
@@ -457,7 +451,7 @@ end
 -- we could have nil, Lua structure, or Instance
 --
 function BackgroundBase:_prepareData( data )
-	-- print("BackgroundBase:_prepareData", data )
+	-- print("BackgroundBase:_prepareData", data, self )
 	if not data then return end
 
 	if data.isa and data:isa(BackgroundBase) then
@@ -465,6 +459,11 @@ function BackgroundBase:_prepareData( data )
 		data = { view=data.view.type }
 	else
 		-- Lua structure
+		local key = BackgroundBase.VIEW_KEY
+		if data[key]==nil then
+			data[key] = { type=StyleFactory.Rectangle.TYPE }
+			print( "[WARNING] Defaulting to Rectangle style", type(data[key].type) )
+		end
 		data = BackgroundBase.pushMissingProperties( data )
 	end
 	return data
@@ -479,20 +478,27 @@ end
 
 function BackgroundBase:_checkProperties()
 	-- print( "BackgroundBase._checkProperties" )
+	local emsg = "Style: requires property '%s'"
+	local is_valid = BaseStyle._checkProperties( self )
 
-	BaseStyle._checkProperties( self )
+	if not self.width then print(sformat(emsg,'width')) ; is_valid=false end
+	if not self.height then print(sformat(emsg,'height')) ; is_valid=false end
 
-	assert( self.width, "Style: requires property 'width'" )
-	assert( self.height, "Style: requires property 'height'" )
+	if not self.anchorX then print(sformat(emsg,'anchorX')) ; is_valid=false end
+	if not self.anchorY then print(sformat(emsg,'anchorY')) ; is_valid=false end
+	if self.hitMarginX<0 then print(sformat(emsg,'hitMarginX')) ; is_valid=false end
+	if self.hitMarginY<0 then print(sformat(emsg,'hitMarginY')) ; is_valid=false end
+	if not type(self.isHitActive)=='boolean' then print(sformat(emsg,'isHitActive')) ; is_valid=false end
+	if not type(self.isHitTestable)=='boolean' then print(sformat(emsg,'isHitTestable')) ; is_valid=false end
 
-	assert( self.anchorX, "Style: requires property 'anchorX'" )
-	assert( self.anchorY, "Style: requires property 'anchory'" )
-	assert( self.hitMarginX>=0, "Style: requires property 'hitMarginX'" )
-	assert( self.hitMarginY>=0, "Style: requires property 'hitMarginY'" )
-	assert( self.isHitActive~=nil, "Style: requires property 'isHitActive'" )
-	assert( self.isHitTestable~=nil, "Style: requires property 'isHitTestable'" )
+	-- check sub-styles ??
 
-	-- TODO: add substyle check
+	local StyleClass
+
+	StyleClass = self._view.class
+	-- if not StyleClass._checkProperties( self._view ) then is_valid=false end
+
+	return is_valid
 end
 
 
