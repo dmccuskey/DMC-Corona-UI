@@ -38,6 +38,29 @@ local theme, style
 -- Support Functions
 
 
+-- Setup Visual Screen Items
+--
+local function setupBackground()
+	print( 'Main: setupBackground' )
+	local width, height = 100, 36
+	local o
+
+	o = display.newRect(0,0,W,H)
+	o:setFillColor(0.5,0.5,0.5)
+	o.x, o.y = H_CENTER, V_CENTER
+
+	o = display.newRect(0,0,width+4,height+4)
+	o:setStrokeColor(0,0,0)
+	o.strokeWidth=2
+	o.x, o.y = H_CENTER, V_CENTER
+
+	o = display.newRect( 0,0,10,10)
+	o:setFillColor(1,0,0)
+	o.x, o.y = H_CENTER, V_CENTER
+end
+
+
+
 local function widgetOnPropertyEvent_handler( event )
 	print( 'Main: widgetOnPropertyEvent_handler', event.id, event.phase )
 	local etype= event.type
@@ -51,12 +74,14 @@ end
 -- handles button-type taps
 --
 local function widgetEvent_handler( event )
-	-- print( 'Main: widgetEvent_handler', event.type )
+	print( 'Main: widgetEvent_handler', event.type )
 	local etype= event.type
 	local target=event.target
 
 	if etype==target.PRESSED then
 		print( "Background: touch started" )
+	elseif etype==target.MOVED then
+		print( "Background: moved ", event.isWithinBounds )
 	elseif etype==target.RELEASED then
 		print( "Background: touch ended" )
 	end
@@ -69,167 +94,182 @@ end
 --== Main
 --===================================================================--
 
-
-local width, height = 100, 36
-local o
-
---== Setup Visual Screen Items
-
-o = display.newRect(0,0,W,H)
-o:setFillColor(0.5,0.5,0.5)
-o.x, o.y = H_CENTER, V_CENTER
-
-o = display.newRect(0,0,width+4,height+4)
--- o:setFillColor(1,0,0)
-o:setStrokeColor(0,0,0)
-o.strokeWidth=2
-o.x, o.y = H_CENTER, V_CENTER
-
-o = display.newRect( 0,0,10,10)
-o:setFillColor(1,0,0)
-o.x, o.y = H_CENTER, V_CENTER
-
+setupBackground()
 
 
 --======================================================--
 --== create background widget, default style
 
-bg1 = Widgets.newBackground{}
-bg1:addEventListener( bg1.EVENT, widgetEvent_handler )
-bg1.onProperty = widgetOnPropertyEvent_handler
+function run_example1()
 
-bg1.x = H_CENTER
-bg1.y = V_CENTER
+	local bw1 = Widgets.newBackground{}
 
--- bg1:setAnchor( {0,0} )
-bg1:setAnchor( {0.5,0.5} )
--- bg1:setAnchor( {1,1} )
+	bw1:addEventListener( bw1.EVENT, widgetEvent_handler )
+	-- bw1.onProperty = widgetOnPropertyEvent_handler
 
-bg1.y = 400
+	bw1.x = H_CENTER
+	bw1.y = V_CENTER-50
+	bw1.width, bw1.height = 10,10
+	-- bw1:setAnchor( {0,0} )
+	bw1:setAnchor( {0.5,0.5} )
+	-- bw1:setAnchor( {1,1} )
+	bw1:setViewFillColor(1,0,0 )
 
 
-timer.performWithDelay( 1000, function()
-	bg1.style=nil -- shouldn't change, already default
-end)
+	timer.performWithDelay( 1000, function()
+		bw1.style=nil -- shouldn't change, already default
+	end)
+
+	timer.performWithDelay( 2000, function()
+		bw1:clearStyle() -- clear our changes
+	end)
+
+end
+
+-- run_example1()
 
 
 --======================================================--
 --== create background, inline style
 
-bg2 = Widgets.newBackground{
-	x=100,
-	y=100,
+function run_example2()
+	local bw2 = Widgets.newBackground{
+		x=100,
+		y=100,
 
-	style={
-		width=100,
-		height=20,
+		style={
 
-		anchorX=1,
-		anchorY=0.5,
-		strokeWidth=5,
-		strokeColor={0,0,1},
-		fillColor={0.5,1,0.5,0.5}
+			width=100,
+			height=20,
+
+			anchorX=1,
+			anchorY=0.5,
+
+			view={
+				type='rectangle',
+				strokeWidth=5,
+				strokeColor={0,0,1},
+				fillColor={0.5,1,0.5,0.5}
+			}
+		}
 	}
-}
-bg2:addEventListener( bg2.EVENT, widgetEvent_handler )
-bg2.onProperty = widgetOnPropertyEvent_handler
+	bw2:addEventListener( bw2.EVENT, widgetEvent_handler )
+	-- bw2.onProperty = widgetOnPropertyEvent_handler
+
+	timer.performWithDelay( 1000, function()
+		print( "\n\nUpdate properties" )
+
+		bw2.x = H_CENTER
+		bw2.y = V_CENTER
+
+		bw2.width=220
+		bw2.height=70
+
+		bw2:setAnchor( {0,1} )
+
+		bw2:setFillColor( 1,0.5,0.2,0.5 )
+		bw2:setStrokeColor( 2,0,0,1 )
+		bw2.strokeWidth = 1
+	end)
 
 
-timer.performWithDelay( 1000, function()
-	print( "\n\nUpdate properties" )
+	timer.performWithDelay( 2000, function()
+		print( "\n\nUpdate properties" )
+		bw2.style=nil
+	end)
 
-	bg2.x = H_CENTER
-	bg2.y = V_CENTER
+end
 
-	bg2.width=300
-	bg2.height=70
-
-	bg2:setAnchor( {0,1} )
-
-	bg2:setFillColor( 1,0.5,0.2,0.5 )
-	bg2:setStrokeColor( 2,0,0,1 )
-	bg2.strokeWidth = 1
-end)
-
-
-timer.performWithDelay( 2000, function()
-	print( "\n\nUpdate properties" )
-	bg2.style=nil
-end)
+-- run_example2()
 
 
 --======================================================--
 --== Create Style, add to Widget
 
--- create a style
+function run_example3()
 
-style = Widgets.newBackgroundStyle{
-	name='my-background-style',
+	local st3, bw3
 
-	width=20,
-	height=20,
+	st3 = Widgets.newBackgroundStyle{
+		name='my-background-style',
 
-	anchorX=1,
-	anchorY=0.5,
-	strokeWidth=5,
-	strokeColor={0,0,0},
-	fillColor={1,1,0.5,0.5}
-}
+		width=150,
+		height=70,
 
--- add to widget
+		anchorX=1,
+		anchorY=0.5,
 
-bg3 = Widgets.newBackground{
-	x=H_CENTER,
-	y=50,
-	style=style
-}
-bg3:addEventListener( bg3.EVENT, widgetEvent_handler )
-bg3.onProperty = widgetOnPropertyEvent_handler
+		view={
+			type='rounded',
+			-- cornerRadius=10,
+			strokeWidth=5,
+			strokeColor={0,0,0},
+			fillColor={1,1,0.5,0.5}
+		}
+
+	}
+
+	-- add style to widget
+
+	bw3 = Widgets.newBackground{
+		x=H_CENTER,
+		y=50,
+		style=st3
+	}
+	bw3:addEventListener( bw3.EVENT, widgetEvent_handler )
+	-- bw3.onProperty = widgetOnPropertyEvent_handler
 
 
-timer.performWithDelay( 2000, function()
-	print( "\n\nUpdate properties" )
-	bg3.style=nil
-	bg3.y=100
-	bg3:setFillColor( 0.7, 0.5, 0.6, 1)
-end)
+	timer.performWithDelay( 2000, function()
+		print( "\n\nUpdate properties" )
+		bw3.style=nil
+		bw3.y=100
+		bw3:setViewFillColor( 0.7, 0.5, 0.6, 1)
+	end)
+
+end
+
+-- run_example3()
 
 
 --======================================================--
 --== create background widget, test hit area
 
-bg4 = Widgets.newBackground{}
-bg4:addEventListener( bg4.EVENT, widgetEvent_handler )
+function run_example4()
 
-bg4.x = H_CENTER
-bg4.y = V_CENTER-100
+	local bw4 = Widgets.newBackground{}
+	bw4:addEventListener( bw4.EVENT, widgetEvent_handler )
 
-bg4:setFillColor( 0.2,0.6,1, 0.5 )
+	bw4.x = H_CENTER
+	bw4.y = V_CENTER-100
 
-bg4:setAnchor( {0,0} )
--- bg4:setAnchor( {0.5,0.5} )
--- bg4:setAnchor( {1,1} )
+	bw4:setFillColor( 0.2,0.6,1, 0.5 )
 
-bg4.hitMarginX=5
-bg4.hitMarginY=10
--- bg4:setHitMargin( {0,8} )
+	bw4:setAnchor( {0,0} )
+	bw4:setAnchor( {0.5,0.5} )
+	-- bw4:setAnchor( {1,1} )
 
-bg4.isHitActive=true
-bg4.debugOn = true
+	bw4.hitMarginX=5
+	bw4.hitMarginY=10
+	-- bw4:setHitMargin( {0,8} )
 
-timer.performWithDelay( 1000, function()
-	print("\n\nUpdate Properties")
-	bg4.hitMarginX=5
-	bg4.hitMarginY=10
-	bg4:setHitMargin( {3,5} )
-end)
+	bw4.isHitActive=true
+	bw4.debugOn = true
 
-
-timer.performWithDelay( 2000, function()
-	bg4.style:clear()
-end)
+	timer.performWithDelay( 1000, function()
+		print("\n\nUpdate Properties")
+		bw4.hitMarginX=5
+		bw4.hitMarginY=10
+		bw4.y = 400
+		bw4:setHitMargin( {3,5} )
+	end)
 
 
+	timer.performWithDelay( 2000, function()
+		bw4:clearStyle()
+	end)
 
+end
 
+run_example4()
 

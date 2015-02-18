@@ -48,9 +48,9 @@ local VERSION = "0.1.0"
 --====================================================================--
 
 
-local dmc_widget_data, dmc_widget_func
-dmc_widget_data = _G.__dmc_widget
-dmc_widget_func = dmc_widget_data.func
+local dmc_widget_data = _G.__dmc_widget
+local dmc_widget_func = dmc_widget_data.func
+local widget_find = dmc_widget_func.find
 
 
 
@@ -64,8 +64,15 @@ dmc_widget_func = dmc_widget_data.func
 --== Imports
 
 
+local LifecycleMixModule = require 'dmc_lifecycle_mix'
 local Objects = require 'dmc_objects'
 local StatesMixModule = require 'dmc_states_mix'
+local ThemeMixModule = require( dmc_widget_func.find( 'widget_theme_mix' ) )
+local Utils = require 'dmc_utils'
+
+-- set later
+local Widgets = nil
+local ThemeMgr = nil
 
 --== Components
 
@@ -80,13 +87,12 @@ local ShapeView = require( dmc_widget_func.find( 'widget_button.view_shape' ) )
 --== Setup, Constants
 
 
-local StatesMix = StatesMixModule.StatesMix
-
--- setup some aliases to make code cleaner
 local newClass = Objects.newClass
 local ComponentBase = Objects.ComponentBase
 
-local LOCAL_DEBUG = false
+local LifecycleMix = LifecycleMixModule.LifecycleMix
+local StatesMix = StatesMixModule.StatesMix
+local ThemeMix = ThemeMixModule.ThemeMix
 
 
 
@@ -124,7 +130,9 @@ end
 --====================================================================--
 
 
-local ButtonBase = newClass( { ComponentBase, StatesMix }, {name="Button Base"}  )
+-- ! put ThemeMix first !
+
+local ButtonBase = newClass( {ThemeMix,ComponentBase, StatesMix,LifecycleMix}, {name="Button Base"}  )
 
 --== Class Constants
 
@@ -153,7 +161,7 @@ ButtonBase.RELEASED = 'released'
 -- Start: Setup DMC Objects
 
 function ButtonBase:__init__( params )
-	-- print( "ButtonBase:__init__", params )
+	print( "ButtonBase:__init__", params )
 	params = params or {}
 	self:superCall( ComponentBase, '__init__', params )
 	self:superCall( StatesMix, '__init__', params )
@@ -162,8 +170,6 @@ function ButtonBase:__init__( params )
 	--== Sanity Check ==--
 
 	if self.is_class then return end
-
-	assert( params.width and params.height, "newButton: expected params 'width' and 'height'" )
 
 	--== Create Properties ==--
 
@@ -828,19 +834,21 @@ Buttons.RadioButton = RadioButton
 
 function Buttons.create( params )
 	-- print( "Buttons.create", params.type )
-	assert( params.type, "newButton: expected param 'type'" )
+	assert( params.action, "newButton: expected param 'action'" )
 	--==--
-	if params.type == PushButton.TYPE then
+	local action = params.action
+
+	if action == PushButton.TYPE then
 		return PushButton:new( params )
 
-	elseif params.type == RadioButton.TYPE then
+	elseif action == RadioButton.TYPE then
 		return RadioButton:new( params )
 
-	elseif params.type == ToggleButton.TYPE then
+	elseif action == ToggleButton.TYPE then
 		return ToggleButton:new( params )
 
 	else
-		error( "newButton: unknown button type: " .. tostring( params.type ) )
+		error( "newButton: unknown button type: " .. tostring( action ) )
 
 	end
 end
