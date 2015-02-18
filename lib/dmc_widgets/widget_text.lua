@@ -452,14 +452,30 @@ function Text:__commitProperties__()
 		self._bgHeight_dirty=true
 	end
 
+	if self._marginX_dirty then
+		-- reminder, we don't set text height
+		self._marginX_dirty=false
+
+		self._bgWidth_dirty=true
+		self._textX_dirty=true
+	end
+	if self._marginY_dirty then
+		-- reminder, we don't set text height
+		self._marginY_dirty=false
+
+		self._bgHeight_dirty=true
+		self._textY_dirty=true
+	end
+
+
 	-- bg width/height
 
 	if self._bgWidth_dirty then
-		bg.width = self.width -- use getter, it's smart
+		bg.width = self.width+style.marginX*2 -- use getter, it's smart
 		self._bgWidth_dirty=false
 	end
 	if self._bgHeight_dirty then
-		bg.height = self.height -- use getter, it's smart
+		bg.height = self.height+style.marginY*2 -- use getter, it's smart
 		self._bgHeight_dirty=false
 	end
 
@@ -470,12 +486,14 @@ function Text:__commitProperties__()
 		self._anchorX_dirty=false
 
 		self._x_dirty=true
+		self._textX_dirty=true
 	end
 	if self._anchorY_dirty then
 		bg.anchorY = style.anchorY
 		self._anchorY_dirty=false
 
 		self._y_dirty=true
+		self._textY_dirty=true
 	end
 
 	-- x/y
