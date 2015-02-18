@@ -64,10 +64,10 @@ local widget_find = dmc_widget_func.find
 --== Imports
 
 
-local Objects = require 'dmc_objects'
-local Utils = require 'dmc_utils'
 local LifecycleMixModule = require 'dmc_lifecycle_mix'
+local Objects = require 'dmc_objects'
 local ThemeMixModule = require( dmc_widget_func.find( 'widget_theme_mix' ) )
+local Utils = require 'dmc_utils'
 
 -- set later
 local Widgets = nil
@@ -79,14 +79,11 @@ local ThemeMgr = nil
 --== Setup, Constants
 
 
--- setup some aliases to make code cleaner
 local newClass = Objects.newClass
 local ComponentBase = Objects.ComponentBase
 
 local LifecycleMix = LifecycleMixModule.LifecycleMix
 local ThemeMix = ThemeMixModule.ThemeMix
-
-local LOCAL_DEBUG = false
 
 
 
@@ -399,8 +396,8 @@ function TextField.__setters:width( value )
 	style.background.width=value
 	style.hint.width = value
 	style.display.width = value
-	self._width_dirty=true
-	self:__invalidateProperties__()
+	-- self._width_dirty=true
+	-- self:__invalidateProperties__()
 end
 
 --== height (custom)
@@ -416,8 +413,8 @@ function TextField.__setters:height( value )
 	style.background.height=value
 	style.hint.height = value
 	style.display.height = value
-	self._height_dirty=true
-	self:__invalidateProperties__()
+	-- self._height_dirty=true
+	-- self:__invalidateProperties__()
 end
 
 

@@ -376,6 +376,7 @@ end
 
 
 function Theme._createStyle( self, StyleClass, data )
+	-- print( "Theme._createStyle", self, StyleClass, data )
 	-- create copied style
 	local name = string.format( "copied-style-%s", tostring( self ) )
 	local style = StyleClass:createStyleFrom{
@@ -415,6 +416,7 @@ function Theme._destroyDefaultStyle( self )
 	self.__default_style = nil
 	return nil
 end
+
 
 
 --====================================================================--

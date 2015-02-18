@@ -106,7 +106,7 @@ Widget.FontMgr = require( PATH .. '.' .. 'font_manager' )
 Widget.ThemeMgr = require( PATH .. '.' .. 'theme_manager' )
 
 -- Styles
-local BaseStyle = require( PATH .. '.' .. 'theme_manager.base_style' )
+local BaseStyle = require( PATH .. '.' .. 'widget_style.base_style' )
 
 
 -- Widgets
@@ -139,7 +139,8 @@ Widget.Popover.__setWidgetManager( Widget )
 Widget.PopoverMixModule.__setWidgetManager( Widget )
 
 
-local loadBackgroundSupport, loadTextSupport, loadTextFieldSupport
+local loadBackgroundSupport, loadButtonSupport
+local loadTextSupport, loadTextFieldSupport
 
 
 
@@ -148,16 +149,24 @@ local loadBackgroundSupport, loadTextSupport, loadTextFieldSupport
 
 
 loadBackgroundSupport = function()
-	-- print("loadBackgroundSupport")
+	print("loadBackgroundSupport")
 
 	local Background = require( PATH .. '.' .. 'widget_background' )
-	local BackgroundStyle = require( PATH .. '.' .. 'theme_manager.background_style' )
+	local BackgroundStyle = require( PATH .. '.' .. 'widget_style.background_style' )
+	local RectangleStyle = require( PATH .. '.' .. 'widget_background.rectangle_style' )
+	local RoundedStyle = require( PATH .. '.' .. 'widget_background.rounded_style' )
+	local BackgroundStyleFactory = require( PATH .. '.' .. 'widget_background.style_factory' )
+	local BackgroundViewFactory = require( PATH .. '.' .. 'widget_background.view_factory' )
 
 	Widget.Background=Background
+	Widget.BackgroundFactory=BackgroundViewFactory
 	Widget.Style.Background=BackgroundStyle
+	Widget.Style.BackgroundFactory=BackgroundStyleFactory
 
 	Background.initialize( Widget )
+	BackgroundViewFactory.initialize( Widget )
 	BackgroundStyle.initialize( Widget )
+	BackgroundStyleFactory.initialize( Widget )
 end
 
 
@@ -167,8 +176,10 @@ function Widget.newBackground( options )
 end
 
 function Widget.newBackgroundStyle( style_info )
-	-- print("Widget.newBackgroundStyle")
+	print("Widget.newBackgroundStyle")
+	-- assert( type(style_info)=='table' and style_info.type, "newBackgroundStyle: missing style property 'type'" )
 	if not Widget.Style.Background then loadBackgroundSupport() end
+	print( "\n\n\n mystyle")
 	return Widget.Style.Background:createStyleFrom{ data=style_info }
 end
 
@@ -178,10 +189,46 @@ end
 --== newButton widget
 
 
+loadButtonSupport = function()
+	print("loadButtonSupport")
+	local Button = require( PATH .. '.' .. 'widget_button' )
+	local ButtonStyle = require( PATH .. '.' .. 'theme_manager.button_style' )
+
+	Widget.Button=Button
+	Widget.Style.Button=ButtonStyle
+
+	Button.initialize( Widget )
+	ButtonStyle.initialize( Widget )
+end
+
+
 function Widget.newButton( options )
-	local theme = nil
-	local widget = Widget.Button
-	return widget.create( options, theme )
+	if not Widget.Button then loadButtonSupport() end
+	return Widget.Button.create( options )
+end
+
+function Widget.newPushButton( options )
+	if not Widget.Button then loadButtonSupport() end
+	options = options or {}
+	--==--
+	options.action = Widget.Button.PushButton.TYPE
+	return Widget.Button.create( options )
+end
+
+function Widget.newRadioButton( options )
+	if not Widget.Button then loadButtonSupport() end
+	options = options or {}
+	--==--
+	options.action = Widget.Button.RadioButton.TYPE
+	return Widget.Button.create( options )
+end
+
+function Widget.newToggleButton( options )
+	if not Widget.Button then loadButtonSupport() end
+	options = options or {}
+	--==--
+	options.action = Widget.Button.ToggleButton.TYPE
+	return Widget.Button.create( options )
 end
 
 
@@ -241,18 +288,6 @@ end
 
 
 
---===================================================================--
---== newPushButton widget
-
-
-function Widget.newPushButton( options )
-	options = options or {}
-	--==--
-	local theme = nil
-	options.type = Widget.Button.PushButton.TYPE
-	return Widget.Button.create( options, theme )
-end
-
 
 
 --===================================================================--
@@ -298,7 +333,7 @@ end
 loadTextSupport = function()
 	-- print("loadTextSupport")
 	local Text = require( PATH .. '.' .. 'widget_text' )
-	local TextStyle = require( PATH .. '.' .. 'theme_manager.text_style' )
+	local TextStyle = require( PATH .. '.' .. 'widget_style.text_style' )
 
 	Widget.Text=Text
 	Widget.Style.Text=TextStyle
@@ -333,7 +368,7 @@ loadTextFieldSupport = function()
 	loadTextSupport()
 
 	TextField = require( PATH .. '.' .. 'widget_textfield' )
-	TextFieldStyle = require( PATH .. '.' .. 'theme_manager.textfield_style' )
+	TextFieldStyle = require( PATH .. '.' .. 'widget_style.textfield_style' )
 
 	Widget.TextField=TextField
 	Widget.Style.TextField=TextFieldStyle

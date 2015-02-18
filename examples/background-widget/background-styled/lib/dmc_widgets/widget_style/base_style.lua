@@ -65,6 +65,7 @@ local widget_find = dmc_widget_func.find
 
 
 local Objects = require 'dmc_objects'
+local Utils = require 'dmc_utils'
 
 
 
@@ -72,9 +73,10 @@ local Objects = require 'dmc_objects'
 --== Setup, Constants
 
 
--- setup some aliases to make code cleaner
 local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
+
+local sformat = string.format
 
 
 
@@ -87,9 +89,12 @@ local Style = newClass( ObjectBase, {name="Style Base"}  )
 
 --== Class Constants
 
--- Style.__base_style__  <instance of class>
+Style.__base_style__ = nil  -- <instance of class>
 
-Style.EXCLUDE_PROPERTY_CHECK = {}
+-- table of properties to exclude from checking
+-- these are properties which value can be 'nil'
+--
+Style.EXCLUDE_PROPERTY_CHECK = {} -- d
 
 --== Event Constants
 
@@ -100,7 +105,7 @@ Style.STYLE_UPDATED = 'style-updated-event'
 
 
 --======================================================--
---== Start: Setup DMC Objects
+-- Start: Setup DMC Objects
 
 function Style:__init__( params )
 	-- print( "Style:__init__", params )
@@ -131,10 +136,15 @@ function Style:__initComplete__()
 	-- print( "Style:__initComplete__" )
 	self:superCall( '__initComplete__' )
 	--==--
-	self:_parseData( self._data )
+	local data = self._data
+	data = self:_prepareData( data )
+	self:_parseData( data )
 	self:_checkChildren()
 	self:_checkProperties()
 end
+
+-- End: Setup DMC Objects
+--======================================================--
 
 
 
@@ -142,26 +152,21 @@ end
 --== Public Methods
 
 
-function Style:_checkChildren()
-	-- print("OVERRIDE Style:_checkChildren")
-end
-
-
+-- cloneStyle()
 -- make a copy of the current style setting
 -- same information and inheritance
 --
 function Style:cloneStyle()
-	local params = {
+	local o = self.class:new{
 		inherit=self._inherit
 	}
-	local o = self.class:new( params )
 	o:updateStyle( self, {force=true} ) -- clone data, force
 	return o
 end
 
 
--- create a new style, setting
--- inheritance to current style
+-- copyStyle()
+-- create a new style, setting inheritance to current style
 --
 function Style:copyStyle( params )
 	-- print( "Style:copyStyle", self )
@@ -173,11 +178,15 @@ end
 Style.inheritStyle=Style.copyStyle
 
 
+-- resetProperties()
+-- sends out Reset event, tells listening Widget
+-- to redraw itself
+--
 function Style:resetProperties()
 	self:_dispatchResetEvent()
 end
 
--- this would clear any local modifications
+-- this would clear any local modifications on style class
 --
 function Style:clear()
 	self:updateStyle( {}, {force=true} )
@@ -190,10 +199,11 @@ end
 -- widget
 -- name
 function Style:createStyleFrom( params )
-	-- print( "Style:createStyleFrom", params )
+	-- print( "Style:createStyleFrom", params, params.copy )
 	params = params or {}
 	if params.copy==nil then params.copy=true end
 	--==--
+	-- Utils.print( params )
 	local data = params.data
 	local copy = params.copy ; params.copy=nil
 
@@ -222,7 +232,7 @@ end
 
 --== inherit
 
--- Style Class
+-- value should be a instance of Style Class
 --
 function Style.__setters:inherit( value )
 	-- print( "Style.__setters:inherit", value )
@@ -233,14 +243,14 @@ end
 
 --== widget
 
--- widget, to process events
---
 function Style.__getters:widget()
 	-- print( "Style.__getters:widget" )
 	return self._widget
 end
 function Style.__setters:widget( value )
 	-- print( "Style.__setters:widget", value )
+	-- TODO: update to check class, not table
+	assert( value==nil or type(value)=='table' )
 	self._widget = value
 end
 
@@ -255,11 +265,14 @@ function Style.__setters:onPropertyChange( func )
 end
 
 
+--======================================================--
+-- Access to style properties
+
 --[[
 override these getters/setters/methods if necesary
 --]]
 
---== name, getter/setter
+--== name
 
 function Style.__getters:name()
 	-- print( 'Style.__getters:name', self._inherit )
@@ -276,7 +289,6 @@ function Style.__setters:name( value )
 	if value == self._name then return end
 	self._name = value
 end
-
 
 --== debugOn
 
@@ -295,7 +307,6 @@ function Style.__setters:debugOn( value )
 	self._debugOn = value
 	self:_dispatchChangeEvent( 'debugOn', value )
 end
-
 
 --== X
 
@@ -336,6 +347,7 @@ end
 --== width
 
 function Style.__getters:width()
+	-- print( "Style.__getters:width", self.name, self._width  )
 	local value = self._width
 	if value==nil and self._inherit then
 		value = self._inherit.width
@@ -343,7 +355,7 @@ function Style.__getters:width()
 	return value
 end
 function Style.__setters:width( value )
-	-- print( "Style.__setters:width", value )
+	-- print( "Style.__setters:width", self.name, value )
 	assert( type(value)=='number' or (value==nil and self._inherit) )
 	--==--
 	if value == self._width then return end
@@ -569,27 +581,63 @@ end
 --== Private Methods
 
 
+--======================================================--
+-- Style Class setup
+
+-- _prepareData()
+-- if necessary, modify data before we process it
+-- usually this is to copy styles from parent to child
+--
+function Style:_prepareData( data )
+	-- print("OVERRIDE Style:_prepareData")
+	return data
+end
+
+-- _checkChildren()
+-- check children after class initialization
+-- eg, if a style doesn't have any child properties (eg, background)
+-- to actually create the substyle
+--
+function Style:_checkChildren()
+	-- print("OVERRIDE Style:_checkChildren")
+end
+
+-- _checkProperties()
+-- ability to check properties to make sure everything went well
+--
 function Style:_checkProperties()
 	assert( self.name, "Style: requires property 'name'" )
 	assert( self.debugOn~=nil , "Style: requires a property 'debugOn'" )
 end
 
-
+-- _parseData()
+-- parse through the Lua data given, creating properties
+-- an substyles as we loop through
+--
 function Style:_parseData( data )
 	-- print( "Style:_parseData", data )
 	if data==nil then return end
+
+	-- prep tables of things to exclude, etc
 	local DEF = self.DEFAULT
 	local EXCL = self.EXCLUDE_PROPERTY_CHECK
+
 	for k,v in pairs( data ) do
 		-- print(k,v)
 		if DEF[k]==nil and not EXCL[k] then
-			error( string.format( "Style: invalid property style found '%s'", tostring(k) ) )
+			error( sformat( "Style: invalid property style found '%s'", tostring(k) ) )
 		end
 		self[k]=v
 	end
 end
 
 
+--======================================================--
+-- Event Dispatch
+
+-- _dispatchResetEvent()
+-- send out Reset event to listeners
+--
 function Style:_dispatchResetEvent()
 	-- print( 'Style:_dispatchResetEvent', self )
 	--==--
@@ -610,6 +658,9 @@ function Style:_dispatchResetEvent()
 end
 
 
+-- _dispatchChangeEvent()
+-- send out property-changed event to listeners
+--
 function Style:_dispatchChangeEvent( prop, value, substyle )
 	-- print( 'Style:_dispatchChangeEvent', prop, value, self )
 	local widget = self._widget
@@ -625,7 +676,6 @@ function Style:_dispatchChangeEvent( prop, value, substyle )
 		value=value
 	}
 	if widget and widget.stylePropertyChangeHandler then
-		-- print( widget, widget.NAME )
 		widget:stylePropertyChangeHandler( e )
 	end
 	if callback then callback( e ) end

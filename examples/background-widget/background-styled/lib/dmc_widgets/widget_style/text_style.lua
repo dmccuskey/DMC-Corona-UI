@@ -126,7 +126,7 @@ TextStyle.EVENT = 'text-style-event'
 
 
 --======================================================--
---== Start: Setup DMC Objects
+-- Start: Setup DMC Objects
 
 function TextStyle:__init__( params )
 	-- print( "TextStyle:__init__", params )
@@ -161,7 +161,7 @@ function TextStyle:__init__( params )
 	self._textColor = nil
 end
 
---== END: Setup DMC Objects
+-- END: Setup DMC Objects
 --======================================================--
 
 
@@ -176,6 +176,33 @@ function TextStyle.initialize( manager )
 
 	TextStyle._setDefaults()
 end
+
+
+-- copyMissingProperties()
+-- copies properties from src structure to dest structure
+-- if property isn't already in dest
+-- Note: usually used by OTHER classes
+--
+function TextStyle.copyMissingProperties( dest, src )
+	-- print( "TextStyle.copyMissingProperties", dest, src )
+	if dest.debugOn==nil then dest.debugOn=src.debugOn end
+
+	if dest.width==nil then dest.width=src.width end
+	if dest.height==nil then dest.height=src.height end
+
+	if dest.align==nil then dest.align=src.align end
+	if dest.anchorX==nil then dest.anchorX=src.anchorX end
+	if dest.anchorY==nil then dest.anchorY=src.anchorY end
+	if dest.fillColor==nil then dest.fillColor=src.fillColor end
+	if dest.font==nil then dest.font=src.font end
+	if dest.fontSize==nil then dest.fontSize=src.fontSize end
+	if dest.marginX==nil then dest.marginX=src.marginX end
+	if dest.marginY==nil then dest.marginY=src.marginY end
+	if dest.strokeColor==nil then dest.strokeColor=src.strokeColor end
+	if dest.strokeWidth==nil then dest.strokeWidth=src.strokeWidth end
+	if dest.textColor==nil then dest.textColor=src.textColor end
+end
+
 
 
 

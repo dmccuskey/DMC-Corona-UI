@@ -93,12 +93,16 @@ local TextFieldStyle = newClass( BaseStyle, {name="TextField Style"} )
 TextFieldStyle.__base_style__ = nil
 
 -- child styles
-TextFieldStyle.BACKGROUND = 'textfield-background'
-TextFieldStyle.HINT = 'textfield-hint'
-TextFieldStyle.DISPLAY = 'textfield-display'
+TextFieldStyle.BACKGROUND_KEY = 'background'
+TextFieldStyle.BACKGROUND_NAME = 'textfield-background'
+TextFieldStyle.HINT_KEY = 'hint'
+TextFieldStyle.HINT_NAME = 'textfield-hint'
+TextFieldStyle.DISPLAY_KEY = 'display'
+TextFieldStyle.DISPLAY_NAME = 'textfield-display'
 
 TextFieldStyle.DEFAULT = {
 	name='textfield-default-style',
+	debugOn=false,
 
 	width=200,
 	height=40,
@@ -106,7 +110,6 @@ TextFieldStyle.DEFAULT = {
 	align='center',
 	anchorX=0.5,
 	anchorY=0.5,
-	debugOn=false,
 	backgroundStyle='none',
 	inputType='password',
 	marginX=0,
@@ -115,7 +118,7 @@ TextFieldStyle.DEFAULT = {
 
 	background={
 		--[[
-		from TextField
+		Copied from TextField
 		* width
 		* height
 		* anchorX/Y
@@ -127,7 +130,7 @@ TextFieldStyle.DEFAULT = {
 	},
 	hint={
 		--[[
-		from TextField
+		Copied from TextField
 		* width
 		* height
 		* align
@@ -141,7 +144,7 @@ TextFieldStyle.DEFAULT = {
 	},
 	display={
 		--[[
-		from TextField
+		Copied from TextField
 		* width
 		* height
 		* align
@@ -166,7 +169,7 @@ TextFieldStyle.EVENT = 'textfield-style-event'
 
 
 --======================================================--
---== Start: Setup DMC Objects
+-- Start: Setup DMC Objects
 
 function TextFieldStyle:__init__( params )
 	-- print( "TextFieldStyle:__init__", params )
@@ -185,9 +188,10 @@ function TextFieldStyle:__init__( params )
 	-- self._name
 	-- self._debugOn
 
-	-- these are ones which we save locally, others are
-	-- stored in component styles
-	--
+	--== Local style properties
+
+	-- other properties are in substyles
+
 	self._width = nil
 	self._height = nil
 
@@ -209,7 +213,7 @@ function TextFieldStyle:__init__( params )
 
 end
 
---== END: Setup DMC Objects
+-- END: Setup DMC Objects
 --======================================================--
 
 
@@ -227,12 +231,33 @@ end
 
 
 
-function TextFieldStyle:_checkChildren()
-	-- print( "TextFieldStyle:_checkChildren" )
-	-- using setters !!!
-	if self._background==nil then self.background=nil end
-	if self._hint==nil then self.hint=nil end
-	if self._display==nil then self.display=nil end
+
+function TextFieldStyle._setDefaults()
+	-- print( "TextFieldStyle._setDefaults" )
+
+	local src = TextFieldStyle.DEFAULT
+	local StyleClass, dest
+
+	-- copy properties to Background substyle 'background'
+	StyleClass = Widgets.Style.Background
+	dest = src[ TextFieldStyle.BACKGROUND_KEY ]
+	StyleClass.copyMissingProperties( dest, src )
+
+	-- copy properties to Text substyle 'hint'
+	StyleClass = Widgets.Style.Text
+	dest = src[ TextFieldStyle.HINT_KEY ]
+	StyleClass.copyMissingProperties( dest, src )
+
+	-- copy properties to Text substyle 'display'
+	StyleClass = Widgets.Style.Text
+	dest = src[ TextFieldStyle.DISPLAY_KEY ]
+	StyleClass.copyMissingProperties( dest, src )
+
+	local style = TextFieldStyle:new{
+		data=defaults
+	}
+	TextFieldStyle.__base_style__ = style
+
 end
 
 
@@ -327,10 +352,10 @@ function TextFieldStyle.__setters:background( data )
 	local inherit = self._inherit and self._inherit._background
 
 	self._background = StyleClass:createStyleFrom{
-		name=TextFieldStyle.BACKGROUND,
-		data=data,
+		name=TextFieldStyle.BACKGROUND_NAME,
 		inherit=inherit,
-		parent=self
+		parent=self,
+		data=data
 	}
 end
 
@@ -347,10 +372,10 @@ function TextFieldStyle.__setters:hint( data )
 	local inherit = self._inherit and self._inherit._hint
 
 	self._hint = StyleClass:createStyleFrom{
-		name=TextFieldStyle.HINT,
+		name=TextFieldStyle.HINT_NAME,
 		inherit=inherit,
-		data=data,
-		parent=self
+		parent=self,
+		data=data
 	}
 end
 
@@ -366,10 +391,10 @@ function TextFieldStyle.__setters:display( data )
 	local inherit = self._inherit and self._inherit._display
 
 	self._display = StyleClass:createStyleFrom{
-		name=TextFieldStyle.TEXT,
-		data=data,
+		name=TextFieldStyle.DISPLAY_NAME,
 		inherit=inherit,
-		parent=self
+		parent=self,
+		data=data
 	}
 end
 
@@ -421,49 +446,25 @@ end
 --== Private Methods
 
 
-function TextFieldStyle._setDefaults()
-	-- print( "TextFieldStyle._setDefaults" )
-	local defaults = TextFieldStyle.DEFAULT
+function TextFieldStyle:_prepareData( data )
+	-- print("TextFieldStyle:_prepareData", data )
+	if not data then return end
 
-	--== copy over property values to sub-styles
-	-- this is a little hack, but inline with how the system works
-	-- just done manually for startup
-	local tmp
-	-- background
-	tmp = defaults.background
-	tmp.width=defaults.width
-	tmp.height=defaults.height
-	tmp.anchorX=defaults.anchorX
-	tmp.anchorY=defaults.anchorY
+	-- copy down data elements to subviews
+	local src, dest = data, data.view
+	TextFieldStyle.pushMissingProperties( src, dest )
 
-	-- hint
-	tmp = defaults.hint
-	tmp.width=defaults.width
-	tmp.height=defaults.height
-	tmp.align=defaults.align
-	tmp.anchorX=defaults.anchorX
-	tmp.anchorY=defaults.anchorY
-	tmp.marginX=defaults.marginX
-	tmp.marginY=defaults.marginY
-
-	-- text
-	tmp = defaults.display
-	tmp.width=defaults.width
-	tmp.height=defaults.height
-	tmp.align=defaults.align
-	tmp.anchorX=defaults.anchorX
-	tmp.anchorY=defaults.anchorY
-	tmp.marginX=defaults.marginX
-	tmp.marginY=defaults.marginY
-
-
-	local style = TextFieldStyle:new{
-		data=defaults
-	}
-	TextFieldStyle.__base_style__ = style
-
+	return data
 end
 
+
+function TextFieldStyle:_checkChildren()
+	-- print( "TextFieldStyle:_checkChildren" )
+	-- using setters !!!
+	if self._background==nil then self.background=nil end
+	if self._hint==nil then self.hint=nil end
+	if self._display==nil then self.display=nil end
+end
 
 
 function TextFieldStyle:_checkProperties()
