@@ -52,6 +52,15 @@ local Utils = require 'dmc_utils'
 -- local Widgets = require 'dmc_utils'
 
 
+
+--====================================================================--
+--== Setup, Constants
+
+
+local LOCAL_DEBUG = false
+
+
+
 --====================================================================--
 --== Support Functions
 
@@ -93,7 +102,13 @@ function Theme.__init__( self, params )
 	params = params or {}
 	--==--
 	Theme.resetTheme( self, params )
+	if LOCAL_DEBUG then
+		print( "\n\n\n DOING THEME INIT: widget", self)
+	end
 	Theme._createDefaultStyle( self )
+	if LOCAL_DEBUG then
+		print( "\n\n\n DONE WITH THEME INIT")
+	end
 end
 
 function Theme.__undoInit__( self )
@@ -116,7 +131,7 @@ function Theme.resetTheme( self, params )
 	if params.debug_on==nil then params.debug_on=false end
 	--==--
 	if self.__debug_on then
-		print( outStr( "resetTheme: resetting popover" ) )
+		print( outStr( "ResetTheme: resetting theme" ) )
 	end
 	self.__collection_name = nil -- 'navbar-home'
 	self.__curr_style_collection = nil -- <style collection obj>
@@ -158,17 +173,17 @@ end
 --== Style Getters/Setters ==--
 
 function Theme.__getters:style()
-	-- print( 'Theme.__getters:style' )
+	-- print( "Theme.__getters:style" )
 	return self.curr_style
 end
 function Theme.__setters:style( value )
-	-- print( 'Theme.__setters:style', value )
+	-- print( "Theme.__setters:style", value )
 	self:setActiveStyle( value )
 end
 
 
 function Theme.setActiveStyle( self, data, params )
-	-- print( "Theme.setActiveStyle", style )
+	-- print( "Theme.setActiveStyle", data, self.STYLE_CLASS )
 	params = params or {}
 	if params.widget==nil then params.widget=self end
 	if params.copy==nil then params.copy=true end
@@ -195,6 +210,8 @@ function Theme.setActiveStyle( self, data, params )
 		assert( data.isa and data:isa(StyleClass) )
 		style = data
 	else
+		-- Utils.print( data )
+		-- data could be a Style instance or Lua data
 		style = self:_createStyle( StyleClass, data )
 	end
 
@@ -208,6 +225,9 @@ function Theme.setActiveStyle( self, data, params )
 	end
 end
 
+function Theme:clearStyle()
+	return self.curr_style:clearProperties()
+end
 
 
 
@@ -376,6 +396,7 @@ end
 
 
 function Theme._createStyle( self, StyleClass, data )
+	-- print( "Theme._createStyle", self, StyleClass, data )
 	-- create copied style
 	local name = string.format( "copied-style-%s", tostring( self ) )
 	local style = StyleClass:createStyleFrom{
@@ -397,6 +418,7 @@ end
 
 
 function Theme._createDefaultStyle( self )
+	-- print( "Theme._createDefaultStyle", self.STYLE_CLASS )
 	local StyleClass = self.STYLE_CLASS
 	assert( StyleClass, "[ERROR] Widget is missing property 'STYLE_CLASS'" )
 	local name = string.format( "default-style-%s", tostring( self ) )
@@ -415,6 +437,7 @@ function Theme._destroyDefaultStyle( self )
 	self.__default_style = nil
 	return nil
 end
+
 
 
 --====================================================================--
