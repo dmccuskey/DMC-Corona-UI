@@ -97,7 +97,7 @@ TextStyle.EXCLUDE_PROPERTY_CHECK = {
 	height=true
 }
 
-TextStyle.DEFAULT = {
+TextStyle._STYLE_DEFAULTS = {
 	name='text-default-style',
 
 	width=nil,
@@ -248,32 +248,37 @@ end
 function TextStyle._setDefaults()
 	-- print( "TextStyle._setDefaults" )
 	local style = TextStyle:new{
-		data=TextStyle.DEFAULT
+		data=TextStyle._STYLE_DEFAULTS
 	}
 	TextStyle.__base_style__ = style
 end
 
 
 function TextStyle:_checkProperties()
-	BaseStyle._checkProperties( self )
+	-- print( "TextStyle:_checkProperties" )
+	local emsg = "Style: requires property '%s'"
+	local is_valid = BaseStyle._checkProperties( self )
+
 	--[[
 	we don't check for width/height because nil is valid value
 	sometimes we just use width/height of the text object
-	-- assert( self.width, "Style: requires 'width'" )
-	-- assert( self.height, "Style: requires 'height'" )
+	-- if not self.width then print(sformat(emsg,'width')) ; is_valid=false end
+	-- if not self.height then print(sformat(emsg,'height')) ; is_valid=false end
 	--]]
 
-	assert( self.align, "Style: requires 'align'" )
-	assert( self.anchorY, "Style: requires 'anchory'" )
-	assert( self.anchorX, "Style: requires 'anchorX'" )
-	assert( self.fillColor, "Style: requires 'fillColor'" )
-	assert( self.font, "Style: requires 'font'" )
-	assert( self.fontSize, "Style: requires 'fontSize'" )
-	assert( self.marginX, "Style: requires 'marginX'" )
-	assert( self.marginY, "Style: requires 'marginY'" )
-	assert( self.strokeColor, "Style: requires 'strokeColor'" )
-	assert( self.strokeWidth, "Style: requires 'strokeWidth'" )
-	assert( self.textColor, "Style: requires 'textColor'" )
+	if not self.align then print(sformat(emsg,'align')) ; is_valid=false end
+	if not self.anchorX then print(sformat(emsg,'anchorX')) ; is_valid=false end
+	if not self.anchorY then print(sformat(emsg,'anchorY')) ; is_valid=false end
+	if not self.fillColor then print(sformat(emsg,'fillColor')) ; is_valid=false end
+	if not self.font then print(sformat(emsg,'font')) ; is_valid=false end
+	if not self.fontSize then print(sformat(emsg,'fontSize')) ; is_valid=false end
+	if not self.marginX then print(sformat(emsg,'marginX')) ; is_valid=false end
+	if not self.marginY then print(sformat(emsg,'marginY')) ; is_valid=false end
+	if not self.strokeColor then print(sformat(emsg,'strokeColor')) ; is_valid=false end
+	if not self.strokeWidth then print(sformat(emsg,'strokeWidth')) ; is_valid=false end
+	if not self.textColor then print(sformat(emsg,'textColor')) ; is_valid=false end
+
+	return is_valid
 end
 
 
