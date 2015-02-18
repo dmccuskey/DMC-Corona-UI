@@ -192,7 +192,7 @@ end
 
 -- this would clear any local modifications on style class
 --
-function Style:clear()
+function Style:clearProperties()
 	self:updateStyle( {}, {force=true} )
 	self:_dispatchResetEvent()
 end
