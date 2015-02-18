@@ -403,6 +403,15 @@ end
 --== View Style Methods ==--
 
 
+function Background.__getters:cornerRadius()
+	return self.curr_style.view.cornerRadius
+end
+function Background.__setters:cornerRadius( value )
+	-- print( 'Background.__setters:cornerRadius', value )
+	self.curr_style.view.cornerRadius = value
+end
+
+
 --== viewStrokeWidth
 
 function Background.__getters:viewStrokeWidth()
@@ -447,12 +456,16 @@ end
 function Background:_createBackgroundView()
 	-- print( 'Background:_createBackgroundView' )
 	local style = self.curr_style
+	local vtype = style.view.type
+	local o = self._wgt_bgView
 
-	self:_removeBackground()
-
-	local o = ViewFactory.create( style.view.type )
-	self:insert( o.view )
-	self._wgt_bgView = o
+	-- create background if missing or type mismatch
+	if not o or vtype ~= o.TYPE then
+		self:_removeBackground()
+		o = ViewFactory.create( style.view.type )
+		self:insert( o.view )
+		self._wgt_bgView = o
+	end
 
 	-- conditions for coming in here
 	self._wgt_bgView_dirty = false
@@ -495,33 +508,38 @@ function Background:__commitProperties__()
 
 	-- width/height
 
-	if self._width_dirty then
+	if self._width_dirty or self._hitMarginX_dirty then
 		hit.width = style.width+style.hitMarginX*2
 		self._width_dirty=false
+		self._hitMarginX_dirty=false
 	end
-	if self._height_dirty then
+	if self._height_dirty or self._hitMarginY_dirty then
 		hit.height = style.height+style.hitMarginY*2
 		self._height_dirty=false
-	end
-
-	--== View Widget
-
-	if self._bgStyle_dirty then
-		bg:setActiveStyle( style.view, {copy=false} )
-		self._bgStyle_dirty=false
+		self._hitMarginY_dirty=false
 	end
 
 	-- Hit Area
 
-	if self._hitX_dirty then
+	if self._hitX_dirty or self._anchorX_dirty then
 		local width = style.width
 		hit.x = width/2+(-width*style.anchorX)
 		self._hitX_dirty=false
+		self._anchorX_dirty=false
 	end
-	if self._hitY_dirty then
+	if self._hitY_dirty or self._anchorY_dirty then
 		local height = style.height
 		hit.y = height/2+(-height*style.anchorY)
 		self._hitY_dirty=false
+		self._anchorY_dirty=false
+	end
+
+
+	--== Background
+
+	if self._bgStyle_dirty then
+		bg:setActiveStyle( style.view, {copy=false} )
+		self._bgStyle_dirty=false
 	end
 
 
@@ -562,6 +580,8 @@ function Background:stylePropertyChangeHandler( event )
 	-- print( "Style Changed", etype, property, value )
 
 	if etype == style.STYLE_RESET then
+		self._wgt_bgView_dirty=true
+
 		self._width_dirty=true
 		self._height_dirty=true
 
@@ -569,7 +589,7 @@ function Background:stylePropertyChangeHandler( event )
 		self._anchorY_dirty=true
 		self._debugOn_dirty = true
 		self._hitMarginX_dirty = true
-		self._hitMarginX_dirty = true
+		self._hitMarginY_dirty = true
 		self._isHitActive_dirty=true
 		self._isHitTestable_dirty=true
 

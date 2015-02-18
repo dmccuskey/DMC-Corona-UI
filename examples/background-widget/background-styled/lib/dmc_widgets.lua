@@ -176,10 +176,9 @@ function Widget.newBackground( options )
 end
 
 function Widget.newBackgroundStyle( style_info )
-	print("Widget.newBackgroundStyle")
+	-- print("Widget.newBackgroundStyle")
 	-- assert( type(style_info)=='table' and style_info.type, "newBackgroundStyle: missing style property 'type'" )
 	if not Widget.Style.Background then loadBackgroundSupport() end
-	print( "\n\n\n mystyle")
 	return Widget.Style.Background:createStyleFrom{ data=style_info }
 end
 

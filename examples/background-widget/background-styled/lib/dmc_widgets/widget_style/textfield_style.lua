@@ -250,20 +250,24 @@ function TextFieldStyle.pushMissingProperties( src )
 	if not src then return end
 
 	local StyleClass, dest
+	local eStr = "ERROR: Style missing property '%s'"
 
 	-- copy properties to Background substyle 'background'
 	StyleClass = Widgets.Style.Background
 	dest = src[ TextFieldStyle.BACKGROUND_KEY ]
+	assert( dest, sformat( eStr, TextFieldStyle.BACKGROUND_KEY ) )
 	StyleClass.copyMissingProperties( dest, src )
 
 	-- copy properties to Text substyle 'hint'
 	StyleClass = Widgets.Style.Text
 	dest = src[ TextFieldStyle.HINT_KEY ]
+	assert( dest, sformat( eStr, TextFieldStyle.HINT_KEY ) )
 	StyleClass.copyMissingProperties( dest, src )
 
 	-- copy properties to Text substyle 'display'
 	StyleClass = Widgets.Style.Text
 	dest = src[ TextFieldStyle.DISPLAY_KEY ]
+	assert( dest, sformat( eStr, TextFieldStyle.DISPLAY_KEY ) )
 	StyleClass.copyMissingProperties( dest, src )
 
 	return src
@@ -461,7 +465,6 @@ end
 function TextFieldStyle:_prepareData( data )
 	-- print("TextFieldStyle:_prepareData", data )
 	if not data then return end
-
 	return TextFieldStyle.pushMissingProperties( data )
 end
 

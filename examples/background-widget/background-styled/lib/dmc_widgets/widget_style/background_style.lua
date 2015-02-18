@@ -78,6 +78,8 @@ local BaseStyle = require( widget_find( 'widget_style.base_style' ) )
 local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
 
+local sformat = string.format
+
 -- Set Later
 local Widgets = nil
 local StyleFactory = nil
@@ -129,6 +131,15 @@ BackgroundBase.DEFAULT = {
 	},
 
 }
+
+BackgroundBase._VIEW_DEFAULTS = {
+	rounded=nil,
+	rectangle=nil,
+	polygon=nil,
+	shape=nil
+}
+
+
 
 --== Event Constants
 
@@ -204,14 +215,6 @@ function BackgroundBase._setDefaults()
 
 	defaults = BackgroundBase.pushMissingProperties( defaults )
 
-	-- local src = BackgroundBase.DEFAULT
-	-- local StyleClass, dest
-
-	-- -- copy items to substyle 'view'
-	-- dest = src[ BackgroundBase.VIEW_KEY ]
-	-- StyleClass = StyleFactory.getClass( dest.type )
-	-- StyleClass.copyMissingProperties( dest, src )
-
 	local style = BackgroundBase:new{
 		data=defaults
 	}
@@ -244,9 +247,16 @@ function BackgroundBase.pushMissingProperties( src )
 	if not src then return end
 
 	local StyleClass, dest
+	local eStr = "ERROR: Style missing property '%s'"
 
 	-- copy items to substyle 'view'
 	dest = src[ BackgroundBase.VIEW_KEY ]
+	-- if no property 'view', then choose default
+	if type(dest)~='table' then
+		print( "[WARNING] Defaulting to Rectangle style", type(dest) )
+		dest = { type=StyleFactory.Rectangle.TYPE }
+		src[ BackgroundBase.VIEW_KEY ] = dest
+	end
 	StyleClass = StyleFactory.getClass( dest.type )
 	StyleClass.copyMissingProperties( dest, src )
 
@@ -268,10 +278,10 @@ function BackgroundBase.__getters:view()
 end
 function BackgroundBase.__setters:view( data )
 	-- print( 'BackgroundBase.__setters:view', data )
-	assert( data==nil or type( data )=='table' )
+	assert( data==nil or type(data)=='string' or type( data )=='table' )
 	--==--
 	local inherit = self._inherit and self._inherit._view
-	self._view = self:_createStyleFromType{
+	self._view = self:createStyleFromType{
 		name=BackgroundBase.VIEW_NAME,
 		inherit=inherit,
 		parent=self,
@@ -373,6 +383,46 @@ function BackgroundBase.__setters:inherit( value )
 	self._view.inherit = value.view
 end
 
+-- function BackgroundBase:copyStyle( params )
+-- 	-- print( "BackgroundBase:copyStyle", self )
+-- 	params = params or {}
+-- 	params.inherit = self
+-- 	--==--
+-- 	local style = self.class:new( params )
+-- 	return style
+-- end
+
+
+
+-- createStyleFromType()
+-- looks for style class based on view type
+-- then calls to create the style
+--
+function BackgroundBase:createStyleFromType( params )
+	-- print( "BackgroundBase:createStyleFromType", params )
+	params = params or {}
+	--==--
+	local data = params.data
+	local style_type, StyleClass
+
+	-- look around for our style 'type'
+	if data==nil then
+		style_type = StyleFactory.Rectangle.TYPE
+	elseif type(data)=='string' then
+		-- we have type already
+		style_type = data
+		params.data=nil
+	elseif type(data)=='table' then
+		style_type = data.type
+	end
+	assert( style_type and type(style_type)=='string', "Style: missing style property 'type'" )
+
+	StyleClass = StyleFactory.getClass( style_type )
+
+	return StyleClass:createStyleFrom( params )
+end
+
+
 
 --== updateStyle
 
@@ -404,11 +454,20 @@ end
 --== Private Methods
 
 
+-- we could have nil, Lua structure, or Instance
+--
 function BackgroundBase:_prepareData( data )
 	-- print("BackgroundBase:_prepareData", data )
 	if not data then return end
 
-	return BackgroundBase.pushMissingProperties( data )
+	if data.isa and data:isa(BackgroundBase) then
+		-- Instance
+		data = { view=data.view.type }
+	else
+		-- Lua structure
+		data = BackgroundBase.pushMissingProperties( data )
+	end
+	return data
 end
 
 function BackgroundBase:_checkChildren()
@@ -434,32 +493,6 @@ function BackgroundBase:_checkProperties()
 	assert( self.isHitTestable~=nil, "Style: requires property 'isHitTestable'" )
 
 	-- TODO: add substyle check
-end
-
-
--- _createStyleFromType()
--- looks for style class based on view type
--- then calls to create the style
---
-function BackgroundBase:_createStyleFromType( params )
-	-- print( "BackgroundBase:_createStyleFromType", params )
-	params = params or {}
-	--==--
-	local data = params.data
-	local style_type, StyleClass
-
-	-- look around for our style 'type'
-	if data==nil then
-		style_type = StyleFactory.Rectangle.TYPE
-	elseif data.type then
-		style_type = data.type
-	end
-	assert( style_type and type(style_type)=='string', "Style: missing style property 'type'" )
-
-	StyleClass = StyleFactory.getClass( style_type )
-
-	-- Utils.print( params )
-	return StyleClass:createStyleFrom( params )
 end
 
 

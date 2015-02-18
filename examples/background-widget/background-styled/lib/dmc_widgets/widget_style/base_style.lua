@@ -126,7 +126,8 @@ function Style:__init__( params )
 	self._widget = params.widget
 	self._onPropertyChange_f = params.onPropertyChange
 
-	self._data = params.data
+	-- self._data = params.data
+	self._tmp_data = params.data -- temporary save of data
 
 	self._name = params.name
 	self._debugOn = params.debugOn
@@ -136,8 +137,9 @@ function Style:__initComplete__()
 	-- print( "Style:__initComplete__" )
 	self:superCall( '__initComplete__' )
 	--==--
-	local data = self._data
-	data = self:_prepareData( data )
+	local data = self:_prepareData( self._tmp_data )
+	self._tmp_data = nil
+
 	self:_parseData( data )
 	self:_checkChildren()
 	self:_checkProperties()
@@ -171,8 +173,8 @@ end
 function Style:copyStyle( params )
 	-- print( "Style:copyStyle", self )
 	params = params or {}
-	--==--
 	params.inherit = self
+	--==--
 	return self.class:new( params )
 end
 Style.inheritStyle=Style.copyStyle
@@ -193,6 +195,11 @@ function Style:clear()
 	self:_dispatchResetEvent()
 end
 
+function Style:getDefaultStyles()
+	-- TODO: make a copy
+	return self.DEFAULT
+end
+
 
 -- params:
 -- data
@@ -203,7 +210,6 @@ function Style:createStyleFrom( params )
 	params = params or {}
 	if params.copy==nil then params.copy=true end
 	--==--
-	-- Utils.print( params )
 	local data = params.data
 	local copy = params.copy ; params.copy=nil
 
@@ -212,11 +218,10 @@ function Style:createStyleFrom( params )
 	if data==nil then
 		style = StyleClass:new( params )
 	elseif type(data.isa)=='function' then
+
 		if not copy then
 			style = data
 		else
-			assert( data:isa( StyleClass ) )
-			params.data=nil
 			style = data:copyStyle( params )
 		end
 	else
@@ -590,6 +595,10 @@ end
 --
 function Style:_prepareData( data )
 	-- print("OVERRIDE Style:_prepareData")
+	-- data could be nil, Lua structure, or class instance
+	if type(data)=='table' and data.isa then
+		data=nil
+	end
 	return data
 end
 
