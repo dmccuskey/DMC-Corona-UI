@@ -1,5 +1,5 @@
 --====================================================================--
--- dmc_widgets/theme_manager/background_style.lua
+-- dmc_widgets/widget_background/rounded_style.lua
 --
 -- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
@@ -33,7 +33,7 @@ SOFTWARE.
 
 
 --====================================================================--
---== DMC Corona Widgets : Widget Background Style
+--== DMC Corona Widgets : Rounded Background Style
 --====================================================================--
 
 
@@ -55,7 +55,7 @@ local widget_find = dmc_widget_func.find
 
 
 --====================================================================--
---== DMC Widgets : newTextStyle
+--== DMC Widgets : newRoundedBackgroundStyle
 --====================================================================--
 
 
@@ -65,6 +65,7 @@ local widget_find = dmc_widget_func.find
 
 
 local Objects = require 'dmc_objects'
+local Utils = require 'dmc_utils'
 
 local BaseStyle = require( widget_find( 'widget_style.base_style' ) )
 
@@ -77,49 +78,45 @@ local BaseStyle = require( widget_find( 'widget_style.base_style' ) )
 local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
 
+local sformat = string.format
+
 local Widgets = nil -- set later
 
 
 
 --====================================================================--
---== Text Style Class
+--== Rounded Background Style Class
 --====================================================================--
 
 
-local TextStyle = newClass( BaseStyle, {name="Text Style"} )
+local RoundedStyle = newClass( BaseStyle, {name="Rounded Background Style"} )
 
 --== Class Constants
 
-TextStyle.__base_style__ = nil
+RoundedStyle.TYPE = 'rounded'
 
-TextStyle.EXCLUDE_PROPERTY_CHECK = {
-	width=true,
-	height=true
-}
+RoundedStyle.__base_style__ = nil
 
-TextStyle._STYLE_DEFAULTS = {
-	name='text-default-style',
+RoundedStyle._STYLE_DEFAULTS = {
+	name='rounded-background-default-style',
 	debugOn=false,
 
-	width=nil,
-	height=nil,
+	width=75,
+	height=30,
 
-	align='center',
+	type=RoundedStyle.TYPE,
+
 	anchorX=0.5,
 	anchorY=0.5,
-	fillColor={1,1,1,0},
-	font=native.systemFont,
-	fontSize=24,
-	marginX=0,
-	marginY=0,
+	cornerRadius=3,
+	fillColor={1,1,1,1},
 	strokeColor={0,0,0,1},
-	strokeWidth=0,
-	textColor={0,0,0,1}
+	strokeWidth=0
 }
 
 --== Event Constants
 
-TextStyle.EVENT = 'text-style-event'
+RoundedStyle.EVENT = 'rounded-background-style-event'
 
 -- from super
 -- Class.STYLE_UPDATED
@@ -128,8 +125,8 @@ TextStyle.EVENT = 'text-style-event'
 --======================================================--
 -- Start: Setup DMC Objects
 
-function TextStyle:__init__( params )
-	-- print( "TextStyle:__init__", params )
+function RoundedStyle:__init__( params )
+	-- print( "RoundedStyle:__init__", params )
 	params = params or {}
 	self:superCall( '__init__', params )
 	--==--
@@ -145,20 +142,19 @@ function TextStyle:__init__( params )
 	-- self._name
 	-- self._debugOn
 
+	--== Local style properties
+
 	self._width = nil
 	self._height = nil
 
-	self._align = nil
+	self._type = nil
+
 	self._anchorX = nil
 	self._anchorY = nil
+	self._cornerRadius = nil
 	self._fillColor = nil
-	self._font = nil
-	self._fontSize = nil
-	self._marginX = nil
-	self._marginY = nil
 	self._strokeColor = nil
 	self._strokeWidth = nil
-	self._textColor = nil
 end
 
 -- END: Setup DMC Objects
@@ -170,11 +166,21 @@ end
 --== Static Methods
 
 
-function TextStyle.initialize( manager )
-	-- print( "TextStyle.initialize", manager )
+function RoundedStyle.initialize( manager )
+	-- print( "RoundedStyle.initialize", manager )
 	Widgets = manager
 
-	TextStyle._setDefaults()
+	RoundedStyle._setDefaults()
+end
+
+
+function RoundedStyle._setDefaults()
+	-- print( "RoundedStyle._setDefaults" )
+	local defaults = RoundedStyle._STYLE_DEFAULTS
+	local style = RoundedStyle:new{
+		data=defaults
+	}
+	RoundedStyle.__base_style__ = style
 end
 
 
@@ -183,26 +189,20 @@ end
 -- if property isn't already in dest
 -- Note: usually used by OTHER classes
 --
-function TextStyle.copyMissingProperties( dest, src )
-	-- print( "TextStyle.copyMissingProperties", dest, src )
+function RoundedStyle.copyMissingProperties( dest, src )
+	-- print( "RoundedStyle.copyMissingProperties", dest, src )
 	if dest.debugOn==nil then dest.debugOn=src.debugOn end
 
 	if dest.width==nil then dest.width=src.width end
 	if dest.height==nil then dest.height=src.height end
 
-	if dest.align==nil then dest.align=src.align end
 	if dest.anchorX==nil then dest.anchorX=src.anchorX end
 	if dest.anchorY==nil then dest.anchorY=src.anchorY end
+	if dest.cornerRadius==nil then dest.cornerRadius=src.cornerRadius end
 	if dest.fillColor==nil then dest.fillColor=src.fillColor end
-	if dest.font==nil then dest.font=src.font end
-	if dest.fontSize==nil then dest.fontSize=src.fontSize end
-	if dest.marginX==nil then dest.marginX=src.marginX end
-	if dest.marginY==nil then dest.marginY=src.marginY end
 	if dest.strokeColor==nil then dest.strokeColor=src.strokeColor end
 	if dest.strokeWidth==nil then dest.strokeWidth=src.strokeWidth end
-	if dest.textColor==nil then dest.textColor=src.textColor end
 end
-
 
 
 
@@ -210,33 +210,75 @@ end
 --== Public Methods
 
 
+--======================================================--
+-- Access to style properties
+
+--== cornerRadius
+
+function RoundedStyle.__getters:cornerRadius()
+	-- print( "RoundedStyle.__getters:cornerRadius", self )
+	local value = self._cornerRadius
+	if value==nil and self._inherit then
+		value = self._inherit.cornerRadius
+	end
+	return value
+end
+function RoundedStyle.__setters:cornerRadius( value )
+	-- print( "RoundedStyle.__setters:cornerRadius", value )
+	assert( (type(value)=='number' and value>=0) or (value==nil and self._inherit) )
+	--==--
+	if value == self._cornerRadius then return end
+	self._cornerRadius = value
+	self:_dispatchChangeEvent( 'cornerRadius', value )
+end
+
+--== type
+
+function RoundedStyle.__getters:type()
+	-- print( "RoundedStyle.__getters:type" )
+	local value = self._type
+	-- TODO, check inheritance
+	if value==nil and self._inherit then
+		value = self._inherit.type
+	end
+	return value
+end
+function RoundedStyle.__setters:type( value )
+	-- print( "RoundedStyle.__setters:type", value )
+	assert( type(value)=='string' or (value==nil and self._inherit) )
+	--==--
+	if value==self._type then return end
+	self._type = value
+	self:_dispatchChangeEvent( 'type', value )
+end
+
+
+
+--======================================================--
+-- Misc
+
 --== updateStyle
 
--- force is used when making exact copy of data, incl 'nil's
+-- force is used when making exact copy of data
 --
-function TextStyle:updateStyle( info, params )
-	-- print( "TextStyle:updateStyle" )
+function RoundedStyle:updateStyle( src, params )
+	-- print( "RoundedStyle:updateStyle", src )
 	params = params or {}
 	if params.force==nil then params.force=true end
 	--==--
 	local force=params.force
 
-	if info.debugOn~=nil or force then self.debugOn=info.debugOn end
+	if src.debugOn~=nil or force then self.debugOn=src.debugOn end
 
-	if info.width~=nil or force then self.width=info.width end
-	if info.height~=nil or force then self.height=info.height end
+	if src.width~=nil or force then self.width=src.width end
+	if src.height~=nil or force then self.height=src.height end
 
-	if info.align~=nil or force then self.align=info.align end
-	if info.anchorX~=nil or force then self.anchorX=info.anchorX end
-	if info.anchorY~=nil or force then self.anchorY=info.anchorY end
-	if info.fillColor~=nil or force then self.fillColor=info.fillColor end
-	if info.font~=nil or force then self.font=info.font end
-	if info.fontSize~=nil or force then self.fontSize=info.fontSize end
-	if info.marginX~=nil or force then self.marginX=info.marginX end
-	if info.marginY~=nil or force then self.marginY=info.marginY end
-	if info.strokeColor~=nil or force then self.strokeColor=info.strokeColor end
-	if info.strokeWidth~=nil or force then self.strokeWidth=info.strokeWidth end
-	if info.textColor~=nil or force then self.textColor=info.textColor end
+	if src.anchorX~=nil or force then self.anchorX=src.anchorX end
+	if src.anchorY~=nil or force then self.anchorY=src.anchorY end
+	if src.cornerRadius~=nil or force then self.cornerRadius=src.cornerRadius end
+	if src.fillColor~=nil or force then self.fillColor=src.fillColor end
+	if src.strokeColor~=nil or force then self.strokeColor=src.strokeColor end
+	if src.strokeWidth~=nil or force then self.strokeWidth=src.strokeWidth end
 end
 
 
@@ -244,39 +286,31 @@ end
 --====================================================================--
 --== Private Methods
 
+-- returns true, false
 
-function TextStyle._setDefaults()
-	-- print( "TextStyle._setDefaults" )
-	local style = TextStyle:new{
-		data=TextStyle._STYLE_DEFAULTS
-	}
-	TextStyle.__base_style__ = style
-end
-
-
-function TextStyle:_checkProperties()
-	-- print( "TextStyle:_checkProperties" )
+function RoundedStyle:_checkProperties()
+	-- print( "RoundedStyle._checkProperties" )
 	local emsg = "Style: requires property '%s'"
+
+	--== Check Inheritance
+	-- if not proper types, then make sure we have data
+	local inherit_type = self._inherit and self._inherit.type or nil
+	if self.type ~= inherit_type then
+		print( sformat("[NOTICE] Style inheritance mismatch '%s'<>'%s'", tostring(self.type), tostring(inherit_type) ))
+		RoundedStyle.copyMissingProperties( self, self._STYLE_DEFAULTS )
+	end
+
 	local is_valid = BaseStyle._checkProperties( self )
 
-	--[[
-	we don't check for width/height because nil is valid value
-	sometimes we just use width/height of the text object
-	-- if not self.width then print(sformat(emsg,'width')) ; is_valid=false end
-	-- if not self.height then print(sformat(emsg,'height')) ; is_valid=false end
-	--]]
+	if not self.width then print(sformat(emsg,'width')) ; is_valid=false end
+	if not self.height then print(sformat(emsg,'height')) ; is_valid=false end
 
-	if not self.align then print(sformat(emsg,'align')) ; is_valid=false end
 	if not self.anchorX then print(sformat(emsg,'anchorX')) ; is_valid=false end
 	if not self.anchorY then print(sformat(emsg,'anchorY')) ; is_valid=false end
+	if not self.cornerRadius then print(sformat(emsg,'cornerRadius')) ; is_valid=false end
 	if not self.fillColor then print(sformat(emsg,'fillColor')) ; is_valid=false end
-	if not self.font then print(sformat(emsg,'font')) ; is_valid=false end
-	if not self.fontSize then print(sformat(emsg,'fontSize')) ; is_valid=false end
-	if not self.marginX then print(sformat(emsg,'marginX')) ; is_valid=false end
-	if not self.marginY then print(sformat(emsg,'marginY')) ; is_valid=false end
 	if not self.strokeColor then print(sformat(emsg,'strokeColor')) ; is_valid=false end
 	if not self.strokeWidth then print(sformat(emsg,'strokeWidth')) ; is_valid=false end
-	if not self.textColor then print(sformat(emsg,'textColor')) ; is_valid=false end
 
 	return is_valid
 end
@@ -291,4 +325,5 @@ end
 
 
 
-return TextStyle
+
+return RoundedStyle
