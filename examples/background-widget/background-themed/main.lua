@@ -29,9 +29,6 @@ local Widgets = require 'lib.dmc_widgets'
 local W, H = display.contentWidth, display.contentHeight
 local H_CENTER, V_CENTER = W*0.5, H*0.5
 
-local background
-local theme, style
-
 
 
 --===================================================================--
@@ -41,8 +38,7 @@ local theme, style
 -- Setup Visual Screen Items
 --
 local function setupBackground()
-	print( 'Main: setupBackground' )
-	local width, height = 100, 36
+	local width, height = 100, 50
 	local o
 
 	o = display.newRect(0,0,W,H)
@@ -94,6 +90,7 @@ end
 --== Main
 --===================================================================--
 
+
 setupBackground()
 
 
@@ -107,26 +104,26 @@ function run_example1()
 	bw1:addEventListener( bw1.EVENT, widgetEvent_handler )
 	-- bw1.onProperty = widgetOnPropertyEvent_handler
 
-	bw1.x = H_CENTER
-	bw1.y = V_CENTER-50
-	bw1.width, bw1.height = 10,10
-	-- bw1:setAnchor( {0,0} )
-	bw1:setAnchor( {0.5,0.5} )
-	-- bw1:setAnchor( {1,1} )
-	bw1:setViewFillColor(1,0,0 )
+	bw1.x, bw1.y = H_CENTER, V_CENTER-100
+	-- bw1.y = V_CENTER-50
+	-- bw1.width, bw1.height = 10,10
+	-- -- bw1:setAnchor( {0,0} )
+	-- bw1:setAnchor( {0.5,0.5} )
+	-- -- bw1:setAnchor( {1,1} )
+	-- bw1:setViewFillColor(1,0,0 )
 
 
-	timer.performWithDelay( 1000, function()
-		bw1.style=nil -- shouldn't change, already default
-	end)
+	-- timer.performWithDelay( 1000, function()
+	-- 	bw1.style=nil -- shouldn't change, already default
+	-- end)
 
-	timer.performWithDelay( 2000, function()
-		bw1:clearStyle() -- clear our changes
-	end)
+	-- timer.performWithDelay( 2000, function()
+	-- 	bw1:clearStyle() -- clear our changes
+	-- end)
 
 end
 
--- run_example1()
+run_example1()
 
 
 --======================================================--
@@ -271,5 +268,5 @@ function run_example4()
 
 end
 
-run_example4()
+-- run_example4()
 
