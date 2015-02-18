@@ -78,6 +78,8 @@ local BaseStyle = require( widget_find( 'widget_style.base_style' ) )
 local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
 
+local sformat = string.format
+
 local Widgets = nil -- set later
 
 
@@ -95,7 +97,7 @@ RectangleStyle.TYPE = 'rectangle'
 
 RectangleStyle.__base_style__ = nil
 
-RectangleStyle.DEFAULT = {
+RectangleStyle._STYLE_DEFAULTS = {
 	name='rectangle-background-default-style',
 	debugOn=false,
 
@@ -172,7 +174,7 @@ end
 
 function RectangleStyle._setDefaults()
 	-- print( "RectangleStyle._setDefaults" )
-	local defaults = RectangleStyle.DEFAULT
+	local defaults = RectangleStyle._STYLE_DEFAULTS
 	local style = RectangleStyle:new{
 		data=defaults
 	}
@@ -188,7 +190,6 @@ end
 --
 function RectangleStyle.copyMissingProperties( dest, src )
 	-- print( "RectangleStyle.copyMissingProperties", dest, src )
-	-- Utils.print( src )
 	if dest.debugOn==nil then dest.debugOn=src.debugOn end
 
 	if dest.width==nil then dest.width=src.width end
@@ -265,19 +266,30 @@ end
 
 function RectangleStyle:_checkProperties()
 	-- print( "RectangleStyle._checkProperties" )
+	local emsg = "Style: requires property '%s'"
 
-	BaseStyle._checkProperties( self )
+	--== Check Inheritance
+	-- if not proper types, then make sure we have data
+	local inherit_type = self._inherit and self._inherit.type or nil
+	if self.type ~= inherit_type then
+		print( sformat("[NOTICE] Style inheritance mismatch '%s'<>'%s'", tostring(self.type), tostring(inherit_type) ))
+		RectangleStyle.copyMissingProperties( self, RectangleStyle._STYLE_DEFAULTS )
+	end
 
-	assert( self.width, "Style: requires property'width'" )
-	assert( self.height, "Style: requires property 'height'" )
+	local is_valid = BaseStyle._checkProperties( self )
 
-	assert( self.type, "Style: requires property 'type'" )
+	if not self.width then print(sformat(emsg,'width')) ; is_valid=false end
+	if not self.height then print(sformat(emsg,'height')) ; is_valid=false end
 
-	assert( self.anchorX, "Style: requires property'anchorX'" )
-	assert( self.anchorY, "Style: requires property 'anchory'" )
-	assert( self.fillColor, "Style: requires property 'fillColor'" )
-	assert( self.strokeColor, "Style: requires property 'strokeColor'" )
-	assert( self.strokeWidth, "Style: requires property 'strokeWidth'" )
+	if not self.type then print(sformat(emsg,'type')) ; is_valid=false end
+
+	if not self.anchorX then print(sformat(emsg,'anchorX')) ; is_valid=false end
+	if not self.anchorY then print(sformat(emsg,'anchorY')) ; is_valid=false end
+	if not self.fillColor then print(sformat(emsg,'fillColor')) ; is_valid=false end
+	if not self.strokeColor then print(sformat(emsg,'strokeColor')) ; is_valid=false end
+	if not self.strokeWidth then print(sformat(emsg,'strokeWidth')) ; is_valid=false end
+
+	return is_valid
 end
 
 

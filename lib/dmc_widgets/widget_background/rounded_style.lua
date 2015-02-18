@@ -65,6 +65,7 @@ local widget_find = dmc_widget_func.find
 
 
 local Objects = require 'dmc_objects'
+local Utils = require 'dmc_utils'
 
 local BaseStyle = require( widget_find( 'widget_style.base_style' ) )
 
@@ -76,6 +77,8 @@ local BaseStyle = require( widget_find( 'widget_style.base_style' ) )
 
 local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
+
+local sformat = string.format
 
 local Widgets = nil -- set later
 
@@ -94,7 +97,7 @@ RoundedStyle.TYPE = 'rounded'
 
 RoundedStyle.__base_style__ = nil
 
-RoundedStyle.DEFAULT = {
+RoundedStyle._STYLE_DEFAULTS = {
 	name='rounded-background-default-style',
 	debugOn=false,
 
@@ -173,7 +176,7 @@ end
 
 function RoundedStyle._setDefaults()
 	-- print( "RoundedStyle._setDefaults" )
-	local defaults = RoundedStyle.DEFAULT
+	local defaults = RoundedStyle._STYLE_DEFAULTS
 	local style = RoundedStyle:new{
 		data=defaults
 	}
@@ -213,7 +216,7 @@ end
 --== cornerRadius
 
 function RoundedStyle.__getters:cornerRadius()
-	-- print( "RoundedStyle.__getters:cornerRadius" )
+	-- print( "RoundedStyle.__getters:cornerRadius", self )
 	local value = self._cornerRadius
 	if value==nil and self._inherit then
 		value = self._inherit.cornerRadius
@@ -283,21 +286,33 @@ end
 --====================================================================--
 --== Private Methods
 
+-- returns true, false
 
 function RoundedStyle:_checkProperties()
 	-- print( "RoundedStyle._checkProperties" )
+	local emsg = "Style: requires property '%s'"
 
-	BaseStyle._checkProperties( self )
+	--== Check Inheritance
+	-- if not proper types, then make sure we have data
+	local inherit_type = self._inherit and self._inherit.type or nil
+	if self.type ~= inherit_type then
+		print( sformat("[NOTICE] Style inheritance mismatch '%s'<>'%s'", tostring(self.type), tostring(inherit_type) ))
+		RoundedStyle.copyMissingProperties( self, self._STYLE_DEFAULTS )
+	end
 
-	assert( self.width, "Style: requires property'width'" )
-	assert( self.height, "Style: requires property 'height'" )
+	local is_valid = BaseStyle._checkProperties( self )
 
-	assert( self.anchorX, "Style: requires property'anchorX'" )
-	assert( self.anchorY, "Style: requires property 'anchory'" )
-	assert( self.cornerRadius, "Style: requires property 'cornerRadius'" )
-	assert( self.fillColor, "Style: requires property 'fillColor'" )
-	assert( self.strokeColor, "Style: requires property 'strokeColor'" )
-	assert( self.strokeWidth, "Style: requires property 'strokeWidth'" )
+	if not self.width then print(sformat(emsg,'width')) ; is_valid=false end
+	if not self.height then print(sformat(emsg,'height')) ; is_valid=false end
+
+	if not self.anchorX then print(sformat(emsg,'anchorX')) ; is_valid=false end
+	if not self.anchorY then print(sformat(emsg,'anchorY')) ; is_valid=false end
+	if not self.cornerRadius then print(sformat(emsg,'cornerRadius')) ; is_valid=false end
+	if not self.fillColor then print(sformat(emsg,'fillColor')) ; is_valid=false end
+	if not self.strokeColor then print(sformat(emsg,'strokeColor')) ; is_valid=false end
+	if not self.strokeWidth then print(sformat(emsg,'strokeWidth')) ; is_valid=false end
+
+	return is_valid
 end
 
 
