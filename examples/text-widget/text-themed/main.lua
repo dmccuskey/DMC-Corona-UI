@@ -66,14 +66,6 @@ local function widgetOnPropertyEvent_handler( event )
 
 end
 
-local function widgetEvent_handler( event )
-	print( 'Main: widgetEvent_handler', event.id, event.phase )
-	local etype= event.type
-
-	print( "Widget Event", etype )
-
-end
-
 
 
 --===================================================================--
@@ -82,7 +74,6 @@ end
 
 
 setupBackground()
-
 
 
 --======================================================--
@@ -98,7 +89,7 @@ function run_example1()
 
 end
 
-run_example1()
+-- run_example1()
 
 
 --======================================================--
@@ -272,3 +263,68 @@ function run_example3()
 end
 
 -- run_example3()
+
+
+--======================================================--
+--== create style, apply to widgets, change style
+
+function run_example4()
+
+	local st4, txt3, txt5
+
+	st4 = Widgets.newTextStyle{
+		name='my-text-style',
+
+		width=120,
+		fontSize=20,
+		fillColor={0.5,0.8,0.2},
+		marginX=0,
+		marginY=0,
+		textColor={1,0,0},
+	}
+
+	-- add text widget, give style
+
+	txt3 = Widgets.newText{
+		text="Text One",
+		style=st4
+	}
+	txt3.x, txt3.y = H_CENTER-70, V_CENTER-100
+
+	-- add another text widget, give same style
+
+	txt5 = Widgets.newText{
+		text="Text Two"
+	}
+	txt5.style = st4
+	txt5.x, txt5.y = H_CENTER+70, V_CENTER-100
+
+	-- add another text widget, with same style
+
+	timer.performWithDelay( 1000, function()
+		print( "\n\nUpdate Properties" )
+		st4.align='left'
+		st4.fontSize=12
+		st4.textColor={0,0,0,1}
+		st4.fillColor={0.2,0.2,0.2}
+
+		-- set property on one text
+		txt5:setFillColor( 1,0.5,0.2,1 )
+	end)
+
+	timer.performWithDelay( 2000, function()
+		print( "\n\nUpdate Properties" )
+		st4.align='center'
+	end)
+
+	timer.performWithDelay( 3000, function()
+		print( "\n\nUpdate Properties" )
+		-- reset local changes to text widget
+		txt5:clearStyle()
+	end)
+
+
+
+end
+
+run_example4()
