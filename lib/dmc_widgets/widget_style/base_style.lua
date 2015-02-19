@@ -243,11 +243,11 @@ end
 
 --== inherit
 
--- value should be a instance of Style Class
+-- value should be a instance of Style Class or nil
 --
 function Style.__setters:inherit( value )
-	-- print( "Style.__setters:inherit", value )
-	assert( value==nil or value:isa( self.class ) )
+	-- print( "Style.__setters:inherit", self, value )
+	assert( value==nil or value:isa( Style ) )
 	--==--
 	local o = self._inherit
 	local f = self._inherit_f

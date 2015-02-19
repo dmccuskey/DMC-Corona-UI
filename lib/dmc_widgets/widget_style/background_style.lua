@@ -370,11 +370,11 @@ end
 
 function BackgroundBase.__setters:inherit( value )
 	-- print( "BackgroundBase.__setters:inherit", value )
-	assert( value:isa(BackgroundBase) )
+	BaseStyle.__setters.inherit( self, value )
 	--==--
-	self._inherit = value
-	assert( value.view )
-	self._view.inherit = value.view
+	if self._view then
+		self._view.inherit = value and value.view or value
+	end
 end
 
 -- function BackgroundBase:copyStyle( params )
