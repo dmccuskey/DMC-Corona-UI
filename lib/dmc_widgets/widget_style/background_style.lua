@@ -377,16 +377,6 @@ function BackgroundBase.__setters:inherit( value )
 	end
 end
 
--- function BackgroundBase:copyStyle( params )
--- 	-- print( "BackgroundBase:copyStyle", self )
--- 	params = params or {}
--- 	params.inherit = self
--- 	--==--
--- 	local style = self.class:new( params )
--- 	return style
--- end
-
-
 
 -- createStyleFromType()
 -- looks for style class based on view type
