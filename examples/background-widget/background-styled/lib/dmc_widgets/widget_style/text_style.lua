@@ -99,7 +99,6 @@ TextStyle.EXCLUDE_PROPERTY_CHECK = {
 
 TextStyle._STYLE_DEFAULTS = {
 	name='text-default-style',
-	debugOn=false,
 
 	width=nil,
 	height=nil,
@@ -107,6 +106,7 @@ TextStyle._STYLE_DEFAULTS = {
 	align='center',
 	anchorX=0.5,
 	anchorY=0.5,
+	debugOn=false,
 	fillColor={1,1,1,0},
 	font=native.systemFont,
 	fontSize=24,

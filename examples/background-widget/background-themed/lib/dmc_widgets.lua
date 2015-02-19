@@ -176,10 +176,9 @@ function Widget.newBackground( options )
 end
 
 function Widget.newBackgroundStyle( style_info )
-	print("Widget.newBackgroundStyle")
+	-- print("Widget.newBackgroundStyle")
 	-- assert( type(style_info)=='table' and style_info.type, "newBackgroundStyle: missing style property 'type'" )
 	if not Widget.Style.Background then loadBackgroundSupport() end
-	print("\n\n\nNOW MY BACKGROUND")
 	return Widget.Style.Background:createStyleFrom{ data=style_info }
 end
 
@@ -192,7 +191,7 @@ end
 loadButtonSupport = function()
 	-- print("loadButtonSupport")
 	local Button = require( PATH .. '.' .. 'widget_button' )
-	local ButtonStyle = require( PATH .. '.' .. 'theme_manager.button_style' )
+	local ButtonStyle = require( PATH .. '.' .. 'widget_style.button_style' )
 
 	Widget.Button=Button
 	Widget.Style.Button=ButtonStyle

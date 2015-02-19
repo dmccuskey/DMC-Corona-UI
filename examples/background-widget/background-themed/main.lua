@@ -105,25 +105,27 @@ function run_example1()
 	-- bw1.onProperty = widgetOnPropertyEvent_handler
 
 	bw1.x, bw1.y = H_CENTER, V_CENTER-100
-	-- bw1.y = V_CENTER-50
-	-- bw1.width, bw1.height = 10,10
-	-- -- bw1:setAnchor( {0,0} )
-	-- bw1:setAnchor( {0.5,0.5} )
-	-- -- bw1:setAnchor( {1,1} )
-	-- bw1:setViewFillColor(1,0,0 )
+	bw1.y = V_CENTER-50
+	bw1.width, bw1.height = 10,10
+	-- bw1:setAnchor( {0,0} )
+	bw1:setAnchor( {0.5,0.5} )
+	-- bw1:setAnchor( {1,1} )
+	bw1:setViewFillColor(1,0,0 )
 
 
-	-- timer.performWithDelay( 1000, function()
-	-- 	bw1.style=nil -- shouldn't change, already default
-	-- end)
+	timer.performWithDelay( 1000, function()
+		print( "\n\nUpdate style" )
+		bw1.style=nil -- shouldn't change, already default
+	end)
 
-	-- timer.performWithDelay( 2000, function()
-	-- 	bw1:clearStyle() -- clear our changes
-	-- end)
+	timer.performWithDelay( 2000, function()
+		print( "\n\nClear properties" )
+		bw1:clearStyle() -- clear our changes
+	end)
 
 end
 
-run_example1()
+-- run_example1()
 
 
 --======================================================--
@@ -263,10 +265,11 @@ function run_example4()
 
 
 	timer.performWithDelay( 2000, function()
+		print("\n\nClear Style")
 		bw4:clearStyle()
 	end)
 
 end
 
--- run_example4()
+run_example4()
 

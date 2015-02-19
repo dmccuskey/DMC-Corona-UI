@@ -123,6 +123,8 @@ function Style:__init__( params )
 	--==--
 	-- Style inheritance tree
 	self._inherit = params.inherit
+	self._inherit_f = nil
+
 	-- widget delegate
 	self._parent = params.parent
 	self._widget = params.widget
@@ -141,6 +143,8 @@ function Style:__initComplete__()
 	--==--
 	local data = self:_prepareData( self._tmp_data )
 	self._tmp_data = nil
+
+	self.inherit = self._inherit -- use setter
 
 	self:_parseData( data )
 	self:_checkChildren()
@@ -239,13 +243,28 @@ end
 
 --== inherit
 
--- value should be a instance of Style Class
+-- value should be a instance of Style Class or nil
 --
 function Style.__setters:inherit( value )
-	-- print( "Style.__setters:inherit", value )
-	assert( value:isa( self.class ) )
+	-- print( "Style.__setters:inherit", self, value )
+	assert( value==nil or value:isa( Style ) )
 	--==--
-	self._inherit = value
+	local o = self._inherit
+	local f = self._inherit_f
+	if o and f then
+		o:removeEventListener( o.EVENT, f )
+		self._inherit = nil
+		self._inherit_f = nil
+	end
+
+	o = value
+
+	if o then
+		f = self:createCallback( self._inheritedStyleEvent_handler )
+		o:addEventListener( o.EVENT, f )
+		self._inherit = o
+		self._inherit_f = f
+	end
 end
 
 --== widget
@@ -648,6 +667,16 @@ function Style:_parseData( data )
 end
 
 
+-- _getRawProperty()
+-- property access with name, and not using getters
+--
+function Style:_getRawProperty( name )
+	assert( type(name)=='string' )
+	local key = '_'..name
+	return self[key]
+end
+
+
 --======================================================--
 -- Event Dispatch
 
@@ -676,26 +705,24 @@ end
 
 -- _dispatchChangeEvent()
 -- send out property-changed event to listeners
+-- and to any inherits
 --
-function Style:_dispatchChangeEvent( prop, value, substyle )
+function Style:_dispatchChangeEvent( prop, value )
 	-- print( 'Style:_dispatchChangeEvent', prop, value, self )
 	local widget = self._widget
 	local callback = self._onPropertyChange_f
 
-	if not widget and not callback then return end
+	local e = self:createEvent( self.STYLE_UPDATED, {property=prop,value=value}, {merge=true} )
 
-	local e = {
-		name=self.EVENT,
-		target=self,
-		type=self.STYLE_UPDATED,
-		property=prop,
-		value=value
-	}
+	-- dispatch event to different listeners
 	if widget and widget.stylePropertyChangeHandler then
 		widget:stylePropertyChangeHandler( e )
 	end
+	--
 	if callback then callback( e ) end
 
+	-- styles which inherit from this one
+	self:dispatchRawEvent( e )
 end
 
 
@@ -704,7 +731,25 @@ end
 --== Event Handlers
 
 
--- none
+-- _inheritedStyleEvent_handler()
+-- handle inheritdstyle-events
+--
+function Style:_inheritedStyleEvent_handler( event )
+	-- print( "Style:_inheritedStyleEvent_handler", event )
+	local style = event.target
+	local etype = event.type
+
+	if etype==style.STYLE_RESET then
+		self._dispatchResetEvent()
+
+	elseif etype==style.STYLE_UPDATED then
+		-- only re-dispatch property changes if our property is empty
+		if self:_getRawProperty( event.property ) == nil then
+			self:_dispatchChangeEvent( event.property, event.value )
+		end
+	end
+
+end
 
 
 

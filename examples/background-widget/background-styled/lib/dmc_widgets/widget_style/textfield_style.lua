@@ -405,13 +405,17 @@ end
 
 function TextFieldStyle.__setters:inherit( value )
 	-- print( "TextFieldStyle.__setters:inherit", value )
-	assert( value:isa(TextFieldStyle) )
+	BaseStyle.__setters.inherit( self, value )
 	--==--
-	self._inherit = value
-
-	self._background.inherit = value.background
-	self._hint.inherit = value.hint
-	self._display.inherit = value.display
+	if self._background then
+		self._background.inherit = value and value.background or value
+	end
+	if self._hint then
+		self._hint.inherit = value and value.hint or value
+	end
+	if self._display then
+		self._display.inherit = value and value.display or value
+	end
 end
 
 
