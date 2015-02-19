@@ -139,7 +139,8 @@ Widget.Popover.__setWidgetManager( Widget )
 Widget.PopoverMixModule.__setWidgetManager( Widget )
 
 
-local loadBackgroundSupport, loadTextSupport, loadTextFieldSupport
+local loadBackgroundSupport, loadButtonSupport
+local loadTextSupport, loadTextFieldSupport
 
 
 
@@ -152,12 +153,20 @@ loadBackgroundSupport = function()
 
 	local Background = require( PATH .. '.' .. 'widget_background' )
 	local BackgroundStyle = require( PATH .. '.' .. 'widget_style.background_style' )
+	local RectangleStyle = require( PATH .. '.' .. 'widget_background.rectangle_style' )
+	local RoundedStyle = require( PATH .. '.' .. 'widget_background.rounded_style' )
+	local BackgroundStyleFactory = require( PATH .. '.' .. 'widget_background.style_factory' )
+	local BackgroundViewFactory = require( PATH .. '.' .. 'widget_background.view_factory' )
 
 	Widget.Background=Background
+	Widget.BackgroundFactory=BackgroundViewFactory
 	Widget.Style.Background=BackgroundStyle
+	Widget.Style.BackgroundFactory=BackgroundStyleFactory
 
 	Background.initialize( Widget )
+	BackgroundViewFactory.initialize( Widget )
 	BackgroundStyle.initialize( Widget )
+	BackgroundStyleFactory.initialize( Widget )
 end
 
 
@@ -168,6 +177,7 @@ end
 
 function Widget.newBackgroundStyle( style_info )
 	-- print("Widget.newBackgroundStyle")
+	-- assert( type(style_info)=='table' and style_info.type, "newBackgroundStyle: missing style property 'type'" )
 	if not Widget.Style.Background then loadBackgroundSupport() end
 	return Widget.Style.Background:createStyleFrom{ data=style_info }
 end
@@ -178,10 +188,46 @@ end
 --== newButton widget
 
 
+loadButtonSupport = function()
+	-- print("loadButtonSupport")
+	local Button = require( PATH .. '.' .. 'widget_button' )
+	local ButtonStyle = require( PATH .. '.' .. 'widget_style.button_style' )
+
+	Widget.Button=Button
+	Widget.Style.Button=ButtonStyle
+
+	Button.initialize( Widget )
+	ButtonStyle.initialize( Widget )
+end
+
+
 function Widget.newButton( options )
-	local theme = nil
-	local widget = Widget.Button
-	return widget.create( options, theme )
+	if not Widget.Button then loadButtonSupport() end
+	return Widget.Button.create( options )
+end
+
+function Widget.newPushButton( options )
+	if not Widget.Button then loadButtonSupport() end
+	options = options or {}
+	options.action = Widget.Button.PushButton.TYPE
+	--==--
+	return Widget.Button.create( options )
+end
+
+function Widget.newRadioButton( options )
+	if not Widget.Button then loadButtonSupport() end
+	options = options or {}
+	options.action = Widget.Button.RadioButton.TYPE
+	--==--
+	return Widget.Button.create( options )
+end
+
+function Widget.newToggleButton( options )
+	if not Widget.Button then loadButtonSupport() end
+	options = options or {}
+	options.action = Widget.Button.ToggleButton.TYPE
+	--==--
+	return Widget.Button.create( options )
 end
 
 
@@ -240,18 +286,6 @@ function Widget.newPopover( options )
 end
 
 
-
---===================================================================--
---== newPushButton widget
-
-
-function Widget.newPushButton( options )
-	options = options or {}
-	--==--
-	local theme = nil
-	options.type = Widget.Button.PushButton.TYPE
-	return Widget.Button.create( options, theme )
-end
 
 
 

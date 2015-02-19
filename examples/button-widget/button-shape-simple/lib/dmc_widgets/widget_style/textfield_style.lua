@@ -93,12 +93,16 @@ local TextFieldStyle = newClass( BaseStyle, {name="TextField Style"} )
 TextFieldStyle.__base_style__ = nil
 
 -- child styles
-TextFieldStyle.BACKGROUND = 'textfield-background'
-TextFieldStyle.HINT = 'textfield-hint'
-TextFieldStyle.DISPLAY = 'textfield-display'
+TextFieldStyle.BACKGROUND_KEY = 'background'
+TextFieldStyle.BACKGROUND_NAME = 'textfield-background'
+TextFieldStyle.HINT_KEY = 'hint'
+TextFieldStyle.HINT_NAME = 'textfield-hint'
+TextFieldStyle.DISPLAY_KEY = 'display'
+TextFieldStyle.DISPLAY_NAME = 'textfield-display'
 
-TextFieldStyle.DEFAULT = {
+TextFieldStyle._STYLE_DEFAULTS = {
 	name='textfield-default-style',
+	debugOn=false,
 
 	width=200,
 	height=40,
@@ -106,7 +110,6 @@ TextFieldStyle.DEFAULT = {
 	align='center',
 	anchorX=0.5,
 	anchorY=0.5,
-	debugOn=false,
 	backgroundStyle='none',
 	inputType='password',
 	marginX=0,
@@ -115,7 +118,7 @@ TextFieldStyle.DEFAULT = {
 
 	background={
 		--[[
-		from TextField
+		Copied from TextField
 		* width
 		* height
 		* anchorX/Y
@@ -127,7 +130,7 @@ TextFieldStyle.DEFAULT = {
 	},
 	hint={
 		--[[
-		from TextField
+		Copied from TextField
 		* width
 		* height
 		* align
@@ -141,7 +144,7 @@ TextFieldStyle.DEFAULT = {
 	},
 	display={
 		--[[
-		from TextField
+		Copied from TextField
 		* width
 		* height
 		* align
@@ -166,7 +169,7 @@ TextFieldStyle.EVENT = 'textfield-style-event'
 
 
 --======================================================--
---== Start: Setup DMC Objects
+-- Start: Setup DMC Objects
 
 function TextFieldStyle:__init__( params )
 	-- print( "TextFieldStyle:__init__", params )
@@ -185,9 +188,10 @@ function TextFieldStyle:__init__( params )
 	-- self._name
 	-- self._debugOn
 
-	-- these are ones which we save locally, others are
-	-- stored in component styles
-	--
+	--== Local style properties
+
+	-- other properties are in substyles
+
 	self._width = nil
 	self._height = nil
 
@@ -209,7 +213,7 @@ function TextFieldStyle:__init__( params )
 
 end
 
---== END: Setup DMC Objects
+-- END: Setup DMC Objects
 --======================================================--
 
 
@@ -226,36 +230,118 @@ function TextFieldStyle.initialize( manager )
 end
 
 
+function TextFieldStyle._setDefaults()
+	-- print( "TextFieldStyle._setDefaults" )
 
-function TextFieldStyle:_checkChildren()
-	-- print( "TextFieldStyle:_checkChildren" )
-	-- using setters !!!
-	if self._background==nil then self.background=nil end
-	if self._hint==nil then self.hint=nil end
-	if self._display==nil then self.display=nil end
+	local defaults = TextFieldStyle._STYLE_DEFAULTS
+
+	defaults = TextFieldStyle.pushMissingProperties( defaults )
+
+	local style = TextFieldStyle:new{
+		data=defaults
+	}
+	TextFieldStyle.__base_style__ = style
+
 end
 
+
+function TextFieldStyle.pushMissingProperties( src )
+	-- print("TextFieldStyle.pushMissingProperties", src )
+	if not src then return end
+
+	local StyleClass, dest
+	local eStr = "ERROR: Style missing property '%s'"
+
+	-- copy properties to Background substyle 'background'
+	StyleClass = Widgets.Style.Background
+	dest = src[ TextFieldStyle.BACKGROUND_KEY ]
+	assert( dest, sformat( eStr, TextFieldStyle.BACKGROUND_KEY ) )
+	StyleClass.copyMissingProperties( dest, src )
+
+	-- copy properties to Text substyle 'hint'
+	StyleClass = Widgets.Style.Text
+	dest = src[ TextFieldStyle.HINT_KEY ]
+	assert( dest, sformat( eStr, TextFieldStyle.HINT_KEY ) )
+	StyleClass.copyMissingProperties( dest, src )
+
+	-- copy properties to Text substyle 'display'
+	StyleClass = Widgets.Style.Text
+	dest = src[ TextFieldStyle.DISPLAY_KEY ]
+	assert( dest, sformat( eStr, TextFieldStyle.DISPLAY_KEY ) )
+	StyleClass.copyMissingProperties( dest, src )
+
+	return src
+end
 
 
 --====================================================================--
 --== Public Methods
 
 
---== inherit
+--======================================================--
+-- Access to sub-styles
 
--- Style Class
---
-function TextFieldStyle.__setters:inherit( value )
-	-- print( "TextFieldStyle.__setters:inherit", value )
-	assert( value:isa(TextFieldStyle) )
+function TextFieldStyle.__getters:background()
+	-- print( 'TextFieldStyle.__getters:background', self._background )
+	return self._background
+end
+function TextFieldStyle.__setters:background( data )
+	-- print( 'TextFieldStyle.__setters:background', data )
+	assert( data==nil or type( data )=='table' )
 	--==--
-	self._inherit = value
+	local StyleClass = Widgets.Style.Background
+	local inherit = self._inherit and self._inherit._background
 
-	self._background.inherit = value.background
-	self._hint.inherit = value.hint
-	self._display.inherit = value.display
+	self._background = StyleClass:createStyleFrom{
+		name=TextFieldStyle.BACKGROUND_NAME,
+		inherit=inherit,
+		parent=self,
+		data=data
+	}
 end
 
+
+function TextFieldStyle.__getters:hint()
+	-- print( "TextFieldStyle.__getters:hint", data )
+	return self._hint
+end
+function TextFieldStyle.__setters:hint( data )
+	-- print( "TextFieldStyle.__setters:hint", data )
+	assert( data==nil or type( data )=='table' )
+	--==--
+	local StyleClass = Widgets.Style.Text
+	local inherit = self._inherit and self._inherit._hint
+
+	self._hint = StyleClass:createStyleFrom{
+		name=TextFieldStyle.HINT_NAME,
+		inherit=inherit,
+		parent=self,
+		data=data
+	}
+end
+
+
+function TextFieldStyle.__getters:display()
+	return self._display
+end
+function TextFieldStyle.__setters:display( data )
+	-- print( 'TextFieldStyle.__setters:display', data )
+	assert( data==nil or type( data )=='table' )
+	--==--
+	local StyleClass = Widgets.Style.Text
+	local inherit = self._inherit and self._inherit._display
+
+	self._display = StyleClass:createStyleFrom{
+		name=TextFieldStyle.DISPLAY_NAME,
+		inherit=inherit,
+		parent=self,
+		data=data
+	}
+end
+
+
+--======================================================--
+-- Access to style properties
 
 --== backgroundStyle
 
@@ -312,65 +398,24 @@ function TextFieldStyle.__setters:returnKey( value )
 end
 
 
+--======================================================--
+-- Misc
 
---== other styles
+--== inherit
 
-function TextFieldStyle.__getters:background()
-	-- print( 'TextFieldStyle.__getters:background', self._background )
-	return self._background
-end
-function TextFieldStyle.__setters:background( data )
-	-- print( 'TextFieldStyle.__setters:background', data )
-	assert( data==nil or type( data )=='table' )
+function TextFieldStyle.__setters:inherit( value )
+	-- print( "TextFieldStyle.__setters:inherit", value )
+	BaseStyle.__setters.inherit( self, value )
 	--==--
-	local StyleClass = Widgets.Style.Background
-	local inherit = self._inherit and self._inherit._background
-
-	self._background = StyleClass:createStyleFrom{
-		name=TextFieldStyle.BACKGROUND,
-		data=data,
-		inherit=inherit,
-		parent=self
-	}
-end
-
-
-function TextFieldStyle.__getters:hint()
-	-- print( "TextFieldStyle.__getters:hint", data )
-	return self._hint
-end
-function TextFieldStyle.__setters:hint( data )
-	-- print( "TextFieldStyle.__setters:hint", data )
-	assert( data==nil or type( data )=='table' )
-	--==--
-	local StyleClass = Widgets.Style.Text
-	local inherit = self._inherit and self._inherit._hint
-
-	self._hint = StyleClass:createStyleFrom{
-		name=TextFieldStyle.HINT,
-		inherit=inherit,
-		data=data,
-		parent=self
-	}
-end
-
-
-function TextFieldStyle.__getters:display()
-	return self._display
-end
-function TextFieldStyle.__setters:display( data )
-	-- print( 'TextFieldStyle.__setters:display', data )
-	assert( data==nil or type( data )=='table' )
-	--==--
-	local StyleClass = Widgets.Style.Text
-	local inherit = self._inherit and self._inherit._display
-
-	self._display = StyleClass:createStyleFrom{
-		name=TextFieldStyle.TEXT,
-		data=data,
-		inherit=inherit,
-		parent=self
-	}
+	if self._background then
+		self._background.inherit = value and value.background or value
+	end
+	if self._hint then
+		self._hint.inherit = value and value.hint or value
+	end
+	if self._display then
+		self._display.inherit = value and value.display or value
+	end
 end
 
 
@@ -421,81 +466,54 @@ end
 --== Private Methods
 
 
-function TextFieldStyle._setDefaults()
-	-- print( "TextFieldStyle._setDefaults" )
-	local defaults = TextFieldStyle.DEFAULT
-
-	--== copy over property values to sub-styles
-	-- this is a little hack, but inline with how the system works
-	-- just done manually for startup
-	local tmp
-	-- background
-	tmp = defaults.background
-	tmp.width=defaults.width
-	tmp.height=defaults.height
-	tmp.anchorX=defaults.anchorX
-	tmp.anchorY=defaults.anchorY
-
-	-- hint
-	tmp = defaults.hint
-	tmp.width=defaults.width
-	tmp.height=defaults.height
-	tmp.align=defaults.align
-	tmp.anchorX=defaults.anchorX
-	tmp.anchorY=defaults.anchorY
-	tmp.marginX=defaults.marginX
-	tmp.marginY=defaults.marginY
-
-	-- text
-	tmp = defaults.display
-	tmp.width=defaults.width
-	tmp.height=defaults.height
-	tmp.align=defaults.align
-	tmp.anchorX=defaults.anchorX
-	tmp.anchorY=defaults.anchorY
-	tmp.marginX=defaults.marginX
-	tmp.marginY=defaults.marginY
-
-
-	local style = TextFieldStyle:new{
-		data=defaults
-	}
-	TextFieldStyle.__base_style__ = style
-
+function TextFieldStyle:_prepareData( data )
+	-- print("TextFieldStyle:_prepareData", data )
+	if not data then return end
+	return TextFieldStyle.pushMissingProperties( data )
 end
 
+function TextFieldStyle:_checkChildren()
+	-- print( "TextFieldStyle:_checkChildren" )
 
+	-- using setters !!!
+	if self._background==nil then self.background=nil end
+	if self._hint==nil then self.hint=nil end
+	if self._display==nil then self.display=nil end
+end
 
 function TextFieldStyle:_checkProperties()
 	-- print( "TextFieldStyle:_checkProperties" )
-	BaseStyle._checkProperties( self )
+	local emsg = "Style: requires property '%s'"
+	local is_valid = BaseStyle._checkProperties( self )
 
 	-- TODO: add more tests
 
-	assert( self.width, "Style: requires 'width'" )
-	assert( self.height, "Style: requires 'height'" )
+	if not self.width then print(sformat(emsg,'width')) ; is_valid=false end
+	if not self.height then print(sformat(emsg,'height')) ; is_valid=false end
 
-	assert( self.align, "Style: requires 'align'" )
-	assert( self.anchorY, "Style: requires 'anchory'" )
-	assert( self.anchorX, "Style: requires 'anchorX'" )
-	assert( self.backgroundStyle, "Style: requires 'backgroundStyle'" )
-	assert( self.inputType, "Style: requires 'inputType'" )
-	assert( self.marginX, "Style: requires 'marginX'" )
-	assert( self.marginY, "Style: requires 'marginY'" )
-	assert( self.returnKey, "Style: requires 'returnKey'" )
+	if not self.align then print(sformat(emsg,'align')) ; is_valid=false end
+	if not self.anchorX then print(sformat(emsg,'anchorX')) ; is_valid=false end
+	if not self.anchorY then print(sformat(emsg,'anchorY')) ; is_valid=false end
+	if not self.backgroundStyle then print(sformat(emsg,'backgroundStyle')) ; is_valid=false end
+	if not self.inputType then print(sformat(emsg,'inputType')) ; is_valid=false end
+	if not self.marginX then print(sformat(emsg,'marginX')) ; is_valid=false end
+	if not self.marginY then print(sformat(emsg,'marginY')) ; is_valid=false end
+	if not self.returnKey then print(sformat(emsg,'returnKey')) ; is_valid=false end
 
-	assert( self._background.strokeWidth, "Style: requires 'background.strokeWidth'" )
-	assert( self._background.fillColor, "Style: requires 'background.fillColor'" )
-	assert( self._background.strokeColor, "Style: requires 'background.strokeColor'" )
+	-- check sub-styles
 
-	assert( self.hint.font, "Style: requires 'hint.font'" )
-	assert( self.hint.fontSize, "Style: requires 'hint.fontSize'" )
-	assert( self.hint.textColor, "Style: requires 'hint.textColor'" )
+	local StyleClass
 
-	assert( self.display.font, "Style: requires 'display.font'" )
-	assert( self.display.fontSize, "Style: requires 'display.fontSize'" )
-	assert( self.display.textColor, "Style: requires 'display.textColor'" )
+	StyleClass = self._background.class
+	if not StyleClass._checkProperties( self._background ) then is_valid=false end
 
+	StyleClass = self._hint.class
+	if not StyleClass._checkProperties( self._hint ) then is_valid=false end
+
+	StyleClass = self._display.class
+	if not StyleClass._checkProperties( self._display ) then is_valid=false end
+
+	return is_valid
 end
 
 
