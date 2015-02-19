@@ -349,6 +349,8 @@ function RectangleView:stylePropertyChangeHandler( event )
 	-- print( "Style Changed", etype, property, value )
 
 	if etype == style.STYLE_RESET then
+		self._debugOn_dirty = true
+
 		self._width_dirty=true
 		self._height_dirty=true
 
@@ -361,7 +363,10 @@ function RectangleView:stylePropertyChangeHandler( event )
 		property = etype
 
 	else
-		if property=='width' then
+		if property=='debugActive' then
+			self._debugOn_dirty=true
+
+		elseif property=='width' then
 			self._width_dirty=true
 		elseif property=='height' then
 			self._height_dirty=true

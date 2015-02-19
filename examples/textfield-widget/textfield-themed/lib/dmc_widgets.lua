@@ -191,7 +191,7 @@ end
 loadButtonSupport = function()
 	-- print("loadButtonSupport")
 	local Button = require( PATH .. '.' .. 'widget_button' )
-	local ButtonStyle = require( PATH .. '.' .. 'theme_manager.button_style' )
+	local ButtonStyle = require( PATH .. '.' .. 'widget_style.button_style' )
 
 	Widget.Button=Button
 	Widget.Style.Button=ButtonStyle

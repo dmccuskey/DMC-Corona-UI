@@ -18,8 +18,6 @@ print( "\n\n#########################################################\n\n" )
 --== Imports
 
 
--- local display, native = require('lib.dmc_corona.dmc_kozy')()
-local Utils = require 'lib.dmc_corona.dmc_utils'
 local Widgets = require 'lib.dmc_widgets'
 
 
@@ -31,13 +29,31 @@ local Widgets = require 'lib.dmc_widgets'
 local W, H = display.contentWidth, display.contentHeight
 local H_CENTER, V_CENTER = W*0.5, H*0.5
 
-local textfield, background
-local formatter, theme, style
-
 
 
 --===================================================================--
 -- Support Functions
+
+
+-- Setup Visual Screen Items
+--
+local function setupBackground()
+	local width, height = 100, 50
+	local o
+
+	o = display.newRect(0,0,W,H)
+	o:setFillColor(0.5,0.5,0.5)
+	o.x, o.y = H_CENTER, V_CENTER
+
+	o = display.newRect(0,0,width+4,height+4)
+	o:setStrokeColor(0,0,0)
+	o.strokeWidth=2
+	o.x, o.y = H_CENTER, V_CENTER
+
+	o = display.newRect( 0,0,10,10)
+	o:setFillColor(1,0,0)
+	o.x, o.y = H_CENTER, V_CENTER
+end
 
 
 local function widgetOnPropertyEvent_handler( event )
@@ -65,141 +81,163 @@ end
 --===================================================================--
 
 
-local width, height = 100, 36
-local o
-
---== Setup Visual Screen Items
-
-o = display.newRect(0,0,W,H)
-o:setFillColor(0.5,0.5,0.5)
-o.x, o.y = H_CENTER, V_CENTER
-
-o = display.newRect(0,0,width+4,height+4)
--- o:setFillColor(1,0,0)
-o:setStrokeColor(0,0,0)
-o.strokeWidth=2
-o.x, o.y = H_CENTER, V_CENTER
-
-o = display.newRect( 0,0,10,10)
-o:setFillColor(1,0,0)
-o.x, o.y = H_CENTER, V_CENTER
+setupBackground()
 
 
+--======================================================--
+--== create textfield widget, default style
 
---== Setup Widgets ==--
+function run_example1()
+
+	local bw1
+
+	tf1 = Widgets.newTextField{
+		text="pizze",
+		hintText="Pizza Topping:"
+	}
+	-- tf1:addEventListener( tf1.EVENT, widgetEvent_handler )
+	-- tf1.onProperty = widgetOnPropertyEvent_handler
+	tf1.debugOn = true
+	tf1.x = H_CENTER
+	tf1.y = V_CENTER
+
+	tf1:setAnchor( {0,0} )
+	-- tf1:setAnchor( {0.5,0.5} )
+	tf1:setAnchor( {1,1} )
+
+	-- tf1.y = 300
+
+	tf1.width=150
+	tf1.height=60
+	tf1.align='center'
+	tf1.marginX=0
+	tf1.hintFontSize=14
+
+	-- tf1.isSecure=true
+
+	timer.performWithDelay( 1000, function()
+		print("\n\n Update Properties")
+		-- test background props
+
+		-- tf1.x = H_CENTER-50
+		tf1.y = V_CENTER+100
+
+		-- tf1.align='left'
+
+		-- tf1.width=250
+		tf1.height=400
+
+		-- tf1:setHintColor( 1,1,0)
+		-- tf1.hintFontSize = 18
+
+		-- tf1:setAnchor( {0,1} )
+
+		-- tf1:setBackgroundFillColor( 1,0.5,0.2,0.5 )
+		-- tf1:setBackgroundStrokeColor( 2,0,0,1 )
+		-- tf1.backgroundStrokeWidth = 1
+
+	end)
+
+	timer.performWithDelay( 2000, function()
+		print("\n\n Update Properties")
+		-- test background props
+		-- tf1.width=100
+		-- tf1.height=80
+		-- tf1.x = 100
+
+		-- tf1.x = H_CENTER+50
+		-- tf1.y = V_CENTER+50
+
+		-- tf1.isHitActive=false
+
+	end)
+
+end
+
+run_example1()
+
+
 
 
 --======================================================--
 --== create textfield widget, default style
 
 
-tf1 = Widgets.newTextField{
-	text="",
-	hintText="Pizza Topping:"
-}
--- tf1:addEventListener( tf1.EVENT, widgetEvent_handler )
--- tf1.onProperty = widgetOnPropertyEvent_handler
-
-tf1.x = H_CENTER
-tf1.y = V_CENTER
-tf1.y = V_CENTER-100
-
--- tf1:setAnchor( {0,0} )
--- tf1:setAnchor( {0.5,0.5} )
--- tf1:setAnchor( {1,1} )
-
--- tf1.y = 300
+function run_example2()
 
 
-tf1.width=250
-tf1.height=60
-tf1.align='center'
-tf1.marginX=10
+	-- timer.performWithDelay( 2000, function()
+	-- 	print("\n\n Update Properties")
+	-- 	-- test hint-text props
+
+	-- 	tf1.x = H_CENTER
+	-- 	tf1.y = V_CENTER
+
+	-- 	-- testing hint properties
+	-- 	tf1.text=""
+
+	-- 	tf1.align='right'
+
+	-- 	-- tf1.marginX=5
+	-- 	-- tf1.marginY=10
+
+	-- 	-- tf1.width=200
+	-- 	-- tf1.height=60
+
+	-- 	-- tf1:setAnchor( {0,0} )
+	-- 	-- tf1:setAnchor( {0,1} )
+	-- 	-- tf1:setAnchor( {1,1} )
+
+	-- 	tf1.hintFont = native.systemFontBold
+	-- 	tf1.hintFontSize = 50
+	-- 	tf1:setHintColor( 0.5,0.5,0.5, 1)
+
+	-- end)
 
 
--- timer.performWithDelay( 1000, function()
--- 	print("\n\n Update Properties")
--- 	-- test background props
-
--- 	tf1.x = H_CENTER
--- 	tf1.y = V_CENTER
-
--- 	tf1.align='left'
-
--- 	tf1.width=250
--- 	tf1.height=60
-
--- 	-- tf1:setAnchor( {0,1} )
-
--- 	-- tf1:setBackgroundFillColor( 1,0.5,0.2,0.5 )
--- 	-- tf1:setBackgroundStrokeColor( 2,0,0,1 )
--- 	-- tf1.backgroundStrokeWidth = 1
-
--- end)
+	-- tf1.text="hamburger"
 
 
--- timer.performWithDelay( 2000, function()
--- 	print("\n\n Update Properties")
--- 	-- test hint-text props
+	-- timer.performWithDelay( 1000, function()
+	-- 	print("\n\n Update Properties")
+	-- 	-- test hint-text props
 
--- 	tf1.x = H_CENTER
--- 	tf1.y = V_CENTER
+	-- 	tf1.x = H_CENTER
+	-- 	tf1.y = V_CENTER
 
--- 	-- testing hint properties
--- 	tf1.text=""
+	-- 	-- testing text properties
 
--- 	tf1.align='right'
+	-- 	tf1.align='right'
 
--- 	-- tf1.marginX=5
--- 	-- tf1.marginY=10
+	-- 	tf1.marginX=5
+	-- 	tf1.marginY=10
 
--- 	-- tf1.width=200
--- 	-- tf1.height=60
+	-- 	tf1.width=200
+	-- 	tf1.height=60
 
--- 	-- tf1:setAnchor( {0,0} )
--- 	-- tf1:setAnchor( {0,1} )
--- 	-- tf1:setAnchor( {1,1} )
+	-- 	tf1:setAnchor( {0,0} )
+	-- 	-- tf1:setAnchor( {0,1} )
+	-- 	-- tf1:setAnchor( {1,1} )
 
--- 	tf1.hintFont = native.systemFontBold
--- 	tf1.hintFontSize = 50
--- 	tf1:setHintColor( 0.5,0.5,0.5, 1)
+	-- 		tf1:setBackgroundFillColor( 1,0.5,0.2,0.5 )
+	-- 		tf1:setBackgroundStrokeColor( 2,0,0,1 )
+	-- 		tf1.backgroundStrokeWidth = 1
 
--- end)
+	-- 	tf1.textFont = native.systemFontBold
+	-- 	tf1.textFontSize = 20
+	-- 	tf1:setTextColor( 0.5,0.5,0.5, 1)
+
+	-- end)
 
 
--- tf1.text="hamburger"
+end
+
+-- run_example2()
 
 
--- timer.performWithDelay( 1000, function()
--- 	print("\n\n Update Properties")
--- 	-- test hint-text props
 
--- 	tf1.x = H_CENTER
--- 	tf1.y = V_CENTER
+function run_example3()
 
--- 	-- testing text properties
-
--- 	tf1.align='right'
-
--- 	tf1.marginX=5
--- 	tf1.marginY=10
-
--- 	tf1.width=200
--- 	tf1.height=60
-
--- 	tf1:setAnchor( {0,0} )
--- 	-- tf1:setAnchor( {0,1} )
--- 	-- tf1:setAnchor( {1,1} )
-
--- 		tf1:setBackgroundFillColor( 1,0.5,0.2,0.5 )
--- 		tf1:setBackgroundStrokeColor( 2,0,0,1 )
--- 		tf1.backgroundStrokeWidth = 1
-
--- 	tf1.textFont = native.systemFontBold
--- 	tf1.textFontSize = 20
--- 	tf1:setTextColor( 0.5,0.5,0.5, 1)
-
--- end)
 
 
 -- tf1.text="hamburger"
@@ -242,16 +280,15 @@ tf1.marginX=10
 -- end)
 
 
-
-
-
-
-
-
 -- timer.performWithDelay( 3000, function()
 -- 	-- tf1.style=nil -- shouldn't change, already default
 -- end)
 
+
+
+end
+
+-- run_example3()
 
 
 
@@ -259,6 +296,11 @@ tf1.marginX=10
 --== create textfield widget, zipcode formatter
 
 -- create formatter
+
+
+
+function run_example4()
+
 
 formatter = Widgets.newFormatter( Widgets.Formatter.US_ZIPCODE )
 
@@ -444,4 +486,7 @@ textfield.y = V_CENTER
 
 -- theme.
 
+end
+
+-- run_example4()
 
