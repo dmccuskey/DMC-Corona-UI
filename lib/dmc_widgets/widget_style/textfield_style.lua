@@ -77,6 +77,8 @@ local BaseStyle = require( widget_find( 'widget_style.base_style' ) )
 local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
 
+local sformat = string.format
+
 local Widgets = nil -- set later
 
 
@@ -111,7 +113,10 @@ TextFieldStyle._STYLE_DEFAULTS = {
 	anchorX=0.5,
 	anchorY=0.5,
 	backgroundStyle='none',
-	inputType='password',
+	inputType='default',
+	isHitActive=true,
+	isHitTestable=true,
+	isSecure=false,
 	marginX=0,
 	marginY=5,
 	returnKey='done',
@@ -123,10 +128,13 @@ TextFieldStyle._STYLE_DEFAULTS = {
 		* height
 		* anchorX/Y
 		--]]
-		fillColor={0.5,0.5,0.2,1},
-		isHitTestable=true,
-		strokeWidth=2,
-		strokeColor={0,0,0,0},
+		view={
+			type='rectangle',
+
+			fillColor={0.5,0.5,0.2,1},
+			strokeWidth=2,
+			strokeColor={0,0,0,1},
+		}
 	},
 	hint={
 		--[[
@@ -158,7 +166,6 @@ TextFieldStyle._STYLE_DEFAULTS = {
 	},
 
 }
-
 
 --== Event Constants
 
@@ -200,6 +207,9 @@ function TextFieldStyle:__init__( params )
 	self._anchorY = nil
 	self._bgStyle = nil
 	self._inputType = nil
+	self._isHitActive = nil
+	self._isHitTestable = nil
+	self._isSecure = nil
 	self._marginX = nil
 	self._marginY = nil
 	self._returnKey = nil
@@ -343,6 +353,24 @@ end
 --======================================================--
 -- Access to style properties
 
+--== align
+
+function TextFieldStyle.__getters:align()
+	-- print( "TextFieldStyle.__getters:align" )
+	local value = self._align
+	if value==nil and self._inherit then
+		value = self._inherit.align
+	end
+	return value
+end
+function TextFieldStyle.__setters:align( value )
+	-- print( "TextFieldStyle.__setters:align", value )
+	assert( (value==nil and self._inherit) or type(value)=='string' )
+	--==--
+	if value == self._align then return end
+	self._align = value
+end
+
 --== backgroundStyle
 
 function TextFieldStyle.__getters:backgroundStyle()
@@ -379,6 +407,101 @@ function TextFieldStyle.__setters:inputType( value )
 	self._inputType = value
 end
 
+--== isHitActive
+
+function TextFieldStyle.__getters:isHitActive()
+	-- print( "TextFieldStyle.__getters:isHitActive" )
+	local value = self._isHitActive
+	if value==nil and self._inherit then
+		value = self._inherit.isHitActive
+	end
+	return value
+end
+function TextFieldStyle.__setters:isHitActive( value )
+	-- print( "TextFieldStyle.__setters:isHitActive", value )
+	assert( type(value)=='boolean' or (value==nil and self._inherit) )
+	--==--
+	if value == self._isHitActive then return end
+	self._isHitActive = value
+	self:_dispatchChangeEvent( 'isHitActive', value )
+end
+
+--== isHitTestable
+
+function TextFieldStyle.__getters:isHitTestable()
+	-- print( "TextFieldStyle.__getters:isHitTestable" )
+	local value = self._isHitTestable
+	if value==nil and self._inherit then
+		value = self._inherit.isHitTestable
+	end
+	return value
+end
+function TextFieldStyle.__setters:isHitTestable( value )
+	-- print( "TextFieldStyle.__setters:isHitTestable", value )
+	assert( type(value)=='boolean' or (value==nil and self._inherit) )
+	--==--
+	if value==self._isHitTestable then return end
+	self._isHitTestable = value
+	self:_dispatchChangeEvent( 'isHitTestable', value )
+end
+
+--== isSecure
+
+function TextFieldStyle.__getters:isSecure()
+	-- print( "TextFieldStyle.__getters:isSecure" )
+	local value = self._isSecure
+	if value==nil and self._inherit then
+		value = self._inherit.isSecure
+	end
+	return value
+end
+function TextFieldStyle.__setters:isSecure( value )
+	-- print( "TextFieldStyle.__setters:isSecure", value )
+	assert( type(value)=='boolean' or (value==nil and self._inherit) )
+	--==--
+	if value==self._isSecure then return end
+	self._isSecure = value
+	self:_dispatchChangeEvent( 'isSecure', value )
+end
+
+--== marginX
+
+function TextFieldStyle.__getters:marginX()
+	-- print( "TextFieldStyle.__getters:marginX" )
+	local value = self._marginX
+	if value==nil and self._inherit then
+		value = self._inherit.marginX
+	end
+	return value
+end
+function TextFieldStyle.__setters:marginX( value )
+	-- print( "TextFieldStyle.__setters:marginX", value )
+	assert( (type(value)=='number' and value>=0) or (value==nil and self._inherit) )
+	--==--
+	if value == self._marginX then return end
+	self._marginX = value
+	self:_dispatchChangeEvent( 'marginX', value )
+end
+
+--== marginY
+
+function TextFieldStyle.__getters:marginY()
+	-- print( "TextFieldStyle.__getters:marginY" )
+	local value = self._marginY
+	if value==nil and self._inherit then
+		value = self._inherit.marginY
+	end
+	return value
+end
+function TextFieldStyle.__setters:marginY( value )
+	-- print( "TextFieldStyle.__setters:marginY", value )
+	assert( (type(value)=='number' and value>=0) or (value==nil and self._inherit) )
+	--==--
+	if value == self._marginY then return end
+	self._marginY = value
+	self:_dispatchChangeEvent( 'marginY', value )
+end
+
 --== returnKey
 
 function TextFieldStyle.__getters:returnKey()
@@ -396,6 +519,13 @@ function TextFieldStyle.__setters:returnKey( value )
 	if value == self._inputType then return end
 	self._returnKey = value
 end
+
+
+--======================================================--
+-- Proxy Methods
+
+
+
 
 
 --======================================================--
@@ -432,7 +562,6 @@ function TextFieldStyle:updateStyle( info, params )
 
 	if info.debugOn~=nil or force then self.debugOn=info.debugOn end
 
-	--== Widget-level
 	if info.width or force then self.width=info.width end
 	if info.height or force then self.height=info.height end
 
@@ -441,22 +570,25 @@ function TextFieldStyle:updateStyle( info, params )
 	if info.anchorY or force then self.anchorY=info.anchorY end
 	if info.backgroundStyle or force then self.backgroundStyle=info.backgroundStyle end
 	if info.inputType or force then self.inputType=info.inputType end
+	if info.isHitActive or force then self.isHitActive=info.isHitActive end
+	if info.isHitTestable or force then self.isHitTestable=info.isHitTestable end
+	if info.isSecure or force then self.isSecure=info.isSecure end
 	if info.marginX or force then self.marginX=info.marginX end
 	if info.marginY or force then self.marginY=info.marginY end
 	if info.returnKey or force then self.returnKey=info.returnKey end
 
-	--== Text-level
-	if info.displayColor or force then self.display.textColor=info.displayColor end
-	if info.displayFont or force then self.display.font=info.displayFont end
-	if info.displayFontSize or force then self.display.fontSize=info.displayFontSize end
-	--== Hint-level
-	if info.hintColor or force then self.hint.textColor=info.hintColor end
-	if info.hintFont or force then self.hint.font=info.hintFont end
-	if info.hintFontSize or force then self.hint.fontSize=info.hintFontSize end
+	-- --== Text-level
+	-- if info.displayColor or force then self.display.textColor=info.displayColor end
+	-- if info.displayFont or force then self.display.font=info.displayFont end
+	-- if info.displayFontSize or force then self.display.fontSize=info.displayFontSize end
+	-- --== Hint-level
+	-- if info.hintColor or force then self.hint.textColor=info.hintColor end
+	-- if info.hintFont or force then self.hint.font=info.hintFont end
+	-- if info.hintFontSize or force then self.hint.fontSize=info.hintFontSize end
 
-	--== Background-level
-	if info.marginX or force then self.background.marginX=info.marginX end
-	if info.marginY or force then self.background.marginY=info.marginY end
+	-- --== Background-level
+	-- if info.marginX or force then self.background.marginX=info.marginX end
+	-- if info.marginY or force then self.background.marginY=info.marginY end
 
 end
 
@@ -496,6 +628,9 @@ function TextFieldStyle:_checkProperties()
 	if not self.anchorY then print(sformat(emsg,'anchorY')) ; is_valid=false end
 	if not self.backgroundStyle then print(sformat(emsg,'backgroundStyle')) ; is_valid=false end
 	if not self.inputType then print(sformat(emsg,'inputType')) ; is_valid=false end
+	if self.isHitActive==nil then print(sformat(emsg,'isHitActive')) ; is_valid=false end
+	if self.isHitTestable==nil then print(sformat(emsg,'isHitTestable')) ; is_valid=false end
+	if self.isSecure==nil then print(sformat(emsg,'isSecure')) ; is_valid=false end
 	if not self.marginX then print(sformat(emsg,'marginX')) ; is_valid=false end
 	if not self.marginY then print(sformat(emsg,'marginY')) ; is_valid=false end
 	if not self.returnKey then print(sformat(emsg,'returnKey')) ; is_valid=false end
@@ -505,13 +640,13 @@ function TextFieldStyle:_checkProperties()
 	local StyleClass
 
 	StyleClass = self._background.class
-	if not StyleClass._checkProperties( self._background ) then is_valid=false end
+	-- if not StyleClass._checkProperties( self._background ) then is_valid=false end
 
 	StyleClass = self._hint.class
-	if not StyleClass._checkProperties( self._hint ) then is_valid=false end
+	-- if not StyleClass._checkProperties( self._hint ) then is_valid=false end
 
 	StyleClass = self._display.class
-	if not StyleClass._checkProperties( self._display ) then is_valid=false end
+	-- if not StyleClass._checkProperties( self._display ) then is_valid=false end
 
 	return is_valid
 end
