@@ -217,7 +217,6 @@ end
 
 function Widget.newButton( options )
 	if not Widget.Button then loadButtonSupport() end
-	print("\n\n\nCREATING BUTT")
 	return Widget.Button.create( options )
 end
 
@@ -226,6 +225,7 @@ function Widget.newPushButton( options )
 	options = options or {}
 	options.action = Widget.Button.PushButton.TYPE
 	--==--
+	print("\n\n\n\nCREATING BUTT\n\n")
 	return Widget.Button.create( options )
 end
 

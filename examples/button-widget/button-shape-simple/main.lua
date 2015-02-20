@@ -98,6 +98,29 @@ end
 setupBackground()
 
 
+-- src={
+-- 	debugOn=true,
+
+-- 	width=100,
+-- 	height=50,
+
+
+-- }
+
+-- dest = {
+
+-- 	width=50
+-- }
+
+-- in borroing from lower classes, upper needs to override
+
+-- in dest:
+-- if src~= nil then dest=src end
+
+
+-- style={
+-- 	align='right'
+-- }
 
 --======================================================--
 --== create textfield widget, default style
@@ -117,7 +140,7 @@ function run_example1()
 
 		data="your data",
 
-		style={
+		style = {
 			debugOn=true,
 
 			width=100,
@@ -129,7 +152,19 @@ function run_example1()
 			hitMarginX=0,
 			hitMarginY=0,
 			isHitActive=true,
+			offsetX=0,
+			offsetY=0,
 
+			label={
+				text="hello",
+				fontColor={1,0,1},
+			},
+
+			background = {
+			 view={
+
+				}
+			},
 
 			inactive = {
 				label = {
@@ -164,7 +199,10 @@ function run_example1()
 					textColor={0,0,0},
 				},
 				background={
-
+					view={
+						type='rounded',
+						fillColor={0,1,0}
+					}
 				}
 			},
 
@@ -176,7 +214,7 @@ function run_example1()
 		onEvent = onEvent_handler,
 
 	}
-	btn1.x, btn1.y = H_CENTER, V_CENTER
+	btn1.x, btn1.y = H_CENTER, V_CENTER-100
 
 
 	timer.performWithDelay( 1000, function()

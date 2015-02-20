@@ -185,6 +185,8 @@ function ButtonBase:__init__( params )
 	self._hitMarginY_dirty=true
 	self._marginX_dirty=true
 	self._marginY_dirty=true
+	self._offsetX_dirty=true
+	self._offsetY_dirty=true
 
 	-- "Virtual" properties
 
@@ -348,7 +350,7 @@ function ButtonBase.__getters:strokeWidth()
 	return self.curr_style.background.strokeWidth
 end
 function ButtonBase.__setters:strokeWidth( value )
-	print( 'ButtonBase.__setters:strokeWidth', value )
+	-- print( 'ButtonBase.__setters:strokeWidth', value )
 	self.curr_style.inactive.strokeWidth = value
 end
 
@@ -356,7 +358,7 @@ function ButtonBase.__getters:strokeColor()
 	return self.curr_style.background.strokeWidth
 end
 function ButtonBase.__setters:strokeColor( value )
-	print( 'ButtonBase.__setters:strokeColor', value )
+	-- print( 'ButtonBase.__setters:strokeColor', value )
 	self.curr_style.inactive.strokeColor = value
 end
 
@@ -527,7 +529,7 @@ end
 --
 -- TODO: use create event
 function ButtonBase:_doPressEventDispatch()
-	print( "ButtonBase:_doPressEventDispatch" )
+	-- print( "ButtonBase:_doPressEventDispatch" )
 
 	if not self.isEnabled then return end
 

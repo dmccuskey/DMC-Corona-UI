@@ -80,7 +80,7 @@ local ObjectBase = Objects.ObjectBase
 
 local sformat = string.format
 
--- these set in initialize()
+--== To be set in initialize()
 local Widgets = nil
 local StyleFactory = nil
 
@@ -95,11 +95,15 @@ local BackgroundStyle = newClass( BaseStyle, {name="Background Style"} )
 
 --== Class Constants
 
+BackgroundStyle.TYPE = 'background'
+
 BackgroundStyle.__base_style__ = nil
 
 -- child styles
 BackgroundStyle.VIEW_KEY = 'view'
 BackgroundStyle.VIEW_NAME = 'background-view'
+
+BackgroundStyle.EXCLUDE_PROPERTY_CHECK = nil
 
 BackgroundStyle._STYLE_DEFAULTS = {
 	name='background-default-style',
@@ -128,12 +132,12 @@ BackgroundStyle._STYLE_DEFAULTS = {
 
 }
 
-BackgroundStyle._VIEW_DEFAULTS = {
-	rounded=nil,
-	rectangle=nil,
-	polygon=nil,
-	shape=nil
-}
+-- BackgroundStyle._VIEW_DEFAULTS = {
+-- 	rounded=nil,
+-- 	rectangle=nil,
+-- 	polygon=nil,
+-- 	shape=nil
+-- }
 
 --== Event Constants
 
@@ -165,8 +169,6 @@ function BackgroundStyle:__init__( params )
 
 	--== Local style properties
 
-	-- other properties are in substyles
-
 	self._width = nil
 	self._height = nil
 
@@ -175,8 +177,7 @@ function BackgroundStyle:__init__( params )
 
 	--== Object Refs ==--
 
-	-- these are other style objects
-	self._view = nil
+	self._view = nil -- Background View Style
 
 end
 
@@ -198,53 +199,137 @@ function BackgroundStyle.initialize( manager )
 end
 
 
+function BackgroundStyle.addMissingDestProperties( dest, src, params )
+	-- print( "BackgroundStyle.addMissingDestProperties", dest, src )
+	assert( dest )
+	if not src then return end
+	params = params or {}
+	if params.force==nil then params.force=false end
+	--==--
+	local force=params.force
+
+	if dest.debugOn==nil or force then dest.debugOn=src.debugOn end
+
+	if dest.width==nil or force then dest.width=src.width end
+	if dest.height==nil or force then dest.height=src.height end
+
+	if dest.anchorX==nil or force then dest.anchorX=src.anchorX end
+	if dest.anchorY==nil or force then dest.anchorY=src.anchorY end
+	if dest.fillColor==nil or force then dest.fillColor=src.fillColor end
+	if dest.strokeColor==nil or force then dest.strokeColor=src.strokeColor end
+	if dest.strokeWidth==nil or force then dest.strokeWidth=src.strokeWidth end
+
+	return dest
+end
+
+-- to a new stucture
+function BackgroundStyle.copyExistingSrcProperties( dest, src, params )
+	-- print( "BackgroundStyle.copyExistingSrcProperties", dest, src )
+	assert( dest )
+	if not src then return end
+	params = params or {}
+	if params.force==nil then params.force=false end
+	--==--
+	local force=params.force
+
+	if (src.debugOn~=nil and dest.debugOn==nil) or force then
+		dest.debugOn=src.debugOn
+	end
+
+	if (src.width~=nil and dest.width==nil) or force then
+		dest.width=src.width
+	end
+	if (src.height~=nil and dest.height==nil) or force then
+		dest.height=src.height
+	end
+
+	if (src.anchorX~=nil and dest.anchorX==nil) or force then
+		dest.anchorX=src.anchorX
+	end
+	if (src.anchorY~=nil and dest.anchorY==nil) or force then
+		dest.anchorY=src.anchorY
+	end
+
+	return dest
+end
+
+
+-- create empty Background Style structure
+function BackgroundStyle.createStateStructure( data )
+	-- print( "BackgroundStyle.createStateStructure", data )
+	return {
+		view={
+			type=data
+		}
+	}
+end
+
+
+--
+-- copy properties to sub-styles
+--
+function BackgroundStyle._pushMissingProperties( src )
+	-- print("BackgroundStyle._pushMissingProperties", src )
+	if not src then return end
+
+	local eStr = "ERROR: Style missing property '%s'"
+
+	local StyleClass, dest
+
+	dest = src.view
+	assert( dest, sformat( eStr, 'view' ) )
+	StyleClass = StyleFactory.getClass( dest.type )
+	StyleClass.addMissingDestProperties( dest, src )
+
+	return src
+end
+
+
+function BackgroundStyle._verifyClassProperties( src )
+	-- print( "BackgroundStyle._verifyClassProperties" )
+	assert( src )
+	--==--
+	local emsg = "Style: requires property '%s'"
+
+	local is_valid = BaseStyle._verifyClassProperties( src )
+
+	if not src.width then
+		print(sformat(emsg,'width')) ; is_valid=false
+	end
+	if not src.height then
+		print(sformat(emsg,'height')) ; is_valid=false
+	end
+	if not src.anchorX then
+		print(sformat(emsg,'anchorX')) ; is_valid=false
+	end
+	if not src.anchorY then
+		print(sformat(emsg,'anchorY')) ; is_valid=false
+	end
+
+	-- check sub-styles ??
+
+	local StyleClass
+
+	StyleClass = src._view.class
+	-- TODO
+	-- if not StyleClass._checkProperties( self._view ) then is_valid=false end
+
+	return is_valid
+end
+
+
 function BackgroundStyle._setDefaults()
 	-- print( "BackgroundStyle._setDefaults" )
 
 	local defaults = BackgroundStyle._STYLE_DEFAULTS
 
-	defaults = BackgroundStyle.pushMissingProperties( defaults )
+	defaults = BackgroundStyle._pushMissingProperties( defaults )
+	-- Utils.print( defaults )
 
 	local style = BackgroundStyle:new{
 		data=defaults
 	}
 	BackgroundStyle.__base_style__ = style
-end
-
-
--- copyMissingProperties()
--- copies properties from src structure to dest structure
--- if property isn't already in dest
--- Note: usually used by OTHER classes
---
-function BackgroundStyle.copyMissingProperties( dest, src )
-	-- print( "BackgroundStyle.copyMissingProperties", dest, src )
-	if dest.debugOn==nil then dest.debugOn=src.debugOn end
-
-	if dest.width==nil then dest.width=src.width end
-	if dest.height==nil then dest.height=src.height end
-
-	if dest.anchorX==nil then dest.anchorX=src.anchorX end
-	if dest.anchorY==nil then dest.anchorY=src.anchorY end
-	if dest.fillColor==nil then dest.fillColor=src.fillColor end
-	if dest.strokeColor==nil then dest.strokeColor=src.strokeColor end
-	if dest.strokeWidth==nil then dest.strokeWidth=src.strokeWidth end
-end
-
-
-function BackgroundStyle.pushMissingProperties( src )
-	-- print("BackgroundStyle.pushMissingProperties", src )
-	if not src then return end
-
-	local StyleClass, dest
-	local eStr = "ERROR: Style missing property '%s'"
-
-	-- copy items to substyle 'view'
-	dest = src[ BackgroundStyle.VIEW_KEY ]
-	StyleClass = StyleFactory.getClass( dest.type )
-	StyleClass.copyMissingProperties( dest, src )
-
-	return src
 end
 
 
@@ -316,25 +401,19 @@ function BackgroundStyle:createStyleFromType( params )
 end
 
 
-
 --== updateStyle
 
 -- force is used when making exact copy of data
 --
 function BackgroundStyle:updateStyle( src, params )
 	-- print( "BackgroundStyle:updateStyle", src )
-	params = params or {}
-	if params.force==nil then params.force=true end
-	--==--
-	local force=params.force
+	BackgroundStyle.copyExistingSrcProperties( self, src, params )
+end
 
-	if src.debugOn~=nil or force then self.debugOn=src.debugOn end
 
-	if src.width~=nil or force then self.width=src.width end
-	if src.height~=nil or force then self.height=src.height end
-
-	if src.anchorX~=nil or force then self.anchorX=src.anchorX end
-	if src.anchorY~=nil or force then self.anchorY=src.anchorY end
+function BackgroundStyle:verifyClassProperties()
+	-- print( "BackgroundStyle:verifyClassProperties" )
+	return BackgroundStyle._verifyClassProperties( self )
 end
 
 
@@ -349,18 +428,27 @@ function BackgroundStyle:_prepareData( data )
 	-- print("BackgroundStyle:_prepareData", data, self )
 	if not data then return end
 
-	if data.isa and data:isa(BackgroundStyle) then
-		-- Instance
-		data = { view=data.view.type }
+	if data.isa and data:isa( BackgroundStyle ) then
+		--== Instance
+		local o = data
+		data = { view=o.view.type } -- setting to string, special case
+
 	else
-		-- Lua structure
-		local key = BackgroundStyle.VIEW_KEY
-		if data[key]==nil then
-			data[key] = { type=StyleFactory.Rectangle.TYPE }
-			print( "[WARNING] Defaulting to Rectangle style", type(data[key].type) )
+		--== Lua structure
+		local StyleClass
+		local src, dest = data, nil
+
+		dest = src.view
+		if dest==nil then
+			dest = { type=StyleFactory.Rectangle.TYPE }
+			print( "[WARNING] Defaulting to Rectangle style", type(dest.type) )
+			src.view = dest
 		end
-		data = BackgroundStyle.pushMissingProperties( data )
+		StyleClass = StyleFactory.getClass( dest.type )
+		StyleClass.copyExistingSrcProperties( dest, src )
+
 	end
+
 	return data
 end
 
@@ -369,28 +457,6 @@ function BackgroundStyle:_checkChildren()
 
 	-- using setters !!!
 	if self._view==nil then self.view=nil end
-end
-
-function BackgroundStyle:_checkProperties()
-	-- print( "BackgroundStyle._checkProperties" )
-	local emsg = "Style: requires property '%s'"
-	local is_valid = BaseStyle._checkProperties( self )
-
-	if not self.width then print(sformat(emsg,'width')) ; is_valid=false end
-	if not self.height then print(sformat(emsg,'height')) ; is_valid=false end
-
-	if not self.anchorX then print(sformat(emsg,'anchorX')) ; is_valid=false end
-	if not self.anchorY then print(sformat(emsg,'anchorY')) ; is_valid=false end
-
-	-- check sub-styles ??
-
-	local StyleClass
-
-	StyleClass = self._view.class
-	-- TODO
-	-- if not StyleClass._checkProperties( self._view ) then is_valid=false end
-
-	return is_valid
 end
 
 

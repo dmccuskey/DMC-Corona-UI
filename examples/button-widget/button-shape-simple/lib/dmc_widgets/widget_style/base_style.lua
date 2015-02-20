@@ -138,7 +138,7 @@ function Style:__init__( params )
 end
 
 function Style:__initComplete__()
-	-- print( "Style:__initComplete__" )
+	-- print( "Style:__initComplete__", self )
 	self:superCall( '__initComplete__' )
 	--==--
 	local data = self:_prepareData( self._tmp_data )
@@ -152,12 +152,52 @@ function Style:__initComplete__()
 	-- self.widget = self._widget -- use setter
 
 	-- do this after inherit/widget in place --
-	assert( self:_checkProperties(), "Style: missing properties"..tostring(self.class) )
+	assert( self:verifyClassProperties(), "Style: missing properties"..tostring(self.class) )
 
 end
 
 -- End: Setup DMC Objects
 --======================================================--
+
+
+
+--====================================================================--
+--== Static Methods
+
+
+-- addMissingDestProperties()
+-- copies properties from src structure to dest structure
+-- if property isn't already in dest
+-- Note: usually used by OTHER classes
+--
+function Style.addMissingDestProperties( dest, src, params )
+	error( "Style.addMissingDestProperties", dest, src )
+end
+
+
+function Style.copyExistingSrcProperties( dest, src, params )
+	error( "Style.copyExistingSrcProperties", dest, src )
+end
+
+
+function Style._verifyClassProperties( src )
+	-- print( "Style:_verifyClassProperties" )
+	assert( src, "Style:_verifyClassProperties missing source")
+	--==--
+	local emsg = "Style: requires property '%s'"
+	local is_valid = true
+
+	if type(src.name)~='string' then
+		print(sformat(emsg,'name')) ; is_valid=false
+	end
+	if type(src.debugOn)~='boolean' then
+		print(sformat(emsg,'debugOn')) ; is_valid=false
+	end
+	return is_valid
+end
+
+
+
 
 
 
@@ -250,6 +290,10 @@ end
 -- Misc
 
 --== inherit
+
+function Style.__getters:inherit()
+	return self._inherit
+end
 
 -- value should be a instance of Style Class or nil
 --
@@ -610,6 +654,14 @@ function Style.__setters:textColor( value )
 end
 
 
+-- verifyClassProperties()
+-- ability to check properties to make sure everything went well
+--
+function Style:verifyClassProperties()
+	-- print( "Style:verifyClassProperties" )
+	return Style._verifyClassProperties( self )
+end
+
 
 --====================================================================--
 --== Private Methods
@@ -623,7 +675,7 @@ end
 -- usually this is to copy styles from parent to child
 --
 function Style:_prepareData( data )
-	-- print("OVERRIDE Style:_prepareData")
+	-- print( "OVERRIDE Style:_prepareData", self )
 	-- data could be nil, Lua structure, or class instance
 	if type(data)=='table' and data.isa then
 		-- if we have an Instance, dump it
@@ -641,25 +693,13 @@ function Style:_checkChildren()
 	-- print("OVERRIDE Style:_checkChildren")
 end
 
--- _checkProperties()
--- ability to check properties to make sure everything went well
---
-function Style:_checkProperties()
-	-- print( "Style:_checkProperties" )
-	local emsg = "Style: requires property '%s'"
-	local is_valid = true
-
-	if not self.name then print(sformat(emsg,'name')) ; is_valid=false end
-	if self.debugOn==nil then print(sformat(emsg,'debugOn')) ; is_valid=false end
-	return is_valid
-end
 
 -- _parseData()
 -- parse through the Lua data given, creating properties
 -- an substyles as we loop through
 --
 function Style:_parseData( data )
-	print( "Style:_parseData", data )
+	-- print( "Style:_parseData", self, data )
 	if data==nil then return end
 
 	-- Utils.print( data )
@@ -668,7 +708,7 @@ function Style:_parseData( data )
 	local EXCL = self.EXCLUDE_PROPERTY_CHECK
 
 	for k,v in pairs( data ) do
-		print(k,v)
+		-- print(k,v)
 		if DEF[k]==nil and not EXCL[k] then
 			error( sformat( "Style: invalid property style found '%s'", tostring(k) ) )
 		end
