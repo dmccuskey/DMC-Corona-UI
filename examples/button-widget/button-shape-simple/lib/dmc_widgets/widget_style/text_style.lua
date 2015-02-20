@@ -99,6 +99,7 @@ TextStyle.EXCLUDE_PROPERTY_CHECK = {
 
 TextStyle._STYLE_DEFAULTS = {
 	name='text-default-style',
+	debugOn=false,
 
 	width=nil,
 	height=nil,
@@ -106,15 +107,17 @@ TextStyle._STYLE_DEFAULTS = {
 	align='center',
 	anchorX=0.5,
 	anchorY=0.5,
-	debugOn=false,
 	fillColor={1,1,1,0},
 	font=native.systemFont,
 	fontSize=24,
 	marginX=0,
 	marginY=0,
+	offsetX=0,
+	offsetY=0,
+	textColor={0,0,0,1},
+
 	strokeColor={0,0,0,1},
 	strokeWidth=0,
-	textColor={0,0,0,1}
 }
 
 --== Event Constants

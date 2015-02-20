@@ -1,5 +1,5 @@
 --====================================================================--
--- dmc_widgets/base_textfield_style.lua
+-- dmc_widgets/widget_button/button_state_style.lua
 --
 -- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
@@ -33,7 +33,7 @@ SOFTWARE.
 
 
 --====================================================================--
---== DMC Corona Widgets : Widget TextField Style
+--== DMC Corona Widgets : Widget Button State Style
 --====================================================================--
 
 
@@ -55,7 +55,7 @@ local widget_find = dmc_widget_func.find
 
 
 --====================================================================--
---== DMC Widgets : newTextFieldStyle
+--== DMC Widgets : newButtonStyle
 --====================================================================--
 
 
@@ -84,92 +84,54 @@ local Widgets = nil -- set later
 
 
 --====================================================================--
---== TextField Style Class
+--== Button-State Style Class
 --====================================================================--
 
 
-local TextFieldStyle = newClass( BaseStyle, {name="TextField Style"} )
+local ButtonStateStyle = newClass( BaseStyle, {name="Button State Style"} )
 
 --== Class Constants
 
-TextFieldStyle.__base_style__ = nil
+ButtonStateStyle.__base_style__ = nil
 
 -- child styles
-TextFieldStyle.BACKGROUND_KEY = 'background'
-TextFieldStyle.BACKGROUND_NAME = 'textfield-background'
-TextFieldStyle.HINT_KEY = 'hint'
-TextFieldStyle.HINT_NAME = 'textfield-hint'
-TextFieldStyle.DISPLAY_KEY = 'display'
-TextFieldStyle.DISPLAY_NAME = 'textfield-display'
+ButtonStateStyle.LABEL_KEY = 'label'
+ButtonStateStyle.LABEL_NAME = 'button-state-label'
+ButtonStateStyle.BACKGROUND_KEY = 'background'
+ButtonStateStyle.BACKGROUND_NAME = 'button-state-background'
 
-TextFieldStyle._STYLE_DEFAULTS = {
-	name='textfield-default-style',
+ButtonStateStyle._STYLE_DEFAULTS = {
+	name='button-state-default-style',
 	debugOn=false,
 
-	width=200,
-	height=40,
+	-- width=100,
+	-- height=40,
 
 	align='center',
 	anchorX=0.5,
 	anchorY=0.5,
-	backgroundStyle='none',
-	inputType='default',
-	isHitActive=true,
-	isHitTestable=true,
-	isSecure=false,
 	marginX=0,
 	marginY=5,
-	returnKey='done',
 
+	label={
+		textColor={1,0,0},
+		font=native.systemFontBold,
+		fontSize=10
+	},
 	background={
-		--[[
-		Copied from TextField
-		* width
-		* height
-		* anchorX/Y
-		--]]
 		view={
 			type='rectangle',
-
-			fillColor={0.5,0.5,0.2,1},
-			strokeWidth=2,
-			strokeColor={0,0,0,1},
+			fillColor={1,1,0.5, 0.5},
+			strokeWidth=6,
+			strokeColor={1,0,0,0.5},
 		}
-	},
-	hint={
-		--[[
-		Copied from TextField
-		* width
-		* height
-		* align
-		* anchorX/Y
-		* marginX/Y
-		--]]
-		fillColor={0,0,0,0},
-		font=native.systemFont,
-		fontSize=24,
-		textColor={0.3,0.3,0.3,1},
-	},
-	display={
-		--[[
-		Copied from TextField
-		* width
-		* height
-		* align
-		* anchorX/Y
-		* marginX/Y
-		--]]
-		fillColor={0,0,0,0},
-		font=native.systemFontBold,
-		fontSize=24,
-		textColor={0.1,0.1,0.1,1},
-	},
+	}
 
 }
 
 --== Event Constants
 
-TextFieldStyle.EVENT = 'textfield-style-event'
+ButtonStateStyle.EVENT = 'button-state-style-event'
 
 -- from super
 -- Class.STYLE_UPDATED
@@ -178,8 +140,8 @@ TextFieldStyle.EVENT = 'textfield-style-event'
 --======================================================--
 -- Start: Setup DMC Objects
 
-function TextFieldStyle:__init__( params )
-	-- print( "TextFieldStyle:__init__", params )
+function ButtonStateStyle:__init__( params )
+	print( "ButtonStateStyle:__init__", params )
 	params = params or {}
 	self:superCall( '__init__', params )
 	--==--
@@ -216,8 +178,7 @@ function TextFieldStyle:__init__( params )
 
 	-- these are other style objects
 	self._background = nil
-	self._hint = nil
-	self._display = nil
+	self._label = nil
 
 end
 
@@ -230,57 +191,51 @@ end
 --== Static Methods
 
 
-function TextFieldStyle.initialize( manager )
-	-- print( "TextFieldStyle.initialize", manager )
+function ButtonStateStyle.initialize( manager )
+	-- print( "ButtonStateStyle.initialize", manager )
 	Widgets = manager
 
-	TextFieldStyle._setDefaults()
+	ButtonStateStyle._setDefaults()
 end
 
 
-function TextFieldStyle._setDefaults()
-	-- print( "TextFieldStyle._setDefaults" )
+function ButtonStateStyle._setDefaults()
+	-- print( "ButtonStateStyle._setDefaults" )
 
-	local defaults = TextFieldStyle._STYLE_DEFAULTS
+	local defaults = ButtonStateStyle._STYLE_DEFAULTS
 
-	defaults = TextFieldStyle.pushMissingProperties( defaults )
+	defaults = ButtonStateStyle.pushMissingProperties( defaults )
 
-	local style = TextFieldStyle:new{
+	local style = ButtonStateStyle:new{
 		data=defaults
 	}
-	TextFieldStyle.__base_style__ = style
+	ButtonStateStyle.__base_style__ = style
 
 end
 
 
-function TextFieldStyle.copyMissingProperties( dest, src )
-	-- print( "TextFieldStyle.copyMissingProperties", dest, src )
+function ButtonStateStyle.copyMissingProperties( dest, src )
+	print( "ButtonStateStyle.copyMissingProperties", dest, src )
 end
 
 
-function TextFieldStyle.pushMissingProperties( src )
-	-- print("TextFieldStyle.pushMissingProperties", src )
+function ButtonStateStyle.pushMissingProperties( src )
+	print("ButtonStateStyle.pushMissingProperties", src )
 	if not src then return end
 
 	local StyleClass, dest
 	local eStr = "ERROR: Style missing property '%s'"
 
+	-- copy properties to Text substyle 'label'
+	StyleClass = Widgets.Style.Text
+	dest = src[ ButtonStateStyle.LABEL_KEY ]
+	assert( dest, sformat( eStr, ButtonStateStyle.LABEL_KEY ) )
+	StyleClass.copyMissingProperties( dest, src )
+
 	-- copy properties to Background substyle 'background'
 	StyleClass = Widgets.Style.Background
-	dest = src[ TextFieldStyle.BACKGROUND_KEY ]
-	assert( dest, sformat( eStr, TextFieldStyle.BACKGROUND_KEY ) )
-	StyleClass.copyMissingProperties( dest, src )
-
-	-- copy properties to Text substyle 'hint'
-	StyleClass = Widgets.Style.Text
-	dest = src[ TextFieldStyle.HINT_KEY ]
-	assert( dest, sformat( eStr, TextFieldStyle.HINT_KEY ) )
-	StyleClass.copyMissingProperties( dest, src )
-
-	-- copy properties to Text substyle 'display'
-	StyleClass = Widgets.Style.Text
-	dest = src[ TextFieldStyle.DISPLAY_KEY ]
-	assert( dest, sformat( eStr, TextFieldStyle.DISPLAY_KEY ) )
+	dest = src[ ButtonStateStyle.BACKGROUND_KEY ]
+	assert( dest, sformat( eStr, ButtonStateStyle.BACKGROUND_KEY ) )
 	StyleClass.copyMissingProperties( dest, src )
 
 	return src
@@ -294,67 +249,46 @@ end
 --======================================================--
 -- Access to sub-styles
 
---== Background
-
-function TextFieldStyle.__getters:background()
-	-- print( 'TextFieldStyle.__getters:background', self._background )
+function ButtonStateStyle.__getters:background()
+	-- print( 'ButtonStateStyle.__getters:background', self._background )
 	return self._background
 end
-function TextFieldStyle.__setters:background( data )
-	-- print( 'TextFieldStyle.__setters:background', data )
+function ButtonStateStyle.__setters:background( data )
+	print( 'ButtonStateStyle.__setters:background', data )
 	assert( data==nil or type( data )=='table' )
 	--==--
 	local StyleClass = Widgets.Style.Background
 	local inherit = self._inherit and self._inherit._background
 
 	self._background = StyleClass:createStyleFrom{
-		name=TextFieldStyle.BACKGROUND_NAME,
+		name=ButtonStateStyle.BACKGROUND_NAME,
 		inherit=inherit,
 		parent=self,
 		data=data
 	}
 end
 
---== Hint
 
-function TextFieldStyle.__getters:hint()
-	-- print( "TextFieldStyle.__getters:hint", data )
-	return self._hint
+function ButtonStateStyle.__getters:label()
+	-- print( "ButtonStateStyle.__getters:label", data )
+	return self._label
 end
-function TextFieldStyle.__setters:hint( data )
-	-- print( "TextFieldStyle.__setters:hint", data )
+function ButtonStateStyle.__setters:label( data )
+	print( "ButtonStateStyle.__setters:label", data )
 	assert( data==nil or type( data )=='table' )
 	--==--
 	local StyleClass = Widgets.Style.Text
-	local inherit = self._inherit and self._inherit._hint
+	local inherit = self._inherit and self._inherit._label
 
-	self._hint = StyleClass:createStyleFrom{
-		name=TextFieldStyle.HINT_NAME,
+	self._label = StyleClass:createStyleFrom{
+		name=ButtonStateStyle.LABEL_NAME,
 		inherit=inherit,
 		parent=self,
 		data=data
 	}
 end
 
---== Display
 
-function TextFieldStyle.__getters:display()
-	return self._display
-end
-function TextFieldStyle.__setters:display( data )
-	-- print( 'TextFieldStyle.__setters:display', data )
-	assert( data==nil or type( data )=='table' )
-	--==--
-	local StyleClass = Widgets.Style.Text
-	local inherit = self._inherit and self._inherit._display
-
-	self._display = StyleClass:createStyleFrom{
-		name=TextFieldStyle.DISPLAY_NAME,
-		inherit=inherit,
-		parent=self,
-		data=data
-	}
-end
 
 
 --======================================================--
@@ -362,16 +296,16 @@ end
 
 --== align
 
-function TextFieldStyle.__getters:align()
-	-- print( "TextFieldStyle.__getters:align" )
+function ButtonStateStyle.__getters:align()
+	-- print( "ButtonStateStyle.__getters:align" )
 	local value = self._align
 	if value==nil and self._inherit then
 		value = self._inherit.align
 	end
 	return value
 end
-function TextFieldStyle.__setters:align( value )
-	-- print( "TextFieldStyle.__setters:align", value )
+function ButtonStateStyle.__setters:align( value )
+	-- print( "ButtonStateStyle.__setters:align", value )
 	assert( (value==nil and self._inherit) or type(value)=='string' )
 	--==--
 	if value == self._align then return end
@@ -380,109 +314,34 @@ end
 
 --== backgroundStyle
 
-function TextFieldStyle.__getters:backgroundStyle()
-	-- print( "TextFieldStyle.__getters:backgroundStyle" )
+function ButtonStateStyle.__getters:backgroundStyle()
+	-- print( "ButtonStateStyle.__getters:backgroundStyle" )
 	local value = self._bgStyle
 	if value==nil and self._inherit then
 		value = self._inherit.backgroundStyle
 	end
 	return value
 end
-function TextFieldStyle.__setters:backgroundStyle( value )
-	-- print( "TextFieldStyle.__setters:backgroundStyle", value )
+function ButtonStateStyle.__setters:backgroundStyle( value )
+	-- print( "ButtonStateStyle.__setters:backgroundStyle", value )
 	assert( (value==nil and self._inherit) or type(value)=='string' )
 	--==--
 	if value == self._bgStyle then return end
 	self._bgStyle = value
 end
 
---== inputType
-
-function TextFieldStyle.__getters:inputType()
-	-- print( "TextFieldStyle.__getters:inputType" )
-	local value = self._inputType
-	if value==nil and self._inherit then
-		value = self._inherit.inputType
-	end
-	return value
-end
-function TextFieldStyle.__setters:inputType( value )
-	-- print( "TextFieldStyle.__setters:inputType", value )
-	assert( (value==nil and self._inherit) or type(value)=='string' )
-	--==--
-	if value == self._inputType then return end
-	self._inputType = value
-end
-
---== isHitActive
-
-function TextFieldStyle.__getters:isHitActive()
-	-- print( "TextFieldStyle.__getters:isHitActive" )
-	local value = self._isHitActive
-	if value==nil and self._inherit then
-		value = self._inherit.isHitActive
-	end
-	return value
-end
-function TextFieldStyle.__setters:isHitActive( value )
-	-- print( "TextFieldStyle.__setters:isHitActive", value )
-	assert( type(value)=='boolean' or (value==nil and self._inherit) )
-	--==--
-	if value == self._isHitActive then return end
-	self._isHitActive = value
-	self:_dispatchChangeEvent( 'isHitActive', value )
-end
-
---== isHitTestable
-
-function TextFieldStyle.__getters:isHitTestable()
-	-- print( "TextFieldStyle.__getters:isHitTestable" )
-	local value = self._isHitTestable
-	if value==nil and self._inherit then
-		value = self._inherit.isHitTestable
-	end
-	return value
-end
-function TextFieldStyle.__setters:isHitTestable( value )
-	-- print( "TextFieldStyle.__setters:isHitTestable", value )
-	assert( type(value)=='boolean' or (value==nil and self._inherit) )
-	--==--
-	if value==self._isHitTestable then return end
-	self._isHitTestable = value
-	self:_dispatchChangeEvent( 'isHitTestable', value )
-end
-
---== isSecure
-
-function TextFieldStyle.__getters:isSecure()
-	-- print( "TextFieldStyle.__getters:isSecure" )
-	local value = self._isSecure
-	if value==nil and self._inherit then
-		value = self._inherit.isSecure
-	end
-	return value
-end
-function TextFieldStyle.__setters:isSecure( value )
-	-- print( "TextFieldStyle.__setters:isSecure", value )
-	assert( type(value)=='boolean' or (value==nil and self._inherit) )
-	--==--
-	if value==self._isSecure then return end
-	self._isSecure = value
-	self:_dispatchChangeEvent( 'isSecure', value )
-end
-
 --== marginX
 
-function TextFieldStyle.__getters:marginX()
-	-- print( "TextFieldStyle.__getters:marginX" )
+function ButtonStateStyle.__getters:marginX()
+	-- print( "ButtonStateStyle.__getters:marginX" )
 	local value = self._marginX
 	if value==nil and self._inherit then
 		value = self._inherit.marginX
 	end
 	return value
 end
-function TextFieldStyle.__setters:marginX( value )
-	-- print( "TextFieldStyle.__setters:marginX", value )
+function ButtonStateStyle.__setters:marginX( value )
+	-- print( "ButtonStateStyle.__setters:marginX", value )
 	assert( (type(value)=='number' and value>=0) or (value==nil and self._inherit) )
 	--==--
 	if value == self._marginX then return end
@@ -492,16 +351,16 @@ end
 
 --== marginY
 
-function TextFieldStyle.__getters:marginY()
-	-- print( "TextFieldStyle.__getters:marginY" )
+function ButtonStateStyle.__getters:marginY()
+	-- print( "ButtonStateStyle.__getters:marginY" )
 	local value = self._marginY
 	if value==nil and self._inherit then
 		value = self._inherit.marginY
 	end
 	return value
 end
-function TextFieldStyle.__setters:marginY( value )
-	-- print( "TextFieldStyle.__setters:marginY", value )
+function ButtonStateStyle.__setters:marginY( value )
+	-- print( "ButtonStateStyle.__setters:marginY", value )
 	assert( (type(value)=='number' and value>=0) or (value==nil and self._inherit) )
 	--==--
 	if value == self._marginY then return end
@@ -509,23 +368,6 @@ function TextFieldStyle.__setters:marginY( value )
 	self:_dispatchChangeEvent( 'marginY', value )
 end
 
---== returnKey
-
-function TextFieldStyle.__getters:returnKey()
-	-- print( "TextFieldStyle.__getters:returnKey" )
-	local value = self._returnKey
-	if value==nil and self._inherit then
-		value = self._inherit.returnKey
-	end
-	return value
-end
-function TextFieldStyle.__setters:returnKey( value )
-	-- print( "TextFieldStyle.__setters:returnKey", value )
-	assert( (value==nil and self._inherit) or type(value)=='string' )
-	--==--
-	if value == self._inputType then return end
-	self._returnKey = value
-end
 
 
 --======================================================--
@@ -540,18 +382,15 @@ end
 
 --== inherit
 
-function TextFieldStyle.__setters:inherit( value )
-	-- print( "TextFieldStyle.__setters:inherit", value )
+function ButtonStateStyle.__setters:inherit( value )
+	print( "ButtonStateStyle.__setters:inherit", value )
 	BaseStyle.__setters.inherit( self, value )
 	--==--
 	if self._background then
 		self._background.inherit = value and value.background or value
 	end
-	if self._hint then
-		self._hint.inherit = value and value.hint or value
-	end
-	if self._display then
-		self._display.inherit = value and value.display or value
+	if self._label then
+		self._label.inherit = value and value.label or value
 	end
 end
 
@@ -560,8 +399,8 @@ end
 
 -- force is used when making exact copy of data
 --
-function TextFieldStyle:updateStyle( info, params )
-	-- print( "TextFieldStyle:updateStyle" )
+function ButtonStateStyle:updateStyle( info, params )
+	print( "ButtonStateStyle:updateStyle" )
 	params = params or {}
 	if params.force==nil then params.force=true end
 	--==--
@@ -605,23 +444,22 @@ end
 --== Private Methods
 
 
-function TextFieldStyle:_prepareData( data )
-	-- print("TextFieldStyle:_prepareData", data )
+function ButtonStateStyle:_prepareData( data )
+	print("ButtonStateStyle:_prepareData", data )
 	if not data then return end
-	return TextFieldStyle.pushMissingProperties( data )
+	return ButtonStateStyle.pushMissingProperties( data )
 end
 
-function TextFieldStyle:_checkChildren()
-	-- print( "TextFieldStyle:_checkChildren" )
+function ButtonStateStyle:_checkChildren()
+	print( "ButtonStateStyle:_checkChildren" )
 
 	-- using setters !!!
 	if self._background==nil then self.background=nil end
-	if self._hint==nil then self.hint=nil end
-	if self._display==nil then self.display=nil end
+	if self._label==nil then self.label=nil end
 end
 
-function TextFieldStyle:_checkProperties()
-	-- print( "TextFieldStyle:_checkProperties" )
+function ButtonStateStyle:_checkProperties()
+	print( "ButtonStateStyle:_checkProperties" )
 	local emsg = "Style: requires property '%s'"
 	local is_valid = BaseStyle._checkProperties( self )
 
@@ -633,14 +471,8 @@ function TextFieldStyle:_checkProperties()
 	if not self.align then print(sformat(emsg,'align')) ; is_valid=false end
 	if not self.anchorX then print(sformat(emsg,'anchorX')) ; is_valid=false end
 	if not self.anchorY then print(sformat(emsg,'anchorY')) ; is_valid=false end
-	if not self.backgroundStyle then print(sformat(emsg,'backgroundStyle')) ; is_valid=false end
-	if not self.inputType then print(sformat(emsg,'inputType')) ; is_valid=false end
-	if self.isHitActive==nil then print(sformat(emsg,'isHitActive')) ; is_valid=false end
-	if self.isHitTestable==nil then print(sformat(emsg,'isHitTestable')) ; is_valid=false end
-	if self.isSecure==nil then print(sformat(emsg,'isSecure')) ; is_valid=false end
 	if not self.marginX then print(sformat(emsg,'marginX')) ; is_valid=false end
 	if not self.marginY then print(sformat(emsg,'marginY')) ; is_valid=false end
-	if not self.returnKey then print(sformat(emsg,'returnKey')) ; is_valid=false end
 
 	-- check sub-styles
 
@@ -649,11 +481,8 @@ function TextFieldStyle:_checkProperties()
 	StyleClass = self._background.class
 	-- if not StyleClass._checkProperties( self._background ) then is_valid=false end
 
-	StyleClass = self._hint.class
-	-- if not StyleClass._checkProperties( self._hint ) then is_valid=false end
-
-	StyleClass = self._display.class
-	-- if not StyleClass._checkProperties( self._display ) then is_valid=false end
+	StyleClass = self._label.class
+	-- if not StyleClass._checkProperties( self._label ) then is_valid=false end
 
 	return is_valid
 end
@@ -669,4 +498,4 @@ end
 
 
 
-return TextFieldStyle
+return ButtonStateStyle

@@ -26,12 +26,54 @@ local Widgets = require 'lib.dmc_widgets'
 --== Setup, Constants
 
 
-local o
+local W, H = display.contentWidth, display.contentHeight
+local H_CENTER, V_CENTER = W*0.5, H*0.5
 
 
 
 --===================================================================--
 --== Support Functions
+
+
+-- Setup Visual Screen Items
+--
+local function setupBackground()
+	local width, height = 100, 50
+	local o
+
+	o = display.newRect(0,0,W,H)
+	o:setFillColor(0.5,0.5,0.5)
+	o.x, o.y = H_CENTER, V_CENTER
+
+	o = display.newRect(0,0,width+4,height+4)
+	o:setStrokeColor(0,0,0)
+	o.strokeWidth=2
+	o.x, o.y = H_CENTER, V_CENTER
+
+	o = display.newRect( 0,0,10,10)
+	o:setFillColor(1,0,0)
+	o.x, o.y = H_CENTER, V_CENTER
+end
+
+
+local function widgetOnPropertyEvent_handler( event )
+	print( 'Main: widgetOnPropertyEvent_handler', event.id, event.phase )
+	local etype= event.type
+	local property= event.property
+	local value = event.value
+
+	print( "Widget Property Changed", etype, property, value )
+
+end
+
+local function widgetEvent_handler( event )
+	print( 'Main: widgetEvent_handler', event.id, event.phase )
+	local etype= event.type
+
+	print( "Widget Event", etype )
+
+end
+
 
 
 local function onPress_handler( event )
@@ -53,105 +95,103 @@ end
 --===================================================================--
 
 
---[[
+setupBackground()
 
-text
-action='push' or 'toggle'
 
-style={
 
-	width = 75,
-	height = 30,
+--======================================================--
+--== create textfield widget, default style
 
-	type='rectangle', -- shape, 9slice, image,
-	type='rounded', -- shape, 9slice, image,
-	type='circle', -- shape, 9slice, image,
-	type='polygon', -- shape, 9slice, image,
-	type='9-slice', -- shape, 9slice, image,
-	type='image', -- shape, 9slice, image,
+function run_example1()
 
-	cornerRadius = 10,
-	fillColor={1,1,0.5, 0.5},
-	strokeWidth=6,
-	strokeColor={1,0,0,0.5},
+	local btn1
 
-	default={
+
+	btn1 = Widgets.newPushButton{
+		-- button info
+		x=100,
+		y=50,
+
+		id='button-top',
+		labelText="Press",
+
+		data="your data",
+
+		style={
+			debugOn=true,
+
+			width=100,
+			height=50,
+
+			align='center',
+			anchorX=0.5,
+			anchorY=0.5,
+			hitMarginX=0,
+			hitMarginY=0,
+			isHitActive=true,
+
+
+			inactive = {
+				label = {
+					align='right',
+					textColor={0,0,0},
+				},
+				background={
+					view={
+						type='rounded',
+						fillColor={1,0,0}
+					}
+				}
+			},
+
+
+			active = {
+				label = {
+					align='right',
+					textColor={0,0,0},
+				},
+				background={
+					view={
+						type='rounded',
+						fillColor={0,1,0}
+					}
+				}
+			},
+
+			disabled = {
+				label = {
+					align='right',
+					textColor={0,0,0},
+				},
+				background={
+
+				}
+			},
+
+		},
+
+		-- handlers
+		onPress = onPress_handler,
+		onRelease = onRelease_handler,
+		onEvent = onEvent_handler,
 
 	}
-
-	active = {
-
-		label = {
-			align='right',
-			textColor={0,0,0},
-		},
-
-		fillColor={1,0,0},
-		cornerRadius = 2,
-	},
-
-	disabled={
-
-	}
+	btn1.x, btn1.y = H_CENTER, V_CENTER
 
 
-}
+	timer.performWithDelay( 1000, function()
+		btn1:setLabelColor( 1,1,1)
+		btn1.strokeWidth=6
+		btn1.strokeColor={0,0,0}
+	end)
 
+	-- timer.performWithDelay( 2000, function()
+	-- 	btn1:clearStyle()
+	-- end)
 
---]]
+end
 
-
-
-o = Widgets.newPushButton{
-	-- button info
-	id='button-top',
-
-	style={
-		width = 75,
-		height = 30,
-
-		type='rectangle',
-
-		default ={
-			label={
-				textColor={1,0,0},
-				font=native.systemFontBold,
-				fontSize=10
-			},
-			background={
-				cornerRadius=10,
-				fillColor={1,1,0.5, 0.5},
-				strokeWidth=6,
-				strokeColor={1,0,0,0.5},
-			}
-		},
-
-
-		inactive = {
-		},
-
-
-		active = {
-			label = {
-				align='right',
-				textColor={0,0,0},
-			},
-			background={
-
-			}
-		},
-
-	},
-
-	-- handlers
-	onPress = onPress_handler,
-	onRelease = onRelease_handler,
-	onEvent = onEvent_handler,
-
-}
-o.x, o.y = 150, 75
-
-
+run_example1()
 
 --== Create Buttons
 

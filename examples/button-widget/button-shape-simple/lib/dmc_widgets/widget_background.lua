@@ -68,7 +68,7 @@ local Objects = require 'dmc_objects'
 local LifecycleMixModule = require 'dmc_lifecycle_mix'
 local ThemeMixModule = require( widget_find( 'widget_theme_mix' ) )
 
--- these are set later
+-- these set in initialize()
 local Widgets = nil
 local ThemeMgr = nil
 local ViewFactory = nil
@@ -96,18 +96,6 @@ local ThemeMix = ThemeMixModule.ThemeMix
 
 local Background = newClass( {ThemeMix,ComponentBase,LifecycleMix}, {name="Background Widget"} )
 
---== Class Constants
-
-Background.DEFAULT_TEXTCOLOR = {0,0,0,1}
-Background.DEFAULT_FILLCOLOR = {0,0,0,0}
-
-Background.RIGHT = 'right'
-Background.CENTER = 'center'
-Background.LEFT = 'left'
-
-Background.TOP = 'top'
-Background.BOTTOM = 'bottom'
-
 --== Theme Constants
 
 Background.THEME_ID = 'background'
@@ -129,7 +117,7 @@ Background.RELEASED = 'touch-release-event'
 
 
 --======================================================--
---== Start: Setup DMC Objects
+-- Start: Setup DMC Objects
 
 --== Init
 
@@ -146,70 +134,60 @@ function Background:__init__( params )
 
 	--== Create Properties ==--
 
-	-- properties stored in this class
+	-- Class properties
 
 	self._x = params.x
-	self._x_dirty = true
+	self._x_dirty=true
 	self._y = params.y
-	self._y_dirty = true
+	self._y_dirty=true
 
-	-- properties stored in style
+	-- Style properties
+
+	self._debugOn_dirty=true
 
 	self._width_dirty=true
 	self._height_dirty=true
 
 	self._anchorX_dirty=true
 	self._anchorY_dirty=true
-	self._debugOn_dirty=true
-	self._hitMarginX_dirty=true
-	self._hitMarginY_dirty=true
-	self._isHitActive_dirty=true
-	self._isHitTestable_dirty=true
 
-	-- virtual
-	self._hitX_dirty = true
-	self._hitY_dirty = true
+	-- "Virtual" properties
+
+	self._wgtViewStyle_dirty=true
 
 	--== Object References ==--
 
-	self._tmp_style = params.style -- save
-	-- self.curr_style -- from inherit
+	self._tmp_style = params.style -- save later
 
-	self._rct_bgHit = nil -- our hit area
-	self._rct_bgHit_f = nil
-
-	self._wgt_bgView = nil -- background view
-	self._wgt_bgView_dirty = true
+	self._wgtView = nil -- background view
+	self._wgtView_dirty=true
 
 end
 
 function Background:__undoInit__()
 	-- print( "Background:__undoInit__" )
 	--==--
-	self:superCall( ComponentBase, '__undoInit__' )
 	self:superCall( ThemeMix, '__undoInit__' )
+	self:superCall( ComponentBase, '__undoInit__' )
 	self:superCall( LifecycleMix, '__undoInit__' )
 end
 
 
+--[[
 --== createView
+
 function Background:__createView__()
 	-- print( "Background:__createView__" )
 	self:superCall( ComponentBase, '__createView__' )
 	--==--
-	local o = display.newRect( 0,0,0,0 )
-	o.anchorX, o.anchorY = 0.5,0.5
-	self:insert( o )
-	self._rct_bgHit = o
 end
 
 function Background:__undoCreateView__()
 	-- print( "Background:__undoCreateView__" )
-	self._rct_bgHit:removeSelf()
-	self._rct_bgHit=nil
 	--==--
 	self:superCall( ComponentBase, '__undoCreateView__' )
 end
+--]]
 
 
 --== initComplete
@@ -218,25 +196,18 @@ function Background:__initComplete__()
 	-- print( "Background:__initComplete__" )
 	self:superCall( ComponentBase, '__initComplete__' )
 	--==--
-	self._rct_bgHit_f = self:createCallback( self._hitAreaTouch_handler )
-	self._rct_bgHit:addEventListener( 'touch', self._rct_bgHit_f )
-
 	self.style = self._tmp_style
 end
 
 function Background:__undoInitComplete__()
 	--print( "Background:__undoInitComplete__" )
 	self:_removeBackground()
-
 	self.style = nil
-
-	self._rct_bgHit:removeEventListener( 'touch', self._rct_bgHit_f )
-	self._rct_bgHit_f = nil
 	--==--
 	self:superCall( ComponentBase, '__undoInitComplete__' )
 end
 
---== END: Setup DMC Objects
+-- END: Setup DMC Objects
 --======================================================--
 
 
@@ -268,7 +239,7 @@ function Background.__getters:x()
 	return self._x
 end
 function Background.__setters:x( value )
-	-- print( 'Background.__setters:x', value )
+	-- print( "Background.__setters:x", value )
 	assert( type(value)=='number' )
 	--==--
 	self._x = value
@@ -282,7 +253,7 @@ function Background.__getters:y()
 	return self._y
 end
 function Background.__setters:y( value )
-	-- print( 'Background.__setters:y', value )
+	-- print( "Background.__setters:y", value )
 	assert( type(value)=='number' )
 	--==--
 	self._y = value
@@ -290,124 +261,11 @@ function Background.__setters:y( value )
 	self:__invalidateProperties__()
 end
 
---== width (custom)
 
-function Background.__getters:width()
-	-- print( 'Background.__getters:width' )
-	return self.curr_style.width
-end
-function Background.__setters:width( value )
-	-- print( 'Background.__setters:width', value )
-	local style=self.curr_style
-	style.width = value
-	style.view.width=value
-end
+--======================================================--
+--== View Style Methods
 
---== height (custom)
-
-function Background.__getters:height()
-	-- print( 'Background.__getters:height' )
-	return self.curr_style.height
-end
-function Background.__setters:height( value )
-	-- print( 'Background.__setters:height', value )
-	local style=self.curr_style
-	style.height = value
-	style.view.height=value
-end
-
-
-function Background:clearStyle()
-	local style=self.curr_style
-	style:clearProperties()
-	style.view:clearProperties()
-end
-
-
-
---== anchorX
-
-function Background.__getters:anchorX()
-	-- print( 'Background.__getters:anchorX' )
-	return self.curr_style.anchorX
-end
-function Background.__setters:anchorX( value )
-	-- print( 'Background.__setters:anchorX', value )
-	local style=self.curr_style
-	style.anchorX = value
-	style.view.anchorX = value
-end
-
---== anchorY
-
-function Background.__getters:anchorY()
-	-- print( 'Background.__getters:anchorY' )
-	return self.curr_style.anchorY
-end
-function Background.__setters:anchorY( value )
-	-- print( 'Background.__setters:anchorY', value )
-	local style=self.curr_style
-	style.anchorY = value
-	style.view.anchorY = value
-end
-
-
-
---== hitMarginX
-
-function Background.__getters:hitMarginX()
-	-- print( 'Background.__getters:hitMarginX' )
-	return self.curr_style.hitMarginX
-end
-function Background.__setters:hitMarginX( value )
-	-- print( 'Background.__setters:hitMarginX', value )
-	self.curr_style.hitMarginX = value
-end
-
---== hitMarginY
-
-function Background.__getters:hitMarginY()
-	-- print( 'Background.__getters:hitMarginY' )
-	return self.curr_style.hitMarginY
-end
-function Background.__setters:hitMarginY( value )
-	-- print( 'Background.__setters:hitMarginY', value )
-	self.curr_style.hitMarginY = value
-end
-
---== isHitActive
-
-function Background.__getters:isHitActive()
-	-- print( 'Background.__getters:isHitActive' )
-	return self.curr_style.isHitActive
-end
-function Background.__setters:isHitActive( value )
-	-- print( 'Background.__setters:isHitActive', value )
-	self.curr_style.isHitActive = value
-end
-
-
-
---== setHitMargin
-
-function Background:setHitMargin( ... )
-	-- print( 'Background:setHitMargin' )
-	local args = {...}
-
-	if type( args[1] ) == 'table' then
-		self.hitMarginX, self.hitMarginY = unpack( args[1] )
-	end
-	if type( args[1] ) == 'number' then
-		self.hitMarginX = args[1]
-	end
-	if type( args[2] ) == 'number' then
-		self.hitMarginY = args[2]
-	end
-end
-
-
---== View Style Methods ==--
-
+--== cornerRadius
 
 function Background.__getters:cornerRadius()
 	return self.curr_style.view.cornerRadius
@@ -417,31 +275,53 @@ function Background.__setters:cornerRadius( value )
 	self.curr_style.view.cornerRadius = value
 end
 
-
 --== viewStrokeWidth
 
 function Background.__getters:viewStrokeWidth()
 	return self.curr_style.view.strokeWidth
 end
 function Background.__setters:viewStrokeWidth( value )
-	-- print( 'Background.__setters:viewStrokeWidth', value )
+	-- print( "Background.__setters:viewStrokeWidth", value )
 	self.curr_style.view.strokeWidth = value
 end
 
 --== setViewFillColor
 
 function Background:setViewFillColor( ... )
-	-- print( 'Background:setViewFillColor' )
+	-- print( "Background:setViewFillColor" )
 	self.curr_style.view.fillColor = {...}
 end
 
 --== setViewStrokeColor
 
 function Background:setViewStrokeColor( ... )
-	-- print( 'Background:setViewStrokeColor' )
+	-- print( "Background:setViewStrokeColor" )
 	self.curr_style.view.strokeColor = {...}
 end
 
+
+--======================================================--
+--== Theme Mix Methods
+
+function Background:clearStyle()
+	local style=self.curr_style
+	style:clearProperties()
+	style.view:clearProperties()
+end
+
+
+function Background:afterAddStyle()
+	-- print( "Background:afterAddStyle" )
+	self._wgtViewStyle_dirty=true
+	self:__invalidateProperties__()
+end
+
+
+function Background:beforeRemoveStyle()
+	-- print( "Background:beforeRemoveStyle" )
+	self._wgtViewStyle_dirty=true
+	self:__invalidateProperties__()
+end
 
 
 
@@ -450,123 +330,92 @@ end
 
 
 function Background:_removeBackground()
-	-- print( 'Background:_removeBackground' )
-	local o = self._wgt_bgView
+	-- print( "Background:_removeBackground" )
+	local o = self._wgtView
 	if not o then return end
+	o.style = nil
 	o:removeSelf()
-	self._wgt_bgView = nil
+	self._wgtView = nil
 end
 
--- TODO: future will have different types of backgrounds
---
 function Background:_createBackgroundView()
-	-- print( 'Background:_createBackgroundView' )
+	-- print( "Background:_createBackgroundView" )
 	local style = self.curr_style
 	local vtype = style.view.type
-	local o = self._wgt_bgView
+	local o = self._wgtView
 
 	-- create background if missing or type mismatch
 	if not o or vtype ~= o.TYPE then
 		self:_removeBackground()
-		o = ViewFactory.create( style.view.type )
+		o = ViewFactory.create( vtype )
 		self:insert( o.view )
-		self._wgt_bgView = o
 	end
 
-	-- conditions for coming in here
-	self._wgt_bgView_dirty = false
+	o:setActiveStyle( style.view, {copy=false} )
+	self._wgtView = o
 
-	--== reset our object
+	--== Unset create conditions
 
-	self._bgStyle_dirty = true
+	self._wgtView_dirty=false
+	self._wgtViewStyle_dirty=false
+
+	--== Reset properties
+
+	-- none
 end
 
 
 function Background:__commitProperties__()
-	-- print( 'Background:__commitProperties__' )
-	local style = self.curr_style
+	-- print( "Background:__commitProperties__" )
 
-	-- create new background if necessary
-	if self._wgt_bgView_dirty then
+	--== Update Widget Components
+
+	if self._wgtView_dirty or self._wgtViewStyle_dirty then
 		self:_createBackgroundView()
 	end
 
-	local view = self.view
-	local hit = self._rct_bgHit
-	local bg = self._wgt_bgView
+	--== Update Widget View
 
-	--== View
+	local style = self.curr_style
+	local view = self.view
+	local bg = self._wgtView
 
 	-- x/y
 
 	if self._x_dirty then
 		view.x = self._x
 		self._x_dirty = false
-
-		self._hitX_dirty=true
 	end
 	if self._y_dirty then
 		view.y = self._y
 		self._y_dirty = false
-
-		self._hitY_dirty=true
 	end
 
 	-- width/height
 
-	if self._width_dirty or self._hitMarginX_dirty then
-		hit.width = style.width+style.hitMarginX*2
+	if self._width_dirty then
+		style.view.width = style.width
 		self._width_dirty=false
-		self._hitMarginX_dirty=false
 	end
-	if self._height_dirty or self._hitMarginY_dirty then
-		hit.height = style.height+style.hitMarginY*2
+	if self._height_dirty then
+		style.view.height = style.height
 		self._height_dirty=false
-		self._hitMarginY_dirty=false
 	end
 
-	-- Hit Area
+	-- anchorX/anchorY
 
-	if self._hitX_dirty or self._anchorX_dirty then
-		local width = style.width
-		hit.x = width/2+(-width*style.anchorX)
-		self._hitX_dirty=false
+	if self._anchorX_dirty then
+		style.view.anchorX = style.anchorX
 		self._anchorX_dirty=false
 	end
-	if self._hitY_dirty or self._anchorY_dirty then
-		local height = style.height
-		hit.y = height/2+(-height*style.anchorY)
-		self._hitY_dirty=false
+	if self._anchorY_dirty then
+		style.view.anchorY = style.anchorY
 		self._anchorY_dirty=false
 	end
 
-
-	--== Background
-
-	if self._bgStyle_dirty then
-		bg:setActiveStyle( style.view, {copy=false} )
-		self._bgStyle_dirty=false
-	end
-
-
-	--== non-position sensitive
-
-	-- debug on
-
-	if self._debugOn_dirty then
-		if style.debugOn then
-			hit:setFillColor( 1,0,0,0.5 )
-		else
-			hit:setFillColor( 0,0,0,0 )
-		end
-	end
-
-	-- hit testable
-
-	if self._isHitTestable_dirty then
-		hit.isHitTestable = style.isHitTestable
-		self._isHitTestable_dirty=false
-	end
+	-- if self._debugOn_dirty then
+	-- 	self._debugOn_dirty=false
+	-- end
 
 end
 
@@ -577,7 +426,7 @@ end
 
 
 function Background:stylePropertyChangeHandler( event )
-	-- print( "\n\nBackground:stylePropertyChangeHandler", event )
+	-- print( "Background:stylePropertyChangeHandler", event )
 	local style = event.target
 	local etype= event.type
 	local property= event.property
@@ -586,23 +435,21 @@ function Background:stylePropertyChangeHandler( event )
 	-- print( "Style Changed", etype, property, value )
 
 	if etype == style.STYLE_RESET then
-		self._wgt_bgView_dirty=true
+		self._debugOn_dirty=true
 
 		self._width_dirty=true
 		self._height_dirty=true
 
 		self._anchorX_dirty=true
 		self._anchorY_dirty=true
-		self._debugOn_dirty = true
-		self._hitMarginX_dirty = true
-		self._hitMarginY_dirty = true
-		self._isHitActive_dirty=true
-		self._isHitTestable_dirty=true
 
 		property = etype
 
 	else
-		if property=='width' then
+		if property=='debugActive' then
+			self._debugOn_dirty=true
+
+		elseif property=='width' then
 			self._width_dirty=true
 		elseif property=='height' then
 			self._height_dirty=true
@@ -611,55 +458,12 @@ function Background:stylePropertyChangeHandler( event )
 			self._anchorX_dirty=true
 		elseif property=='anchorY' then
 			self._anchorY_dirty=true
-		elseif property=='debugActive' then
-			self._debugOn_dirty=true
-		elseif property=='hitMarginX' then
-			self._hitMarginX_dirty=true
-		elseif property=='hitMarginY' then
-			self._hitMarginY_dirty=true
-		elseif property=='isHitActive' then
-			self._isHitActive_dirty=true
-		elseif property=='isHitTestable' then
-			self._isHitTestable_dirty=true
 		end
 
 	end
 
 	self:__invalidateProperties__()
 	self:__dispatchInvalidateNotification__( property, value )
-end
-
-
-function Background:_hitAreaTouch_handler( e )
-	-- print( 'Background:_hitAreaTouch_handler', e.phase )
-	local phase = e.phase
-	local background = e.target
-
-	if not self.curr_style.isHitActive then return false end
-
-	if phase=='began' then
-		display.getCurrentStage():setFocus( background )
-		self._has_focus = true
-		self:dispatchEvent( self.PRESSED, {isWithinBounds=true}, {merge=true} )
-	end
-
-	if not self._has_focus then return false end
-
-	local bgCb = background.contentBounds
-	local isWithinBounds =
-		( bgCb.xMin <= e.x and bgCb.xMax >= e.x
-			and bgCb.yMin <= e.y and bgCb.yMax >= e.y )
-
-	if phase=='moved' then
-		self:dispatchEvent( self.MOVED, {isWithinBounds=isWithinBounds}, {merge=true} )
-
-	elseif phase=='ended' or phase=='canceled' then
-		display.getCurrentStage():setFocus( nil )
-		self._has_focus = false
-		self:dispatchEvent( self.RELEASED, {isWithinBounds=isWithinBounds}, {merge=true}  )
-	end
-
-	return true
 end
 
 
