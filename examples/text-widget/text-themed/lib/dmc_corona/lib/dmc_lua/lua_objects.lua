@@ -389,7 +389,9 @@ local function blessObject( inheritance, params )
 	o.__getters = {}
 
 	-- copy down all getters/setters of parents
-	for _, cls in ipairs( inheritance ) do
+	-- do in reverse order, to match order of property lookup
+	for i = #inheritance, 1, -1 do
+		local cls = inheritance[i]
 		if cls.__getters then
 			o.__getters = Utils.extend( cls.__getters, o.__getters )
 		end

@@ -157,6 +157,109 @@ ButtonBase.PRESSED = 'pressed'
 ButtonBase.RELEASED = 'released'
 
 
+
+
+
+--[[
+getters sttters
+
+
+
+--== hitMarginX
+
+-- function Background.__getters:hitMarginX()
+-- 	-- print( "Background.__getters:hitMarginX" )
+-- 	return self.curr_style.hitMarginX
+-- end
+-- function Background.__setters:hitMarginX( value )
+-- 	-- print( "Background.__setters:hitMarginX", value )
+-- 	self.curr_style.hitMarginX = value
+-- end
+
+-- --== hitMarginY
+
+-- function Background.__getters:hitMarginY()
+-- 	-- print( "Background.__getters:hitMarginY" )
+-- 	return self.curr_style.hitMarginY
+-- end
+-- function Background.__setters:hitMarginY( value )
+-- 	-- print( "Background.__setters:hitMarginY", value )
+-- 	self.curr_style.hitMarginY = value
+-- end
+
+
+-- --== setHitMargin
+
+-- function Background:setHitMargin( ... )
+-- 	-- print( 'Background:setHitMargin' )
+-- 	local args = {...}
+
+-- 	if type( args[1] ) == 'table' then
+-- 		self.hitMarginX, self.hitMarginY = unpack( args[1] )
+-- 	end
+-- 	if type( args[1] ) == 'number' then
+-- 		self.hitMarginX = args[1]
+-- 	end
+-- 	if type( args[2] ) == 'number' then
+-- 		self.hitMarginY = args[2]
+-- 	end
+-- end
+
+-- --== isHitActive
+
+-- function Background.__getters:isHitActive()
+-- 	-- print( "Background.__getters:isHitActive" )
+-- 	return self.curr_style.isHitActive
+-- end
+-- function Background.__setters:isHitActive( value )
+-- 	-- print( "Background.__setters:isHitActive", value )
+-- 	self.curr_style.isHitActive = value
+-- end
+
+
+
+complete prperties
+
+-- if self._hitX_dirty or self._anchorX_dirty then
+-- 	local width = style.width
+-- 	hit.x = width/2+(-width*style.anchorX)
+-- 	self._hitX_dirty=false
+-- 	self._anchorX_dirty=false
+-- end
+-- if self._hitY_dirty or self._anchorY_dirty then
+-- 	local height = style.height
+-- 	hit.y = height/2+(-height*style.anchorY)
+-- 	self._hitY_dirty=false
+-- 	self._anchorY_dirty=false
+-- end
+
+
+-- hit testable
+
+-- if self._isHitTestable_dirty then
+-- 	hit.isHitTestable = style.isHitTestable
+-- 	self._isHitTestable_dirty=false
+-- end
+
+
+
+
+in event handler
+
+
+elseif property=='hitMarginX' then
+	self._hitMarginX_dirty=true
+elseif property=='hitMarginY' then
+	self._hitMarginY_dirty=true
+elseif property=='isHitActive' then
+	self._isHitActive_dirty=true
+elseif property=='isHitTestable' then
+	self._isHitTestable_dirty=true
+
+--]]
+
+
+
 --======================================================--
 -- Start: Setup DMC Objects
 

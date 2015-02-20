@@ -143,12 +143,17 @@ function Style:__initComplete__()
 	--==--
 	local data = self:_prepareData( self._tmp_data )
 	self._tmp_data = nil
-
-	self.inherit = self._inherit -- use setter
-
 	self:_parseData( data )
 	self:_checkChildren()
+
+	-- do this after style/children constructed --
+	-- TODO: why this blow up ?
+	-- self.inherit = self._inherit -- use setter
+	-- self.widget = self._widget -- use setter
+
+	-- do this after inherit/widget in place --
 	assert( self:_checkProperties(), "Style: missing properties"..tostring(self.class) )
+
 end
 
 -- End: Setup DMC Objects
@@ -240,6 +245,9 @@ function Style:createStyleFrom( params )
 	return style
 end
 
+
+--======================================================--
+-- Misc
 
 --== inherit
 
@@ -399,7 +407,7 @@ function Style.__getters:height()
 	return value
 end
 function Style.__setters:height( value )
-	-- print( "Style.__setters:height", value )
+	-- print( "Style.__setters:height", self, value )
 	assert( type(value)=='number' or (value==nil and self._inherit) )
 	--==--
 	if value == self._height then return end
@@ -653,6 +661,7 @@ function Style:_parseData( data )
 	-- print( "Style:_parseData", data )
 	if data==nil then return end
 
+	-- Utils.print( data )
 	-- prep tables of things to exclude, etc
 	local DEF = self._STYLE_DEFAULTS
 	local EXCL = self.EXCLUDE_PROPERTY_CHECK
@@ -732,10 +741,31 @@ end
 
 
 -- _inheritedStyleEvent_handler()
--- handle inheritdstyle-events
+-- handle parent property changes
+--
+-- function Style:_parentStyleEvent_handler( event )
+-- 	-- print( "Style:_inheritedStyleEvent_handler", event, self )
+-- 	local style = event.target
+-- 	local etype = event.type
+
+-- 	if etype==style.STYLE_RESET then
+-- 		self._dispatchResetEvent()
+
+-- 	elseif etype==style.STYLE_UPDATED then
+-- 		-- only re-dispatch property changes if our property is empty
+-- 		if self:_getRawProperty( event.property ) == nil then
+-- 			self:_dispatchChangeEvent( event.property, event.value )
+-- 		end
+-- 	end
+
+-- end
+
+
+-- _inheritedStyleEvent_handler()
+-- handle inherited style-events
 --
 function Style:_inheritedStyleEvent_handler( event )
-	-- print( "Style:_inheritedStyleEvent_handler", event )
+	-- print( "Style:_inheritedStyleEvent_handler", event, self )
 	local style = event.target
 	local etype = event.type
 
