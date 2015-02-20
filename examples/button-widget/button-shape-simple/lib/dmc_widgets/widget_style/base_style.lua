@@ -147,11 +147,10 @@ function Style:__initComplete__()
 	self:_checkChildren()
 
 	-- do this after style/children constructed --
-	-- TODO: why this blow up ?
-	-- self.inherit = self._inherit -- use setter
+
+	self.inherit = self._inherit -- use setter
 	-- self.widget = self._widget -- use setter
 
-	-- do this after inherit/widget in place --
 	assert( self:verifyClassProperties(), "Style: missing properties"..tostring(self.class) )
 
 end
@@ -517,6 +516,7 @@ end
 --== fillColor
 
 function Style.__getters:fillColor()
+	-- print( "Style.__getters:fillColor", self, self._fillColor )
 	local value = self._fillColor
 	if value==nil and self._inherit then
 		value = self._inherit.fillColor
@@ -784,22 +784,22 @@ end
 -- _inheritedStyleEvent_handler()
 -- handle parent property changes
 --
--- function Style:_parentStyleEvent_handler( event )
--- 	-- print( "Style:_inheritedStyleEvent_handler", event, self )
--- 	local style = event.target
--- 	local etype = event.type
+function Style:_parentStyleEvent_handler( event )
+	-- print( "Style:_inheritedStyleEvent_handler", event, self )
+	local style = event.target
+	local etype = event.type
 
--- 	if etype==style.STYLE_RESET then
--- 		self._dispatchResetEvent()
+	if etype==style.STYLE_RESET then
+		self._dispatchResetEvent()
 
--- 	elseif etype==style.STYLE_UPDATED then
--- 		-- only re-dispatch property changes if our property is empty
--- 		if self:_getRawProperty( event.property ) == nil then
--- 			self:_dispatchChangeEvent( event.property, event.value )
--- 		end
--- 	end
+	elseif etype==style.STYLE_UPDATED then
+		-- only re-dispatch property changes if our property is empty
+		if self:_getRawProperty( event.property ) == nil then
+			self:_dispatchChangeEvent( event.property, event.value )
+		end
+	end
 
--- end
+end
 
 
 -- _inheritedStyleEvent_handler()

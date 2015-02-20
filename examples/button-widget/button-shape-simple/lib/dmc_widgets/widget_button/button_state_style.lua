@@ -79,6 +79,7 @@ local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
 
 local sformat = string.format
+local tinsert = table.insert
 
 --== To be set in initialize()
 local Widgets = nil
@@ -209,40 +210,13 @@ function ButtonStateStyle.initialize( manager )
 end
 
 
-function ButtonStateStyle.addMissingDestProperties( dest, src, params )
-	-- print( "ButtonStateStyle.addMissingDestProperties", dest, src )
-	assert( dest )
-	if not src then return end
-	params = params or {}
-	if params.force==nil then params.force=false end
-	--==--
-	local force=params.force
-
-	if dest.debugOn==nil or force then dest.debugOn=src.debugOn end
-
-	if dest.width==nil or force then dest.width=src.width end
-	if dest.height==nil or force then dest.height=src.height end
-
-	if dest.align==nil or force then dest.align=src.align end
-	if dest.anchorX==nil or force then dest.anchorX=src.anchorX end
-	if dest.anchorY==nil or force then dest.anchorY=src.anchorY end
-	if dest.isHitActive==nil or force then dest.isHitActive=src.isHitActive end
-	if dest.hitMarginX==nil or force then dest.hitMarginX=src.hitMarginX end
-	if dest.hitMarginY==nil or force then dest.hitMarginY=src.hitMarginY end
-	if dest.marginX==nil or force then dest.marginX=src.marginX end
-	if dest.marginY==nil or force then dest.marginY=src.marginY end
-	if dest.offsetX==nil or force then dest.offsetX=src.offsetX end
-	if dest.offsetY==nil or force then dest.offsetY=src.offsetY end
-
-	local StyleClass
-
-	StyleClass = Widgets.Style.Text
-	StyleClass.addMissingDestProperties( dest.label, src.label )
-
-	StyleClass = Widgets.Style.Background
-	StyleClass.addMissingDestProperties( dest.background, src.background )
-
-	return dest
+-- create empty button-state-style structure
+function ButtonStateStyle.createStateStructure( data )
+	-- print( "ButtonStateStyle.createStateStructure", data )
+	return {
+		label=Widgets.Style.Text.createStateStructure(),
+		background=Widgets.Style.Background.createStateStructure( data )
+	}
 end
 
 
@@ -298,6 +272,9 @@ function ButtonStateStyle.copyExistingSrcProperties( dest, src, params )
 
 	local StyleClass
 
+	-- to include children.
+	-- TODO: see if this needs to be split out, like the push()
+
 	StyleClass = Widgets.Style.Text
 	StyleClass.copyExistingSrcProperties( dest.label, src.label )
 
@@ -307,39 +284,83 @@ function ButtonStateStyle.copyExistingSrcProperties( dest, src, params )
 end
 
 
--- create empty button-state-style structure
-function ButtonStateStyle.createStateStructure( data )
-	-- print( "ButtonStateStyle.createStateStructure", data )
-	return {
-		label=Widgets.Style.Text.createStateStructure(),
-		background=Widgets.Style.Background.createStateStructure( data )
-	}
+
+-- really only used for when a class boots
+-- could be used by others during their boot
+function ButtonStateStyle.addMissingDestProperties( dest, src, params )
+	-- print( "ButtonStateStyle.addMissingDestProperties", dest, src )
+	params = params or {}
+	if params.force==nil then params.force=false end
+	assert( dest )
+	--==--
+	local force=params.force
+	local srcs = { ButtonStateStyle._STYLE_DEFAULTS }
+	if src then tinsert( srcs, 1, src ) end
+
+	for i=1,#srcs do
+		local src = srcs[i]
+
+		if dest.debugOn==nil or force then dest.debugOn=src.debugOn end
+
+		if dest.width==nil or force then dest.width=src.width end
+		if dest.height==nil or force then dest.height=src.height end
+
+		if dest.align==nil or force then dest.align=src.align end
+		if dest.anchorX==nil or force then dest.anchorX=src.anchorX end
+		if dest.anchorY==nil or force then dest.anchorY=src.anchorY end
+		if dest.isHitActive==nil or force then dest.isHitActive=src.isHitActive end
+		if dest.hitMarginX==nil or force then dest.hitMarginX=src.hitMarginX end
+		if dest.hitMarginY==nil or force then dest.hitMarginY=src.hitMarginY end
+		if dest.marginX==nil or force then dest.marginX=src.marginX end
+		if dest.marginY==nil or force then dest.marginY=src.marginY end
+		if dest.offsetX==nil or force then dest.offsetX=src.offsetX end
+		if dest.offsetY==nil or force then dest.offsetY=src.offsetY end
+
+	end
+
+	ButtonStateStyle._addMissingChildProperties( dest, src )
+
+	return dest
 end
 
-
 --
--- copy properties to sub-styles
+-- only used to push properties to children
 --
-function ButtonStateStyle._pushMissingProperties( src )
-	-- print("ButtonStateStyle._pushMissingProperties", src )
-	if not src then return end
-
+function ButtonStateStyle._addMissingChildProperties( dest, src )
+	-- print("ButtonStateStyle._addMissingChildProperties", dest, src )
 	local eStr = "ERROR: Style missing property '%s'"
+	local StyleClass, child
 
-	local StyleClass, dest
-
-	dest = src.label
-	assert( dest, sformat( eStr, 'label' ) )
+	child = dest.label
+	assert( child, sformat( eStr, 'label' ) )
 	StyleClass = Widgets.Style.Text
-	StyleClass.addMissingDestProperties( dest, src )
+	StyleClass.addMissingDestProperties( child, src )
 
-	dest = src.background
-	assert( dest, sformat( eStr, 'background' ) )
+	child = dest.background
+	assert( child, sformat( eStr, 'background' ) )
 	StyleClass = Widgets.Style.Background
-	StyleClass.addMissingDestProperties( dest, src )
+	StyleClass.addMissingDestProperties( child, src )
 
-	return src
+	return dest
 end
+
+
+function ButtonStateStyle._setDefaults()
+	-- print( "ButtonStateStyle._setDefaults" )
+
+	local defaults = ButtonStateStyle._STYLE_DEFAULTS
+
+	defaults = ButtonStateStyle._addMissingChildProperties( defaults, defaults )
+
+	local style = ButtonStateStyle:new{
+		data=defaults
+	}
+	ButtonStateStyle.__base_style__ = style
+
+end
+
+
+
 
 
 function ButtonStateStyle._verifyClassProperties( src )
@@ -386,21 +407,6 @@ function ButtonStateStyle._verifyClassProperties( src )
 	-- if not StyleClass._checkProperties( src._label ) then is_valid=false end
 
 	return is_valid
-end
-
-
-function ButtonStateStyle._setDefaults()
-	-- print( "ButtonStateStyle._setDefaults" )
-
-	local defaults = ButtonStateStyle._STYLE_DEFAULTS
-
-	defaults = ButtonStateStyle._pushMissingProperties( defaults )
-
-	local style = ButtonStateStyle:new{
-		data=defaults
-	}
-	ButtonStateStyle.__base_style__ = style
-
 end
 
 
@@ -549,12 +555,8 @@ function ButtonStateStyle.__setters:inherit( value )
 	-- print( "ButtonStateStyle.__setters:inherit", value )
 	BaseStyle.__setters.inherit( self, value )
 	--==--
-	if self._background then
-		self._background.inherit = value and value.background or value
-	end
-	if self._label then
-		self._label.inherit = value and value.label or value
-	end
+	self._background.inherit = value and value.background or nil
+	self._label.inherit = value and value.label or nil
 end
 
 

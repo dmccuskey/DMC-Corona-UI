@@ -712,15 +712,10 @@ function TextFieldStyle.__setters:inherit( value )
 	-- print( "TextFieldStyle.__setters:inherit", value )
 	BaseStyle.__setters.inherit( self, value )
 	--==--
-	if self._background then
-		self._background.inherit = value and value.background or value
-	end
-	if self._hint then
-		self._hint.inherit = value and value.hint or value
-	end
-	if self._display then
-		self._display.inherit = value and value.display or value
-	end
+	-- if value
+		self._background.inherit = value and value.background or nil
+		self._hint.inherit = value and value.hint or nil
+		self._display.inherit = value and value.display or nil
 end
 
 

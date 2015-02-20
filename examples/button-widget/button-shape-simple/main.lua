@@ -149,8 +149,8 @@ function run_example1()
 			align='center',
 			anchorX=0.5,
 			anchorY=0.5,
-			hitMarginX=0,
-			hitMarginY=0,
+			hitMarginX=10,
+			hitMarginY=10,
 			isHitActive=true,
 			offsetX=0,
 			offsetY=0,
@@ -174,7 +174,7 @@ function run_example1()
 				background={
 					view={
 						type='rounded',
-						fillColor={1,0,0}
+						fillColor={0.2,0.5,0.5}
 					}
 				}
 			},
@@ -214,13 +214,19 @@ function run_example1()
 		onEvent = onEvent_handler,
 
 	}
-	btn1.x, btn1.y = H_CENTER, V_CENTER-100
+	btn1.x, btn1.y = H_CENTER, V_CENTER
 
 
 	timer.performWithDelay( 1000, function()
+		print( "\n\n\nProperties Updated")
 		btn1:setLabelColor( 1,1,1)
 		btn1.strokeWidth=6
 		btn1.strokeColor={0,0,0}
+		btn1.hitMarginY=20
+		btn1:setAnchor({1,1})
+		-- btn1.width=200
+		-- btn1.height=100
+
 	end)
 
 	-- timer.performWithDelay( 2000, function()

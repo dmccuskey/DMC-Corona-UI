@@ -79,6 +79,7 @@ local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
 
 local sformat = string.format
+local tinsert = table.insert
 
 --== To be set in initialize()
 local Widgets = nil
@@ -176,13 +177,19 @@ end
 
 
 function RectangleStyle.addMissingDestProperties( dest, src, params )
-	-- print( "RectangleStyle.addMissingDestProperties", dest, src )
-	assert( dest )
-	if not src then return end
+	print( "RectangleStyle.addMissingDestProperties", dest, src )
 	params = params or {}
 	if params.force==nil then params.force=false end
+	assert( dest )
 	--==--
 	local force=params.force
+	local srcs = { RectangleStyle._STYLE_DEFAULTS }
+	if src then tinsert( srcs, 1, src ) end
+
+	for i=1,#srcs do
+		local src = srcs[i]
+		print(i)
+
 
 	if dest.debugOn==nil or force then dest.debugOn=src.debugOn end
 
@@ -194,6 +201,7 @@ function RectangleStyle.addMissingDestProperties( dest, src, params )
 	if dest.fillColor==nil or force then dest.fillColor=src.fillColor end
 	if dest.strokeColor==nil or force then dest.strokeColor=src.strokeColor end
 	if dest.strokeWidth==nil or force then dest.strokeWidth=src.strokeWidth end
+end
 
 	return dest
 end

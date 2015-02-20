@@ -77,6 +77,9 @@ local BaseStyle = require( widget_find( 'widget_style.base_style' ) )
 local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
 
+local sformat = string.format
+local tinsert = table.insert
+
 --== To be set in initialize()
 local Widgets = nil
 
@@ -116,8 +119,6 @@ TextStyle._STYLE_DEFAULTS = {
 	fontSize=24,
 	marginX=0,
 	marginY=0,
-	offsetX=0,
-	offsetY=0,
 	textColor={0,0,0,1},
 
 	strokeColor={0,0,0,1},
@@ -185,30 +186,44 @@ function TextStyle.initialize( manager )
 end
 
 
+-- create empty Style structure
+function TextStyle.createStateStructure( data )
+	-- print( "TextStyle.createStateStructure", data )
+	return {}
+end
+
+
 function TextStyle.addMissingDestProperties( dest, src, params )
 	-- print( "TextStyle.addMissingDestProperties", dest, src )
-	if not dest or not src then return end
 	params = params or {}
 	if params.force==nil then params.force=false end
+	assert( dest )
 	--==--
 	local force=params.force
+	local srcs = { TextStyle._STYLE_DEFAULTS }
+	if src then tinsert( srcs, 1, src ) end
 
-	if dest.debugOn==nil or force then dest.debugOn=src.debugOn end
+	for i=1,#srcs do
+		local src = srcs[i]
 
-	if dest.width==nil or force then dest.width=src.width end
-	if dest.height==nil or force then dest.height=src.height end
+		if dest.debugOn==nil or force then dest.debugOn=src.debugOn end
 
-	if dest.align==nil or force then dest.align=src.align end
-	if dest.anchorX==nil or force then dest.anchorX=src.anchorX end
-	if dest.anchorY==nil or force then dest.anchorY=src.anchorY end
-	if dest.fillColor==nil or force then dest.fillColor=src.fillColor end
-	if dest.font==nil or force then dest.font=src.font end
-	if dest.fontSize==nil or force then dest.fontSize=src.fontSize end
-	if dest.marginX==nil or force then dest.marginX=src.marginX end
-	if dest.marginY==nil or force then dest.marginY=src.marginY end
-	if dest.strokeColor==nil or force then dest.strokeColor=src.strokeColor end
-	if dest.strokeWidth==nil or force then dest.strokeWidth=src.strokeWidth end
-	if dest.textColor==nil or force then dest.textColor=src.textColor end
+		if dest.width==nil or force then dest.width=src.width end
+		if dest.height==nil or force then dest.height=src.height end
+
+		if dest.align==nil or force then dest.align=src.align end
+		if dest.anchorX==nil or force then dest.anchorX=src.anchorX end
+		if dest.anchorY==nil or force then dest.anchorY=src.anchorY end
+		if dest.fillColor==nil or force then dest.fillColor=src.fillColor end
+		if dest.font==nil or force then dest.font=src.font end
+		if dest.fontSize==nil or force then dest.fontSize=src.fontSize end
+		if dest.marginX==nil or force then dest.marginX=src.marginX end
+		if dest.marginY==nil or force then dest.marginY=src.marginY end
+		if dest.strokeColor==nil or force then dest.strokeColor=src.strokeColor end
+		if dest.strokeWidth==nil or force then dest.strokeWidth=src.strokeWidth end
+		if dest.textColor==nil or force then dest.textColor=src.textColor end
+
+	end
 
 	return dest
 end
@@ -268,13 +283,6 @@ function TextStyle.copyExistingSrcProperties( dest, src, params )
 	end
 
 	return dest
-end
-
-
--- create empty Style structure
-function TextStyle.createStateStructure( data )
-	-- print( "TextStyle.createStateStructure", data )
-	return {}
 end
 
 
