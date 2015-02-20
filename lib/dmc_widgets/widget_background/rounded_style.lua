@@ -80,7 +80,8 @@ local ObjectBase = Objects.ObjectBase
 
 local sformat = string.format
 
-local Widgets = nil -- set later
+--== To be set in initialize()
+local Widgets = nil
 
 
 
@@ -96,6 +97,8 @@ local RoundedStyle = newClass( BaseStyle, {name="Rounded Background Style"} )
 RoundedStyle.TYPE = 'rounded'
 
 RoundedStyle.__base_style__ = nil
+
+RoundedStyle.EXCLUDE_PROPERTY_CHECK = nil
 
 RoundedStyle._STYLE_DEFAULTS = {
 	name='rounded-background-default-style',
@@ -174,23 +177,16 @@ function RoundedStyle.initialize( manager )
 end
 
 
-function RoundedStyle._setDefaults()
-	-- print( "RoundedStyle._setDefaults" )
-	local defaults = RoundedStyle._STYLE_DEFAULTS
-	local style = RoundedStyle:new{
-		data=defaults
-	}
-	RoundedStyle.__base_style__ = style
-end
 
+function RoundedStyle.addMissingDestProperties( dest, src, params )
+	-- print( "RoundedStyle.addMissingDestProperties", dest, src )
+	assert( dest )
+	if not src then return end
+	params = params or {}
+	if params.force==nil then params.force=false end
+	--==--
+	local force=params.force
 
--- copyMissingProperties()
--- copies properties from src structure to dest structure
--- if property isn't already in dest
--- Note: usually used by OTHER classes
---
-function RoundedStyle.copyMissingProperties( dest, src )
-	-- print( "RoundedStyle.copyMissingProperties", dest, src )
 	if dest.debugOn==nil then dest.debugOn=src.debugOn end
 
 	if dest.width==nil then dest.width=src.width end
@@ -202,6 +198,100 @@ function RoundedStyle.copyMissingProperties( dest, src )
 	if dest.fillColor==nil then dest.fillColor=src.fillColor end
 	if dest.strokeColor==nil then dest.strokeColor=src.strokeColor end
 	if dest.strokeWidth==nil then dest.strokeWidth=src.strokeWidth end
+
+	return dest
+end
+
+
+function RoundedStyle.copyExistingSrcProperties( dest, src, params )
+	-- print( "RoundedStyle.copyExistingSrcProperties", dest, src )
+	assert( dest )
+	if not src then return end
+	params = params or {}
+	if params.force==nil then params.force=false end
+	--==--
+	local force=params.force
+
+	if (src.debugOn~=nil and dest.debugOn==nil) or force
+		then src.debugOn=src.debugOn
+	end
+	if (src.width~=nil and dest.width==nil) or force
+		then src.width=src.width
+	end
+	if (src.height~=nil and dest.height==nil) or force
+		then src.height=src.height
+	end
+	if (src.anchorX~=nil and dest.anchorX==nil) or force
+		then src.anchorX=src.anchorX
+	end
+	if (src.anchorY~=nil and dest.anchorY==nil) or force
+		then src.anchorY=src.anchorY
+	end
+	if (src.cornerRadius~=nil and dest.cornerRadius==nil) or force
+		then src.cornerRadius=src.cornerRadius
+	end
+	if (src.fillColor~=nil and dest.fillColor==nil) or force
+		then src.fillColor=src.fillColor
+	end
+	if (src.strokeColor~=nil and dest.strokeColor==nil) or force
+		then src.strokeColor=src.strokeColor
+	end
+	if (src.strokeWidth~=nil and dest.strokeWidth==nil) or force
+		then src.strokeWidth=src.strokeWidth
+	end
+
+	return dest
+end
+
+
+function RoundedStyle._verifyClassProperties( src )
+	-- print( "RoundedStyle._verifyClassProperties" )
+	assert( src )
+	--==--
+	local emsg = "Style: requires property '%s'"
+
+	local is_valid = BaseStyle._verifyClassProperties( src )
+
+	if not src.width then
+		print(sformat(emsg,'width')) ; is_valid=false
+	end
+	if not src.height then
+		print(sformat(emsg,'height')) ; is_valid=false
+	end
+	if not src.type then
+		print(sformat(emsg,'type')) ; is_valid=false
+	end
+	if not src.anchorX then
+		print(sformat(emsg,'anchorX')) ; is_valid=false
+	end
+	if not src.anchorY then
+		print(sformat(emsg,'anchorY')) ; is_valid=false
+	end
+	if not src.cornerRadius then
+		print(sformat(emsg,'cornerRadius')) ; is_valid=false
+	end
+	if not src.fillColor then
+		print(sformat(emsg,'fillColor')) ; is_valid=false
+	end
+	if not src.strokeColor then
+		print(sformat(emsg,'strokeColor')) ; is_valid=false
+	end
+	if not src.strokeWidth then
+		print(sformat(emsg,'strokeWidth')) ; is_valid=false
+	end
+
+	return is_valid
+
+end
+
+
+function RoundedStyle._setDefaults()
+	-- print( "RoundedStyle._setDefaults" )
+	local defaults = RoundedStyle._STYLE_DEFAULTS
+	local style = RoundedStyle:new{
+		data=defaults
+	}
+	RoundedStyle.__base_style__ = style
 end
 
 
@@ -263,22 +353,26 @@ end
 --
 function RoundedStyle:updateStyle( src, params )
 	-- print( "RoundedStyle:updateStyle", src )
-	params = params or {}
-	if params.force==nil then params.force=true end
-	--==--
-	local force=params.force
+	RoundedStyle.copyExistingSrcProperties( self, src, params )
+end
 
-	if src.debugOn~=nil or force then self.debugOn=src.debugOn end
 
-	if src.width~=nil or force then self.width=src.width end
-	if src.height~=nil or force then self.height=src.height end
+function RoundedStyle:verifyClassProperties()
+	-- print( "RoundedStyle.verifyClassProperties" )
+	local emsg = "Style: requires property '%s'"
 
-	if src.anchorX~=nil or force then self.anchorX=src.anchorX end
-	if src.anchorY~=nil or force then self.anchorY=src.anchorY end
-	if src.cornerRadius~=nil or force then self.cornerRadius=src.cornerRadius end
-	if src.fillColor~=nil or force then self.fillColor=src.fillColor end
-	if src.strokeColor~=nil or force then self.strokeColor=src.strokeColor end
-	if src.strokeWidth~=nil or force then self.strokeWidth=src.strokeWidth end
+	--== Check Inheritance
+
+	-- if not proper types, then make sure we have data
+
+	local inherit_type = self._inherit and self._inherit.type or nil
+
+	if self.type ~= inherit_type and inherit_type~=nil then
+		print( sformat("[NOTICE] Style inheritance mismatch '%s'<>'%s'", tostring(self.type), tostring(inherit_type) ))
+		RoundedStyle.addMissingDestProperties( self, RoundedStyle._STYLE_DEFAULTS )
+	end
+
+	return RoundedStyle._verifyClassProperties( self )
 end
 
 
@@ -286,35 +380,7 @@ end
 --====================================================================--
 --== Private Methods
 
--- returns true, false
-
-function RoundedStyle:_checkProperties()
-	-- print( "RoundedStyle._checkProperties" )
-	local emsg = "Style: requires property '%s'"
-
-	--== Check Inheritance
-	-- if not proper types, then make sure we have data
-	local inherit_type = self._inherit and self._inherit.type or nil
-	if self.type ~= inherit_type then
-		print( sformat("[NOTICE] Style inheritance mismatch '%s'<>'%s'", tostring(self.type), tostring(inherit_type) ))
-		RoundedStyle.copyMissingProperties( self, self._STYLE_DEFAULTS )
-	end
-
-	local is_valid = BaseStyle._checkProperties( self )
-
-	if not self.width then print(sformat(emsg,'width')) ; is_valid=false end
-	if not self.height then print(sformat(emsg,'height')) ; is_valid=false end
-
-	if not self.anchorX then print(sformat(emsg,'anchorX')) ; is_valid=false end
-	if not self.anchorY then print(sformat(emsg,'anchorY')) ; is_valid=false end
-	if not self.cornerRadius then print(sformat(emsg,'cornerRadius')) ; is_valid=false end
-	if not self.fillColor then print(sformat(emsg,'fillColor')) ; is_valid=false end
-	if not self.strokeColor then print(sformat(emsg,'strokeColor')) ; is_valid=false end
-	if not self.strokeWidth then print(sformat(emsg,'strokeWidth')) ; is_valid=false end
-
-	return is_valid
-end
-
+-- none
 
 
 --====================================================================--

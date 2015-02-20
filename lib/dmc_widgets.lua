@@ -110,7 +110,6 @@ local BaseStyle = require( PATH .. '.' .. 'widget_style.base_style' )
 
 
 -- Widgets
-Widget.Button = require( PATH .. '.' .. 'widget_button' )
 Widget.ButtonGroup = require( PATH .. '.' .. 'button_group' )
 Widget.Formatter = require( PATH .. '.' .. 'data_formatters' )
 Widget.NavBar = require( PATH .. '.' .. 'widget_navbar' )
@@ -151,6 +150,8 @@ local loadTextSupport, loadTextFieldSupport
 loadBackgroundSupport = function()
 	-- print("loadBackgroundSupport")
 
+	--== Background Components
+
 	local Background = require( PATH .. '.' .. 'widget_background' )
 	local BackgroundStyle = require( PATH .. '.' .. 'widget_style.background_style' )
 	local RectangleStyle = require( PATH .. '.' .. 'widget_background.rectangle_style' )
@@ -189,20 +190,34 @@ end
 
 
 loadButtonSupport = function()
-	-- print("loadButtonSupport")
+	print("loadButtonSupport")
+	-- print("loadTextFieldSupport")
+
+	--== Dependencies
+
+	loadBackgroundSupport()
+	loadTextSupport()
+
+	--== Button Components
+
 	local Button = require( PATH .. '.' .. 'widget_button' )
 	local ButtonStyle = require( PATH .. '.' .. 'widget_style.button_style' )
+	local ButtonStateStyle = require( PATH .. '.' .. 'widget_button.button_state_style' )
 
 	Widget.Button=Button
 	Widget.Style.Button=ButtonStyle
+	Widget.Style.ButtonState=ButtonStateStyle
 
-	Button.initialize( Widget )
+	--== Reverse order
+	ButtonStateStyle.initialize( Widget )
 	ButtonStyle.initialize( Widget )
+	Button.initialize( Widget )
 end
 
 
 function Widget.newButton( options )
 	if not Widget.Button then loadButtonSupport() end
+	print("\n\n\nCREATING BUTT")
 	return Widget.Button.create( options )
 end
 
@@ -349,7 +364,7 @@ function Widget.newText( options )
 end
 
 function Widget.newTextStyle( style_info )
-	-- print("Widget.newTextStyle")
+	print("Widget.newTextStyle")
 	if not Widget.Style.Text then loadTextSupport() end
 	return Widget.Style.Text:createStyleFrom{ data=style_info }
 end
@@ -362,12 +377,16 @@ end
 
 loadTextFieldSupport = function()
 	-- print("loadTextFieldSupport")
-	-- dependencies
+
+	--== Dependencies
+
 	loadBackgroundSupport()
 	loadTextSupport()
 
-	TextField = require( PATH .. '.' .. 'widget_textfield' )
-	TextFieldStyle = require( PATH .. '.' .. 'widget_style.textfield_style' )
+	--== TextField Components
+
+	local TextField = require( PATH .. '.' .. 'widget_textfield' )
+	local TextFieldStyle = require( PATH .. '.' .. 'widget_style.textfield_style' )
 
 	Widget.TextField=TextField
 	Widget.Style.TextField=TextFieldStyle
