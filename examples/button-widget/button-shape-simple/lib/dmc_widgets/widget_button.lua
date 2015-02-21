@@ -166,7 +166,7 @@ function ButtonBase:__init__( params )
 	self._id = params.id
 	self._id_dirty=true
 
-	self._labelText = params.text
+	self._labelText = params.labelText
 	self._labelText_dirty=true
 
 	self._data = params.data
@@ -203,7 +203,9 @@ function ButtonBase:__init__( params )
 	self._hitAreaMarginX_dirty=true
 	self._hitAreaMarginY_dirty=true
 
-	self._params = params -- save for view creation
+	self._displayText_dirty=true
+
+
 
 	self._callbacks = {
 		onPress = params.onPress,
@@ -344,6 +346,7 @@ function ButtonBase.__getters:labelText()
 end
 function ButtonBase.__setters:labelText( value )
 	-- print( "ButtonBase.__setters:labelText", value )
+	assert( type(value)=='string' )
 	if value == self._labelText then return end
 	self._labelText = value
 	self._labelText_dirty=true
@@ -401,48 +404,36 @@ end
 
 
 
-
 --======================================================--
 -- Background Style Properties
 
 
-
--- .strokeWidth
+-- .backgroundStrokeWidth
 --
-function ButtonBase.__getters:strokeWidth()
-	return self.curr_style.background.strokeWidth
+function ButtonBase.__getters:backgroundStrokeWidth()
+	return self.curr_style.backgroundStrokeWidth
 end
-function ButtonBase.__setters:strokeWidth( value )
-	-- print( 'ButtonBase.__setters:strokeWidth', value )
-	self.curr_style.inactive.strokeWidth = value
+function ButtonBase.__setters:backgroundStrokeWidth( value )
+	-- print( 'ButtonBase.__setters:backgroundStrokeWidth', value )
+	self.curr_style.backgroundStrokeWidth = value
 end
 
-
--- .strokeWidth
+-- setBackgroundFillColor()
 --
-function ButtonBase.__getters:strokeWidth()
-	return self.curr_style.background.strokeWidth
+function ButtonBase:setBackgroundStrokeColor()
+	return self.curr_style.backgroundStrokeColor
 end
-function ButtonBase.__setters:strokeWidth( value )
-	-- print( 'ButtonBase.__setters:strokeWidth', value )
-	self.curr_style.inactive.strokeWidth = value
-end
-
-function ButtonBase.__getters:strokeColor()
-	return self.curr_style.background.strokeWidth
-end
-function ButtonBase.__setters:strokeColor( value )
-	-- print( 'ButtonBase.__setters:strokeColor', value )
-	self.curr_style.inactive.strokeColor = value
+function ButtonBase:setBackgroundStrokeColor( ... )
+	-- print( 'ButtonBase:setBackgroundStrokeColor' )
+	self.curr_style.backgroundStrokeColor = {...}
 end
 
 -- setBackgroundStrokeColor()
 --
 function ButtonBase:setBackgroundStrokeColor( ... )
 	-- print( 'ButtonBase:setBackgroundStrokeColor' )
-	self.curr_style.background.strokeColor = {...}
+	self.curr_style.backgroundStrokeColor = {...}
 end
-
 
 
 --======================================================--
@@ -452,31 +443,21 @@ end
 --
 function ButtonBase.__setters:labelFont( value )
 	-- print( 'ButtonBase.__setters:labelFont', value )
-	local style = self.curr_style
-	style.inactive.font = value
-	style.active.font = value
-	style.disabled.font = value
+	self.curr_style.font = value
 end
 
 -- .labelFontSize
 --
 function ButtonBase.__setters:labelFontSize( value )
 	-- print( 'ButtonBase.__setters:labelFontSize', value )
-	local style = self.curr_style
-	style.inactive.fontSize = value
-	style.active.fontSize = value
-	style.disabled.fontSize = value
+	self.curr_style.fontSize = value
 end
 
 -- setLabelColor()
 --
-function ButtonBase:setLabelColor( ... )
-	-- print( 'ButtonBase:setLabelColor' )
-	local args={...}
-	local style = self.curr_style
-	style.inactive.textColor = args
-	style.active.textColor = args
-	style.disabled.textColor = args
+function ButtonBase:setLabelTextColor( ... )
+	-- print( 'ButtonBase:setLabelTextColor' )
+	self.curr_style.labelTextColor = {...}
 end
 
 
@@ -498,9 +479,6 @@ function ButtonBase:beforeRemoveStyle()
 	self._widgetStyle_dirty=true
 	self:__invalidateProperties__()
 end
-
-
-
 
 
 --======================================================--
@@ -606,7 +584,7 @@ end
 -- dispatch 'release' events
 --
 function ButtonBase:_doReleaseEventDispatch()
-	print( "ButtonBase:_doReleaseEventDispatch" )
+	-- print( "ButtonBase:_doReleaseEventDispatch" )
 
 	if not self.isEnabled then return end
 
@@ -655,8 +633,37 @@ function ButtonBase:_createBackground()
 end
 
 
+--== Create/Destroy Text Widget
+
+function ButtonBase:_removeText()
+	-- print( "ButtonBase:_removeText" )
+	local o = self._wgtText
+	if not o then return end
+	o.onUpdate=nil
+	o:removeSelf()
+	self._wgtText = nil
+end
+
+function ButtonBase:_createText()
+	-- print( "ButtonBase:_createText" )
+
+	self:_removeText()
+
+	local o = Widgets.newText()
+	o.onUpdate = self._wgtText_f
+	self:insert( o.view )
+	self._wgtText = o
+
+	--== Reset properties
+
+	self._wgtTextStyle_dirty=true
+	self._isEditActive_dirty=true
+end
+
+
+
 function ButtonBase:__commitProperties__()
-	print( 'ButtonBase:__commitProperties__' )
+	-- print( 'ButtonBase:__commitProperties__' )
 
 	--== Update Widget Components ==--
 
@@ -664,6 +671,12 @@ function ButtonBase:__commitProperties__()
 		self:_createBackground()
 		self._wgtBg_dirty = false
 	end
+
+	if self._wgtText_dirty then
+		self:_createText()
+		self._wgtText_dirty=false
+	end
+
 
 	--== Update Widget View ==--
 
@@ -724,15 +737,23 @@ function ButtonBase:__commitProperties__()
 		self._hitAreaMarginY_dirty=true
 	end
 
+	if self._labelText_dirty then
+		text.text = self._labelText
+		self._labelText_dirty=false
+	end
+
 	--== Set Styles
 
 	if self._widgetStyle_dirty or self._widgetViewState_dirty then
 		local state = self._widgetViewState
 		if state==ButtonBase.INACTIVE then
+			text:setActiveStyle( style.inactive.label, {copy=false} )
 			bg:setActiveStyle( style.inactive.background, {copy=false} )
 		elseif state==ButtonBase.ACTIVE then
+			text:setActiveStyle( style.active.label, {copy=false} )
 			bg:setActiveStyle( style.active.background, {copy=false} )
 		else
+			text:setActiveStyle( style.disabled.label, {copy=false} )
 			bg:setActiveStyle( style.disabled.background, {copy=false} )
 		end
 		self._widgetStyle_dirty=false
@@ -790,7 +811,7 @@ end
 -- and reponds with the appropriate message
 --
 function ButtonBase:stylePropertyChangeHandler( event )
-	print( "\n\n\n>>>>>> ButtonBase:stylePropertyChangeHandler", event.property, event.value )
+	-- print( "ButtonBase:stylePropertyChangeHandler", event.property, event.value )
 	local style = event.target
 	local etype= event.type
 	local property= event.property
@@ -1109,7 +1130,7 @@ end
 
 
 function ToggleButton:_hitAreaTouch_handler( event )
-	print( "ToggleButton:_hitAreaTouch_handler", event.phase )
+	-- print( "ToggleButton:_hitAreaTouch_handler", event.phase )
 
 	if not self.isEnabled then return true end
 

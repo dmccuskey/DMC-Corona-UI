@@ -133,7 +133,7 @@ function run_example1()
 
 end
 
-run_example1()
+-- run_example1()
 
 
 
@@ -165,6 +165,7 @@ function run_example2()
 			hitMarginX=10,
 			hitMarginY=10,
 			isHitActive=true,
+			marginX=10,
 			offsetX=0,
 			offsetY=0,
 
@@ -181,13 +182,13 @@ function run_example2()
 
 			inactive = {
 				label = {
-					align='right',
+					align='center',
 					textColor={0,0,0},
 				},
 				background={
 					view={
 						type='rectangle',
-						fillColor={0,0,0,1},
+						fillColor={0.7,0.7,0.7,1},
 						strokeColor={1,1,0,1},
 						strokeWidth=6
 					}
@@ -197,8 +198,8 @@ function run_example2()
 
 			active = {
 				label = {
-					align='right',
-					textColor={0,0,0},
+					align='center',
+					textColor={0.4,0.2,1,},
 				},
 				background={
 					view={
@@ -210,7 +211,7 @@ function run_example2()
 
 			disabled = {
 				label = {
-					align='right',
+					align='center',
 					textColor={0,0,0},
 				},
 				background={
@@ -266,7 +267,7 @@ function run_example2()
 
 end
 
--- run_example2()
+run_example2()
 
 
 
