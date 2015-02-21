@@ -97,7 +97,7 @@ function run_example1()
 	}
 	-- tf1:addEventListener( tf1.EVENT, widgetEvent_handler )
 	-- tf1.onProperty = widgetOnPropertyEvent_handler
-	tf1.debugOn = true
+	-- tf1.debugOn = true
 	tf1.x = H_CENTER
 	tf1.y = V_CENTER
 

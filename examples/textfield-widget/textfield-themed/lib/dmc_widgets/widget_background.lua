@@ -68,7 +68,7 @@ local Objects = require 'dmc_objects'
 local LifecycleMixModule = require 'dmc_lifecycle_mix'
 local ThemeMixModule = require( widget_find( 'widget_theme_mix' ) )
 
--- these set in initialize()
+--== To be set in initialize()
 local Widgets = nil
 local ThemeMgr = nil
 local ViewFactory = nil
@@ -94,7 +94,10 @@ local ThemeMix = ThemeMixModule.ThemeMix
 
 -- ! put ThemeMix first !
 
-local Background = newClass( {ThemeMix,ComponentBase,LifecycleMix}, {name="Background Widget"} )
+local Background = newClass(
+	{ ThemeMix, ComponentBase, LifecycleMix },
+	{name="Background Widget"}
+)
 
 --== Theme Constants
 
@@ -134,14 +137,14 @@ function Background:__init__( params )
 
 	--== Create Properties ==--
 
-	-- Class properties
+	-- properties stored in Class
 
 	self._x = params.x
 	self._x_dirty=true
 	self._y = params.y
 	self._y_dirty=true
 
-	-- Style properties
+	-- properties stored in Style
 
 	self._debugOn_dirty=true
 	self._width_dirty=true
@@ -231,8 +234,11 @@ end
 --== Public Methods
 
 
---== X
+--======================================================--
+-- Local Properties
 
+-- .X
+--
 function Background.__getters:x()
 	return self._x
 end
@@ -245,8 +251,8 @@ function Background.__setters:x( value )
 	self:__invalidateProperties__()
 end
 
---== Y
-
+-- .Y
+--
 function Background.__getters:y()
 	return self._y
 end
@@ -261,7 +267,7 @@ end
 
 
 --======================================================--
---== View Style Methods
+--== View Style Properties
 
 --== cornerRadius
 
@@ -275,36 +281,31 @@ end
 
 --== viewStrokeWidth
 
-function Background.__getters:strokeWidth()
+function Background.__getters:viewStrokeWidth()
 	return self.curr_style.view.strokeWidth
 end
-function Background.__setters:strokeWidth( value )
+function Background.__setters:viewStrokeWidth( value )
 	-- print( "Background.__setters:viewStrokeWidth", value )
 	self.curr_style.view.strokeWidth = value
 end
 
 --== setViewFillColor
 
-function Background:setFillColor( ... )
-	-- print( "Background:setFillColor" )
+function Background:setViewFillColor( ... )
+	-- print( "Background:setViewFillColor" )
 	self.curr_style.view.fillColor = {...}
 end
 
 --== setViewStrokeColor
 
-function Background:setStrokeColor( ... )
-	-- print( "Background:setVtrokeColor" )
+function Background:setViewStrokeColor( ... )
+	-- print( "Background:setViewStrokeColor" )
 	self.curr_style.view.strokeColor = {...}
 end
 
 
 --======================================================--
 --== Theme Mix Methods
-
-function Background:clearStyle()
-	self.curr_style:clearProperties()
-end
-
 
 function Background:afterAddStyle()
 	-- print( "Background:afterAddStyle" )

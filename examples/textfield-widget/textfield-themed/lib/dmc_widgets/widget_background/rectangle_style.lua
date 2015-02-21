@@ -208,6 +208,7 @@ function RectangleStyle.addMissingDestProperties( dest, src, params )
 		if dest.fillColor==nil or force then dest.fillColor=src.fillColor end
 		if dest.strokeColor==nil or force then dest.strokeColor=src.strokeColor end
 		if dest.strokeWidth==nil or force then dest.strokeWidth=src.strokeWidth end
+
 	end
 
 	return dest

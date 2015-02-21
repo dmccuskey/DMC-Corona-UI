@@ -68,7 +68,7 @@ local Objects = require 'dmc_objects'
 local LifecycleMixModule = require 'dmc_lifecycle_mix'
 local ThemeMixModule = require( dmc_widget_func.find( 'widget_theme_mix' ) )
 
--- these are set later
+--== To be set in initialize()
 local StyleFactory = nil
 local ThemeMgr = nil
 local ViewFactory = nil
@@ -141,14 +141,14 @@ function RectangleView:__init__( params )
 
 	--== Create Properties ==--
 
-	-- properties in this class
+	-- properties stored in Class
 
 	self._x = params.x
 	self._x_dirty = true
 	self._y = params.y
 	self._y_dirty = true
 
-	-- properties from style
+	-- properties stored in Style
 
 	self._width_dirty=true
 	self._height_dirty=true
