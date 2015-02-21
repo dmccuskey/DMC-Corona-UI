@@ -225,8 +225,9 @@ function Style.copyExistingSrcProperties( dest, src, params )
 end
 
 
-function Style._verifyClassProperties( src )
+function Style._verifyClassProperties( src, excl  )
 	-- print( "Style:_verifyClassProperties" )
+	excl = excl or {}
 	assert( src, "Style:_verifyClassProperties missing source" )
 	--==--
 	local emsg = "Style: requires property '%s'"
@@ -238,10 +239,10 @@ function Style._verifyClassProperties( src )
 	if type(src.debugOn)~='boolean' then
 		print(sformat(emsg,'debugOn')) ; is_valid=false
 	end
-	if not src.width then
+	if not src.width and not excl.width then
 		print(sformat(emsg,'width')) ; is_valid=false
 	end
-	if not src.height then
+	if not src.height and not excl.height then
 		print(sformat(emsg,'height')) ; is_valid=false
 	end
 	if not src.anchorX then
@@ -255,7 +256,16 @@ function Style._verifyClassProperties( src )
 end
 
 
-
+-- _setDefaults()
+-- generic method to set defaults
+function Style._setDefaults( StyleClass )
+	-- print( "Style._setDefaults" )
+	local defaults = StyleClass._STYLE_DEFAULTS
+	local style = StyleClass:new{
+		data=defaults
+	}
+	StyleClass.__base_style__ = style
+end
 
 
 

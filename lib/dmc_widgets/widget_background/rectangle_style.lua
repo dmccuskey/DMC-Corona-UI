@@ -156,16 +156,13 @@ function RectangleStyle:__init__( params )
 
 	-- self._name
 	-- self._debugOn
-
-	--== Local style properties
-
-	self._width = nil
-	self._height = nil
+	-- self._width
+	-- self._height
+	-- self._anchorX
+	-- self._anchorY
 
 	self._type = nil
 
-	self._anchorX = nil
-	self._anchorY = nil
 	self._fillColor = nil
 	self._strokeColor = nil
 	self._strokeWidth = nil
@@ -184,7 +181,7 @@ function RectangleStyle.initialize( manager )
 	-- print( "RectangleStyle.initialize", manager )
 	Widgets = manager
 
-	RectangleStyle._setDefaults()
+	RectangleStyle._setDefaults( RectangleStyle )
 end
 
 
@@ -255,13 +252,6 @@ function RectangleStyle.copyExistingSrcProperties( dest, src, params )
 end
 
 
--- create empty Style structure
-function RectangleStyle.createStateStructure( data )
-	-- print( "RectangleStyle.createStateStructure", data )
-	return {}
-end
-
-
 function RectangleStyle._verifyClassProperties( src )
 	-- print( "RectangleStyle._verifyClassProperties", src )
 	assert( src )
@@ -270,20 +260,8 @@ function RectangleStyle._verifyClassProperties( src )
 
 	local is_valid = BaseStyle._verifyClassProperties( src )
 
-	if not src.width then
-		print(sformat(emsg,'width')) ; is_valid=false
-	end
-	if not src.height then
-		print(sformat(emsg,'height')) ; is_valid=false
-	end
 	if not src.type then
 		print(sformat(emsg,'type')) ; is_valid=false
-	end
-	if not src.anchorX then
-		print(sformat(emsg,'anchorX')) ; is_valid=false
-	end
-	if not src.anchorY then
-		print(sformat(emsg,'anchorY')) ; is_valid=false
 	end
 	if not src.fillColor then
 		print(sformat(emsg,'fillColor')) ; is_valid=false
@@ -296,16 +274,6 @@ function RectangleStyle._verifyClassProperties( src )
 	end
 
 	return is_valid
-end
-
-
-function RectangleStyle._setDefaults()
-	-- print( "RectangleStyle._setDefaults" )
-	local defaults = RectangleStyle._STYLE_DEFAULTS
-	local style = RectangleStyle:new{
-		data=defaults
-	}
-	RectangleStyle.__base_style__ = style
 end
 
 
@@ -350,6 +318,7 @@ function RectangleStyle:updateStyle( src, params )
 	RectangleStyle.copyExistingSrcProperties( self, src, params )
 end
 
+--== verifyClassProperties
 
 function RectangleStyle:verifyClassProperties()
 	-- print( "RectangleStyle.verifyClassProperties" )
@@ -375,7 +344,7 @@ end
 --== Private Methods
 
 
--- this would clear any local modifications on style class
+-- clear any local modifications on style class
 -- called by clearProperties()
 --
 function RectangleStyle:_clearProperties()
@@ -388,13 +357,11 @@ end
 
 
 
-
 --====================================================================--
 --== Event Handlers
 
 
 -- none
-
 
 
 
