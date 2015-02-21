@@ -240,28 +240,33 @@ function run_example4()
 	bw4:addEventListener( bw4.EVENT, widgetEvent_handler )
 
 	bw4.x = H_CENTER
-	bw4.y = V_CENTER-100
+	bw4.y = V_CENTER
 
-	bw4:setFillColor( 0.2,0.6,1, 0.5 )
+	-- bw4:setFillColor( 0.2,0.6,1, 0.5 )
 
-	bw4:setAnchor( {0,0} )
+	-- bw4:setAnchor( {0,0} )
 	bw4:setAnchor( {0.5,0.5} )
 	-- bw4:setAnchor( {1,1} )
 
-	bw4.hitMarginX=5
-	bw4.hitMarginY=10
-	-- bw4:setHitMargin( {0,8} )
+	-- bw4.debugOn = true
 
-	bw4.isHitActive=true
-	bw4.debugOn = true
 
 	timer.performWithDelay( 1000, function()
-		print("\n\nUpdate Properties")
-		bw4.hitMarginX=5
-		bw4.hitMarginY=10
-		bw4.y = 400
-		bw4:setHitMargin( {3,5} )
+		print("\n\n\n\nUpdate Properties")
+		bw4.anchorX=1
+		bw4.width=200
+		bw4.height=75
+		bw4.x = H_CENTER-10
+		bw4:setFillColor( 0.2,0.6,1, 0.5 )
 	end)
+
+
+	-- timer.performWithDelay( 1000, function()
+	-- 	print("\n\nUpdate Properties")
+	-- 	bw4.hitMarginX=5
+	-- 	bw4.hitMarginY=10
+	-- 	bw4.y = 400
+	-- end)
 
 
 	timer.performWithDelay( 2000, function()
