@@ -350,11 +350,6 @@ function Background:_createBackgroundView()
 	o:setActiveStyle( style.view, {copy=false} )
 	self._wgtView = o
 
-	--== Unset create conditions
-
-	self._wgtView_dirty=false
-	self._wgtViewStyle_dirty=false
-
 	--== Reset properties
 
 	-- none
@@ -368,6 +363,8 @@ function Background:__commitProperties__()
 
 	if self._wgtView_dirty or self._wgtViewStyle_dirty then
 		self:_createBackgroundView()
+		self._wgtView_dirty=false
+		self._wgtViewStyle_dirty=false
 	end
 
 	--== Update Widget View
