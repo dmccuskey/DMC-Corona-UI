@@ -94,7 +94,7 @@ local VALID_SHAPES = {
 }
 
 
-local LOCAL_DEBUG = true
+local LOCAL_DEBUG = false
 
 
 
@@ -107,9 +107,7 @@ local LOCAL_DEBUG = true
 -- @param name string name of shape type, one of types above
 --
 local function validateShapeType( name )
-	if not Utils.propertyIn( VALID_SHAPES, name ) then
-		error( "newButton: unknown shape type: " .. tostring( name ) )
-	end
+	assert( Utils.propertyIn( VALID_SHAPES, name ), "newButton: unknown shape type: " .. tostring( name ) )
 	return name
 end
 

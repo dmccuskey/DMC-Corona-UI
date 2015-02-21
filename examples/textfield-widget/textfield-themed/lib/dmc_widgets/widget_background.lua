@@ -144,10 +144,8 @@ function Background:__init__( params )
 	-- Style properties
 
 	self._debugOn_dirty=true
-
 	self._width_dirty=true
 	self._height_dirty=true
-
 	self._anchorX_dirty=true
 	self._anchorY_dirty=true
 
@@ -277,25 +275,25 @@ end
 
 --== viewStrokeWidth
 
-function Background.__getters:viewStrokeWidth()
+function Background.__getters:strokeWidth()
 	return self.curr_style.view.strokeWidth
 end
-function Background.__setters:viewStrokeWidth( value )
+function Background.__setters:strokeWidth( value )
 	-- print( "Background.__setters:viewStrokeWidth", value )
 	self.curr_style.view.strokeWidth = value
 end
 
 --== setViewFillColor
 
-function Background:setViewFillColor( ... )
-	-- print( "Background:setViewFillColor" )
+function Background:setFillColor( ... )
+	-- print( "Background:setFillColor" )
 	self.curr_style.view.fillColor = {...}
 end
 
 --== setViewStrokeColor
 
-function Background:setViewStrokeColor( ... )
-	-- print( "Background:setViewStrokeColor" )
+function Background:setStrokeColor( ... )
+	-- print( "Background:setVtrokeColor" )
 	self.curr_style.view.strokeColor = {...}
 end
 
@@ -304,9 +302,7 @@ end
 --== Theme Mix Methods
 
 function Background:clearStyle()
-	local style=self.curr_style
-	style:clearProperties()
-	style.view:clearProperties()
+	self.curr_style:clearProperties()
 end
 
 
@@ -354,11 +350,6 @@ function Background:_createBackgroundView()
 	o:setActiveStyle( style.view, {copy=false} )
 	self._wgtView = o
 
-	--== Unset create conditions
-
-	self._wgtView_dirty=false
-	self._wgtViewStyle_dirty=false
-
 	--== Reset properties
 
 	-- none
@@ -372,6 +363,8 @@ function Background:__commitProperties__()
 
 	if self._wgtView_dirty or self._wgtViewStyle_dirty then
 		self:_createBackgroundView()
+		self._wgtView_dirty=false
+		self._wgtViewStyle_dirty=false
 	end
 
 	--== Update Widget View
@@ -391,32 +384,6 @@ function Background:__commitProperties__()
 		self._y_dirty = false
 	end
 
-	-- width/height
-
-	if self._width_dirty then
-		style.view.width = style.width
-		self._width_dirty=false
-	end
-	if self._height_dirty then
-		style.view.height = style.height
-		self._height_dirty=false
-	end
-
-	-- anchorX/anchorY
-
-	if self._anchorX_dirty then
-		style.view.anchorX = style.anchorX
-		self._anchorX_dirty=false
-	end
-	if self._anchorY_dirty then
-		style.view.anchorY = style.anchorY
-		self._anchorY_dirty=false
-	end
-
-	-- if self._debugOn_dirty then
-	-- 	self._debugOn_dirty=false
-	-- end
-
 end
 
 
@@ -426,7 +393,7 @@ end
 
 
 function Background:stylePropertyChangeHandler( event )
-	-- print( "Background:stylePropertyChangeHandler", event )
+	-- print( "Background:stylePropertyChangeHandler", event.type, event.property )
 	local style = event.target
 	local etype= event.type
 	local property= event.property
@@ -434,12 +401,10 @@ function Background:stylePropertyChangeHandler( event )
 
 	-- print( "Style Changed", etype, property, value )
 
-	if etype == style.STYLE_RESET then
+	if etype==style.STYLE_RESET or etype==style.STYLE_CLEARED then
 		self._debugOn_dirty=true
-
 		self._width_dirty=true
 		self._height_dirty=true
-
 		self._anchorX_dirty=true
 		self._anchorY_dirty=true
 
@@ -448,12 +413,10 @@ function Background:stylePropertyChangeHandler( event )
 	else
 		if property=='debugActive' then
 			self._debugOn_dirty=true
-
 		elseif property=='width' then
 			self._width_dirty=true
 		elseif property=='height' then
 			self._height_dirty=true
-
 		elseif property=='anchorX' then
 			self._anchorX_dirty=true
 		elseif property=='anchorY' then

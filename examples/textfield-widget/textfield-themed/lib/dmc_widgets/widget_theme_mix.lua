@@ -58,6 +58,7 @@ local Utils = require 'dmc_utils'
 
 
 local LOCAL_DEBUG = false
+local sformat = string.format
 
 
 
@@ -101,6 +102,13 @@ function Theme.__init__( self, params )
 	-- print( 'Theme.__init__x', params )
 	params = params or {}
 	--==--
+
+	--== Sanity Check ==--
+
+	if self.is_class then return end
+
+	--== Setup
+
 	Theme.resetTheme( self, params )
 	if LOCAL_DEBUG then
 		print( "\n\n\n DOING THEME INIT: widget", self)
@@ -217,7 +225,7 @@ function Theme.setActiveStyle( self, data, params )
 		style=self.__default_style
 	elseif not params.copy then
 		-- use style handed to us
-		assert( data.isa and data:isa(StyleClass) )
+		assert( data.isa and data:isa(StyleClass), sformat( "Style isn't of class '%s'", tostring(StyleClass) ))
 		style = data
 	else
 		-- Utils.print( data )
@@ -295,7 +303,7 @@ function Theme.__getters:anchorX()
 	return self.curr_style.anchorX
 end
 function Theme.__setters:anchorX( value )
-	-- print( 'Theme.__setters:anchorX', value )
+	-- print( 'Theme.__setters:anchorX', value, self )
 	self.curr_style.anchorX = value
 end
 

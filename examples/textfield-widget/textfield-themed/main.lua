@@ -32,7 +32,7 @@ local H_CENTER, V_CENTER = W*0.5, H*0.5
 
 
 --===================================================================--
--- Support Functions
+--== Support Functions
 
 
 -- Setup Visual Screen Items
@@ -92,7 +92,7 @@ function run_example1()
 	local bw1
 
 	tf1 = Widgets.newTextField{
-		text="pizze",
+		text="",
 		hintText="Pizza Topping:"
 	}
 	-- tf1:addEventListener( tf1.EVENT, widgetEvent_handler )
@@ -102,39 +102,59 @@ function run_example1()
 	tf1.y = V_CENTER
 
 	tf1:setAnchor( {0,0} )
-	-- tf1:setAnchor( {0.5,0.5} )
-	tf1:setAnchor( {1,1} )
+	tf1:setAnchor( {0.5,0.5} )
+	-- tf1:setAnchor( {1,1} )
 
 	-- tf1.y = 300
 
-	tf1.width=150
+	tf1.width=200
 	tf1.height=60
-	tf1.align='center'
-	tf1.marginX=0
-	tf1.hintFontSize=14
+	tf1.align='left'
+	tf1.marginX=10
+	tf1.hintFontSize=18
+	tf1:setBackgroundFillColor( 1,0.5,0.2,1 )
 
 	-- tf1.isSecure=true
+	-- tf1.isHitActive=false
 
 	timer.performWithDelay( 1000, function()
 		print("\n\n Update Properties")
 		-- test background props
 
 		-- tf1.x = H_CENTER-50
-		tf1.y = V_CENTER+100
+		-- tf1.y = V_CENTER+100
 
-		-- tf1.align='left'
+		-- tf1.isSecure=false
 
-		-- tf1.width=250
-		tf1.height=400
+		tf1.align='center'
+		tf1.text="hello"
+		-- tf1.marginX=10
 
-		-- tf1:setHintColor( 1,1,0)
+		-- tf1.width=200
+		-- tf1.height=100
+
+		-- -- tf1.isHitActive=false
+
+		-- tf1:setHintTextColor( 1,1,0 )
 		-- tf1.hintFontSize = 18
 
-		-- tf1:setAnchor( {0,1} )
+		-- tf1:setAnchor( {0,0} )
 
-		-- tf1:setBackgroundFillColor( 1,0.5,0.2,0.5 )
-		-- tf1:setBackgroundStrokeColor( 2,0,0,1 )
-		-- tf1.backgroundStrokeWidth = 1
+		-- tf1:setBackgroundStrokeColor( 0.2,0.2,0.9,0.5 )
+		-- tf1:setBackgroundFillColor( 0.2,0.2,0.2,0.2 )
+		-- tf1.backgroundStrokeWidth = 10
+
+		-- tf1:setBackgroundStrokeColor( 0.2,0.2,0.9,0.5 )
+		-- tf1:setBackgroundFillColor( 0.2,0.2,0.2,0.2 )
+		-- tf1.backgroundStrokeWidth = 10
+
+		-- tf1.hintFont = native.systemFontBold
+		-- tf1.hintFontSize = 30
+		-- tf1:setHintTextColor(1,0,0,1)
+
+		-- tf1.displayFont = native.systemFontBold
+		-- tf1.displayFontSize = 30
+		-- tf1:setDisplayTextColor(1,0,0,1)
 
 	end)
 
@@ -144,6 +164,8 @@ function run_example1()
 		-- tf1.width=100
 		-- tf1.height=80
 		-- tf1.x = 100
+
+		-- tf1.isSecure=true
 
 		-- tf1.x = H_CENTER+50
 		-- tf1.y = V_CENTER+50
@@ -302,27 +324,27 @@ end
 function run_example4()
 
 
-formatter = Widgets.newFormatter( Widgets.Formatter.US_ZIPCODE )
+-- formatter = Widgets.newFormatter( Widgets.Formatter.US_ZIPCODE )
 
-style = Widgets.newTextFieldStyle{
-	name="text-field-default",
-	width=200,
-	height=40,
-}
+-- style = Widgets.newTextFieldStyle{
+-- 	name="text-field-default",
+-- 	width=200,
+-- 	height=40,
+-- }
 
--- create text field
+-- -- create text field
 
-textfield = Widgets.newTextField{
+-- textfield = Widgets.newTextField{
 
-	text="",
-	hintText = "Zipcode",
-	style=nil,
-	formatter=formatter
-}
+-- 	text="",
+-- 	hintText = "Zipcode",
+-- 	style=nil,
+-- 	formatter=formatter
+-- }
 
--- textfield.formatter = formatter
-textfield.x = H_CENTER
-textfield.y = V_CENTER
+-- -- textfield.formatter = formatter
+-- textfield.x = H_CENTER
+-- textfield.y = V_CENTER
 
 
 -- --== Main Text Field Tests
