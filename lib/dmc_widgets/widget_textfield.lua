@@ -69,7 +69,7 @@ local Objects = require 'dmc_objects'
 local ThemeMixModule = require( dmc_widget_func.find( 'widget_theme_mix' ) )
 local Utils = require 'dmc_utils'
 
--- set later
+--== To be set in initialize()
 local Widgets = nil
 local ThemeMgr = nil
 
@@ -94,7 +94,10 @@ local ThemeMix = ThemeMixModule.ThemeMix
 
 -- ! put ThemeMix first !
 
-local TextField = newClass( {ThemeMix,ComponentBase,LifecycleMix}, {name="TextField"}  )
+local TextField = newClass(
+	{ ThemeMix, ComponentBase, LifecycleMix },
+	{name="TextField"}
+)
 
 --== Class Constants
 
@@ -181,7 +184,7 @@ function TextField:__init__( params )
 
 	--== Create Properties ==--
 
-	-- properties stored in class
+	-- properties stored in Class
 
 	self._x = params.x
 	self._x_dirty=true
@@ -209,14 +212,15 @@ function TextField:__init__( params )
 	self._keyboardFocus_dirty=true
 	self._keyboardFocus_timer=nil
 
-	-- properties stored in style
+	-- properties stored in Style
 
+	self._debugOn_dirty=true
 	self._width_dirty=true
 	self._height_dirty=true
-
-	self._align_dirty=true
 	self._anchorX_dirty=true
 	self._anchorY_dirty=true
+
+	self._align_dirty=true
 	self._backgroundStyle_dirty=true
 	self._inputType_dirty=true
 	self._isHitActive_dirty=true
@@ -289,6 +293,7 @@ function TextField:__createView__()
 	--==--
 	local o = display.newRect( 0,0,0,0 )
 	o.anchorX, o.anchorY = 0.5,0.5
+	o.isHitTestable=true
 	self:insert( o )
 	self._rctHit = o
 end
@@ -679,16 +684,6 @@ end
 
 --======================================================--
 -- Theme Methods
-
--- clearStyle()
---
-function TextField:clearStyle()
-	local style=self.curr_style
-	style:clearProperties()
-	style.background:clearProperties()
-	style.hint:clearProperties()
-	style.display:clearProperties()
-end
 
 -- afterAddStyle()
 --
