@@ -66,10 +66,11 @@ dmc_widget_func = dmc_widget_data.func
 
 local Objects = require 'dmc_objects'
 
---== Components
-
-local Widgets -- set later
-
+--== To be set in initialize()
+local Widgets = nil
+local ThemeMgr = nil
+local NavBar = nil
+local Button = nil
 
 
 --====================================================================--
@@ -93,6 +94,11 @@ local LOCAL_DEBUG = false
 
 
 local NavItem = newClass( ObjectBase, {name="Nav Item"}  )
+
+--== Theme Constants
+
+NavItem.THEME_ID = 'navitem'
+NavItem.STYLE_CLASS = nil -- added later
 
 
 --======================================================--
@@ -139,28 +145,89 @@ function NavItem:__initComplete__()
 	local o
 
 	o = Widgets.newPushButton{
-		width = 80,
-		height = 40,
 		id='button-back',
-		label = {
-			text="Back",
-			color={0,0,0},
-		},
-		active = {
-			label = {
-				color={1,0,0},
+		labelText="Press",
+
+		style={
+			debugOn=false,
+
+			width=80,
+			height=40,
+
+			inactive={
+				label = {
+					textColor={0,0,0},
+				},
+				background={
+					view={
+						type='rectangle'
+					}
+				}
 			},
-		},
+			active={
+				label = {
+					textColor={0,0,0},
+				},
+				background={
+					view={
+						type='rectangle'
+					}
+				}
+			},
+			disabled={
+				label = {
+					textColor={0,0,0},
+				},
+				background={
+					view={
+						type='rectangle'
+					}
+				}
+			}
+		}
 	}
 	self._btn_back = o
 
 	o = Widgets.newPushButton{
-		width = 80,
-		height = 40,
 		id='button-title',
-		label = {
-			text=self._title,
-			color={0,0,0},
+		labelText="Press",
+
+		style={
+			debugOn=false,
+
+			width=80,
+			height=40,
+
+			inactive={
+				label = {
+					textColor={0,0,0},
+				},
+				background={
+					view={
+						type='rectangle'
+					}
+				}
+			},
+			active={
+				label = {
+					textColor={0,0,0},
+				},
+				background={
+					view={
+						type='rectangle'
+					}
+				}
+			},
+			disabled={
+				label = {
+					textColor={0,0,0},
+				},
+				background={
+					view={
+						type='rectangle'
+					}
+				}
+			}
 		}
 	}
 	self._txt_title = o
@@ -213,12 +280,14 @@ end
 --== Static Methods
 
 
-function NavItem.__setWidgetManager( manager )
-	-- print( "NavItem.__setWidgetManager" )
-	NavItem.__WIDGET = manager
+function NavItem.initialize( manager )
+	-- print( "NavItem.initialize" )
 	Widgets = manager
-	Button = manager.Button
-	NavItem = manager.NavItem
+	ThemeMgr = Widgets.ThemeMgr
+	Button = Widgets.Button
+	NavBar = Widgets.NavBar
+
+	ThemeMgr:registerWidget( NavItem.THEME_ID, NavItem )
 end
 
 
@@ -244,7 +313,7 @@ end
 function NavItem.__setters:left_button( button )
 	-- print( "NavItem.__setters:left_button", button )
 	assert( type(button)=='table' and button.isa, "wrong type for button" )
-	assert( button:isa(Widget.Button), "wrong type for button" )
+	assert( button:isa( Button ), "wrong type for button" )
 	--==--
 	self._btn_left = button
 end
@@ -259,7 +328,7 @@ end
 function NavItem.__setters:right_button( button )
 	-- print( "NavItem.__setters:right_button", button )
 	assert( type(button)=='table' and button.isa, "wrong type for button" )
-	assert( button:isa(Widget.Button), "wrong type for button" )
+	assert( button:isa( Button ), "wrong type for button" )
 	self._btn_right = button
 end
 
