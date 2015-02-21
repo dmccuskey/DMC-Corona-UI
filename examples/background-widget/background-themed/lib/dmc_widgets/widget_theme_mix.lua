@@ -182,8 +182,16 @@ function Theme.__setters:style( value )
 end
 
 
+function Theme.afterAddStyle( self )
+	-- print( "OVERRIDE Theme.afterAddStyle", self )
+end
+function Theme.beforeRemoveStyle( self )
+	-- print( "OVERRIDE Theme.beforeRemoveStyle", self )
+end
+
+
 function Theme.setActiveStyle( self, data, params )
-	-- print( "Theme.setActiveStyle", data, self.STYLE_CLASS )
+	-- print( "\n\n\n>>>>>>>Theme.setActiveStyle", self, data, self.STYLE_CLASS )
 	params = params or {}
 	if params.widget==nil then params.widget=self end
 	if params.copy==nil then params.copy=true end
@@ -196,7 +204,9 @@ function Theme.setActiveStyle( self, data, params )
 	local o = self.__curr_style
 
 	if style then
+		self:beforeRemoveStyle()
 		style.widget = nil
+
 		self:_destroyStyle( style )
 		self.__curr_style = nil
 		self.curr_style = nil
@@ -221,6 +231,7 @@ function Theme.setActiveStyle( self, data, params )
 
 	if style then
 		style.widget = params.widget
+		self:afterAddStyle()
 		style:resetProperties()
 	end
 end
@@ -260,6 +271,7 @@ end
 --== height
 
 function Theme.__getters:height()
+	-- print( 'Theme.__getters:height' )
 	return self.curr_style.height
 end
 function Theme.__setters:height( value )

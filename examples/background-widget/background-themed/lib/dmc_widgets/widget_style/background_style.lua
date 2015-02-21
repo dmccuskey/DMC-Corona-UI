@@ -55,7 +55,7 @@ local widget_find = dmc_widget_func.find
 
 
 --====================================================================--
---== DMC Widgets : newBackgroundBase
+--== DMC Widgets : newBackgroundStyle
 --====================================================================--
 
 
@@ -80,7 +80,7 @@ local ObjectBase = Objects.ObjectBase
 
 local sformat = string.format
 
--- Set Later
+-- these set in initialize()
 local Widgets = nil
 local StyleFactory = nil
 
@@ -91,17 +91,17 @@ local StyleFactory = nil
 --====================================================================--
 
 
-local BackgroundBase = newClass( BaseStyle, {name="Background Style"} )
+local BackgroundStyle = newClass( BaseStyle, {name="Background Style"} )
 
 --== Class Constants
 
-BackgroundBase.__base_style__ = nil
+BackgroundStyle.__base_style__ = nil
 
 -- child styles
-BackgroundBase.VIEW_KEY = 'view'
-BackgroundBase.VIEW_NAME = 'background-view'
+BackgroundStyle.VIEW_KEY = 'view'
+BackgroundStyle.VIEW_NAME = 'background-view'
 
-BackgroundBase._STYLE_DEFAULTS = {
+BackgroundStyle._STYLE_DEFAULTS = {
 	name='background-default-style',
 	debugOn=false,
 
@@ -110,10 +110,6 @@ BackgroundBase._STYLE_DEFAULTS = {
 
 	anchorX=0.5,
 	anchorY=0.5,
-	hitMarginX=0,
-	hitMarginY=0,
-	isHitActive=true,
-	isHitTestable=true,
 
 	view={
 		--[[
@@ -132,18 +128,16 @@ BackgroundBase._STYLE_DEFAULTS = {
 
 }
 
-BackgroundBase._VIEW_DEFAULTS = {
+BackgroundStyle._VIEW_DEFAULTS = {
 	rounded=nil,
 	rectangle=nil,
 	polygon=nil,
 	shape=nil
 }
 
-
-
 --== Event Constants
 
-BackgroundBase.EVENT = 'background-style-event'
+BackgroundStyle.EVENT = 'background-style-event'
 
 -- from super
 -- Class.STYLE_UPDATED
@@ -152,8 +146,8 @@ BackgroundBase.EVENT = 'background-style-event'
 --======================================================--
 -- Start: Setup DMC Objects
 
-function BackgroundBase:__init__( params )
-	-- print( "BackgroundBase:__init__", params )
+function BackgroundStyle:__init__( params )
+	-- print( "BackgroundStyle:__init__", params )
 	params = params or {}
 	self:superCall( '__init__', params )
 	--==--
@@ -178,10 +172,6 @@ function BackgroundBase:__init__( params )
 
 	self._anchorX = nil
 	self._anchorY = nil
-	self._hitMarginX = nil
-	self._hitMarginY = nil
-	self._isHitActive = nil
-	self._isHitTestable = nil
 
 	--== Object Refs ==--
 
@@ -199,26 +189,26 @@ end
 --== Static Methods
 
 
-function BackgroundBase.initialize( manager )
-	-- print( "BackgroundBase.initialize", manager )
+function BackgroundStyle.initialize( manager )
+	-- print( "BackgroundStyle.initialize", manager )
 	Widgets = manager
 	StyleFactory = Widgets.Style.BackgroundFactory
 
-	BackgroundBase._setDefaults()
+	BackgroundStyle._setDefaults()
 end
 
 
-function BackgroundBase._setDefaults()
-	-- print( "BackgroundBase._setDefaults" )
+function BackgroundStyle._setDefaults()
+	-- print( "BackgroundStyle._setDefaults" )
 
-	local defaults = BackgroundBase._STYLE_DEFAULTS
+	local defaults = BackgroundStyle._STYLE_DEFAULTS
 
-	defaults = BackgroundBase.pushMissingProperties( defaults )
+	defaults = BackgroundStyle.pushMissingProperties( defaults )
 
-	local style = BackgroundBase:new{
+	local style = BackgroundStyle:new{
 		data=defaults
 	}
-	BackgroundBase.__base_style__ = style
+	BackgroundStyle.__base_style__ = style
 end
 
 
@@ -227,8 +217,8 @@ end
 -- if property isn't already in dest
 -- Note: usually used by OTHER classes
 --
-function BackgroundBase.copyMissingProperties( dest, src )
-	-- print( "BackgroundBase.copyMissingProperties", dest, src )
+function BackgroundStyle.copyMissingProperties( dest, src )
+	-- print( "BackgroundStyle.copyMissingProperties", dest, src )
 	if dest.debugOn==nil then dest.debugOn=src.debugOn end
 
 	if dest.width==nil then dest.width=src.width end
@@ -242,15 +232,15 @@ function BackgroundBase.copyMissingProperties( dest, src )
 end
 
 
-function BackgroundBase.pushMissingProperties( src )
-	-- print("BackgroundBase.pushMissingProperties", src )
+function BackgroundStyle.pushMissingProperties( src )
+	-- print("BackgroundStyle.pushMissingProperties", src )
 	if not src then return end
 
 	local StyleClass, dest
 	local eStr = "ERROR: Style missing property '%s'"
 
 	-- copy items to substyle 'view'
-	dest = src[ BackgroundBase.VIEW_KEY ]
+	dest = src[ BackgroundStyle.VIEW_KEY ]
 	StyleClass = StyleFactory.getClass( dest.type )
 	StyleClass.copyMissingProperties( dest, src )
 
@@ -266,17 +256,17 @@ end
 --======================================================--
 -- Access to sub-styles
 
-function BackgroundBase.__getters:view()
-	-- print( 'BackgroundBase.__getters:view', self._view )
+function BackgroundStyle.__getters:view()
+	-- print( 'BackgroundStyle.__getters:view', self._view )
 	return self._view
 end
-function BackgroundBase.__setters:view( data )
-	-- print( 'BackgroundBase.__setters:view', data )
+function BackgroundStyle.__setters:view( data )
+	-- print( 'BackgroundStyle.__setters:view', data )
 	assert( data==nil or type(data)=='string' or type( data )=='table' )
 	--==--
 	local inherit = self._inherit and self._inherit._view
 	self._view = self:createStyleFromType{
-		name=BackgroundBase.VIEW_NAME,
+		name=BackgroundStyle.VIEW_NAME,
 		inherit=inherit,
 		parent=self,
 		data=data
@@ -285,96 +275,15 @@ end
 
 
 --======================================================--
--- Access to style properties
-
---== hitMarginX
-
-function BackgroundBase.__getters:hitMarginX()
-	-- print( "BackgroundBase.__getters:hitMarginX" )
-	local value = self._hitMarginX
-	if value==nil and self._inherit then
-		value = self._inherit.hitMarginX
-	end
-	return value
-end
-function BackgroundBase.__setters:hitMarginX( value )
-	-- print( "BackgroundBase.__setters:hitMarginX", value )
-	assert( (type(value)=='number' and value>=0) or (value==nil and self._inherit) )
-	--==--
-	if value == self._hitMarginX then return end
-	self._hitMarginX = value
-	self:_dispatchChangeEvent( 'hitMarginX', value )
-end
-
---== hitMarginY
-
-function BackgroundBase.__getters:hitMarginY()
-	-- print( "BackgroundBase.__getters:hitMarginY" )
-	local value = self._hitMarginY
-	if value==nil and self._inherit then
-		value = self._inherit.hitMarginY
-	end
-	return value
-end
-function BackgroundBase.__setters:hitMarginY( value )
-	-- print( "BackgroundBase.__setters:hitMarginY", value )
-	assert( (type(value)=='number' and value>=0) or (value==nil and self._inherit) )
-	--==--
-	if value == self._hitMarginY then return end
-	self._hitMarginY = value
-	self:_dispatchChangeEvent( 'hitMarginY', value )
-end
-
---== isHitActive
-
-function BackgroundBase.__getters:isHitActive()
-	-- print( "BackgroundBase.__getters:isHitActive" )
-	local value = self._isHitActive
-	if value==nil and self._inherit then
-		value = self._inherit.isHitActive
-	end
-	return value
-end
-function BackgroundBase.__setters:isHitActive( value )
-	-- print( "BackgroundBase.__setters:isHitActive", value )
-	assert( type(value)=='boolean' or (value==nil and self._inherit) )
-	--==--
-	if value == self._isHitActive then return end
-	self._isHitActive = value
-	self:_dispatchChangeEvent( 'isHitActive', value )
-end
-
---== isHitTestable
-
-function BackgroundBase.__getters:isHitTestable()
-	local value = self._isHitTestable
-	if value==nil and self._inherit then
-		value = self._inherit.isHitTestable
-	end
-	return value
-end
-function BackgroundBase.__setters:isHitTestable( value )
-	-- print( "BackgroundBase.__setters:isHitTestable", value )
-	assert( type(value)=='boolean' or (value==nil and self._inherit) )
-	--==--
-	if value==self._isHitTestable then return end
-	self._isHitTestable = value
-	self:_dispatchChangeEvent( 'isHitTestable', value )
-end
-
-
---======================================================--
 -- Misc
 
 --== inherit
 
-function BackgroundBase.__setters:inherit( value )
-	-- print( "BackgroundBase.__setters:inherit", value )
+function BackgroundStyle.__setters:inherit( value )
+	-- print( "BackgroundStyle.__setters:inherit", value )
 	BaseStyle.__setters.inherit( self, value )
 	--==--
-	if self._view then
-		self._view.inherit = value and value.view or value
-	end
+	self._view.inherit = value and value.view or value
 end
 
 
@@ -382,8 +291,8 @@ end
 -- looks for style class based on view type
 -- then calls to create the style
 --
-function BackgroundBase:createStyleFromType( params )
-	-- print( "BackgroundBase:createStyleFromType", params )
+function BackgroundStyle:createStyleFromType( params )
+	-- print( "BackgroundStyle:createStyleFromType", params )
 	params = params or {}
 	--==--
 	local data = params.data
@@ -412,8 +321,8 @@ end
 
 -- force is used when making exact copy of data
 --
-function BackgroundBase:updateStyle( src, params )
-	-- print( "BackgroundBase:updateStyle", src )
+function BackgroundStyle:updateStyle( src, params )
+	-- print( "BackgroundStyle:updateStyle", src )
 	params = params or {}
 	if params.force==nil then params.force=true end
 	--==--
@@ -426,10 +335,6 @@ function BackgroundBase:updateStyle( src, params )
 
 	if src.anchorX~=nil or force then self.anchorX=src.anchorX end
 	if src.anchorY~=nil or force then self.anchorY=src.anchorY end
-	if src.hitMarginX~=nil or force then self.hitMarginX=src.hitMarginX end
-	if src.hitMarginY~=nil or force then self.hitMarginY=src.hitMarginY end
-	if src.isHitActive~=nil or force then self.isHitActive=src.isHitActive end
-	if src.isHitTestable~=nil or force then self.isHitTestable=src.isHitTestable end
 end
 
 
@@ -440,34 +345,34 @@ end
 
 -- we could have nil, Lua structure, or Instance
 --
-function BackgroundBase:_prepareData( data )
-	-- print("BackgroundBase:_prepareData", data, self )
+function BackgroundStyle:_prepareData( data )
+	-- print("BackgroundStyle:_prepareData", data, self )
 	if not data then return end
 
-	if data.isa and data:isa(BackgroundBase) then
+	if data.isa and data:isa(BackgroundStyle) then
 		-- Instance
 		data = { view=data.view.type }
 	else
 		-- Lua structure
-		local key = BackgroundBase.VIEW_KEY
+		local key = BackgroundStyle.VIEW_KEY
 		if data[key]==nil then
 			data[key] = { type=StyleFactory.Rectangle.TYPE }
 			print( "[WARNING] Defaulting to Rectangle style", type(data[key].type) )
 		end
-		data = BackgroundBase.pushMissingProperties( data )
+		data = BackgroundStyle.pushMissingProperties( data )
 	end
 	return data
 end
 
-function BackgroundBase:_checkChildren()
-	-- print( "BackgroundBase:_checkChildren" )
+function BackgroundStyle:_checkChildren()
+	-- print( "BackgroundStyle:_checkChildren" )
 
 	-- using setters !!!
 	if self._view==nil then self.view=nil end
 end
 
-function BackgroundBase:_checkProperties()
-	-- print( "BackgroundBase._checkProperties" )
+function BackgroundStyle:_checkProperties()
+	-- print( "BackgroundStyle._checkProperties" )
 	local emsg = "Style: requires property '%s'"
 	local is_valid = BaseStyle._checkProperties( self )
 
@@ -476,16 +381,13 @@ function BackgroundBase:_checkProperties()
 
 	if not self.anchorX then print(sformat(emsg,'anchorX')) ; is_valid=false end
 	if not self.anchorY then print(sformat(emsg,'anchorY')) ; is_valid=false end
-	if self.hitMarginX<0 then print(sformat(emsg,'hitMarginX')) ; is_valid=false end
-	if self.hitMarginY<0 then print(sformat(emsg,'hitMarginY')) ; is_valid=false end
-	if not type(self.isHitActive)=='boolean' then print(sformat(emsg,'isHitActive')) ; is_valid=false end
-	if not type(self.isHitTestable)=='boolean' then print(sformat(emsg,'isHitTestable')) ; is_valid=false end
 
 	-- check sub-styles ??
 
 	local StyleClass
 
 	StyleClass = self._view.class
+	-- TODO
 	-- if not StyleClass._checkProperties( self._view ) then is_valid=false end
 
 	return is_valid
@@ -502,4 +404,4 @@ end
 
 
 
-return BackgroundBase
+return BackgroundStyle
