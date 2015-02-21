@@ -364,7 +364,7 @@ function Widget.newText( options )
 end
 
 function Widget.newTextStyle( style_info )
-	print("Widget.newTextStyle")
+	-- print("Widget.newTextStyle")
 	if not Widget.Style.Text then loadTextSupport() end
 	return Widget.Style.Text:createStyleFrom{ data=style_info }
 end
