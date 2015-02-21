@@ -301,6 +301,8 @@ function run_example4()
 
 	-- add another text widget, with same style
 
+-- txt5.debugOn = true
+
 	timer.performWithDelay( 1000, function()
 		print( "\n\nUpdate Properties" )
 		st4.align='left'
@@ -308,7 +310,7 @@ function run_example4()
 		st4.textColor={0,0,0,1}
 		st4.fillColor={0.2,0.2,0.2}
 
-		-- set property on one text
+		-- -- set property on one text
 		txt5:setFillColor( 1,0.5,0.2,1 )
 	end)
 

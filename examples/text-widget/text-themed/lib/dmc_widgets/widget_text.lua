@@ -87,8 +87,6 @@ local ComponentBase = Objects.ComponentBase
 local LifecycleMix = LifecycleMixModule.LifecycleMix
 local ThemeMix = ThemeMixModule.ThemeMix
 
-local LOCAL_DEBUG = false
-
 
 
 --====================================================================--
@@ -96,7 +94,10 @@ local LOCAL_DEBUG = false
 --====================================================================--
 
 
-local Text = newClass( {ThemeMix,ComponentBase,LifecycleMix}, {name="Text"}  )
+local Text = newClass(
+	{ ThemeMix, ComponentBase, LifecycleMix },
+	{ name = "Text" }
+)
 
 --== Class Constants
 
@@ -142,13 +143,13 @@ function Text:__init__( params )
 
 	-- properties in this class
 
-	self._text = params.text
-	self._text_dirty=true
-
 	self._x = params.x
 	self._x_dirty = true
 	self._y = params.y
 	self._y_dirty = true
+
+	self._text = params.text
+	self._text_dirty=true
 
 	-- properties from style
 
@@ -177,7 +178,6 @@ function Text:__init__( params )
 	--== Object References ==--
 
 	self._tmp_style = params.style -- save
-	-- self.curr_style -- from inherit
 
 	self._txt_text = nil -- our text object
 	self._bg = nil -- our background object
@@ -200,7 +200,7 @@ function Text:__createView__()
 	self:superCall( ComponentBase, '__createView__' )
 	--==--
 	local o = display.newRect( 0,0,0,0 )
-	o.x, o.y = 0, 0
+	o.anchorX, o.anchorY = 0.5, 0.5
 	self:insert( o )
 	self._bg = o
 end
@@ -453,7 +453,6 @@ function Text:__commitProperties__()
 	end
 
 	if self._marginX_dirty then
-		-- reminder, we don't set text height
 		self._marginX_dirty=false
 
 		self._bgWidth_dirty=true
@@ -547,9 +546,14 @@ function Text:__commitProperties__()
 
 	-- textColor/fillColor
 
-	if self._fillColor_dirty then
-		bg:setFillColor( unpack( style.fillColor ))
+	if self._fillColor_dirty or self._debugOn_dirty then
+		if style.debugOn==true then
+			bg:setFillColor( 1,0,0,0.5 )
+		else
+			bg:setFillColor( unpack( style.fillColor ))
+		end
 		self._fillColor_dirty=false
+		self._debugOn_dirty=false
 	end
 	if self._strokeColor_dirty then
 		bg:setStrokeColor( unpack( style.strokeColor ))
@@ -574,7 +578,7 @@ end
 
 
 function Text:stylePropertyChangeHandler( event )
-	-- print( "Text:stylePropertyChangeHandler", event )
+	-- print( "Text:stylePropertyChangeHandler", event.type, event.property )
 	local style = event.target
 	local etype= event.type
 	local property= event.property
@@ -583,12 +587,13 @@ function Text:stylePropertyChangeHandler( event )
 	-- print( "Style Changed", etype, property, value )
 
 	if etype == style.STYLE_RESET then
+		self._debugOn_dirty = true
 		self._width_dirty=true
 		self._height_dirty=true
-
-		self._align_dirty=true
 		self._anchorX_dirty=true
 		self._anchorY_dirty=true
+
+		self._align_dirty=true
 		self._fillColor_dirty = true
 		self._font_dirty=true
 		self._fontSize_dirty=true
@@ -603,17 +608,19 @@ function Text:stylePropertyChangeHandler( event )
 		property = etype
 
 	else
-		if property=='width' then
+		if property=='debugActive' then
+			self._debugOn_dirty=true
+		elseif property=='width' then
 			self._width_dirty=true
 		elseif property=='height' then
 			self._height_dirty=true
+			elseif property=='anchorX' then
+				self._anchorX_dirty=true
+			elseif property=='anchorY' then
+				self._anchorY_dirty=true
 
 		elseif property=='align' then
 			self._align_dirty=true
-		elseif property=='anchorX' then
-			self._anchorX_dirty=true
-		elseif property=='anchorY' then
-			self._anchorY_dirty=true
 		elseif property=='fillColor' then
 			self._fillColor_dirty=true
 		elseif property=='font' then

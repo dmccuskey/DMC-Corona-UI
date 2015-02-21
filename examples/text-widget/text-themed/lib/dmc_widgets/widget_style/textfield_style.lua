@@ -79,7 +79,8 @@ local ObjectBase = Objects.ObjectBase
 
 local sformat = string.format
 
-local Widgets = nil -- set later
+--== To be set in initialize()
+local Widgets = nil
 
 
 
@@ -92,6 +93,8 @@ local TextFieldStyle = newClass( BaseStyle, {name="TextField Style"} )
 
 --== Class Constants
 
+RectangleStyle.TYPE = 'textfield'
+
 TextFieldStyle.__base_style__ = nil
 
 -- child styles
@@ -101,6 +104,24 @@ TextFieldStyle.HINT_KEY = 'hint'
 TextFieldStyle.HINT_NAME = 'textfield-hint'
 TextFieldStyle.DISPLAY_KEY = 'display'
 TextFieldStyle.DISPLAY_NAME = 'textfield-display'
+
+TextFieldStyle._VALID_PROPERTIES = {
+	debugOn=true,
+	width=true,
+	height=true,
+	anchorX=true,
+	anchorY=true,
+	backgroundStyle=true,
+	inputType=true,
+	isHitActive=true,
+	isHitTestable=true,
+	isSecure=true,
+	marginX=true,
+	marginY=true,
+	returnKey=true,
+}
+
+TextFieldStyle._EXCLUDE_PROPERTY_CHECK = nil
 
 TextFieldStyle._STYLE_DEFAULTS = {
 	name='textfield-default-style',
@@ -197,8 +218,6 @@ function TextFieldStyle:__init__( params )
 
 	--== Local style properties
 
-	-- other properties are in substyles
-
 	self._width = nil
 	self._height = nil
 
@@ -217,9 +236,9 @@ function TextFieldStyle:__init__( params )
 	--== Object Refs ==--
 
 	-- these are other style objects
-	self._background = nil
-	self._hint = nil
-	self._display = nil
+	self._background = nil -- Background Style
+	self._hint = nil  -- Text Style
+	self._display = nil  -- Text Style
 
 end
 
@@ -240,12 +259,209 @@ function TextFieldStyle.initialize( manager )
 end
 
 
+
+-- src is "master" source
+function TextFieldStyle.addMissingDestProperties( dest, src, params )
+	-- print( "TextFieldStyle.addMissingDestProperties", dest, src )
+	assert( dest )
+	if not src then return end
+	params = params or {}
+	if params.force==nil then params.force=false end
+	--==--
+	local force=params.force
+
+	if dest.debugOn==nil or force then dest.debugOn=src.debugOn end
+
+	if dest.width==nil or force then dest.width=src.width end
+	if dest.height==nil or force then dest.height=src.height end
+
+	if dest.align==nil or force then dest.align=src.align end
+	if dest.anchorX==nil or force then dest.anchorX=src.anchorX end
+	if dest.anchorY==nil or force then dest.anchorY=src.anchorY end
+	if dest.backgroundStyle==nil or force then dest.backgroundStyle=src.backgroundStyle end
+	if dest.inputType==nil or force then dest.inputType=src.inputType end
+	if dest.isHitActive==nil or force then dest.isHitActive=src.isHitActive end
+	if dest.isHitTestable==nil or force then dest.isHitTestable=src.isHitTestable end
+	if dest.isSecure==nil or force then dest.isSecure=src.isSecure end
+	if dest.marginX==nil or force then dest.marginX=src.marginX end
+	if dest.marginY==nil or force then dest.marginY=src.marginY end
+	if dest.returnKey==nil or force then dest.returnKey=src.returnKey end
+
+	return dest
+end
+
+
+-- src is "master" source
+function TextFieldStyle.copyExistingSrcProperties( dest, src, params)
+	-- print( "TextFieldStyle.copyMissingProperties", dest, src )
+	assert( dest )
+	if not src then return end
+	params = params or {}
+	if params.force==nil then params.force=false end
+	--==--
+	local force=params.force
+
+	if (src.debugOn~=nil and dest.debugOn==nil) or force then
+		src.debugOn=src.debugOn
+	end
+	if (src.width~=nil and dest.width==nil) or force then
+		src.width=src.width
+	end
+	if (src.height~=nil and dest.height==nil) or force then
+		src.height=src.height
+	end
+	if (src.align~=nil and dest.align==nil) or force then
+		src.align=src.align
+	end
+	if (src.anchorX~=nil and dest.anchorX==nil) or force then
+		src.anchorX=src.anchorX
+	end
+	if (src.anchorY~=nil and dest.anchorY==nil) or force then
+		src.anchorY=src.anchorY
+	end
+	if (src.backgroundStyle~=nil and dest.backgroundStyle==nil) or force then
+		src.backgroundStyle=src.backgroundStyle
+	end
+	if (src.inputType~=nil and dest.inputType==nil) or force then
+		src.inputType=src.inputType
+	end
+	if (src.isHitActive~=nil and dest.isHitActive==nil) or force then
+		src.isHitActive=src.isHitActive
+	end
+	if (src.fillColor~=nil and dest.fillColor==nil) or force then
+		src.fillColor=src.fillColor
+	end
+	if (src.isHitTestable~=nil and dest.isHitTestable==nil) or force then
+		src.isHitTestable=src.isHitTestable
+	end
+	if (src.isSecure~=nil and dest.isSecure==nil) or force then
+		src.isSecure=src.isSecure
+	end
+	if (src.marginX~=nil and dest.marginX==nil) or force then
+		src.marginX=src.marginX
+	end
+	if (src.marginY~=nil and dest.marginY==nil) or force then
+		src.marginY=src.marginY
+	end
+	if (src.returnKey~=nil and dest.returnKey==nil) or force then
+		src.returnKey=src.returnKey
+	end
+
+	return dest
+end
+
+
+-- create empty button-state-style structure
+function TextFieldStyle.createStyleStructure( data )
+	-- print( "TextFieldStyle.createStyleStructure", data )
+	return {
+		background=Widgets.Style.Background.createStyleStructure( data )
+		hint=Widgets.Style.Text.createStyleStructure(),
+		display=Widgets.Style.Text.createStyleStructure(),
+	}
+end
+
+
+
+function TextFieldStyle._pushMissingProperties( src )
+	-- print("TextFieldStyle._pushMissingProperties", src )
+	if not src then return end
+
+	local eStr = "ERROR: Style missing property '%s'"
+	local StyleClass, dest
+
+	dest = src.background
+	assert( dest, sformat( eStr, 'background' ) )
+	StyleClass = Widgets.Style.Background
+	StyleClass.addMissingDestProperties( dest, src )
+
+	dest = src.hint
+	assert( dest, sformat( eStr, 'hint' ) )
+	StyleClass = Widgets.Style.Text
+	StyleClass.addMissingDestProperties( dest, src )
+
+	dest = src.display
+	assert( dest, sformat( eStr, 'display' ) )
+	StyleClass = Widgets.Style.Text
+	StyleClass.addMissingDestProperties( dest, src )
+
+	return src
+end
+
+
+
+function TextFieldStyle._verifyClassProperties( src )
+	-- print("TextFieldStyle._verifyClassProperties", src )
+	if not src then return end
+	assert( src )
+	--==--
+	local emsg = "Style: requires property '%s'"
+
+	local is_valid = BaseStyle._verifyClassProperties( src )
+
+	if not src.width then
+		print(sformat(emsg,'width')) ; is_valid=false
+	end
+	if not src.height then
+		print(sformat(emsg,'height')) ; is_valid=false
+	end
+	if not src.align then
+		print(sformat(emsg,'align')) ; is_valid=false
+	end
+	if not src.anchorX then
+		print(sformat(emsg,'anchorX')) ; is_valid=false
+	end
+	if not src.anchorY then
+		print(sformat(emsg,'anchorY')) ; is_valid=false
+	end
+	if not src.backgroundStyle then print(sformat(emsg,'backgroundStyle')) ; is_valid=false
+	end
+	if not src.inputType then
+		print(sformat(emsg,'inputType')) ; is_valid=false
+	end
+	if src.isHitActive==nil then
+		print(sformat(emsg,'isHitActive')) ; is_valid=false
+	end
+	if src.isHitTestable==nil then
+		print(sformat(emsg,'isHitTestable')) ; is_valid=false
+	end
+	if src.isSecure==nil then
+		print(sformat(emsg,'isSecure')) ; is_valid=false
+	end
+	if not src.marginX then
+		print(sformat(emsg,'marginX')) ; is_valid=false
+	end
+	if not src.marginY then
+		print(sformat(emsg,'marginY')) ; is_valid=false
+	end
+	if not src.returnKey then
+		print(sformat(emsg,'returnKey')) ; is_valid=false
+	end
+
+	-- check sub-styles
+
+	local StyleClass
+
+	StyleClass = src._background.class
+	-- if not StyleClass._checkProperties( src._background ) then is_valid=false end
+
+	StyleClass = src._hint.class
+	-- if not StyleClass._checkProperties( src._hint ) then is_valid=false end
+
+	StyleClass = src._display.class
+	-- if not StyleClass._checkProperties( self._display ) then is_valid=false end
+
+	return is_valid
+end
+
+
+
 function TextFieldStyle._setDefaults()
 	-- print( "TextFieldStyle._setDefaults" )
 
 	local defaults = TextFieldStyle._STYLE_DEFAULTS
 
-	defaults = TextFieldStyle.pushMissingProperties( defaults )
+	defaults = TextFieldStyle._pushMissingProperties( defaults )
 
 	local style = TextFieldStyle:new{
 		data=defaults
@@ -255,41 +471,14 @@ function TextFieldStyle._setDefaults()
 end
 
 
-function TextFieldStyle.pushMissingProperties( src )
-	-- print("TextFieldStyle.pushMissingProperties", src )
-	if not src then return end
-
-	local StyleClass, dest
-	local eStr = "ERROR: Style missing property '%s'"
-
-	-- copy properties to Background substyle 'background'
-	StyleClass = Widgets.Style.Background
-	dest = src[ TextFieldStyle.BACKGROUND_KEY ]
-	assert( dest, sformat( eStr, TextFieldStyle.BACKGROUND_KEY ) )
-	StyleClass.copyMissingProperties( dest, src )
-
-	-- copy properties to Text substyle 'hint'
-	StyleClass = Widgets.Style.Text
-	dest = src[ TextFieldStyle.HINT_KEY ]
-	assert( dest, sformat( eStr, TextFieldStyle.HINT_KEY ) )
-	StyleClass.copyMissingProperties( dest, src )
-
-	-- copy properties to Text substyle 'display'
-	StyleClass = Widgets.Style.Text
-	dest = src[ TextFieldStyle.DISPLAY_KEY ]
-	assert( dest, sformat( eStr, TextFieldStyle.DISPLAY_KEY ) )
-	StyleClass.copyMissingProperties( dest, src )
-
-	return src
-end
-
-
 --====================================================================--
 --== Public Methods
 
 
 --======================================================--
 -- Access to sub-styles
+
+--== Background
 
 function TextFieldStyle.__getters:background()
 	-- print( 'TextFieldStyle.__getters:background', self._background )
@@ -310,6 +499,7 @@ function TextFieldStyle.__setters:background( data )
 	}
 end
 
+--== Hint
 
 function TextFieldStyle.__getters:hint()
 	-- print( "TextFieldStyle.__getters:hint", data )
@@ -330,6 +520,7 @@ function TextFieldStyle.__setters:hint( data )
 	}
 end
 
+--== Display
 
 function TextFieldStyle.__getters:display()
 	return self._display
@@ -537,15 +728,10 @@ function TextFieldStyle.__setters:inherit( value )
 	-- print( "TextFieldStyle.__setters:inherit", value )
 	BaseStyle.__setters.inherit( self, value )
 	--==--
-	if self._background then
-		self._background.inherit = value and value.background or value
-	end
-	if self._hint then
-		self._hint.inherit = value and value.hint or value
-	end
-	if self._display then
-		self._display.inherit = value and value.display or value
-	end
+	-- if value
+		self._background.inherit = value and value.background or nil
+		self._hint.inherit = value and value.hint or nil
+		self._display.inherit = value and value.display or nil
 end
 
 
@@ -553,43 +739,14 @@ end
 
 -- force is used when making exact copy of data
 --
-function TextFieldStyle:updateStyle( info, params )
+function TextFieldStyle:updateStyle( src, params )
 	-- print( "TextFieldStyle:updateStyle" )
-	params = params or {}
-	if params.force==nil then params.force=true end
-	--==--
-	local force=params.force
+	TextFieldStyle.copyExistingSrcProperties( self, src, params )
+end
 
-	if info.debugOn~=nil or force then self.debugOn=info.debugOn end
-
-	if info.width or force then self.width=info.width end
-	if info.height or force then self.height=info.height end
-
-	if info.align or force then self.align=info.align end
-	if info.anchorX or force then self.anchorX=info.anchorX end
-	if info.anchorY or force then self.anchorY=info.anchorY end
-	if info.backgroundStyle or force then self.backgroundStyle=info.backgroundStyle end
-	if info.inputType or force then self.inputType=info.inputType end
-	if info.isHitActive or force then self.isHitActive=info.isHitActive end
-	if info.isHitTestable or force then self.isHitTestable=info.isHitTestable end
-	if info.isSecure or force then self.isSecure=info.isSecure end
-	if info.marginX or force then self.marginX=info.marginX end
-	if info.marginY or force then self.marginY=info.marginY end
-	if info.returnKey or force then self.returnKey=info.returnKey end
-
-	-- --== Text-level
-	-- if info.displayColor or force then self.display.textColor=info.displayColor end
-	-- if info.displayFont or force then self.display.font=info.displayFont end
-	-- if info.displayFontSize or force then self.display.fontSize=info.displayFontSize end
-	-- --== Hint-level
-	-- if info.hintColor or force then self.hint.textColor=info.hintColor end
-	-- if info.hintFont or force then self.hint.font=info.hintFont end
-	-- if info.hintFontSize or force then self.hint.fontSize=info.hintFontSize end
-
-	-- --== Background-level
-	-- if info.marginX or force then self.background.marginX=info.marginX end
-	-- if info.marginY or force then self.background.marginY=info.marginY end
-
+function TextFieldStyle:verifyClassProperties()
+	-- print( "TextFieldStyle:verifyClassProperties" )
+	return TextFieldStyle._verifyClassProperties( self )
 end
 
 
@@ -601,7 +758,34 @@ end
 function TextFieldStyle:_prepareData( data )
 	-- print("TextFieldStyle:_prepareData", data )
 	if not data then return end
-	return TextFieldStyle.pushMissingProperties( data )
+	--==--
+	local createStruct = TextFieldStyle.createStyleStructure
+
+	if data.isa and data:isa( TextFieldStyle ) then
+		--== Instance
+		local o = data
+		data = createStruct( o.background.view.type )
+
+	else
+		--== Lua structure
+		local StyleClass
+		local src, dest = data, nil
+
+		dest = src.background
+		StyleClass = Widgets.Style.Background
+		StyleClass.copyExistingSrcProperties( dest, src )
+
+		dest = src.hint
+		StyleClass = Widgets.Style.Text
+		StyleClass.copyExistingSrcProperties( dest, src )
+
+		dest = src.display
+		StyleClass = Widgets.Style.Text
+		StyleClass.copyExistingSrcProperties( dest, src )
+
+	end
+
+	return data
 end
 
 function TextFieldStyle:_checkChildren()
@@ -611,44 +795,6 @@ function TextFieldStyle:_checkChildren()
 	if self._background==nil then self.background=nil end
 	if self._hint==nil then self.hint=nil end
 	if self._display==nil then self.display=nil end
-end
-
-function TextFieldStyle:_checkProperties()
-	-- print( "TextFieldStyle:_checkProperties" )
-	local emsg = "Style: requires property '%s'"
-	local is_valid = BaseStyle._checkProperties( self )
-
-	-- TODO: add more tests
-
-	if not self.width then print(sformat(emsg,'width')) ; is_valid=false end
-	if not self.height then print(sformat(emsg,'height')) ; is_valid=false end
-
-	if not self.align then print(sformat(emsg,'align')) ; is_valid=false end
-	if not self.anchorX then print(sformat(emsg,'anchorX')) ; is_valid=false end
-	if not self.anchorY then print(sformat(emsg,'anchorY')) ; is_valid=false end
-	if not self.backgroundStyle then print(sformat(emsg,'backgroundStyle')) ; is_valid=false end
-	if not self.inputType then print(sformat(emsg,'inputType')) ; is_valid=false end
-	if self.isHitActive==nil then print(sformat(emsg,'isHitActive')) ; is_valid=false end
-	if self.isHitTestable==nil then print(sformat(emsg,'isHitTestable')) ; is_valid=false end
-	if self.isSecure==nil then print(sformat(emsg,'isSecure')) ; is_valid=false end
-	if not self.marginX then print(sformat(emsg,'marginX')) ; is_valid=false end
-	if not self.marginY then print(sformat(emsg,'marginY')) ; is_valid=false end
-	if not self.returnKey then print(sformat(emsg,'returnKey')) ; is_valid=false end
-
-	-- check sub-styles
-
-	local StyleClass
-
-	StyleClass = self._background.class
-	-- if not StyleClass._checkProperties( self._background ) then is_valid=false end
-
-	StyleClass = self._hint.class
-	-- if not StyleClass._checkProperties( self._hint ) then is_valid=false end
-
-	StyleClass = self._display.class
-	-- if not StyleClass._checkProperties( self._display ) then is_valid=false end
-
-	return is_valid
 end
 
 
