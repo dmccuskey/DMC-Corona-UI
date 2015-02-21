@@ -105,6 +105,21 @@ ButtonStateStyle.LABEL_NAME = 'button-state-label'
 ButtonStateStyle.BACKGROUND_KEY = 'background'
 ButtonStateStyle.BACKGROUND_NAME = 'button-state-background'
 
+ButtonStateStyle._VALID_PROPERTIES = {
+	debugOn=true,
+	width=true,
+	height=true,
+	anchorX=true,
+	anchorY=true,
+	hitMarginX=true,
+	hitMarginY=true,
+	isHitActive=true,
+	marginX=true,
+	marginY=true,
+	offsetX=true,
+	offsetY=true
+}
+
 ButtonStateStyle.EXCLUDE_PROPERTY_CHECK = nil
 
 ButtonStateStyle._STYLE_DEFAULTS = {

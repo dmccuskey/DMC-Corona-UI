@@ -219,11 +219,17 @@ function run_example1()
 
 	timer.performWithDelay( 1000, function()
 		print( "\n\n\nProperties Updated")
-		btn1:setLabelColor( 1,1,1)
-		btn1.strokeWidth=6
-		btn1.strokeColor={0,0,0}
+		-- btn1:setLabelColor( 1,1,1)
+		-- btn1.strokeWidth=6
+		-- btn1.strokeColor={0,0,0}
+
+		print("SETTING HIT MARGING")
 		btn1.hitMarginY=20
-		btn1:setAnchor({1,1})
+
+		print("SETTING ANCHOR")
+		btn1.anchorX=1
+
+		-- btn1:setAnchor({1,1})
 		-- btn1.width=200
 		-- btn1.height=100
 

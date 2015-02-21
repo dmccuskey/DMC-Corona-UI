@@ -98,6 +98,24 @@ TextStyle.TYPE = 'text'
 
 TextStyle.__base_style__ = nil
 
+TextStyle._VALID_PROPERTIES = {
+	debugOn=true,
+	width=true,
+	height=true,
+	align=true,
+	anchorX=true,
+	anchorY=true,
+	fillColor=true,
+	font=true,
+	fontSize=true,
+	marginX=true,
+	marginY=true,
+	textColor=true,
+
+	strokeColor=true,
+	strokeWidth=true,
+}
+
 TextStyle.EXCLUDE_PROPERTY_CHECK = {
 	-- width/height, they can be nil
 	width=true,

@@ -99,6 +99,18 @@ RectangleStyle.TYPE = 'rectangle'
 
 RectangleStyle.__base_style__ = nil -- set in initialize()
 
+RectangleStyle._VALID_PROPERTIES = {
+	debugOn=true,
+	width=true,
+	height=true,
+	type=true,
+	anchorX=true,
+	anchorY=true,
+	fillColor=true,
+	strokeColor=true,
+	strokeWidth=true,
+}
+
 RectangleStyle.EXCLUDE_PROPERTY_CHECK = nil
 
 RectangleStyle._STYLE_DEFAULTS = {

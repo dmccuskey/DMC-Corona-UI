@@ -86,11 +86,11 @@ local Widgets = nil
 
 
 --====================================================================--
---== Background Style Class
+--== Button Style Class
 --====================================================================--
 
 
-local ButtonStyle = newClass( BaseStyle, {name="Background Style"} )
+local ButtonStyle = newClass( BaseStyle, {name="Button Style"} )
 
 --== Class Constants
 
@@ -119,6 +119,21 @@ ButtonStyle.ACTIVE_KEY = 'active'
 ButtonStyle.ACTIVE_NAME = 'button-active-state'
 ButtonStyle.DISABLED_KEY = 'disabled'
 ButtonStyle.DISABLED_NAME = 'button-disabled-state'
+
+ButtonStyle._VALID_PROPERTIES = {
+	debugOn=true,
+	width=true,
+	height=true,
+	anchorX=true,
+	anchorY=true,
+	hitMarginX=true,
+	hitMarginY=true,
+	isHitActive=true,
+	marginX=true,
+	marginY=true,
+	offsetX=true,
+	offsetY=true
+}
 
 ButtonStyle.EXCLUDE_PROPERTY_CHECK = {
 	-- label/background, they can be copied from
@@ -573,10 +588,11 @@ function ButtonStyle.__getters:hitMarginY()
 	return value
 end
 function ButtonStyle.__setters:hitMarginY( value )
-	-- print( "ButtonStyle.__setters:hitMarginY", value )
+	print( "ButtonStyle.__setters:hitMarginY", value, self )
 	assert( (type(value)=='number' and value>=0) or (value==nil and self._inherit) )
 	--==--
-	if value == self._hitMarginY then return end
+	if value==self._hitMarginY then return end
+	print("Passing along hitmargin")
 	self._hitMarginY = value
 	self:_dispatchChangeEvent( 'hitMarginY', value )
 end

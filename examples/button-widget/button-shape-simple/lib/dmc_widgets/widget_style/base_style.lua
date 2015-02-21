@@ -91,6 +91,9 @@ local Style = newClass( ObjectBase, {name="Style Base"}  )
 
 Style.__base_style__ = nil  -- <instance of class>
 
+-- table to check for properties style should have
+Style._VALID_PROPERTIES = {}
+
 -- table of properties to exclude from checking
 -- these are properties which value can be 'nil'
 --
@@ -121,6 +124,8 @@ function Style:__init__( params )
 
 	self:superCall( '__init__', params )
 	--==--
+	self._is_initialized = false
+
 	-- Style inheritance tree
 	self._inherit = params.inherit
 	self._inherit_f = nil
@@ -149,10 +154,12 @@ function Style:__initComplete__()
 	-- do this after style/children constructed --
 
 	self.inherit = self._inherit -- use setter
+	self.parent = self._parent -- use setter
 	-- self.widget = self._widget -- use setter
 
 	assert( self:verifyClassProperties(), "Style: missing properties"..tostring(self.class) )
 
+	self._is_initialized = true
 end
 
 -- End: Setup DMC Objects
@@ -170,18 +177,22 @@ end
 -- Note: usually used by OTHER classes
 --
 function Style.addMissingDestProperties( dest, src, params )
-	error( "Style.addMissingDestProperties", dest, src )
+	error( "OVERRIDE Style.addMissingDestProperties" )
 end
 
-
+-- addMissingDestProperties()
+-- copies properties from src structure to dest structure
+-- if property isn't already in dest
+-- Note: usually used by OTHER classes
+--
 function Style.copyExistingSrcProperties( dest, src, params )
-	error( "Style.copyExistingSrcProperties", dest, src )
+	error( "OVERRIDE Style.copyExistingSrcProperties" )
 end
 
 
 function Style._verifyClassProperties( src )
 	-- print( "Style:_verifyClassProperties" )
-	assert( src, "Style:_verifyClassProperties missing source")
+	assert( src, "Style:_verifyClassProperties missing source" )
 	--==--
 	local emsg = "Style: requires property '%s'"
 	local is_valid = true
@@ -315,6 +326,36 @@ function Style.__setters:inherit( value )
 		o:addEventListener( o.EVENT, f )
 		self._inherit = o
 		self._inherit_f = f
+	end
+end
+
+--== parent
+
+function Style.__getters:parent()
+	return self._parent
+end
+
+-- value should be a instance of Style Class or nil
+--
+function Style.__setters:parent( value )
+	print( "Style.__setters:parent", self, value )
+	assert( value==nil or value:isa( Style ) )
+	--==--
+	local o = self._parent
+	local f = self._parent_f
+	if o and f then
+		o:removeEventListener( o.EVENT, f )
+		self._parent = nil
+		self._parent_f = nil
+	end
+
+	o = value
+
+	if o then
+		f = self:createCallback( self._parentStyleEvent_handler )
+		o:addEventListener( o.EVENT, f )
+		self._parent = o
+		self._parent_f = f
 	end
 end
 
@@ -487,10 +528,11 @@ function Style.__getters:anchorX()
 	return value
 end
 function Style.__setters:anchorX( value )
-	-- print( 'Style.__setters:anchorX', value )
+	print( 'Style.__setters:anchorX', value, self )
 	assert( type(value)=='number' or (value==nil and self._inherit) )
 	--==--
 	if value==self._anchorX then return end
+	print("   Passing along anchor")
 	self._anchorX = value
 	self:_dispatchChangeEvent( 'anchorX', value )
 end
@@ -505,10 +547,12 @@ function Style.__getters:anchorY()
 	return value
 end
 function Style.__setters:anchorY( value )
-	-- print( 'Style.__setters:anchorY', value )
-	assert( type(value)=='number' or (value==nil and self._inherit) )
+	print( 'Style.__setters:anchorY', value )
+	assert( value==nil or type(value)=='number' )
+	if value==nil and self._inherit==nil  then print( "WARN") ; return end
 	--==--
 	if value==self._anchorY then return end
+	print("Passing along anchor")
 	self._anchorY = value
 	self:_dispatchChangeEvent( 'anchorY', value )
 end
@@ -758,14 +802,17 @@ end
 -- and to any inherits
 --
 function Style:_dispatchChangeEvent( prop, value )
-	-- print( 'Style:_dispatchChangeEvent', prop, value, self )
+	print( 'Style:_dispatchChangeEvent', prop, value, self )
 	local widget = self._widget
 	local callback = self._onPropertyChange_f
+
+	if not self._is_initialized then return end
 
 	local e = self:createEvent( self.STYLE_UPDATED, {property=prop,value=value}, {merge=true} )
 
 	-- dispatch event to different listeners
 	if widget and widget.stylePropertyChangeHandler then
+		print("TO WIDGE", widget )
 		widget:stylePropertyChangeHandler( e )
 	end
 	--
@@ -777,15 +824,16 @@ end
 
 
 
+
 --====================================================================--
 --== Event Handlers
 
 
--- _inheritedStyleEvent_handler()
+-- _parentStyleEvent_handler()
 -- handle parent property changes
---
+
 function Style:_parentStyleEvent_handler( event )
-	-- print( "Style:_inheritedStyleEvent_handler", event, self )
+	-- print( "Style:_parentStyleEvent_handler", event, self )
 	local style = event.target
 	local etype = event.type
 
@@ -793,13 +841,16 @@ function Style:_parentStyleEvent_handler( event )
 		self._dispatchResetEvent()
 
 	elseif etype==style.STYLE_UPDATED then
-		-- only re-dispatch property changes if our property is empty
-		if self:_getRawProperty( event.property ) == nil then
-			self:_dispatchChangeEvent( event.property, event.value )
+		local property = event.property
+		-- we accept changes to parent as our own
+		-- however, check to see if property is valid
+		if self._VALID_PROPERTIES[property] then
+			self[property]=value
 		end
 	end
 
 end
+
 
 
 -- _inheritedStyleEvent_handler()

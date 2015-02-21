@@ -346,7 +346,7 @@ end
 
 
 function RoundedView:stylePropertyChangeHandler( event )
-	-- print( "\n\nRoundedView:stylePropertyChangeHandler", event )
+	print( "\n\nRoundedView:stylePropertyChangeHandler", event )
 	local style = event.target
 	local etype= event.type
 	local property= event.property

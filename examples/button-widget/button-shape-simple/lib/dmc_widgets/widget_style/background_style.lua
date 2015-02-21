@@ -104,6 +104,14 @@ BackgroundStyle.__base_style__ = nil
 BackgroundStyle.VIEW_KEY = 'view'
 BackgroundStyle.VIEW_NAME = 'background-view'
 
+BackgroundStyle._VALID_PROPERTIES = {
+	debugOn=true,
+	width=true,
+	height=true,
+	anchorX=true,
+	anchorY=true
+}
+
 BackgroundStyle.EXCLUDE_PROPERTY_CHECK = nil
 
 BackgroundStyle._STYLE_DEFAULTS = {

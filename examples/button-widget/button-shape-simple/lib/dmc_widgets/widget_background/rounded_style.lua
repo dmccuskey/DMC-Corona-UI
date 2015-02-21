@@ -98,6 +98,19 @@ RoundedStyle.TYPE = 'rounded'
 
 RoundedStyle.__base_style__ = nil
 
+RoundedStyle._VALID_PROPERTIES = {
+	debugOn=true,
+	width=true,
+	height=true,
+	type=true,
+	anchorX=true,
+	anchorY=true,
+	cornerRadius=true,
+	fillColor=true,
+	strokeColor=true,
+	strokeWidth=true,
+}
+
 RoundedStyle.EXCLUDE_PROPERTY_CHECK = nil
 
 RoundedStyle._STYLE_DEFAULTS = {

@@ -366,7 +366,7 @@ end
 
 
 function Background:__commitProperties__()
-	-- print( "Background:__commitProperties__" )
+	print( "\n\n>>>Background:__commitProperties__" )
 
 	--== Update Widget Components
 
@@ -394,22 +394,22 @@ function Background:__commitProperties__()
 	-- width/height
 
 	if self._width_dirty then
-		style.view.width = style.width
+		-- style.view.width = style.width
 		self._width_dirty=false
 	end
 	if self._height_dirty then
-		style.view.height = style.height
+		-- style.view.height = style.height
 		self._height_dirty=false
 	end
 
 	-- anchorX/anchorY
 
 	if self._anchorX_dirty then
-		style.view.anchorX = style.anchorX
+		-- style.view.anchorX = style.anchorX
 		self._anchorX_dirty=false
 	end
 	if self._anchorY_dirty then
-		style.view.anchorY = style.anchorY
+		-- style.view.anchorY = style.anchorY
 		self._anchorY_dirty=false
 	end
 
@@ -426,7 +426,7 @@ end
 
 
 function Background:stylePropertyChangeHandler( event )
-	-- print( "Background:stylePropertyChangeHandler", event )
+	print( ">>>>##### Background:stylePropertyChangeHandler", event.type, event.property )
 	local style = event.target
 	local etype= event.type
 	local property= event.property

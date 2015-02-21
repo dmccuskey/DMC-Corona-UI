@@ -180,9 +180,9 @@ function ButtonBase:__init__( params )
 	self._align_dirty=true
 	self._anchorX_dirty=true
 	self._anchorY_dirty=true
-	self._isHitActive_dirty=true
 	self._hitMarginX_dirty=true
 	self._hitMarginY_dirty=true
+	self._isHitActive_dirty=true
 	self._marginX_dirty=true
 	self._marginY_dirty=true
 	self._offsetX_dirty=true
@@ -193,6 +193,11 @@ function ButtonBase:__init__( params )
 	self._widgetState_dirty=true
 	self._widgetViewState = nil
 	self._widgetViewState_dirty=true
+
+	self._wgtBgWidth_dirty=true
+	self._wgtBgHeight_dirty=true
+	self._wgtBgHitMarginX_dirty=true
+	self._wgtBgHitMarginY_dirty=true
 
 	self._params = params -- save for view creation
 
@@ -240,6 +245,7 @@ function ButtonBase:__createView__()
 	--==--
 	local o = display.newRect( 0,0,0,0 )
 	o.anchorX, o.anchorY = 0.5,0.5
+	o.isHitTestable=true
 	self:insert( o )
 	self._rctHit = o
 end
@@ -342,6 +348,69 @@ end
 
 --======================================================--
 -- Background Style Properties
+
+
+function ButtonBase.__getters:hitMarginX()
+	-- print( "ButtonBase.__getters:hitMarginX" )
+	return self.curr_style.hitMarginX
+end
+function ButtonBase.__setters:hitMarginX( value )
+	print( "ButtonBase.__setters:hitMarginX", value )
+	self.curr_style.hitMarginX = value
+end
+
+--== hitMarginY
+
+function ButtonBase.__getters:hitMarginY()
+	-- print( "ButtonBase.__getters:hitMarginY" )
+	return self.curr_style.hitMarginY
+end
+function ButtonBase.__setters:hitMarginY( value )
+	print( "ButtonBase.__setters:hitMarginY", value, self )
+	print( self.curr_style._widget )
+	self.curr_style.hitMarginY = value
+end
+
+
+--== setHitMargin
+
+function ButtonBase:setHitMargin( ... )
+	-- print( 'ButtonBase:setHitMargin' )
+	local args = {...}
+
+	if type( args[1] ) == 'table' then
+		self.hitMarginX, self.hitMarginY = unpack( args[1] )
+	end
+	if type( args[1] ) == 'number' then
+		self.hitMarginX = args[1]
+	end
+	if type( args[2] ) == 'number' then
+		self.hitMarginY = args[2]
+	end
+end
+
+--== isHitActive
+
+function ButtonBase.__getters:isHitActive()
+	-- print( "ButtonBase.__getters:isHitActive" )
+	return self.curr_style.isHitActive
+end
+function ButtonBase.__setters:isHitActive( value )
+	-- print( "ButtonBase.__setters:isHitActive", value )
+	self.curr_style.isHitActive = value
+end
+
+
+
+-- .strokeWidth
+--
+function ButtonBase.__getters:strokeWidth()
+	return self.curr_style.background.strokeWidth
+end
+function ButtonBase.__setters:strokeWidth( value )
+	-- print( 'ButtonBase.__setters:strokeWidth', value )
+	self.curr_style.inactive.strokeWidth = value
+end
 
 
 -- .strokeWidth
@@ -643,6 +712,9 @@ function ButtonBase:__commitProperties__()
 		style.active.width = width
 		style.disabled.width = width
 		self._width_dirty=false
+
+		self._anchorX_dirty=true
+		self._wgtBgWidth_dirty=true
 	end
 	if self._height_dirty then
 		local height = style.height
@@ -651,13 +723,48 @@ function ButtonBase:__commitProperties__()
 		style.active.height = height
 		style.disabled.height = height
 		self._height_dirty=false
+
+		self._anchorY_dirty=true
+		self._wgtBgHeight_dirty=true
 	end
 
+	if self._anchorX_dirty then
+		local anchorX = style.anchorX
+		hit.anchorX = anchorX
+		style.inactive.anchorX = anchorX
+		style.active.anchorX = anchorX
+		style.disabled.anchorX = anchorX
+		self._anchorX_dirty=false
+
+		-- self._wgtBgWidth_dirty=true
+	end
+	if self._anchorY_dirty then
+		local anchorY = style.anchorY
+		hit.anchorY = anchorY
+		style.inactive.anchorY = anchorY
+		style.active.anchorY = anchorY
+		style.disabled.anchorY = anchorY
+		self._anchorY_dirty=false
+
+		-- self._wgtBgHeight_dirty=true
+	end
+
+	if self._hitMarginX_dirty then
+		self._hitMarginX_dirty=false
+
+		self._wgtBgHitMarginX_dirty=true
+	end
+	if self._hitMarginY_dirty then
+		self._hitMarginY_dirty=false
+
+		self._wgtBgHitMarginY_dirty=true
+	end
 
 	--== Set Styles
 
 	if self._widgetStyle_dirty or self._widgetViewState_dirty then
 		local state = self._widgetViewState
+		print("S     ETTTING NEW STEE")
 		if state==ButtonBase.INACTIVE then
 			bg:setActiveStyle( style.inactive.background, {copy=false} )
 		elseif state==ButtonBase.ACTIVE then
@@ -665,15 +772,36 @@ function ButtonBase:__commitProperties__()
 		else
 			bg:setActiveStyle( style.disabled.background, {copy=false} )
 		end
+		print( ">>", bg, style.inactive.background._parent, style.inactive.background._widget, bg )
 		self._widgetStyle_dirty=false
 		self._widgetViewState_dirty=false
 	end
 
 	--== Hit
 
-	if self._isHitTestable then
-		hit.isHitTestable=style.isHitTestable
-		self._isHitTestable=false
+
+	-- if self._hitX_dirty or self._anchorX_dirty then
+	-- 	local width = style.width
+	-- 	hit.x = width/2+(-width*style.anchorX)
+	-- 	self._hitX_dirty=false
+	-- 	self._anchorX_dirty=false
+	-- end
+	-- if self._hitY_dirty or self._anchorY_dirty then
+	-- 	local height = style.height
+	-- 	hit.y = height/2+(-height*style.anchorY)
+	-- 	self._hitY_dirty=false
+	-- 	self._anchorY_dirty=false
+	-- end
+
+	if self._wgtBgWidth_dirty or self._wgtBgHitMarginX_dirty then
+		hit.width=style.width+style.hitMarginX*2
+		self._wgtBgWidth_dirty=false
+		self._wgtBgHitMarginX_dirty=false
+	end
+	if self._wgtBgHeight_dirty or self._wgtBgHitMarginY_dirty then
+		hit.height=style.height+style.hitMarginY*2
+		self._wgtBgHeight_dirty=false
+		self._wgtBgHitMarginY_dirty=false
 	end
 
 	-- debug on
@@ -701,7 +829,7 @@ end
 -- and reponds with the appropriate message
 --
 function ButtonBase:stylePropertyChangeHandler( event )
-	print( "\n\n\n>>>>>> ButtonBase:stylePropertyChangeHandler", event )
+	print( "\n\n\n>>>>>> ButtonBase:stylePropertyChangeHandler", event.property, event.value )
 	local target = event.target
 	local etype= event.type
 	local property= event.property
@@ -709,7 +837,7 @@ function ButtonBase:stylePropertyChangeHandler( event )
 
 	-- Utils.print( event )
 
-	print( "Style Changed", etype, property, value )
+	-- print( "Style Changed", etype, property, value )
 
 	if etype == target.STYLE_RESET then
 		self._debugOn_dirty = true
@@ -720,14 +848,13 @@ function ButtonBase:stylePropertyChangeHandler( event )
 		self._align_dirty=true
 		self._anchorX_dirty=true
 		self._anchorY_dirty=true
-		self._backgroundStyle_dirty = true
-		self._inputType_dirty=true
+		self._hitMarginX_dirty=true
+		self._hitMarginY_dirty=true
 		self._isHitActive_dirty=true
-		self._isHitTestable_dirty=true
-		self._isSecure_dirty=true
 		self._marginX_dirty=true
 		self._marginY_dirty=true
-		self._returnKey_dirty=true
+		self._offsetX_dirty=true
+		self._offsetY_dirty=true
 
 		self._wgtText_dirty=true
 		self._widgetViewState_dirty=true
@@ -749,22 +876,20 @@ function ButtonBase:stylePropertyChangeHandler( event )
 			self._anchorX_dirty=true
 		elseif property=='anchorY' then
 			self._anchorY_dirty=true
-		elseif property=='backgroundStyle' then
-			self._backgroundStyle_dirty=true
-		elseif property=='inputType' then
-			self._inputType_dirty=true
+		elseif property=='hitMarginX' then
+			self._hitMarginX_dirty=true
+		elseif property=='hitMarginY' then
+			self._hitMarginY_dirty=true
 		elseif property=='isHitActive' then
 			self._isHitActive_dirty=true
-		elseif property=='isHitTestable' then
-			self._isHitTestable_dirty=true
-		elseif property=='isSecure' then
-			self._isSecure_dirty=true
 		elseif property=='marginX' then
 			self._marginX_dirty=true
 		elseif property=='marginY' then
 			self._marginY_dirty=true
-		elseif property=='returnKey' then
-			self._returnKey_dirty=true
+		elseif property=='offsetX' then
+			self._offsetX_dirty=true
+		elseif property=='offsetY' then
+			self._offsetY_dirty=true
 		end
 
 	end
@@ -1199,55 +1324,6 @@ getters sttters
 
 --== hitMarginX
 
--- function Background.__getters:hitMarginX()
--- 	-- print( "Background.__getters:hitMarginX" )
--- 	return self.curr_style.hitMarginX
--- end
--- function Background.__setters:hitMarginX( value )
--- 	-- print( "Background.__setters:hitMarginX", value )
--- 	self.curr_style.hitMarginX = value
--- end
-
--- --== hitMarginY
-
--- function Background.__getters:hitMarginY()
--- 	-- print( "Background.__getters:hitMarginY" )
--- 	return self.curr_style.hitMarginY
--- end
--- function Background.__setters:hitMarginY( value )
--- 	-- print( "Background.__setters:hitMarginY", value )
--- 	self.curr_style.hitMarginY = value
--- end
-
-
--- --== setHitMargin
-
--- function Background:setHitMargin( ... )
--- 	-- print( 'Background:setHitMargin' )
--- 	local args = {...}
-
--- 	if type( args[1] ) == 'table' then
--- 		self.hitMarginX, self.hitMarginY = unpack( args[1] )
--- 	end
--- 	if type( args[1] ) == 'number' then
--- 		self.hitMarginX = args[1]
--- 	end
--- 	if type( args[2] ) == 'number' then
--- 		self.hitMarginY = args[2]
--- 	end
--- end
-
--- --== isHitActive
-
--- function Background.__getters:isHitActive()
--- 	-- print( "Background.__getters:isHitActive" )
--- 	return self.curr_style.isHitActive
--- end
--- function Background.__setters:isHitActive( value )
--- 	-- print( "Background.__setters:isHitActive", value )
--- 	self.curr_style.isHitActive = value
--- end
-
 
 
 complete prperties
@@ -1266,12 +1342,6 @@ complete prperties
 -- end
 
 
--- hit testable
-
--- if self._isHitTestable_dirty then
--- 	hit.isHitTestable = style.isHitTestable
--- 	self._isHitTestable_dirty=false
--- end
 
 
 

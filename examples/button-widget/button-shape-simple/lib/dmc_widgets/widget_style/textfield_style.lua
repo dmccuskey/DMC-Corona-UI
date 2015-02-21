@@ -105,6 +105,22 @@ TextFieldStyle.HINT_NAME = 'textfield-hint'
 TextFieldStyle.DISPLAY_KEY = 'display'
 TextFieldStyle.DISPLAY_NAME = 'textfield-display'
 
+TextFieldStyle._VALID_PROPERTIES = {
+	debugOn=true,
+	width=true,
+	height=true,
+	anchorX=true,
+	anchorY=true,
+	backgroundStyle=true,
+	inputType=true,
+	isHitActive=true,
+	isHitTestable=true,
+	isSecure=true,
+	marginX=true,
+	marginY=true,
+	returnKey=true,
+}
+
 TextFieldStyle.EXCLUDE_PROPERTY_CHECK = nil
 
 TextFieldStyle._STYLE_DEFAULTS = {
