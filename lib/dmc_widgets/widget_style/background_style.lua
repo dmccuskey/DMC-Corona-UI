@@ -207,8 +207,8 @@ end
 
 
 -- create empty Background Style structure
-function BackgroundStyle.createStateStructure( data )
-	-- print( "BackgroundStyle.createStateStructure", data )
+function BackgroundStyle.createStyleStructure( data )
+	-- print( "BackgroundStyle.createStyleStructure", data )
 	return {
 		view={
 			type=data

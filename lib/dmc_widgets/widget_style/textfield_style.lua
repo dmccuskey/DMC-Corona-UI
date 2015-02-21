@@ -352,12 +352,12 @@ end
 
 
 -- create empty button-state-style structure
-function TextFieldStyle.createStateStructure( data )
-	-- print( "TextFieldStyle.createStateStructure", data )
+function TextFieldStyle.createStyleStructure( data )
+	-- print( "TextFieldStyle.createStyleStructure", data )
 	return {
-		background=Widgets.Style.Background.createStateStructure( data )
-		hint=Widgets.Style.Text.createStateStructure(),
-		display=Widgets.Style.Text.createStateStructure(),
+		background=Widgets.Style.Background.createStyleStructure( data )
+		hint=Widgets.Style.Text.createStyleStructure(),
+		display=Widgets.Style.Text.createStyleStructure(),
 	}
 end
 
@@ -759,7 +759,7 @@ function TextFieldStyle:_prepareData( data )
 	-- print("TextFieldStyle:_prepareData", data )
 	if not data then return end
 	--==--
-	local createStruct = TextFieldStyle.createStateStructure
+	local createStruct = TextFieldStyle.createStyleStructure
 
 	if data.isa and data:isa( TextFieldStyle ) then
 		--== Instance

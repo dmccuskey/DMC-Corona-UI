@@ -194,6 +194,18 @@ end
 --== Static Methods
 
 
+function Style.initialize( manager )
+	error( "OVERRIDE Style.addMissingDestProperties" )
+end
+
+
+-- create empty Style structure (default)
+function Style.createStyleStructure( data )
+	-- print( "Style.createStyleStructure", data )
+	return {}
+end
+
+
 -- addMissingDestProperties()
 -- copies properties from src structure to dest structure
 -- if property isn't already in dest

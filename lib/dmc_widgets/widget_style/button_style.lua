@@ -632,7 +632,7 @@ function ButtonStyle:_prepareData( data )
 	if not data then return end
 	--==--
 	local StyleClass = Widgets.Style.ButtonState
-	local createStruct = StyleClass.createStateStructure
+	local createStruct = StyleClass.createStyleStructure
 
 	if data.isa and data:isa( ButtonStyle ) then
 		--== Instance

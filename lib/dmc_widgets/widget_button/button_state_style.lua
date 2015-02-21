@@ -308,11 +308,11 @@ end
 
 
 -- create empty button-state-style structure
-function ButtonStateStyle.createStateStructure( data )
-	-- print( "ButtonStateStyle.createStateStructure", data )
+function ButtonStateStyle.createStyleStructure( data )
+	-- print( "ButtonStateStyle.createStyleStructure", data )
 	return {
-		label=Widgets.Style.Text.createStateStructure(),
-		background=Widgets.Style.Background.createStateStructure( data )
+		label=Widgets.Style.Text.createStyleStructure(),
+		background=Widgets.Style.Background.createStyleStructure( data )
 	}
 end
 
@@ -582,7 +582,7 @@ end
 function ButtonStateStyle:_prepareData( data )
 	-- print("ButtonStateStyle:_prepareData", data )
 	if not data then return end
-	local createStruct = ButtonStateStyle.createStateStructure
+	local createStruct = ButtonStateStyle.createStyleStructure
 
 	if data.isa and data:isa( ButtonStateStyle ) then
 		--== Instance
