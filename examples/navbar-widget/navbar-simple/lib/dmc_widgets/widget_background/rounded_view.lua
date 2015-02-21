@@ -1,5 +1,5 @@
 --====================================================================--
--- dmc_widgets/widget_background.lua
+-- dmc_widgets/widget_background/rounded_view.lua
 --
 -- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
@@ -33,7 +33,7 @@ SOFTWARE.
 
 
 --====================================================================--
---== DMC Corona Widgets : Widget Background
+--== DMC Corona Widgets : Rounded Background View
 --====================================================================--
 
 
@@ -55,7 +55,7 @@ local widget_find = dmc_widget_func.find
 
 
 --====================================================================--
---== DMC Widgets : newBackground
+--== DMC Widgets : newRoundedBackground
 --====================================================================--
 
 
@@ -66,12 +66,13 @@ local widget_find = dmc_widget_func.find
 
 local Objects = require 'dmc_objects'
 local LifecycleMixModule = require 'dmc_lifecycle_mix'
-local ThemeMixModule = require( widget_find( 'widget_theme_mix' ) )
+local ThemeMixModule = require( dmc_widget_func.find( 'widget_theme_mix' ) )
 
 --== To be set in initialize()
-local Widgets = nil
+local StyleFactory = nil
 local ThemeMgr = nil
 local ViewFactory = nil
+local Widgets = nil
 
 
 
@@ -88,35 +89,38 @@ local ThemeMix = ThemeMixModule.ThemeMix
 
 
 --====================================================================--
---== Background Widget Class
+--== Rounded Background View Class
 --====================================================================--
 
 
--- ! put ThemeMix first !
-
-local Background = newClass(
+local RoundedView = newClass(
 	{ ThemeMix, ComponentBase, LifecycleMix },
-	{name="Background Widget"}
+	{name="Rounded Background View"}
 )
+
+--== Class Constants
+
+RoundedView.TYPE = 'rounded'
+
+RoundedView.LEFT = 'left'
+RoundedView.CENTER = 'center'
+RoundedView.RIGHT = 'right'
 
 --== Theme Constants
 
-Background.THEME_ID = 'background'
-Background.STYLE_CLASS = nil -- added later
+RoundedView.THEME_ID = 'rounded-background-view'
+RoundedView.STYLE_CLASS = nil -- added later
 
 -- TODO: hook up later
--- Background.DEFAULT = 'default'
+-- RoundedView.DEFAULT = 'default'
 
--- Background.THEME_STATES = {
--- 	Background.DEFAULT,
+-- RoundedView.THEME_STATES = {
+-- 	RoundedView.DEFAULT,
 -- }
 
 --== Event Constants
 
-Background.EVENT = 'background-widget-event'
-
-Background.PRESSED = 'touch-press-event'
-Background.RELEASED = 'touch-release-event'
+RoundedView.EVENT = 'rounded-background-view-event'
 
 
 --======================================================--
@@ -124,8 +128,8 @@ Background.RELEASED = 'touch-release-event'
 
 --== Init
 
-function Background:__init__( params )
-	-- print( "Background:__init__", params )
+function RoundedView:__init__( params )
+	-- print( "RoundedView:__init__", params )
 	params = params or {}
 	if params.x==nil then params.x=0 end
 	if params.y==nil then params.y=0 end
@@ -140,69 +144,68 @@ function Background:__init__( params )
 	-- properties stored in Class
 
 	self._x = params.x
-	self._x_dirty=true
+	self._x_dirty = true
 	self._y = params.y
-	self._y_dirty=true
+	self._y_dirty = true
 
 	-- properties stored in Style
 
-	self._debugOn_dirty=true
 	self._width_dirty=true
 	self._height_dirty=true
 	self._anchorX_dirty=true
 	self._anchorY_dirty=true
 
-	-- "Virtual" properties
-
-	self._wgtViewStyle_dirty=true
+	self._cornerRadius_dirty = true
+	self._fillColor_dirty = true
+	self._strokeColor_dirty=true
+	self._strokeWidth_dirty=true
 
 	--== Object References ==--
 
-	self._tmp_style = params.style -- save later
+	self._tmp_style = params.style -- save
 
-	self._wgtView = nil -- background view
-	self._wgtView_dirty=true
+	self._rndBg = nil -- our rounded rect object
 
 end
 
-function Background:__undoInit__()
-	-- print( "Background:__undoInit__" )
+function RoundedView:__undoInit__()
+	-- print( "RoundedView:__undoInit__" )
 	--==--
 	self:superCall( ThemeMix, '__undoInit__' )
 	self:superCall( ComponentBase, '__undoInit__' )
 	self:superCall( LifecycleMix, '__undoInit__' )
 end
 
-
---[[
 --== createView
 
-function Background:__createView__()
-	-- print( "Background:__createView__" )
+function RoundedView:__createView__()
+	-- print( "RoundedView:__createView__" )
 	self:superCall( ComponentBase, '__createView__' )
 	--==--
+	local o = display.newRoundedRect( 0,0,0,0,1 )
+	self:insert( o )
+	self._rndBg = o
 end
 
-function Background:__undoCreateView__()
-	-- print( "Background:__undoCreateView__" )
+function RoundedView:__undoCreateView__()
+	-- print( "RoundedView:__undoCreateView__" )
+	self._rndBg:removeSelf()
+	self._rndBg=nil
 	--==--
 	self:superCall( ComponentBase, '__undoCreateView__' )
 end
---]]
-
 
 --== initComplete
 
-function Background:__initComplete__()
-	-- print( "Background:__initComplete__" )
+function RoundedView:__initComplete__()
+	-- print( "RoundedView:__initComplete__" )
 	self:superCall( ComponentBase, '__initComplete__' )
 	--==--
 	self.style = self._tmp_style
 end
 
-function Background:__undoInitComplete__()
-	--print( "Background:__undoInitComplete__" )
-	self:_removeBackground()
+function RoundedView:__undoInitComplete__()
+	--print( "RoundedView:__undoInitComplete__" )
 	self.style = nil
 	--==--
 	self:superCall( ComponentBase, '__undoInitComplete__' )
@@ -217,15 +220,17 @@ end
 --== Static Methods
 
 
-function Background.initialize( manager )
-	-- print( "Background.initialize" )
+function RoundedView.initialize( manager )
+	-- print( "RoundedView.initialize" )
 	Widgets = manager
+
 	ThemeMgr = Widgets.ThemeMgr
-	Background.STYLE_CLASS = Widgets.Style.Background
-
 	ViewFactory = Widgets.BackgroundFactory
+	StyleFactory = Widgets.Style.BackgroundFactory
 
-	ThemeMgr:registerWidget( Background.THEME_ID, Background )
+	RoundedView.STYLE_CLASS = StyleFactory.Rounded
+
+	ThemeMgr:registerWidget( RoundedView.THEME_ID, RoundedView )
 end
 
 
@@ -234,89 +239,33 @@ end
 --== Public Methods
 
 
---======================================================--
--- Local Properties
+--== X
 
--- .X
---
-function Background.__getters:x()
+function RoundedView.__getters:x()
 	return self._x
 end
-function Background.__setters:x( value )
-	-- print( "Background.__setters:x", value )
+function RoundedView.__setters:x( value )
+	-- print( 'RoundedView.__setters:x', value )
 	assert( type(value)=='number' )
 	--==--
+	if self._x == value then return end
 	self._x = value
 	self._x_dirty=true
 	self:__invalidateProperties__()
 end
 
--- .Y
---
-function Background.__getters:y()
+--== Y
+
+function RoundedView.__getters:y()
 	return self._y
 end
-function Background.__setters:y( value )
-	-- print( "Background.__setters:y", value )
+function RoundedView.__setters:y( value )
+	-- print( 'RoundedView.__setters:y', value )
 	assert( type(value)=='number' )
 	--==--
+	if self._y == value then return end
 	self._y = value
 	self._y_dirty=true
-	self:__invalidateProperties__()
-end
-
-
---======================================================--
---== View Style Properties
-
---== cornerRadius
-
-function Background.__getters:cornerRadius()
-	return self.curr_style.view.cornerRadius
-end
-function Background.__setters:cornerRadius( value )
-	-- print( 'Background.__setters:cornerRadius', value )
-	self.curr_style.view.cornerRadius = value
-end
-
---== viewStrokeWidth
-
-function Background.__getters:viewStrokeWidth()
-	return self.curr_style.view.strokeWidth
-end
-function Background.__setters:viewStrokeWidth( value )
-	-- print( "Background.__setters:viewStrokeWidth", value )
-	self.curr_style.view.strokeWidth = value
-end
-
---== setViewFillColor
-
-function Background:setViewFillColor( ... )
-	-- print( "Background:setViewFillColor" )
-	self.curr_style.view.fillColor = {...}
-end
-
---== setViewStrokeColor
-
-function Background:setViewStrokeColor( ... )
-	-- print( "Background:setViewStrokeColor" )
-	self.curr_style.view.strokeColor = {...}
-end
-
-
---======================================================--
---== Theme Mix Methods
-
-function Background:afterAddStyle()
-	-- print( "Background:afterAddStyle" )
-	self._wgtViewStyle_dirty=true
-	self:__invalidateProperties__()
-end
-
-
-function Background:beforeRemoveStyle()
-	-- print( "Background:beforeRemoveStyle" )
-	self._wgtViewStyle_dirty=true
 	self:__invalidateProperties__()
 end
 
@@ -326,53 +275,11 @@ end
 --== Private Methods
 
 
-function Background:_removeBackground()
-	-- print( "Background:_removeBackground" )
-	local o = self._wgtView
-	if not o then return end
-	o.style = nil
-	o:removeSelf()
-	self._wgtView = nil
-end
-
-function Background:_createBackgroundView()
-	-- print( "Background:_createBackgroundView" )
-	local style = self.curr_style
-	local vtype = style.view.type
-	local o = self._wgtView
-
-	-- create background if missing or type mismatch
-	if not o or vtype ~= o.TYPE then
-		self:_removeBackground()
-		o = ViewFactory.create( vtype )
-		self:insert( o.view )
-	end
-
-	o:setActiveStyle( style.view, {copy=false} )
-	self._wgtView = o
-
-	--== Reset properties
-
-	-- none
-end
-
-
-function Background:__commitProperties__()
-	-- print( "Background:__commitProperties__" )
-
-	--== Update Widget Components
-
-	if self._wgtView_dirty or self._wgtViewStyle_dirty then
-		self:_createBackgroundView()
-		self._wgtView_dirty=false
-		self._wgtViewStyle_dirty=false
-	end
-
-	--== Update Widget View
-
+function RoundedView:__commitProperties__()
+	-- print( 'RoundedView:__commitProperties__' )
 	local style = self.curr_style
 	local view = self.view
-	local bg = self._wgtView
+	local bg = self._rndBg
 
 	-- x/y
 
@@ -385,6 +292,49 @@ function Background:__commitProperties__()
 		self._y_dirty = false
 	end
 
+	if self._width_dirty then
+		bg.path.width=style.width
+		self._width_dirty=false
+	end
+	if self._height_dirty then
+		bg.path.height=style.height
+		self._height_dirty=false
+	end
+
+	-- anchorX/anchorY
+
+	if self._anchorX_dirty then
+		bg.anchorX = style.anchorX
+		self._anchorX_dirty=false
+	end
+	if self._anchorY_dirty then
+		bg.anchorY = style.anchorY
+		self._anchorY_dirty=false
+	end
+
+	-- fills/colors
+
+	if self._cornerRadius_dirty then
+		bg.path.radius = style.cornerRadius
+		self._cornerRadius_dirty=false
+	end
+	if self._fillColor_dirty then
+		if style.debugOn==true then
+			bg:setFillColor( 1,0,0,0.5 )
+		else
+			bg:setFillColor( unpack( style.fillColor ))
+		end
+		self._fillColor_dirty=false
+	end
+	if self._strokeColor_dirty then
+		bg:setStrokeColor( unpack( style.strokeColor ))
+		self._strokeColor_dirty=false
+	end
+	if self._strokeWidth_dirty then
+		bg.strokeWidth = style.strokeWidth
+		self._strokeWidth_dirty=false
+	end
+
 end
 
 
@@ -393,8 +343,8 @@ end
 --== Event Handlers
 
 
-function Background:stylePropertyChangeHandler( event )
-	-- print( "Background:stylePropertyChangeHandler", event.type, event.property )
+function RoundedView:stylePropertyChangeHandler( event )
+	-- print( "RoundedView:stylePropertyChangeHandler", event )
 	local style = event.target
 	local etype= event.type
 	local property= event.property
@@ -403,11 +353,16 @@ function Background:stylePropertyChangeHandler( event )
 	-- print( "Style Changed", etype, property, value )
 
 	if etype==style.STYLE_RESET or etype==style.STYLE_CLEARED then
-		self._debugOn_dirty=true
+		self._debugOn_dirty = true
 		self._width_dirty=true
 		self._height_dirty=true
 		self._anchorX_dirty=true
 		self._anchorY_dirty=true
+
+		self._cornerRadius_dirty = true
+		self._fillColor_dirty = true
+		self._strokeColor_dirty=true
+		self._strokeWidth_dirty=true
 
 		property = etype
 
@@ -422,6 +377,15 @@ function Background:stylePropertyChangeHandler( event )
 			self._anchorX_dirty=true
 		elseif property=='anchorY' then
 			self._anchorY_dirty=true
+
+		elseif property=='cornerRadius' then
+			self._cornerRadius_dirty=true
+		elseif property=='fillColor' then
+			self._fillColor_dirty=true
+		elseif property=='strokeColor' then
+			self._strokeColor_dirty=true
+		elseif property=='strokeWidth' then
+			self._strokeWidth_dirty=true
 		end
 
 	end
@@ -433,4 +397,4 @@ end
 
 
 
-return Background
+return RoundedView
