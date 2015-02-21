@@ -93,7 +93,10 @@ local ThemeMix = ThemeMixModule.ThemeMix
 --====================================================================--
 
 
-local RectangleView = newClass( {ThemeMix,ComponentBase,LifecycleMix}, {name="Rectangle Background View"}  )
+local RectangleView = newClass(
+	{ ThemeMix, ComponentBase, LifecycleMix },
+	{ name="Rectangle Background View" }
+)
 
 --== Class Constants
 
@@ -179,6 +182,7 @@ function RectangleView:__createView__()
 	self:superCall( ComponentBase, '__createView__' )
 	--==--
 	local o = display.newRect( 0,0,0,0 )
+	o.anchorX, o.anchorY = 0.5, 0.5
 	self:insert( o )
 	self._rectBg = o
 end
