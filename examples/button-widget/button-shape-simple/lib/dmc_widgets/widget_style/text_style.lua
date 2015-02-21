@@ -33,7 +33,7 @@ SOFTWARE.
 
 
 --====================================================================--
---== DMC Corona Widgets : Widget Background Style
+--== DMC Corona Widgets : Text Widget Style
 --====================================================================--
 
 
@@ -102,9 +102,10 @@ TextStyle._VALID_PROPERTIES = {
 	debugOn=true,
 	width=true,
 	height=true,
-	align=true,
 	anchorX=true,
 	anchorY=true,
+
+	align=true,
 	fillColor=true,
 	font=true,
 	fontSize=true,
@@ -116,7 +117,7 @@ TextStyle._VALID_PROPERTIES = {
 	strokeWidth=true,
 }
 
-TextStyle.EXCLUDE_PROPERTY_CHECK = {
+TextStyle._EXCLUDE_PROPERTY_CHECK = {
 	-- width/height, they can be nil
 	width=true,
 	height=true
@@ -125,13 +126,12 @@ TextStyle.EXCLUDE_PROPERTY_CHECK = {
 TextStyle._STYLE_DEFAULTS = {
 	name='text-default-style',
 	debugOn=false,
-
 	width=nil,
 	height=nil,
-
-	align='center',
 	anchorX=0.5,
 	anchorY=0.5,
+
+	align='center',
 	fillColor={1,1,1,0},
 	font=native.systemFont,
 	fontSize=24,
@@ -170,13 +170,12 @@ function TextStyle:__init__( params )
 
 	-- self._name
 	-- self._debugOn
-
-	self._width = nil
-	self._height = nil
+	-- self._width
+	-- self._height
+	-- self._anchorX
+	-- self._anchorY
 
 	self._align = nil
-	self._anchorX = nil
-	self._anchorY = nil
 	self._fillColor = nil
 	self._font = nil
 	self._fontSize = nil
@@ -200,14 +199,7 @@ function TextStyle.initialize( manager )
 	-- print( "TextStyle.initialize", manager )
 	Widgets = manager
 
-	TextStyle._setDefaults()
-end
-
-
--- create empty Style structure
-function TextStyle.createStateStructure( data )
-	-- print( "TextStyle.createStateStructure", data )
-	return {}
+	TextStyle._setDefaults( TextStyle )
 end
 
 
@@ -312,7 +304,7 @@ function TextStyle._verifyClassProperties( src )
 	--==--
 	local emsg = "Style: requires property '%s'"
 
-	local is_valid = BaseStyle._verifyClassProperties( src )
+	local is_valid = BaseStyle._verifyClassProperties( src, {width=true,height=true} )
 
 	--[[
 	we don't check for width/height because nil is valid value
@@ -323,12 +315,6 @@ function TextStyle._verifyClassProperties( src )
 
 	if not src.align then
 		print(sformat(emsg,'align')) ; is_valid=false
-	end
-	if not src.anchorX then
-		print(sformat(emsg,'anchorX')) ; is_valid=false
-	end
-	if not src.anchorY then
-		print(sformat(emsg,'anchorY')) ; is_valid=false
 	end
 	if not src.fillColor then
 		print(sformat(emsg,'fillColor')) ; is_valid=false
@@ -359,15 +345,6 @@ function TextStyle._verifyClassProperties( src )
 end
 
 
-function TextStyle._setDefaults()
-	-- print( "TextStyle._setDefaults" )
-	local style = TextStyle:new{
-		data=TextStyle._STYLE_DEFAULTS
-	}
-	TextStyle.__base_style__ = style
-end
-
-
 
 --====================================================================--
 --== Public Methods
@@ -382,6 +359,7 @@ function TextStyle:updateStyle( src, params )
 	TextStyle.copyExistingSrcProperties( self, src, params )
 end
 
+--== verifyClassProperties
 
 function TextStyle:verifyClassProperties()
 	-- print( "TextStyle:verifyClassProperties" )
@@ -394,7 +372,20 @@ end
 --== Private Methods
 
 
--- none
+-- clear any local modifications on style class
+-- called by clearProperties()
+--
+function TextStyle:_clearProperties()
+	-- print( "TextStyle:_clearProperties" )
+	self:superCall( '_clearProperties' )
+	self.align=nil
+	self.fillColor=nil
+	self.font=nil
+	self.fontSize=nil
+	self.marginX=nil
+	self.marginY=nil
+	self.textColor=nil
+end
 
 
 

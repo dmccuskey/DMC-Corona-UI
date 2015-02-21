@@ -87,8 +87,6 @@ local ComponentBase = Objects.ComponentBase
 local LifecycleMix = LifecycleMixModule.LifecycleMix
 local ThemeMix = ThemeMixModule.ThemeMix
 
-local LOCAL_DEBUG = false
-
 
 
 --====================================================================--
@@ -96,7 +94,10 @@ local LOCAL_DEBUG = false
 --====================================================================--
 
 
-local Text = newClass( {ThemeMix,ComponentBase,LifecycleMix}, {name="Text"}  )
+local Text = newClass(
+	{ ThemeMix, ComponentBase, LifecycleMix },
+	{ name = "Text" }
+)
 
 --== Class Constants
 
@@ -142,21 +143,23 @@ function Text:__init__( params )
 
 	-- properties in this class
 
-	self._text = params.text
-	self._text_dirty=true
-
 	self._x = params.x
 	self._x_dirty = true
 	self._y = params.y
 	self._y_dirty = true
+
+	self._text = params.text
+	self._text_dirty=true
 
 	-- properties from style
 
 	self._width_dirty=true
 	self._height_dirty=true
 	-- virtual
-	self._bgWidth_dirty=true
-	self._bgHeight_dirty=true
+	self._rectBgWidth_dirty=true
+	self._rectBgHeight_dirty=true
+	self._displayWidth_dirty=true
+	self._displayHeight_dirty=true
 
 	self._align_dirty=true
 	self._anchorX_dirty=true
@@ -177,10 +180,9 @@ function Text:__init__( params )
 	--== Object References ==--
 
 	self._tmp_style = params.style -- save
-	-- self.curr_style -- from inherit
 
 	self._txt_text = nil -- our text object
-	self._bg = nil -- our background object
+	self._rectBg = nil -- our background object
 
 end
 
@@ -200,15 +202,15 @@ function Text:__createView__()
 	self:superCall( ComponentBase, '__createView__' )
 	--==--
 	local o = display.newRect( 0,0,0,0 )
-	o.x, o.y = 0, 0
+	o.anchorX, o.anchorY = 0.5, 0.5
 	self:insert( o )
-	self._bg = o
+	self._rectBg = o
 end
 
 function Text:__undoCreateView__()
 	-- print( "Text:__undoCreateView__" )
-	self._bg:removeSelf()
-	self._bg=nil
+	self._rectBg:removeSelf()
+	self._rectBg=nil
 	--==--
 	self:superCall( ComponentBase, '__undoCreateView__' )
 end
@@ -323,7 +325,7 @@ end
 
 -- get just the text height
 function Text:getTextHeight()
-	-- print( "Text:getTextHeight" )
+	-- print( "Text:getTextHeight", self._txt_text )
 	local val = 0
 	if self._txt_text then
 		val = self._txt_text.height
@@ -388,12 +390,7 @@ function Text:_createText()
 	self:insert( o )
 	self._txt_text = o
 
-	-- conditions for coming in here
-	self._align_dirty=false
-	self._font_dirty=false
-	self._fontSize_dirty=false
-
-	--== reset our text object
+	--== Reset properties
 
 	self._x_dirty=true
 	self._y_dirty=true
@@ -414,10 +411,13 @@ function Text:__commitProperties__()
 	-- create new text if necessary
 	if self._align_dirty or self._font_dirty or self._fontSize_dirty then
 		self:_createText()
+		self._align_dirty=false
+		self._font_dirty=false
+		self._fontSize_dirty=false
 	end
 
 	local view = self.view
-	local bg = self._bg
+	local bg = self._rectBg
 	local display = self._txt_text
 
 	--== position sensitive
@@ -438,45 +438,57 @@ function Text:__commitProperties__()
 	end
 
 	if self._width_dirty then
-		display.width=self.width
+		bg.width = self.width -- use getter
 		self._width_dirty=false
 
 		self._anchorX_dirty=true
-		self._bgWidth_dirty=true
+		self._rectBgWidth_dirty=true
+		self._displayWidth_dirty=true
 	end
 	if self._height_dirty then
-		-- reminder, we don't set text height
+		bg.height = self.height -- use getter
 		self._height_dirty=false
 
 		self._anchorY_dirty=true
-		self._bgHeight_dirty=true
+		self._rectBgHeight_dirty=true
+		self._displayHeight_dirty=true
 	end
 
 	if self._marginX_dirty then
-		-- reminder, we don't set text height
 		self._marginX_dirty=false
 
-		self._bgWidth_dirty=true
+		self._rectBgWidth_dirty=true
 		self._textX_dirty=true
+		self._displayWidth_dirty=true
 	end
 	if self._marginY_dirty then
 		-- reminder, we don't set text height
 		self._marginY_dirty=false
 
-		self._bgHeight_dirty=true
+		self._rectBgHeight_dirty=true
 		self._textY_dirty=true
+		self._displayHeight_dirty=true
 	end
-
 
 	-- bg width/height
 
-	if self._bgWidth_dirty then
-		bg.width = self.width+style.marginX*2 -- use getter, it's smart
-		self._bgWidth_dirty=false
+	if self._rectBgWidth_dirty then
+		self._rectBgWidth_dirty=false
 	end
-	if self._bgHeight_dirty then
-		bg.height = self.height+style.marginY*2 -- use getter, it's smart
-		self._bgHeight_dirty=false
+	if self._rectBgHeight_dirty then
+		self._rectBgHeight_dirty=false
+	end
+
+	if self._displayWidth_dirty then
+		display.width = self.width-style.marginX*2 -- use getter
+		self._displayWidth_dirty=false
+	end
+	if self._displayHeight_dirty then
+		--== !! DO NOT SET HEIGHT OF TEXT !! ==--
+		--[[
+		-- -- display.height = self.height
+		--]]
+		self._displayHeight_dirty=false
 	end
 
 	-- anchorX/anchorY
@@ -534,7 +546,7 @@ function Text:__commitProperties__()
 	end
 
 	if self._textY_dirty then
-		local height = self.height -- use getter, it's smart
+		local height = self.height -- use getter
 		local offset
 		display.anchorY = 0.5
 		offset = height/2-height*(style.anchorY)
@@ -547,9 +559,14 @@ function Text:__commitProperties__()
 
 	-- textColor/fillColor
 
-	if self._fillColor_dirty then
-		bg:setFillColor( unpack( style.fillColor ))
+	if self._fillColor_dirty or self._debugOn_dirty then
+		if style.debugOn==true then
+			bg:setFillColor( 1,0,0,0.2 )
+		else
+			bg:setFillColor( unpack( style.fillColor ))
+		end
 		self._fillColor_dirty=false
+		self._debugOn_dirty=false
 	end
 	if self._strokeColor_dirty then
 		bg:setStrokeColor( unpack( style.strokeColor ))
@@ -574,7 +591,7 @@ end
 
 
 function Text:stylePropertyChangeHandler( event )
-	-- print( "Text:stylePropertyChangeHandler", event )
+	-- print( "Text:stylePropertyChangeHandler", event.type, event.property )
 	local style = event.target
 	local etype= event.type
 	local property= event.property
@@ -583,12 +600,13 @@ function Text:stylePropertyChangeHandler( event )
 	-- print( "Style Changed", etype, property, value )
 
 	if etype == style.STYLE_RESET then
+		self._debugOn_dirty = true
 		self._width_dirty=true
 		self._height_dirty=true
-
-		self._align_dirty=true
 		self._anchorX_dirty=true
 		self._anchorY_dirty=true
+
+		self._align_dirty=true
 		self._fillColor_dirty = true
 		self._font_dirty=true
 		self._fontSize_dirty=true
@@ -603,17 +621,19 @@ function Text:stylePropertyChangeHandler( event )
 		property = etype
 
 	else
-		if property=='width' then
+		if property=='debugActive' then
+			self._debugOn_dirty=true
+		elseif property=='width' then
 			self._width_dirty=true
 		elseif property=='height' then
 			self._height_dirty=true
+			elseif property=='anchorX' then
+				self._anchorX_dirty=true
+			elseif property=='anchorY' then
+				self._anchorY_dirty=true
 
 		elseif property=='align' then
 			self._align_dirty=true
-		elseif property=='anchorX' then
-			self._anchorX_dirty=true
-		elseif property=='anchorY' then
-			self._anchorY_dirty=true
 		elseif property=='fillColor' then
 			self._fillColor_dirty=true
 		elseif property=='font' then

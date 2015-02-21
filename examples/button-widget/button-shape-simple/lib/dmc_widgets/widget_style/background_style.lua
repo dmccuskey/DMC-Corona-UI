@@ -112,15 +112,13 @@ BackgroundStyle._VALID_PROPERTIES = {
 	anchorY=true
 }
 
-BackgroundStyle.EXCLUDE_PROPERTY_CHECK = nil
+BackgroundStyle._EXCLUDE_PROPERTY_CHECK = nil
 
 BackgroundStyle._STYLE_DEFAULTS = {
 	name='background-default-style',
 	debugOn=false,
-
 	width=75,
 	height=30,
-
 	anchorX=0.5,
 	anchorY=0.5,
 
@@ -209,8 +207,8 @@ end
 
 
 -- create empty Background Style structure
-function BackgroundStyle.createStateStructure( data )
-	-- print( "BackgroundStyle.createStateStructure", data )
+function BackgroundStyle.createStyleStructure( data )
+	-- print( "BackgroundStyle.createStyleStructure", data )
 	return {
 		view={
 			type=data
@@ -472,6 +470,18 @@ function BackgroundStyle:_checkChildren()
 	-- using setters !!!
 	if self._view==nil then self.view=nil end
 end
+
+
+
+-- this would clear any local modifications on style class
+-- called by clearProperties()
+--
+function BackgroundStyle:_clearProperties()
+	-- print( "BackgroundStyle:_clearProperties" )
+	self:superCall( '_clearProperties' )
+	--== no local properties to update
+end
+
 
 
 

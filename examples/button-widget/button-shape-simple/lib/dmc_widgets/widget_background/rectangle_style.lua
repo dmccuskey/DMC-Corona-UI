@@ -103,30 +103,30 @@ RectangleStyle._VALID_PROPERTIES = {
 	debugOn=true,
 	width=true,
 	height=true,
-	type=true,
 	anchorX=true,
 	anchorY=true,
+
+	type=true,
 	fillColor=true,
 	strokeColor=true,
 	strokeWidth=true,
 }
 
-RectangleStyle.EXCLUDE_PROPERTY_CHECK = nil
+RectangleStyle._EXCLUDE_PROPERTY_CHECK = nil
 
 RectangleStyle._STYLE_DEFAULTS = {
 	name='rectangle-background-default-style',
 	debugOn=false,
-
 	width=75,
 	height=30,
+	anchorX=0.5,
+	anchorY=0.5,
 
 	type=RectangleStyle.TYPE,
 
-	anchorX=0.5,
-	anchorY=0.5,
 	fillColor={1,1,1,1},
 	strokeColor={0,0,0,1},
-	strokeWidth=0,
+	strokeWidth=0
 }
 
 --== Event Constants
@@ -156,16 +156,13 @@ function RectangleStyle:__init__( params )
 
 	-- self._name
 	-- self._debugOn
-
-	--== Local style properties
-
-	self._width = nil
-	self._height = nil
+	-- self._width
+	-- self._height
+	-- self._anchorX
+	-- self._anchorY
 
 	self._type = nil
 
-	self._anchorX = nil
-	self._anchorY = nil
 	self._fillColor = nil
 	self._strokeColor = nil
 	self._strokeWidth = nil
@@ -184,12 +181,12 @@ function RectangleStyle.initialize( manager )
 	-- print( "RectangleStyle.initialize", manager )
 	Widgets = manager
 
-	RectangleStyle._setDefaults()
+	RectangleStyle._setDefaults( RectangleStyle )
 end
 
 
 function RectangleStyle.addMissingDestProperties( dest, src, params )
-	print( "RectangleStyle.addMissingDestProperties", dest, src )
+	-- print( "RectangleStyle.addMissingDestProperties", dest, src )
 	params = params or {}
 	if params.force==nil then params.force=false end
 	assert( dest )
@@ -200,20 +197,18 @@ function RectangleStyle.addMissingDestProperties( dest, src, params )
 
 	for i=1,#srcs do
 		local src = srcs[i]
-		print(i)
 
+		if dest.debugOn==nil or force then dest.debugOn=src.debugOn end
 
-	if dest.debugOn==nil or force then dest.debugOn=src.debugOn end
+		if dest.width==nil or force then dest.width=src.width end
+		if dest.height==nil or force then dest.height=src.height end
 
-	if dest.width==nil or force then dest.width=src.width end
-	if dest.height==nil or force then dest.height=src.height end
-
-	if dest.anchorX==nil or force then dest.anchorX=src.anchorX end
-	if dest.anchorY==nil or force then dest.anchorY=src.anchorY end
-	if dest.fillColor==nil or force then dest.fillColor=src.fillColor end
-	if dest.strokeColor==nil or force then dest.strokeColor=src.strokeColor end
-	if dest.strokeWidth==nil or force then dest.strokeWidth=src.strokeWidth end
-end
+		if dest.anchorX==nil or force then dest.anchorX=src.anchorX end
+		if dest.anchorY==nil or force then dest.anchorY=src.anchorY end
+		if dest.fillColor==nil or force then dest.fillColor=src.fillColor end
+		if dest.strokeColor==nil or force then dest.strokeColor=src.strokeColor end
+		if dest.strokeWidth==nil or force then dest.strokeWidth=src.strokeWidth end
+	end
 
 	return dest
 end
@@ -257,13 +252,6 @@ function RectangleStyle.copyExistingSrcProperties( dest, src, params )
 end
 
 
--- create empty Style structure
-function RectangleStyle.createStateStructure( data )
-	-- print( "RectangleStyle.createStateStructure", data )
-	return {}
-end
-
-
 function RectangleStyle._verifyClassProperties( src )
 	-- print( "RectangleStyle._verifyClassProperties", src )
 	assert( src )
@@ -272,20 +260,8 @@ function RectangleStyle._verifyClassProperties( src )
 
 	local is_valid = BaseStyle._verifyClassProperties( src )
 
-	if not src.width then
-		print(sformat(emsg,'width')) ; is_valid=false
-	end
-	if not src.height then
-		print(sformat(emsg,'height')) ; is_valid=false
-	end
 	if not src.type then
 		print(sformat(emsg,'type')) ; is_valid=false
-	end
-	if not src.anchorX then
-		print(sformat(emsg,'anchorX')) ; is_valid=false
-	end
-	if not src.anchorY then
-		print(sformat(emsg,'anchorY')) ; is_valid=false
 	end
 	if not src.fillColor then
 		print(sformat(emsg,'fillColor')) ; is_valid=false
@@ -298,16 +274,6 @@ function RectangleStyle._verifyClassProperties( src )
 	end
 
 	return is_valid
-end
-
-
-function RectangleStyle._setDefaults()
-	-- print( "RectangleStyle._setDefaults" )
-	local defaults = RectangleStyle._STYLE_DEFAULTS
-	local style = RectangleStyle:new{
-		data=defaults
-	}
-	RectangleStyle.__base_style__ = style
 end
 
 
@@ -352,7 +318,7 @@ function RectangleStyle:updateStyle( src, params )
 	RectangleStyle.copyExistingSrcProperties( self, src, params )
 end
 
-
+--== verifyClassProperties
 
 function RectangleStyle:verifyClassProperties()
 	-- print( "RectangleStyle.verifyClassProperties" )
@@ -378,7 +344,16 @@ end
 --== Private Methods
 
 
--- none
+-- clear any local modifications on style class
+-- called by clearProperties()
+--
+function RectangleStyle:_clearProperties()
+	-- print( "RectangleStyle:_clearProperties" )
+	self:superCall( '_clearProperties' )
+	self.fillColor=nil
+	self.strokeColor=nil
+	self.strokeWidth=nil
+end
 
 
 
@@ -387,7 +362,6 @@ end
 
 
 -- none
-
 
 
 

@@ -97,7 +97,7 @@ Style._VALID_PROPERTIES = {}
 -- table of properties to exclude from checking
 -- these are properties which value can be 'nil'
 --
-Style.EXCLUDE_PROPERTY_CHECK = {} -- d
+Style._EXCLUDE_PROPERTY_CHECK = {} -- d
 
 Style._STYLE_DEFAULTS = nil
 
@@ -105,7 +105,26 @@ Style._STYLE_DEFAULTS = nil
 
 Style.EVENT = 'style-event'
 
+-- CLEARED
+-- this is used when the local Style properties have been cleared
+-- This is only propagated to Child Styles, they should clear also
+-- affected Widgets should do a full refresh
+Style.STYLE_CLEARED = 'style-cleared-event'
+
+-- RESET
+-- this is used to let a Widget know about drastic
+-- changes to a Style, eg, inheritance has changed
+-- This is propagated through inheritance chain as well as
+-- to Child Styles and their inheritance chain
+-- affected Widgets should do a full refresh
 Style.STYLE_RESET = 'style-reset-event'
+
+-- UPDATED
+-- this is used when a property on a Style has changed
+-- this change could be local or in inheritance chain
+-- Child Styles propagate these AS LONG AS their local
+-- value of the property is not set (ie, equal to nil )
+-- affectd Widgets should update accordingly
 Style.STYLE_UPDATED = 'style-updated-event'
 
 
@@ -140,6 +159,10 @@ function Style:__init__( params )
 
 	self._name = params.name
 	self._debugOn = params.debugOn
+	self._width = params.width
+	self._height = params.height
+	self._anchorX = params.anchorX
+	self._anchorY = params.anchorY
 end
 
 function Style:__initComplete__()
@@ -171,6 +194,18 @@ end
 --== Static Methods
 
 
+function Style.initialize( manager )
+	error( "OVERRIDE Style.addMissingDestProperties" )
+end
+
+
+-- create empty Style structure (default)
+function Style.createStyleStructure( data )
+	-- print( "Style.createStyleStructure", data )
+	return {}
+end
+
+
 -- addMissingDestProperties()
 -- copies properties from src structure to dest structure
 -- if property isn't already in dest
@@ -190,8 +225,9 @@ function Style.copyExistingSrcProperties( dest, src, params )
 end
 
 
-function Style._verifyClassProperties( src )
+function Style._verifyClassProperties( src, excl  )
 	-- print( "Style:_verifyClassProperties" )
+	excl = excl or {}
 	assert( src, "Style:_verifyClassProperties missing source" )
 	--==--
 	local emsg = "Style: requires property '%s'"
@@ -203,11 +239,33 @@ function Style._verifyClassProperties( src )
 	if type(src.debugOn)~='boolean' then
 		print(sformat(emsg,'debugOn')) ; is_valid=false
 	end
+	if not src.width and not excl.width then
+		print(sformat(emsg,'width')) ; is_valid=false
+	end
+	if not src.height and not excl.height then
+		print(sformat(emsg,'height')) ; is_valid=false
+	end
+	if not src.anchorX then
+		print(sformat(emsg,'anchorX')) ; is_valid=false
+	end
+	if not src.anchorY then
+		print(sformat(emsg,'anchorY')) ; is_valid=false
+	end
+
 	return is_valid
 end
 
 
-
+-- _setDefaults()
+-- generic method to set defaults
+function Style._setDefaults( StyleClass )
+	-- print( "Style._setDefaults" )
+	local defaults = StyleClass._STYLE_DEFAULTS
+	local style = StyleClass:new{
+		data=defaults
+	}
+	StyleClass.__base_style__ = style
+end
 
 
 
@@ -249,11 +307,22 @@ function Style:resetProperties()
 	self:_dispatchResetEvent()
 end
 
+
+function Style:_clearProperties()
+	-- print("Style:_clearProperties")
+	self.debugOn=nil
+	self.width=nil
+	self.height=nil
+	self.anchorX=nil
+	self.anchorY=nil
+end
+
 -- this would clear any local modifications on style class
 --
 function Style:clearProperties()
-	self:updateStyle( {}, {force=true} )
-	self:_dispatchResetEvent()
+	-- print("Style:clearProperties")
+	self:_clearProperties()
+	self:_dispatchClearEvent()
 end
 
 function Style:getDefaultStyles()
@@ -338,7 +407,7 @@ end
 -- value should be a instance of Style Class or nil
 --
 function Style.__setters:parent( value )
-	print( "Style.__setters:parent", self, value )
+	-- print( "Style.__setters:parent", self, value )
 	assert( value==nil or value:isa( Style ) )
 	--==--
 	local o = self._parent
@@ -472,11 +541,11 @@ function Style.__getters:width()
 	end
 	return value
 end
-function Style.__setters:width( value )
-	-- print( "Style.__setters:width", self.name, value )
+function Style.__setters:width( value, force )
+	-- print( "Style.__setters:width", self.name, value, force )
 	assert( type(value)=='number' or (value==nil and self._inherit) )
 	--==--
-	if value == self._width then return end
+	if value==self._width and not force then return end
 	self._width = value
 	self:_dispatchChangeEvent( 'width', value )
 end
@@ -528,11 +597,10 @@ function Style.__getters:anchorX()
 	return value
 end
 function Style.__setters:anchorX( value )
-	print( 'Style.__setters:anchorX', value, self )
+	-- print( 'Style.__setters:anchorX', value, self )
 	assert( type(value)=='number' or (value==nil and self._inherit) )
 	--==--
 	if value==self._anchorX then return end
-	print("   Passing along anchor")
 	self._anchorX = value
 	self:_dispatchChangeEvent( 'anchorX', value )
 end
@@ -547,12 +615,11 @@ function Style.__getters:anchorY()
 	return value
 end
 function Style.__setters:anchorY( value )
-	print( 'Style.__setters:anchorY', value )
+	-- print( 'Style.__setters:anchorY', value )
 	assert( value==nil or type(value)=='number' )
 	if value==nil and self._inherit==nil  then print( "WARN") ; return end
 	--==--
 	if value==self._anchorY then return end
-	print("Passing along anchor")
 	self._anchorY = value
 	self:_dispatchChangeEvent( 'anchorY', value )
 end
@@ -749,7 +816,7 @@ function Style:_parseData( data )
 	-- Utils.print( data )
 	-- prep tables of things to exclude, etc
 	local DEF = self._STYLE_DEFAULTS
-	local EXCL = self.EXCLUDE_PROPERTY_CHECK
+	local EXCL = self._EXCLUDE_PROPERTY_CHECK
 
 	for k,v in pairs( data ) do
 		-- print(k,v)
@@ -774,6 +841,57 @@ end
 --======================================================--
 -- Event Dispatch
 
+
+-- _dispatchChangeEvent()
+-- send out property-changed event to listeners
+-- and to any inherits
+--
+function Style:_dispatchChangeEvent( prop, value )
+	-- print( 'Style:_dispatchChangeEvent', prop, value, self )
+	local widget = self._widget
+	local callback = self._onPropertyChange_f
+
+	if not self._is_initialized then return end
+
+	local e = self:createEvent( self.STYLE_UPDATED, {property=prop,value=value}, {merge=true} )
+
+	-- dispatch event to different listeners
+	if widget and widget.stylePropertyChangeHandler then
+		widget:stylePropertyChangeHandler( e )
+	end
+	--
+	if callback then callback( e ) end
+
+	-- styles which inherit from this one
+	self:dispatchRawEvent( e )
+end
+
+
+-- _dispatchClearEvent()
+-- send out event to clear properties
+-- and to any inherits
+--
+function Style:_dispatchClearEvent()
+	-- print( 'Style:_dispatchClearEvent', self )
+	local widget = self._widget
+	local callback = self._onPropertyChange_f
+
+	if not self._is_initialized then return end
+
+	local e = self:createEvent( self.STYLE_CLEARED )
+
+	-- dispatch event to different listeners
+	if widget and widget.stylePropertyChangeHandler then
+		widget:stylePropertyChangeHandler( e )
+	end
+	--
+	if callback then callback( e ) end
+
+	-- styles which inherit from this one
+	self:dispatchRawEvent( e )
+end
+
+
 -- _dispatchResetEvent()
 -- send out Reset event to listeners
 --
@@ -797,32 +915,6 @@ function Style:_dispatchResetEvent()
 end
 
 
--- _dispatchChangeEvent()
--- send out property-changed event to listeners
--- and to any inherits
---
-function Style:_dispatchChangeEvent( prop, value )
-	print( 'Style:_dispatchChangeEvent', prop, value, self )
-	local widget = self._widget
-	local callback = self._onPropertyChange_f
-
-	if not self._is_initialized then return end
-
-	local e = self:createEvent( self.STYLE_UPDATED, {property=prop,value=value}, {merge=true} )
-
-	-- dispatch event to different listeners
-	if widget and widget.stylePropertyChangeHandler then
-		print("TO WIDGE", widget )
-		widget:stylePropertyChangeHandler( e )
-	end
-	--
-	if callback then callback( e ) end
-
-	-- styles which inherit from this one
-	self:dispatchRawEvent( e )
-end
-
-
 
 
 --====================================================================--
@@ -833,24 +925,27 @@ end
 -- handle parent property changes
 
 function Style:_parentStyleEvent_handler( event )
-	-- print( "Style:_parentStyleEvent_handler", event, self )
+	-- print( "Style:_parentStyleEvent_handler", event.type, self )
 	local style = event.target
 	local etype = event.type
 
-	if etype==style.STYLE_RESET then
+	if etype==style.STYLE_CLEARED then
+		self:clearProperties()
+
+	elseif etype==style.STYLE_RESET then
 		self._dispatchResetEvent()
 
 	elseif etype==style.STYLE_UPDATED then
-		local property = event.property
+		local property, value = event.property, event.value
 		-- we accept changes to parent as our own
 		-- however, check to see if property is valid
+		-- parent could have other properties
 		if self._VALID_PROPERTIES[property] then
-			self[property]=value
+			self.__setters[property]( self, value, true )
 		end
 	end
 
 end
-
 
 
 -- _inheritedStyleEvent_handler()
@@ -861,7 +956,10 @@ function Style:_inheritedStyleEvent_handler( event )
 	local style = event.target
 	local etype = event.type
 
-	if etype==style.STYLE_RESET then
+	if etype==style.STYLE_CLEARED then
+		-- pass
+
+	elseif etype==style.STYLE_RESET then
 		self._dispatchResetEvent()
 
 	elseif etype==style.STYLE_UPDATED then

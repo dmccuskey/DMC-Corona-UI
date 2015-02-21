@@ -303,7 +303,7 @@ function Theme.__getters:anchorX()
 	return self.curr_style.anchorX
 end
 function Theme.__setters:anchorX( value )
-	print( 'Theme.__setters:anchorX', value, self )
+	-- print( 'Theme.__setters:anchorX', value, self )
 	self.curr_style.anchorX = value
 end
 
