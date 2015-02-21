@@ -112,8 +112,6 @@ local BaseStyle = require( PATH .. '.' .. 'widget_style.base_style' )
 -- Widgets
 Widget.ButtonGroup = require( PATH .. '.' .. 'button_group' )
 Widget.Formatter = require( PATH .. '.' .. 'data_formatters' )
-Widget.NavBar = require( PATH .. '.' .. 'widget_navbar' )
-Widget.NavItem = require( PATH .. '.' .. 'widget_navitem' )
 Widget.Popover = require( PATH .. '.' .. 'widget_popover' )
 Widget.PopoverMixModule = require( PATH .. '.' .. 'widget_popover.popover_mix' )
 
@@ -132,14 +130,8 @@ Widget.Style = {
 
 --== Give widgets access to Widget (do this last)
 
-Widget.NavBar.__setWidgetManager( Widget )
-Widget.NavItem.__setWidgetManager( Widget )
 Widget.Popover.__setWidgetManager( Widget )
 Widget.PopoverMixModule.__setWidgetManager( Widget )
-
-
-local loadBackgroundSupport, loadButtonSupport
-local loadTextSupport, loadTextFieldSupport
 
 
 
@@ -274,17 +266,35 @@ end
 --== newNavBar widget
 
 
+function Widget._loadNavBarSupport()
+	-- print( "Widget._loadNavBarSupport" )
+
+	--== Dependencies
+
+	Widget._loadButtonSupport()
+
+	--== Nav Bar Components
+
+	local NavBar = require( PATH .. '.' .. 'widget_navbar' )
+	local NavItem = require( PATH .. '.' .. 'widget_navitem' )
+
+	Widget.NavBar=NavBar
+	Widget.NavItem=NavItem
+
+	--== Reverse order
+	NavItem.initialize( Widget )
+	NavBar.initialize( Widget )
+end
+
+
 function Widget.newNavBar( options )
+	if not Widget.Background then Widget._loadNavBarSupport() end
 	return Widget.NavBar:new( options )
 end
 
 
-
---===================================================================--
---== newNavItem widget
-
-
 function Widget.newNavItem( options )
+	if not Widget.Background then Widget._loadNavBarSupport() end
 	return Widget.NavItem:new( options )
 end
 
