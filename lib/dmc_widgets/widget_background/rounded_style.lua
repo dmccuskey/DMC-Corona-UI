@@ -98,20 +98,33 @@ RoundedStyle.TYPE = 'rounded'
 
 RoundedStyle.__base_style__ = nil
 
-RoundedStyle.EXCLUDE_PROPERTY_CHECK = nil
+RoundedStyle._VALID_PROPERTIES = {
+	debugOn=true,
+	width=true,
+	height=true,
+	anchorX=true,
+	anchorY=true,
+
+	type=true,
+	cornerRadius=true,
+	fillColor=true,
+	strokeColor=true,
+	strokeWidth=true,
+}
+
+RoundedStyle._EXCLUDE_PROPERTY_CHECK = nil
 
 RoundedStyle._STYLE_DEFAULTS = {
 	name='rounded-background-default-style',
 	debugOn=false,
-
 	width=75,
 	height=30,
+	anchorX=0.5,
+	anchorY=0.5,
 
 	type=RoundedStyle.TYPE,
 
-	anchorX=0.5,
-	anchorY=0.5,
-	cornerRadius=3,
+	cornerRadius=6,
 	fillColor={1,1,1,1},
 	strokeColor={0,0,0,1},
 	strokeWidth=0
@@ -188,12 +201,11 @@ function RoundedStyle.addMissingDestProperties( dest, src, params )
 	local force=params.force
 
 	if dest.debugOn==nil then dest.debugOn=src.debugOn end
-
 	if dest.width==nil then dest.width=src.width end
 	if dest.height==nil then dest.height=src.height end
-
 	if dest.anchorX==nil then dest.anchorX=src.anchorX end
 	if dest.anchorY==nil then dest.anchorY=src.anchorY end
+
 	if dest.cornerRadius==nil then dest.cornerRadius=src.cornerRadius end
 	if dest.fillColor==nil then dest.fillColor=src.fillColor end
 	if dest.strokeColor==nil then dest.strokeColor=src.strokeColor end
@@ -380,7 +392,19 @@ end
 --====================================================================--
 --== Private Methods
 
--- none
+
+-- this would clear any local modifications on style class
+-- called by clearProperties()
+--
+function RoundedStyle:_clearProperties()
+	-- print( "RoundedStyle:_clearProperties" )
+	self:superCall( '_clearProperties' )
+	self.cornerRadius=nil
+	self.fillColor=nil
+	self.strokeColor=nil
+	self.strokeWidth=nil
+end
+
 
 
 --====================================================================--

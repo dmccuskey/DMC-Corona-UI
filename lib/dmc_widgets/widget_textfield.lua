@@ -372,7 +372,7 @@ function TextField.__getters:x()
 	return self._x
 end
 function TextField.__setters:x( value )
-	-- print( 'TextField.__setters:x', value )
+	-- print( "TextField.__setters:x", value )
 	assert( type(value)=='number' )
 	--==--
 	self._x = value
@@ -386,7 +386,7 @@ function TextField.__getters:y()
 	return self._y
 end
 function TextField.__setters:y( value )
-	-- print( 'TextField.__setters:y', value )
+	-- print( "TextField.__setters:y", value )
 	assert( type(value)=='number' )
 	--==--
 	self._y = value
@@ -400,7 +400,7 @@ function TextField.__getters:hintText()
 	return self._hintText
 end
 function TextField.__setters:hintText( value )
-	-- print( 'TextField.__setters:hintText', value )
+	-- print( "TextField.__setters:hintText", value )
 	if value == self._hintText then return end
 	self._hintText = value
 	self._hintText_dirty=true
@@ -416,7 +416,7 @@ end
 -- setEditActive()
 --
 function TextField:setEditActive( value, params )
-	-- print( 'TextField:setEditActive', value )
+	-- print( "TextField:setEditActive", value )
 	params = params or {}
 	if params.set_focus==nil then params.set_focus=true end
 	assert( type(value)=='boolean' )
@@ -433,14 +433,14 @@ function TextField.__getters:isSecure()
 	return self.curr_style.isSecure
 end
 function TextField.__setters:isSecure( value )
-	-- print( 'TextField.__setters:isSecure', value )
+	-- print( "TextField.__setters:isSecure", value )
 	self.curr_style.isSecure = value
 end
 
 -- .isValid
 --
 function TextField.__setters:isValid( value )
-	-- print( 'TextField.__setters:isValid', value )
+	-- print( "TextField.__setters:isValid", value )
 	assert( type(value)=='boolean' )
 	--==--
 	if value == self._isValid then return end
@@ -455,7 +455,7 @@ function TextField.__getters:text()
 	return self._displayText
 end
 function TextField.__setters:text( value )
-	-- print( 'TextField.__setters:text', value )
+	-- print( "TextField.__setters:text", value )
 	assert( type(value)=='string' )
 	--==--
 	if value == self._displayText then return end
@@ -467,7 +467,7 @@ end
 -- setKeyboardFocus()
 --
 function TextField:setKeyboardFocus()
-	-- print( 'TextField:setKeyboardFocus' )
+	-- print( "TextField:setKeyboardFocus" )
 	self._keyboardFocus = true
 	self._keyboardFocus_dirty = true
 	self:__invalidateProperties__()
@@ -476,7 +476,7 @@ end
 -- unsetKeyboardFocus()
 --
 function TextField:unsetKeyboardFocus()
-	-- print( 'TextField:unsetKeyboardFocus' )
+	-- print( "TextField:unsetKeyboardFocus" )
 	self._keyboardFocus = false
 	self._keyboardFocus_dirty = true
 	self:__invalidateProperties__()
@@ -485,7 +485,7 @@ end
 -- setReturnKey()
 --
 function TextField:setReturnKey( value )
-	-- print( 'TextField:setReturnKey', value )
+	-- print( "TextField:setReturnKey", value )
 	assert( type(value)=='string' )
 	--==--
 	if value==self._returnKey then return end

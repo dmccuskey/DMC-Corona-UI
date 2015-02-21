@@ -79,6 +79,7 @@ local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
 
 local sformat = string.format
+local tinsert = table.insert
 
 --== To be set in initialize()
 local Widgets = nil
@@ -103,15 +104,21 @@ BackgroundStyle.__base_style__ = nil
 BackgroundStyle.VIEW_KEY = 'view'
 BackgroundStyle.VIEW_NAME = 'background-view'
 
-BackgroundStyle.EXCLUDE_PROPERTY_CHECK = nil
+BackgroundStyle._VALID_PROPERTIES = {
+	debugOn=true,
+	width=true,
+	height=true,
+	anchorX=true,
+	anchorY=true
+}
+
+BackgroundStyle._EXCLUDE_PROPERTY_CHECK = nil
 
 BackgroundStyle._STYLE_DEFAULTS = {
 	name='background-default-style',
 	debugOn=false,
-
 	width=75,
 	height=30,
-
 	anchorX=0.5,
 	anchorY=0.5,
 
@@ -199,36 +206,24 @@ function BackgroundStyle.initialize( manager )
 end
 
 
-function BackgroundStyle.addMissingDestProperties( dest, src, params )
-	-- print( "BackgroundStyle.addMissingDestProperties", dest, src )
-	assert( dest )
-	if not src then return end
-	params = params or {}
-	if params.force==nil then params.force=false end
-	--==--
-	local force=params.force
-
-	if dest.debugOn==nil or force then dest.debugOn=src.debugOn end
-
-	if dest.width==nil or force then dest.width=src.width end
-	if dest.height==nil or force then dest.height=src.height end
-
-	if dest.anchorX==nil or force then dest.anchorX=src.anchorX end
-	if dest.anchorY==nil or force then dest.anchorY=src.anchorY end
-	if dest.fillColor==nil or force then dest.fillColor=src.fillColor end
-	if dest.strokeColor==nil or force then dest.strokeColor=src.strokeColor end
-	if dest.strokeWidth==nil or force then dest.strokeWidth=src.strokeWidth end
-
-	return dest
+-- create empty Background Style structure
+function BackgroundStyle.createStateStructure( data )
+	-- print( "BackgroundStyle.createStateStructure", data )
+	return {
+		view={
+			type=data
+		}
+	}
 end
+
 
 -- to a new stucture
 function BackgroundStyle.copyExistingSrcProperties( dest, src, params )
 	-- print( "BackgroundStyle.copyExistingSrcProperties", dest, src )
-	assert( dest )
 	if not src then return end
 	params = params or {}
 	if params.force==nil then params.force=false end
+	assert( dest )
 	--==--
 	local force=params.force
 
@@ -254,35 +249,66 @@ function BackgroundStyle.copyExistingSrcProperties( dest, src, params )
 end
 
 
--- create empty Background Style structure
-function BackgroundStyle.createStateStructure( data )
-	-- print( "BackgroundStyle.createStateStructure", data )
-	return {
-		view={
-			type=data
-		}
-	}
-end
+function BackgroundStyle.addMissingDestProperties( dest, src, params )
+	-- print( "BackgroundStyle.addMissingDestProperties", dest, src )
+	params = params or {}
+	if params.force==nil then params.force=false end
+	assert( dest )
+	--==--
+	local force=params.force
+	local srcs = { BackgroundStyle._STYLE_DEFAULTS }
+	if src then tinsert( srcs, 1, src ) end
 
+	for i=1,#srcs do
+		local src = srcs[i]
+
+		if dest.debugOn==nil or force then dest.debugOn=src.debugOn end
+
+		if dest.width==nil or force then dest.width=src.width end
+		if dest.height==nil or force then dest.height=src.height end
+
+		if dest.anchorX==nil or force then dest.anchorX=src.anchorX end
+		if dest.anchorY==nil or force then dest.anchorY=src.anchorY end
+
+	end
+
+	BackgroundStyle._addMissingChildProperties( dest, src )
+
+	return dest
+end
 
 --
 -- copy properties to sub-styles
 --
-function BackgroundStyle._pushMissingProperties( src )
-	-- print("BackgroundStyle._pushMissingProperties", src )
-	if not src then return end
-
+function BackgroundStyle._addMissingChildProperties( dest, src  )
+	-- print("BackgroundStyle._addMissingChildProperties", dest, src  )
 	local eStr = "ERROR: Style missing property '%s'"
+	local StyleClass, child
 
-	local StyleClass, dest
+	child = dest.view
+	assert( child, sformat( eStr, 'view' ) )
+	StyleClass = StyleFactory.getClass( child.type )
+	StyleClass.addMissingDestProperties( child, src )
 
-	dest = src.view
-	assert( dest, sformat( eStr, 'view' ) )
-	StyleClass = StyleFactory.getClass( dest.type )
-	StyleClass.addMissingDestProperties( dest, src )
-
-	return src
+	return dest
 end
+
+
+function BackgroundStyle._setDefaults()
+	-- print( "BackgroundStyle._setDefaults" )
+
+	local defaults = BackgroundStyle._STYLE_DEFAULTS
+
+	defaults = BackgroundStyle._addMissingChildProperties( defaults, defaults )
+	-- Utils.print( defaults )
+
+	local style = BackgroundStyle:new{
+		data=defaults
+	}
+	BackgroundStyle.__base_style__ = style
+end
+
+
 
 
 function BackgroundStyle._verifyClassProperties( src )
@@ -317,20 +343,6 @@ function BackgroundStyle._verifyClassProperties( src )
 	return is_valid
 end
 
-
-function BackgroundStyle._setDefaults()
-	-- print( "BackgroundStyle._setDefaults" )
-
-	local defaults = BackgroundStyle._STYLE_DEFAULTS
-
-	defaults = BackgroundStyle._pushMissingProperties( defaults )
-	-- Utils.print( defaults )
-
-	local style = BackgroundStyle:new{
-		data=defaults
-	}
-	BackgroundStyle.__base_style__ = style
-end
 
 
 
@@ -368,7 +380,7 @@ function BackgroundStyle.__setters:inherit( value )
 	-- print( "BackgroundStyle.__setters:inherit", value )
 	BaseStyle.__setters.inherit( self, value )
 	--==--
-	self._view.inherit = value and value.view or value
+	self._view.inherit = value and value.view or nil
 end
 
 
@@ -458,6 +470,18 @@ function BackgroundStyle:_checkChildren()
 	-- using setters !!!
 	if self._view==nil then self.view=nil end
 end
+
+
+
+-- this would clear any local modifications on style class
+-- called by clearProperties()
+--
+function BackgroundStyle:_clearProperties()
+	-- print( "BackgroundStyle:_clearProperties" )
+	self:superCall( '_clearProperties' )
+	--== no local properties to update
+end
+
 
 
 

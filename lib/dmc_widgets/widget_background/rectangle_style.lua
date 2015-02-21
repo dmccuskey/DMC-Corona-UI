@@ -79,6 +79,7 @@ local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
 
 local sformat = string.format
+local tinsert = table.insert
 
 --== To be set in initialize()
 local Widgets = nil
@@ -98,22 +99,34 @@ RectangleStyle.TYPE = 'rectangle'
 
 RectangleStyle.__base_style__ = nil -- set in initialize()
 
-RectangleStyle.EXCLUDE_PROPERTY_CHECK = nil
+RectangleStyle._VALID_PROPERTIES = {
+	debugOn=true,
+	width=true,
+	height=true,
+	anchorX=true,
+	anchorY=true,
+
+	type=true,
+	fillColor=true,
+	strokeColor=true,
+	strokeWidth=true,
+}
+
+RectangleStyle._EXCLUDE_PROPERTY_CHECK = nil
 
 RectangleStyle._STYLE_DEFAULTS = {
 	name='rectangle-background-default-style',
 	debugOn=false,
-
 	width=75,
 	height=30,
+	anchorX=0.5,
+	anchorY=0.5,
 
 	type=RectangleStyle.TYPE,
 
-	anchorX=0.5,
-	anchorY=0.5,
 	fillColor={1,1,1,1},
 	strokeColor={0,0,0,1},
-	strokeWidth=0,
+	strokeWidth=0
 }
 
 --== Event Constants
@@ -177,23 +190,28 @@ end
 
 function RectangleStyle.addMissingDestProperties( dest, src, params )
 	-- print( "RectangleStyle.addMissingDestProperties", dest, src )
-	assert( dest )
-	if not src then return end
 	params = params or {}
 	if params.force==nil then params.force=false end
+	assert( dest )
 	--==--
 	local force=params.force
+	local srcs = { RectangleStyle._STYLE_DEFAULTS }
+	if src then tinsert( srcs, 1, src ) end
 
-	if dest.debugOn==nil or force then dest.debugOn=src.debugOn end
+	for i=1,#srcs do
+		local src = srcs[i]
 
-	if dest.width==nil or force then dest.width=src.width end
-	if dest.height==nil or force then dest.height=src.height end
+		if dest.debugOn==nil or force then dest.debugOn=src.debugOn end
 
-	if dest.anchorX==nil or force then dest.anchorX=src.anchorX end
-	if dest.anchorY==nil or force then dest.anchorY=src.anchorY end
-	if dest.fillColor==nil or force then dest.fillColor=src.fillColor end
-	if dest.strokeColor==nil or force then dest.strokeColor=src.strokeColor end
-	if dest.strokeWidth==nil or force then dest.strokeWidth=src.strokeWidth end
+		if dest.width==nil or force then dest.width=src.width end
+		if dest.height==nil or force then dest.height=src.height end
+
+		if dest.anchorX==nil or force then dest.anchorX=src.anchorX end
+		if dest.anchorY==nil or force then dest.anchorY=src.anchorY end
+		if dest.fillColor==nil or force then dest.fillColor=src.fillColor end
+		if dest.strokeColor==nil or force then dest.strokeColor=src.strokeColor end
+		if dest.strokeWidth==nil or force then dest.strokeWidth=src.strokeWidth end
+	end
 
 	return dest
 end
@@ -333,7 +351,6 @@ function RectangleStyle:updateStyle( src, params )
 end
 
 
-
 function RectangleStyle:verifyClassProperties()
 	-- print( "RectangleStyle.verifyClassProperties" )
 
@@ -358,7 +375,17 @@ end
 --== Private Methods
 
 
--- none
+-- this would clear any local modifications on style class
+-- called by clearProperties()
+--
+function RectangleStyle:_clearProperties()
+	-- print( "RectangleStyle:_clearProperties" )
+	self:superCall( '_clearProperties' )
+	self.fillColor=nil
+	self.strokeColor=nil
+	self.strokeWidth=nil
+end
+
 
 
 

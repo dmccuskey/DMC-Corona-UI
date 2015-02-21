@@ -105,7 +105,23 @@ TextFieldStyle.HINT_NAME = 'textfield-hint'
 TextFieldStyle.DISPLAY_KEY = 'display'
 TextFieldStyle.DISPLAY_NAME = 'textfield-display'
 
-TextFieldStyle.EXCLUDE_PROPERTY_CHECK = nil
+TextFieldStyle._VALID_PROPERTIES = {
+	debugOn=true,
+	width=true,
+	height=true,
+	anchorX=true,
+	anchorY=true,
+	backgroundStyle=true,
+	inputType=true,
+	isHitActive=true,
+	isHitTestable=true,
+	isSecure=true,
+	marginX=true,
+	marginY=true,
+	returnKey=true,
+}
+
+TextFieldStyle._EXCLUDE_PROPERTY_CHECK = nil
 
 TextFieldStyle._STYLE_DEFAULTS = {
 	name='textfield-default-style',
@@ -383,42 +399,42 @@ function TextFieldStyle._verifyClassProperties( src )
 
 	local is_valid = BaseStyle._verifyClassProperties( src )
 
-	if not self.width then
+	if not src.width then
 		print(sformat(emsg,'width')) ; is_valid=false
 	end
-	if not self.height then
+	if not src.height then
 		print(sformat(emsg,'height')) ; is_valid=false
 	end
-	if not self.align then
+	if not src.align then
 		print(sformat(emsg,'align')) ; is_valid=false
 	end
-	if not self.anchorX then
+	if not src.anchorX then
 		print(sformat(emsg,'anchorX')) ; is_valid=false
 	end
-	if not self.anchorY then
+	if not src.anchorY then
 		print(sformat(emsg,'anchorY')) ; is_valid=false
 	end
-	if not self.backgroundStyle then print(sformat(emsg,'backgroundStyle')) ; is_valid=false
+	if not src.backgroundStyle then print(sformat(emsg,'backgroundStyle')) ; is_valid=false
 	end
-	if not self.inputType then
+	if not src.inputType then
 		print(sformat(emsg,'inputType')) ; is_valid=false
 	end
-	if self.isHitActive==nil then
+	if src.isHitActive==nil then
 		print(sformat(emsg,'isHitActive')) ; is_valid=false
 	end
-	if self.isHitTestable==nil then
+	if src.isHitTestable==nil then
 		print(sformat(emsg,'isHitTestable')) ; is_valid=false
 	end
-	if self.isSecure==nil then
+	if src.isSecure==nil then
 		print(sformat(emsg,'isSecure')) ; is_valid=false
 	end
-	if not self.marginX then
+	if not src.marginX then
 		print(sformat(emsg,'marginX')) ; is_valid=false
 	end
-	if not self.marginY then
+	if not src.marginY then
 		print(sformat(emsg,'marginY')) ; is_valid=false
 	end
-	if not self.returnKey then
+	if not src.returnKey then
 		print(sformat(emsg,'returnKey')) ; is_valid=false
 	end
 
@@ -426,13 +442,13 @@ function TextFieldStyle._verifyClassProperties( src )
 
 	local StyleClass
 
-	StyleClass = self._background.class
-	-- if not StyleClass._checkProperties( self._background ) then is_valid=false end
+	StyleClass = src._background.class
+	-- if not StyleClass._checkProperties( src._background ) then is_valid=false end
 
-	StyleClass = self._hint.class
-	-- if not StyleClass._checkProperties( self._hint ) then is_valid=false end
+	StyleClass = src._hint.class
+	-- if not StyleClass._checkProperties( src._hint ) then is_valid=false end
 
-	StyleClass = self._display.class
+	StyleClass = src._display.class
 	-- if not StyleClass._checkProperties( self._display ) then is_valid=false end
 
 	return is_valid
@@ -712,15 +728,10 @@ function TextFieldStyle.__setters:inherit( value )
 	-- print( "TextFieldStyle.__setters:inherit", value )
 	BaseStyle.__setters.inherit( self, value )
 	--==--
-	if self._background then
-		self._background.inherit = value and value.background or value
-	end
-	if self._hint then
-		self._hint.inherit = value and value.hint or value
-	end
-	if self._display then
-		self._display.inherit = value and value.display or value
-	end
+	-- if value
+		self._background.inherit = value and value.background or nil
+		self._hint.inherit = value and value.hint or nil
+		self._display.inherit = value and value.display or nil
 end
 
 
