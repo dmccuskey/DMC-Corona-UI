@@ -1,5 +1,5 @@
 --====================================================================--
--- dmc_widgets/base_textfield_style.lua
+-- dmc_widgets/widget_style/textfield_style.lua
 --
 -- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
@@ -33,7 +33,7 @@ SOFTWARE.
 
 
 --====================================================================--
---== DMC Corona Widgets : Widget TextField Style
+--== DMC Corona Widgets : TextField Widget Style
 --====================================================================--
 
 
@@ -93,7 +93,7 @@ local TextFieldStyle = newClass( BaseStyle, {name="TextField Style"} )
 
 --== Class Constants
 
-RectangleStyle.TYPE = 'textfield'
+TextFieldStyle.TYPE = 'textfield'
 
 TextFieldStyle.__base_style__ = nil
 
@@ -111,6 +111,8 @@ TextFieldStyle._VALID_PROPERTIES = {
 	height=true,
 	anchorX=true,
 	anchorY=true,
+
+	align=true,
 	backgroundStyle=true,
 	inputType=true,
 	isHitActive=true,
@@ -126,13 +128,12 @@ TextFieldStyle._EXCLUDE_PROPERTY_CHECK = nil
 TextFieldStyle._STYLE_DEFAULTS = {
 	name='textfield-default-style',
 	debugOn=false,
-
 	width=200,
 	height=40,
-
-	align='center',
 	anchorX=0.5,
 	anchorY=0.5,
+
+	align='center',
 	backgroundStyle='none',
 	inputType='default',
 	isHitActive=true,
@@ -215,15 +216,14 @@ function TextFieldStyle:__init__( params )
 
 	-- self._name
 	-- self._debugOn
+	-- self._width
+	-- self._height
+	-- self._anchorX
+	-- self._anchorY
 
 	--== Local style properties
 
-	self._width = nil
-	self._height = nil
-
 	self._align = nil
-	self._anchorX = nil
-	self._anchorY = nil
 	self._bgStyle = nil
 	self._inputType = nil
 	self._isHitActive = nil
@@ -255,9 +255,19 @@ function TextFieldStyle.initialize( manager )
 	-- print( "TextFieldStyle.initialize", manager )
 	Widgets = manager
 
-	TextFieldStyle._setDefaults()
+	TextFieldStyle._setDefaults( TextFieldStyle )
 end
 
+
+-- create empty button-state-style structure
+function TextFieldStyle.createStyleStructure( data )
+	-- print( "TextFieldStyle.createStyleStructure", data )
+	return {
+		background=Widgets.Style.Background.createStyleStructure( data ),
+		hint=Widgets.Style.Text.createStyleStructure(),
+		display=Widgets.Style.Text.createStyleStructure(),
+	}
+end
 
 
 -- src is "master" source
@@ -351,16 +361,6 @@ function TextFieldStyle.copyExistingSrcProperties( dest, src, params)
 end
 
 
--- create empty button-state-style structure
-function TextFieldStyle.createStyleStructure( data )
-	-- print( "TextFieldStyle.createStyleStructure", data )
-	return {
-		background=Widgets.Style.Background.createStyleStructure( data )
-		hint=Widgets.Style.Text.createStyleStructure(),
-		display=Widgets.Style.Text.createStyleStructure(),
-	}
-end
-
 
 
 function TextFieldStyle._pushMissingProperties( src )
@@ -399,20 +399,8 @@ function TextFieldStyle._verifyClassProperties( src )
 
 	local is_valid = BaseStyle._verifyClassProperties( src )
 
-	if not src.width then
-		print(sformat(emsg,'width')) ; is_valid=false
-	end
-	if not src.height then
-		print(sformat(emsg,'height')) ; is_valid=false
-	end
 	if not src.align then
 		print(sformat(emsg,'align')) ; is_valid=false
-	end
-	if not src.anchorX then
-		print(sformat(emsg,'anchorX')) ; is_valid=false
-	end
-	if not src.anchorY then
-		print(sformat(emsg,'anchorY')) ; is_valid=false
 	end
 	if not src.backgroundStyle then print(sformat(emsg,'backgroundStyle')) ; is_valid=false
 	end
@@ -456,17 +444,17 @@ end
 
 
 
-function TextFieldStyle._setDefaults()
+function TextFieldStyle._setDefaults( StyleClass )
 	-- print( "TextFieldStyle._setDefaults" )
 
-	local defaults = TextFieldStyle._STYLE_DEFAULTS
+	local defaults = StyleClass._STYLE_DEFAULTS
 
-	defaults = TextFieldStyle._pushMissingProperties( defaults )
+	defaults = StyleClass._pushMissingProperties( defaults )
 
-	local style = TextFieldStyle:new{
+	local style = StyleClass:new{
 		data=defaults
 	}
-	TextFieldStyle.__base_style__ = style
+	StyleClass.__base_style__ = style
 
 end
 
@@ -541,26 +529,120 @@ function TextFieldStyle.__setters:display( data )
 end
 
 
+
+--======================================================--
+-- Background Style Properties
+
+--== fillColor
+
+function TextFieldStyle.__getters:backgroundFillColor()
+	-- print( "TextFieldStyle.__getters:backgroundFillColor" )
+	return self._background.fillColor
+end
+function TextFieldStyle.__setters:backgroundFillColor( value )
+	-- print( "TextFieldStyle.__setters:backgroundFillColor", value )
+	self._background.fillColor = value
+end
+
+--== strokeColor
+
+function TextFieldStyle.__getters:backgroundStrokeColor()
+	-- print( "TextFieldStyle.__getters:backgroundStrokeColor" )
+	return self._background.strokeColor
+end
+function TextFieldStyle.__setters:backgroundStrokeColor( value )
+	-- print( "TextFieldStyle.__setters:backgroundStrokeColor", value )
+	self._background.strokeColor = value
+end
+
+--== strokeWidth
+
+function TextFieldStyle.__getters:backgroundStrokeWidth()
+	-- print( "TextFieldStyle.__getters:backgroundStrokeWidth" )
+	return self._background.strokeWidth
+end
+function TextFieldStyle.__setters:backgroundStrokeWidth( value )
+	-- print( "TextFieldStyle.__setters:backgroundStrokeWidth", value )
+	self._background.strokeWidth = value
+end
+
+
+--======================================================--
+-- Hint Style Properties
+
+--== font
+
+function TextFieldStyle.__getters:hintFont()
+	-- print( "TextFieldStyle.__getters:hintFont" )
+	return self._hint.font
+end
+function TextFieldStyle.__setters:hintFont( value )
+	-- print( "TextFieldStyle.__setters:hintFont", value )
+	self._hint.font = value
+end
+
+--== fontSize
+
+function TextFieldStyle.__getters:hintFontSize()
+	-- print( "TextFieldStyle.__getters:hintFontSize" )
+	return self._hint.fontSize
+end
+function TextFieldStyle.__setters:hintFontSize( value )
+	-- print( "TextFieldStyle.__setters:hintFontSize", value )
+	self._hint.fontSize = value
+end
+
+--== textColor
+
+function TextFieldStyle.__getters:hintTextColor()
+	-- print( "TextFieldStyle.__getters:hintTextColor" )
+	return self._hint.textColor
+end
+function TextFieldStyle.__setters:hintTextColor( value )
+	-- print( "TextFieldStyle.__setters:hintTextColor", value )
+	self._hint.textColor = value
+end
+
+
+--======================================================--
+-- Display Style Properties
+
+--== font
+
+function TextFieldStyle.__getters:displayFont()
+	-- print( "TextFieldStyle.__getters:displayFont" )
+	return self._display.font
+end
+function TextFieldStyle.__setters:displayFont( value )
+	-- print( "TextFieldStyle.__setters:displayFont", value )
+	self._display.font = value
+end
+
+--== fontSize
+
+function TextFieldStyle.__getters:displayFontSize()
+	-- print( "TextFieldStyle.__getters:displayFontSize" )
+	return self._display.fontSize
+end
+function TextFieldStyle.__setters:displayFontSize( value )
+	-- print( "TextFieldStyle.__setters:displayFontSize", value )
+	self._display.fontSize = value
+end
+
+--== textColor
+
+function TextFieldStyle.__getters:displayTextColor()
+	-- print( "TextFieldStyle.__getters:displayTextColor" )
+	return self._display.textColor
+end
+function TextFieldStyle.__setters:displayTextColor( value )
+	-- print( "TextFieldStyle.__setters:displayTextColor", value )
+	self._display.textColor = value
+end
+
+
 --======================================================--
 -- Access to style properties
-
---== align
-
-function TextFieldStyle.__getters:align()
-	-- print( "TextFieldStyle.__getters:align" )
-	local value = self._align
-	if value==nil and self._inherit then
-		value = self._inherit.align
-	end
-	return value
-end
-function TextFieldStyle.__setters:align( value )
-	-- print( "TextFieldStyle.__setters:align", value )
-	assert( (value==nil and self._inherit) or type(value)=='string' )
-	--==--
-	if value == self._align then return end
-	self._align = value
-end
 
 --== backgroundStyle
 
@@ -578,6 +660,7 @@ function TextFieldStyle.__setters:backgroundStyle( value )
 	--==--
 	if value == self._bgStyle then return end
 	self._bgStyle = value
+	self:_dispatchChangeEvent( 'backgroundStyle', value )
 end
 
 --== inputType
@@ -596,6 +679,7 @@ function TextFieldStyle.__setters:inputType( value )
 	--==--
 	if value == self._inputType then return end
 	self._inputType = value
+	self:_dispatchChangeEvent( 'inputType', value )
 end
 
 --== isHitActive
@@ -655,44 +739,6 @@ function TextFieldStyle.__setters:isSecure( value )
 	self:_dispatchChangeEvent( 'isSecure', value )
 end
 
---== marginX
-
-function TextFieldStyle.__getters:marginX()
-	-- print( "TextFieldStyle.__getters:marginX" )
-	local value = self._marginX
-	if value==nil and self._inherit then
-		value = self._inherit.marginX
-	end
-	return value
-end
-function TextFieldStyle.__setters:marginX( value )
-	-- print( "TextFieldStyle.__setters:marginX", value )
-	assert( (type(value)=='number' and value>=0) or (value==nil and self._inherit) )
-	--==--
-	if value == self._marginX then return end
-	self._marginX = value
-	self:_dispatchChangeEvent( 'marginX', value )
-end
-
---== marginY
-
-function TextFieldStyle.__getters:marginY()
-	-- print( "TextFieldStyle.__getters:marginY" )
-	local value = self._marginY
-	if value==nil and self._inherit then
-		value = self._inherit.marginY
-	end
-	return value
-end
-function TextFieldStyle.__setters:marginY( value )
-	-- print( "TextFieldStyle.__setters:marginY", value )
-	assert( (type(value)=='number' and value>=0) or (value==nil and self._inherit) )
-	--==--
-	if value == self._marginY then return end
-	self._marginY = value
-	self:_dispatchChangeEvent( 'marginY', value )
-end
-
 --== returnKey
 
 function TextFieldStyle.__getters:returnKey()
@@ -728,10 +774,9 @@ function TextFieldStyle.__setters:inherit( value )
 	-- print( "TextFieldStyle.__setters:inherit", value )
 	BaseStyle.__setters.inherit( self, value )
 	--==--
-	-- if value
-		self._background.inherit = value and value.background or nil
-		self._hint.inherit = value and value.hint or nil
-		self._display.inherit = value and value.display or nil
+	self._background.inherit = value and value.background or nil
+	self._hint.inherit = value and value.hint or nil
+	self._display.inherit = value and value.display or nil
 end
 
 
@@ -753,6 +798,25 @@ end
 
 --====================================================================--
 --== Private Methods
+
+
+-- clear any local modifications on style class
+-- called by clearProperties()
+--
+function TextFieldStyle:_clearProperties()
+	-- print( "TextFieldStyle:_clearProperties" )
+	self:superCall( '_clearProperties' )
+	self.align=nil
+	self.backgroundStyle=nil
+	self.inputType=nil
+	self.isHitTestable=nil
+	self.isHitActive=nil
+	self.isSecure=nil
+	self.marginX=nil
+	self.marginY=nil
+	self.returnKey=nil
+end
+
 
 
 function TextFieldStyle:_prepareData( data )
