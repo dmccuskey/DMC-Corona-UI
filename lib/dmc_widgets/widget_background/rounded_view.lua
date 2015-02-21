@@ -68,7 +68,7 @@ local Objects = require 'dmc_objects'
 local LifecycleMixModule = require 'dmc_lifecycle_mix'
 local ThemeMixModule = require( dmc_widget_func.find( 'widget_theme_mix' ) )
 
--- these are set later
+--== To be set in initialize()
 local StyleFactory = nil
 local ThemeMgr = nil
 local ViewFactory = nil
@@ -93,7 +93,10 @@ local ThemeMix = ThemeMixModule.ThemeMix
 --====================================================================--
 
 
-local RoundedView = newClass( {ThemeMix,ComponentBase,LifecycleMix}, {name="Rounded Background View"}  )
+local RoundedView = newClass(
+	{ ThemeMix, ComponentBase, LifecycleMix },
+	{name="Rounded Background View"}
+)
 
 --== Class Constants
 
@@ -138,14 +141,14 @@ function RoundedView:__init__( params )
 
 	--== Create Properties ==--
 
-	-- properties in this class
+	-- properties stored in Class
 
 	self._x = params.x
 	self._x_dirty = true
 	self._y = params.y
 	self._y_dirty = true
 
-	-- properties from style
+	-- properties stored in Style
 
 	self._width_dirty=true
 	self._height_dirty=true
@@ -316,7 +319,11 @@ function RoundedView:__commitProperties__()
 		self._cornerRadius_dirty=false
 	end
 	if self._fillColor_dirty then
-		bg:setFillColor( unpack( style.fillColor ))
+		if style.debugOn==true then
+			bg:setFillColor( 1,0,0,0.5 )
+		else
+			bg:setFillColor( unpack( style.fillColor ))
+		end
 		self._fillColor_dirty=false
 	end
 	if self._strokeColor_dirty then
@@ -346,6 +353,7 @@ function RoundedView:stylePropertyChangeHandler( event )
 	-- print( "Style Changed", etype, property, value )
 
 	if etype==style.STYLE_RESET or etype==style.STYLE_CLEARED then
+		self._debugOn_dirty = true
 		self._width_dirty=true
 		self._height_dirty=true
 		self._anchorX_dirty=true
@@ -359,7 +367,9 @@ function RoundedView:stylePropertyChangeHandler( event )
 		property = etype
 
 	else
-		if property=='width' then
+		if property=='debugActive' then
+			self._debugOn_dirty=true
+		elseif property=='width' then
 			self._width_dirty=true
 		elseif property=='height' then
 			self._height_dirty=true

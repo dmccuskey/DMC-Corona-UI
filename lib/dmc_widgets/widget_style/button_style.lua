@@ -86,11 +86,11 @@ local Widgets = nil
 
 
 --====================================================================--
---== Background Style Class
+--== Button Style Class
 --====================================================================--
 
 
-local ButtonStyle = newClass( BaseStyle, {name="Background Style"} )
+local ButtonStyle = newClass( BaseStyle, {name="Button Style"} )
 
 --== Class Constants
 
@@ -120,7 +120,24 @@ ButtonStyle.ACTIVE_NAME = 'button-active-state'
 ButtonStyle.DISABLED_KEY = 'disabled'
 ButtonStyle.DISABLED_NAME = 'button-disabled-state'
 
-ButtonStyle.EXCLUDE_PROPERTY_CHECK = {
+ButtonStyle._VALID_PROPERTIES = {
+	debugOn=true,
+	width=true,
+	height=true,
+	anchorX=true,
+	anchorY=true,
+
+	align=true,
+	hitMarginX=true,
+	hitMarginY=true,
+	isHitActive=true,
+	marginX=true,
+	marginY=true,
+	offsetX=true,
+	offsetY=true
+}
+
+ButtonStyle._EXCLUDE_PROPERTY_CHECK = {
 	-- label/background, they can be copied from
 	label=true,
 	background=true
@@ -129,13 +146,12 @@ ButtonStyle.EXCLUDE_PROPERTY_CHECK = {
 ButtonStyle._STYLE_DEFAULTS = {
 	name='button-default-style',
 	debugOn=false,
-
 	width=75,
 	height=30,
-
-	align='center',
 	anchorX=0.5,
 	anchorY=0.5,
+
+	align='center',
 	hitMarginX=0,
 	hitMarginY=0,
 	isHitActive=true,
@@ -143,6 +159,10 @@ ButtonStyle._STYLE_DEFAULTS = {
 	marginY=5,
 	offsetX=0,
 	offsetY=0,
+
+	label={
+		anchorY=99999
+	},
 
 	--[[
 	When defining a style in code, 'label' and 'background'
@@ -267,14 +287,11 @@ function ButtonStyle:__init__( params )
 
 	-- self._name
 	-- self._debugOn
+	-- self._width
+	-- self._height
+	-- self._anchorX
+	-- self._anchorY
 
-	--== Local style properties
-
-	self._width = nil
-	self._height = nil
-
-	self._anchorX = nil
-	self._anchorY = nil
 	self._hitMarginX = nil
 	self._hitMarginY = nil
 	self._isHitActive = nil
@@ -302,28 +319,51 @@ function ButtonStyle.initialize( manager )
 	-- print( "ButtonStyle.initialize", manager )
 	Widgets = manager
 
-	ButtonStyle._setDefaults()
+	ButtonStyle._setDefaults( ButtonStyle )
 end
+
+
+-- create empty style structure
+-- param data string, type of background view
+--
+function ButtonStyle.createStyleStructure( data )
+	-- print( "ButtonStyle.createStyleStructure", data )
+	return {
+		inactive=Widgets.Style.ButtonState.createStyleStructure( data ),
+		active=Widgets.Style.ButtonState.createStyleStructure( data ),
+		disabled=Widgets.Style.ButtonState.createStyleStructure( data )
+	}
+end
+
+
 
 function ButtonStyle.addMissingDestProperties( dest, src, params )
 	-- print( "ButtonStyle.addMissingDestProperties", dest, src )
-	assert( dest )
-	if not src then return end
 	params = params or {}
 	if params.force==nil then params.force=false end
+	assert( dest )
 	--==--
 	local force=params.force
+	local srcs = { ButtonStateStyle._STYLE_DEFAULTS }
+	if src then tinsert( srcs, 1, src ) end
 
-	if dest.debugOn==nil or force then dest.debugOn=src.debugOn end
+	for i=1,#srcs do
+		local src = srcs[i]
 
-	if dest.width==nil or force then dest.width=src.width end
-	if dest.height==nil or force then dest.height=src.height end
+		if dest.debugOn==nil or force then dest.debugOn=src.debugOn end
 
-	if dest.anchorX==nil or force then dest.anchorX=src.anchorX end
-	if dest.anchorY==nil or force then dest.anchorY=src.anchorY end
-	if dest.fillColor==nil or force then dest.fillColor=src.fillColor end
-	if dest.strokeColor==nil or force then dest.strokeColor=src.strokeColor end
-	if dest.strokeWidth==nil or force then dest.strokeWidth=src.strokeWidth end
+		if dest.width==nil or force then dest.width=src.width end
+		if dest.height==nil or force then dest.height=src.height end
+
+		if dest.anchorX==nil or force then dest.anchorX=src.anchorX end
+		if dest.anchorY==nil or force then dest.anchorY=src.anchorY end
+		if dest.fillColor==nil or force then dest.fillColor=src.fillColor end
+		if dest.strokeColor==nil or force then dest.strokeColor=src.strokeColor end
+		if dest.strokeWidth==nil or force then dest.strokeWidth=src.strokeWidth end
+
+	end
+
+	ButtonStyle._addMissingChildProperties( dest, src )
 
 	return dest
 end
@@ -358,29 +398,27 @@ end
 --
 -- copy properties to sub-styles
 --
-function ButtonStyle._pushMissingProperties( src )
-	-- print("ButtonStyle._pushMissingProperties", src )
-	if not src then return end
-
+function ButtonStyle._addMissingChildProperties( dest, src )
+	-- print("ButtonStyle._addMissingChildProperties", dest, src )
 	local eStr = "ERROR: Style missing property '%s'"
-	local StyleClass, dest
+	local StyleClass, child
 
-	dest = src.inactive
-	assert( dest, sformat( eStr, 'inactive' ) )
+	child = dest.inactive
+	assert( child, sformat( eStr, 'inactive' ) )
 	StyleClass = Widgets.Style.ButtonState
-	StyleClass.addMissingDestProperties( dest, src )
+	StyleClass.addMissingDestProperties( child, src )
 
-	dest = src.active
-	assert( dest, sformat( eStr, 'active' ) )
+	child = dest.active
+	assert( child, sformat( eStr, 'active' ) )
 	StyleClass = Widgets.Style.ButtonState
-	StyleClass.addMissingDestProperties( dest, src )
+	StyleClass.addMissingDestProperties( child, src )
 
-	dest = src.disabled
-	assert( dest, sformat( eStr, 'disabled' ) )
+	child = dest.disabled
+	assert( child, sformat( eStr, 'disabled' ) )
 	StyleClass = Widgets.Style.ButtonState
-	StyleClass.addMissingDestProperties( dest, src )
+	StyleClass.addMissingDestProperties( child, src )
 
-	return src
+	return dest
 end
 
 
@@ -420,22 +458,6 @@ function ButtonStyle._verifyClassProperties( src )
 	-- if not StyleClass._checkProperties( src._disabled ) then is_valid=false end
 
 	return is_valid
-end
-
-
-
-
-function ButtonStyle._setDefaults()
-	-- print( "ButtonStyle._setDefaults" )
-
-	local defaults = ButtonStyle._STYLE_DEFAULTS
-
-	defaults = ButtonStyle._pushMissingProperties( defaults )
-
-	local style = ButtonStyle:new{
-		data=defaults
-	}
-	ButtonStyle.__base_style__ = style
 end
 
 
@@ -516,78 +538,61 @@ end
 
 --== hitMarginX
 
--- function ButtonStyle.__getters:hitMarginX()
--- 	-- print( "ButtonStyle.__getters:hitMarginX" )
--- 	local value = self._hitMarginX
--- 	if value==nil and self._inherit then
--- 		value = self._inherit.hitMarginX
--- 	end
--- 	return value
--- end
--- function ButtonStyle.__setters:hitMarginX( value )
--- 	-- print( "ButtonStyle.__setters:hitMarginX", value )
--- 	assert( (type(value)=='number' and value>=0) or (value==nil and self._inherit) )
--- 	--==--
--- 	if value == self._hitMarginX then return end
--- 	self._hitMarginX = value
--- 	self:_dispatchChangeEvent( 'hitMarginX', value )
--- end
+function ButtonStyle.__getters:hitMarginX()
+	-- print( "ButtonStyle.__getters:hitMarginX" )
+	local value = self._hitMarginX
+	if value==nil and self._inherit then
+		value = self._inherit.hitMarginX
+	end
+	return value
+end
+function ButtonStyle.__setters:hitMarginX( value )
+	-- print( "ButtonStyle.__setters:hitMarginX", value )
+	assert( (type(value)=='number' and value>=0) or (value==nil and self._inherit) )
+	--==--
+	if value == self._hitMarginX then return end
+	self._hitMarginX = value
+	self:_dispatchChangeEvent( 'hitMarginX', value )
+end
 
--- --== hitMarginY
+--== hitMarginY
 
--- function ButtonStyle.__getters:hitMarginY()
--- 	-- print( "ButtonStyle.__getters:hitMarginY" )
--- 	local value = self._hitMarginY
--- 	if value==nil and self._inherit then
--- 		value = self._inherit.hitMarginY
--- 	end
--- 	return value
--- end
--- function ButtonStyle.__setters:hitMarginY( value )
--- 	-- print( "ButtonStyle.__setters:hitMarginY", value )
--- 	assert( (type(value)=='number' and value>=0) or (value==nil and self._inherit) )
--- 	--==--
--- 	if value == self._hitMarginY then return end
--- 	self._hitMarginY = value
--- 	self:_dispatchChangeEvent( 'hitMarginY', value )
--- end
+function ButtonStyle.__getters:hitMarginY()
+	-- print( "ButtonStyle.__getters:hitMarginY" )
+	local value = self._hitMarginY
+	if value==nil and self._inherit then
+		value = self._inherit.hitMarginY
+	end
+	return value
+end
+function ButtonStyle.__setters:hitMarginY( value )
+	-- print( "ButtonStyle.__setters:hitMarginY", value, self )
+	assert( (type(value)=='number' and value>=0) or (value==nil and self._inherit) )
+	--==--
+	if value==self._hitMarginY then return end
+	self._hitMarginY = value
+	self:_dispatchChangeEvent( 'hitMarginY', value )
+end
 
--- --== isHitActive
+--== isHitActive
 
--- function ButtonStyle.__getters:isHitActive()
--- 	-- print( "ButtonStyle.__getters:isHitActive" )
--- 	local value = self._isHitActive
--- 	if value==nil and self._inherit then
--- 		value = self._inherit.isHitActive
--- 	end
--- 	return value
--- end
--- function ButtonStyle.__setters:isHitActive( value )
--- 	-- print( "ButtonStyle.__setters:isHitActive", value )
--- 	assert( type(value)=='boolean' or (value==nil and self._inherit) )
--- 	--==--
--- 	if value == self._isHitActive then return end
--- 	self._isHitActive = value
--- 	self:_dispatchChangeEvent( 'isHitActive', value )
--- end
+function ButtonStyle.__getters:isHitActive()
+	-- print( "ButtonStyle.__getters:isHitActive" )
+	local value = self._isHitActive
+	if value==nil and self._inherit then
+		value = self._inherit.isHitActive
+	end
+	return value
+end
+function ButtonStyle.__setters:isHitActive( value )
+	-- print( "ButtonStyle.__setters:isHitActive", value )
+	assert( type(value)=='boolean' or (value==nil and self._inherit) )
+	--==--
+	if value == self._isHitActive then return end
+	self._isHitActive = value
+	self:_dispatchChangeEvent( 'isHitActive', value )
+end
 
--- --== isHitTestable
-
--- function ButtonStyle.__getters:isHitTestable()
--- 	local value = self._isHitTestable
--- 	if value==nil and self._inherit then
--- 		value = self._inherit.isHitTestable
--- 	end
--- 	return value
--- end
--- function ButtonStyle.__setters:isHitTestable( value )
--- 	-- print( "ButtonStyle.__setters:isHitTestable", value )
--- 	assert( type(value)=='boolean' or (value==nil and self._inherit) )
--- 	--==--
--- 	if value==self._isHitTestable then return end
--- 	self._isHitTestable = value
--- 	self:_dispatchChangeEvent( 'isHitTestable', value )
--- end
 
 
 --======================================================--
@@ -599,9 +604,9 @@ function ButtonStyle.__setters:inherit( value )
 	-- print( "ButtonStyle.__setters:inherit", value )
 	BaseStyle.__setters.inherit( self, value )
 	--==--
-	self._defalt.inherit = value and value.defalt or value
-	self._active.inherit = value and value.active or value
-	self._disabled.inherit = value and value.disabled or value
+	self._inactive.inherit = value and value.inactive or nil
+	self._active.inherit = value and value.active or nil
+	self._disabled.inherit = value and value.disabled or nil
 end
 
 
@@ -623,6 +628,23 @@ end
 
 --====================================================================--
 --== Private Methods
+
+
+-- this would clear any local modifications on style class
+-- called by clearProperties()
+--
+function ButtonStyle:_clearProperties()
+	-- print( "ButtonStyle:_clearProperties" )
+	self:superCall( '_clearProperties' )
+	self.align=nil
+	self.hitMarginX=nil
+	self.hitMarginY=nil
+	self.isHitActive=nil
+	self.marginX=nil
+	self.marginY=nil
+	self.offsetX=nil
+	self.offsetY=nil
+end
 
 
 -- we could have nil, Lua structure, or Instance
