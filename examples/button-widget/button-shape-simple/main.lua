@@ -127,6 +127,19 @@ setupBackground()
 
 function run_example1()
 
+	local b
+
+	b = Widgets.newToggleButton()
+
+end
+
+run_example1()
+
+
+
+
+function run_example2()
+
 	local btn1
 
 
@@ -141,7 +154,7 @@ function run_example1()
 		data="your data",
 
 		style = {
-			debugOn=true,
+			debugOn=false,
 
 			width=100,
 			height=50,
@@ -173,8 +186,10 @@ function run_example1()
 				},
 				background={
 					view={
-						type='rounded',
-						fillColor={0.2,0.5,0.5}
+						type='rectangle',
+						fillColor={0,0,0,1},
+						strokeColor={1,1,0,1},
+						strokeWidth=6
 					}
 				}
 			},
@@ -223,11 +238,10 @@ function run_example1()
 		-- btn1.strokeWidth=6
 		-- btn1.strokeColor={0,0,0}
 
-		print("SETTING HIT MARGING")
 		btn1.hitMarginY=20
 
-		print("SETTING ANCHOR")
 		btn1.anchorX=1
+		btn1.anchorY=0
 
 		-- btn1:setAnchor({1,1})
 		-- btn1.width=200
@@ -235,13 +249,27 @@ function run_example1()
 
 	end)
 
-	-- timer.performWithDelay( 2000, function()
-	-- 	btn1:clearStyle()
-	-- end)
+	timer.performWithDelay( 2000, function()
+		btn1:setAnchor( {0,0} )
+		btn1:setAnchor( {0.5,0.5} )
+		btn1:setAnchor( {1,1} )
+		btn1.hitMarginY=5
+	end)
+
+-- timer.performWithDelay( 2000, function()
+-- 	btn1:clearStyle()
+-- end)
+
+-- timer.performWithDelay( 2000, function()
+-- 	btn1:clearStyle()
+-- end)
 
 end
 
-run_example1()
+-- run_example2()
+
+
+
 
 --== Create Buttons
 

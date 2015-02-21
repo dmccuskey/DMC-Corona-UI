@@ -68,7 +68,7 @@ local Objects = require 'dmc_objects'
 local LifecycleMixModule = require 'dmc_lifecycle_mix'
 local ThemeMixModule = require( widget_find( 'widget_theme_mix' ) )
 
--- these set in initialize()
+--== To be set in initialize()
 local Widgets = nil
 local ThemeMgr = nil
 local ViewFactory = nil
@@ -94,7 +94,10 @@ local ThemeMix = ThemeMixModule.ThemeMix
 
 -- ! put ThemeMix first !
 
-local Background = newClass( {ThemeMix,ComponentBase,LifecycleMix}, {name="Background Widget"} )
+local Background = newClass(
+	{ ThemeMix, ComponentBase, LifecycleMix },
+	{name="Background Widget"}
+)
 
 --== Theme Constants
 
@@ -134,20 +137,18 @@ function Background:__init__( params )
 
 	--== Create Properties ==--
 
-	-- Class properties
+	-- properties stored in Class
 
 	self._x = params.x
 	self._x_dirty=true
 	self._y = params.y
 	self._y_dirty=true
 
-	-- Style properties
+	-- properties stored in Style
 
 	self._debugOn_dirty=true
-
 	self._width_dirty=true
 	self._height_dirty=true
-
 	self._anchorX_dirty=true
 	self._anchorY_dirty=true
 
@@ -233,8 +234,11 @@ end
 --== Public Methods
 
 
---== X
+--======================================================--
+-- Local Properties
 
+-- .X
+--
 function Background.__getters:x()
 	return self._x
 end
@@ -247,8 +251,8 @@ function Background.__setters:x( value )
 	self:__invalidateProperties__()
 end
 
---== Y
-
+-- .Y
+--
 function Background.__getters:y()
 	return self._y
 end
@@ -263,7 +267,7 @@ end
 
 
 --======================================================--
---== View Style Methods
+--== View Style Properties
 
 --== cornerRadius
 
@@ -302,11 +306,6 @@ end
 
 --======================================================--
 --== Theme Mix Methods
-
-function Background:clearStyle()
-	self.curr_style:clearProperties()
-end
-
 
 function Background:afterAddStyle()
 	-- print( "Background:afterAddStyle" )

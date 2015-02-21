@@ -212,8 +212,24 @@ end
 -- Note: usually used by OTHER classes
 --
 function Style.addMissingDestProperties( dest, src, params )
-	error( "OVERRIDE Style.addMissingDestProperties" )
+	print( "OVERRIDE Style.addMissingDestProperties" )
+	-- process local properties
+	-- pass along to add child properties
+	Style._addMissingChildProperties( dest, src )
 end
+
+
+-- _addMissingChildProperties()
+-- take destination and source. pass along destination
+-- to sub-style classes and let them fill in information
+-- as needed.
+-- 'src' allows us to send in some default properties
+--
+function Style._addMissingChildProperties( dest, src )
+	print( "OVERRIDE Style._addMissingChildProperties" )
+	return dest
+end
+
 
 -- addMissingDestProperties()
 -- copies properties from src structure to dest structure
@@ -261,6 +277,9 @@ end
 function Style._setDefaults( StyleClass )
 	-- print( "Style._setDefaults" )
 	local defaults = StyleClass._STYLE_DEFAULTS
+
+	defaults = StyleClass._addMissingChildProperties( defaults, defaults )
+
 	local style = StyleClass:new{
 		data=defaults
 	}
@@ -941,7 +960,12 @@ function Style:_parentStyleEvent_handler( event )
 		-- however, check to see if property is valid
 		-- parent could have other properties
 		if self._VALID_PROPERTIES[property] then
-			self.__setters[property]( self, value, true )
+			local func = self.__setters[property]
+			if func then
+				func( self, value, true )
+			else
+				error("[WARNING] Known property ".. property .. tostring(self) )
+			end
 		end
 	end
 

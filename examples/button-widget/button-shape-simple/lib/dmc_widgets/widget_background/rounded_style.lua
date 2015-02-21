@@ -79,6 +79,7 @@ local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
 
 local sformat = string.format
+local tinsert = table.insert
 
 --== To be set in initialize()
 local Widgets = nil
@@ -157,16 +158,13 @@ function RoundedStyle:__init__( params )
 
 	-- self._name
 	-- self._debugOn
-
-	--== Local style properties
-
-	self._width = nil
-	self._height = nil
+	-- self._width
+	-- self._height
+	-- self._anchorX
+	-- self._anchorY
 
 	self._type = nil
 
-	self._anchorX = nil
-	self._anchorY = nil
 	self._cornerRadius = nil
 	self._fillColor = nil
 	self._strokeColor = nil
@@ -186,30 +184,36 @@ function RoundedStyle.initialize( manager )
 	-- print( "RoundedStyle.initialize", manager )
 	Widgets = manager
 
-	RoundedStyle._setDefaults()
+	RoundedStyle._setDefaults( RoundedStyle )
 end
 
 
 
 function RoundedStyle.addMissingDestProperties( dest, src, params )
 	-- print( "RoundedStyle.addMissingDestProperties", dest, src )
-	assert( dest )
-	if not src then return end
 	params = params or {}
 	if params.force==nil then params.force=false end
+	assert( dest )
 	--==--
 	local force=params.force
+	local srcs = { RoundedStyle._STYLE_DEFAULTS }
+	if src then tinsert( srcs, 1, src ) end
 
-	if dest.debugOn==nil then dest.debugOn=src.debugOn end
-	if dest.width==nil then dest.width=src.width end
-	if dest.height==nil then dest.height=src.height end
-	if dest.anchorX==nil then dest.anchorX=src.anchorX end
-	if dest.anchorY==nil then dest.anchorY=src.anchorY end
+	for i=1,#srcs do
+		local src = srcs[i]
 
-	if dest.cornerRadius==nil then dest.cornerRadius=src.cornerRadius end
-	if dest.fillColor==nil then dest.fillColor=src.fillColor end
-	if dest.strokeColor==nil then dest.strokeColor=src.strokeColor end
-	if dest.strokeWidth==nil then dest.strokeWidth=src.strokeWidth end
+		if dest.debugOn==nil then dest.debugOn=src.debugOn end
+		if dest.width==nil then dest.width=src.width end
+		if dest.height==nil then dest.height=src.height end
+		if dest.anchorX==nil then dest.anchorX=src.anchorX end
+		if dest.anchorY==nil then dest.anchorY=src.anchorY end
+
+		if dest.cornerRadius==nil then dest.cornerRadius=src.cornerRadius end
+		if dest.fillColor==nil then dest.fillColor=src.fillColor end
+		if dest.strokeColor==nil then dest.strokeColor=src.strokeColor end
+		if dest.strokeWidth==nil then dest.strokeWidth=src.strokeWidth end
+
+	end
 
 	return dest
 end
@@ -217,39 +221,45 @@ end
 
 function RoundedStyle.copyExistingSrcProperties( dest, src, params )
 	-- print( "RoundedStyle.copyExistingSrcProperties", dest, src )
-	assert( dest )
-	if not src then return end
 	params = params or {}
 	if params.force==nil then params.force=false end
+	assert( dest )
 	--==--
 	local force=params.force
+	local srcs = { RoundedStyle._STYLE_DEFAULTS }
+	if src then tinsert( srcs, 1, src ) end
 
-	if (src.debugOn~=nil and dest.debugOn==nil) or force
-		then src.debugOn=src.debugOn
-	end
-	if (src.width~=nil and dest.width==nil) or force
-		then src.width=src.width
-	end
-	if (src.height~=nil and dest.height==nil) or force
-		then src.height=src.height
-	end
-	if (src.anchorX~=nil and dest.anchorX==nil) or force
-		then src.anchorX=src.anchorX
-	end
-	if (src.anchorY~=nil and dest.anchorY==nil) or force
-		then src.anchorY=src.anchorY
-	end
-	if (src.cornerRadius~=nil and dest.cornerRadius==nil) or force
-		then src.cornerRadius=src.cornerRadius
-	end
-	if (src.fillColor~=nil and dest.fillColor==nil) or force
-		then src.fillColor=src.fillColor
-	end
-	if (src.strokeColor~=nil and dest.strokeColor==nil) or force
-		then src.strokeColor=src.strokeColor
-	end
-	if (src.strokeWidth~=nil and dest.strokeWidth==nil) or force
-		then src.strokeWidth=src.strokeWidth
+	for i=1,#srcs do
+		local src = srcs[i]
+
+		if (src.debugOn~=nil and dest.debugOn==nil) or force
+			then src.debugOn=src.debugOn
+		end
+		if (src.width~=nil and dest.width==nil) or force
+			then src.width=src.width
+		end
+		if (src.height~=nil and dest.height==nil) or force
+			then src.height=src.height
+		end
+		if (src.anchorX~=nil and dest.anchorX==nil) or force
+			then src.anchorX=src.anchorX
+		end
+		if (src.anchorY~=nil and dest.anchorY==nil) or force
+			then src.anchorY=src.anchorY
+		end
+		if (src.cornerRadius~=nil and dest.cornerRadius==nil) or force
+			then src.cornerRadius=src.cornerRadius
+		end
+		if (src.fillColor~=nil and dest.fillColor==nil) or force
+			then src.fillColor=src.fillColor
+		end
+		if (src.strokeColor~=nil and dest.strokeColor==nil) or force
+			then src.strokeColor=src.strokeColor
+		end
+		if (src.strokeWidth~=nil and dest.strokeWidth==nil) or force
+			then src.strokeWidth=src.strokeWidth
+		end
+
 	end
 
 	return dest
@@ -264,20 +274,8 @@ function RoundedStyle._verifyClassProperties( src )
 
 	local is_valid = BaseStyle._verifyClassProperties( src )
 
-	if not src.width then
-		print(sformat(emsg,'width')) ; is_valid=false
-	end
-	if not src.height then
-		print(sformat(emsg,'height')) ; is_valid=false
-	end
 	if not src.type then
 		print(sformat(emsg,'type')) ; is_valid=false
-	end
-	if not src.anchorX then
-		print(sformat(emsg,'anchorX')) ; is_valid=false
-	end
-	if not src.anchorY then
-		print(sformat(emsg,'anchorY')) ; is_valid=false
 	end
 	if not src.cornerRadius then
 		print(sformat(emsg,'cornerRadius')) ; is_valid=false
@@ -293,17 +291,6 @@ function RoundedStyle._verifyClassProperties( src )
 	end
 
 	return is_valid
-
-end
-
-
-function RoundedStyle._setDefaults()
-	-- print( "RoundedStyle._setDefaults" )
-	local defaults = RoundedStyle._STYLE_DEFAULTS
-	local style = RoundedStyle:new{
-		data=defaults
-	}
-	RoundedStyle.__base_style__ = style
 end
 
 
@@ -375,7 +362,8 @@ function RoundedStyle:verifyClassProperties()
 
 	--== Check Inheritance
 
-	-- if not proper types, then make sure we have data
+	-- if inheritance is not of similar type then
+	-- then make sure we have default data
 
 	local inherit_type = self._inherit and self._inherit.type or nil
 

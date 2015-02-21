@@ -101,11 +101,14 @@ dmc_lib_info = dmc_lib_data.dmc_corona
 --===================================================================--
 --== Imports
 
--- Managers
+
+--== Managers
+
 Widget.FontMgr = require( PATH .. '.' .. 'font_manager' )
 Widget.ThemeMgr = require( PATH .. '.' .. 'theme_manager' )
 
--- Styles
+--== Styles
+
 local BaseStyle = require( PATH .. '.' .. 'widget_style.base_style' )
 
 
@@ -138,17 +141,13 @@ Widget.Popover.__setWidgetManager( Widget )
 Widget.PopoverMixModule.__setWidgetManager( Widget )
 
 
-local loadBackgroundSupport, loadButtonSupport
-local loadTextSupport, loadTextFieldSupport
-
-
 
 --===================================================================--
 --== newText widget
 
 
-loadBackgroundSupport = function()
-	-- print("loadBackgroundSupport")
+function Widget._loadBackgroundSupport()
+	-- print( "Widget._loadBackgroundSupport" )
 
 	--== Background Components
 
@@ -164,10 +163,11 @@ loadBackgroundSupport = function()
 	Widget.Style.Background=BackgroundStyle
 	Widget.Style.BackgroundFactory=BackgroundStyleFactory
 
-	Background.initialize( Widget )
+	--== Reverse order
 	BackgroundViewFactory.initialize( Widget )
-	BackgroundStyle.initialize( Widget )
 	BackgroundStyleFactory.initialize( Widget )
+	BackgroundStyle.initialize( Widget )
+	Background.initialize( Widget )
 end
 
 
@@ -189,14 +189,13 @@ end
 --== newButton widget
 
 
-loadButtonSupport = function()
-	print("loadButtonSupport")
-	-- print("loadTextFieldSupport")
+function Widget._loadButtonSupport()
+	-- print( "Widget._loadButtonSupport" )
 
 	--== Dependencies
 
-	loadBackgroundSupport()
-	loadTextSupport()
+	Widget._loadBackgroundSupport()
+	Widget._loadTextSupport()
 
 	--== Button Components
 
@@ -216,21 +215,20 @@ end
 
 
 function Widget.newButton( options )
-	if not Widget.Button then loadButtonSupport() end
+	if not Widget.Button then Widget._loadButtonSupport() end
 	return Widget.Button.create( options )
 end
 
 function Widget.newPushButton( options )
-	if not Widget.Button then loadButtonSupport() end
+	if not Widget.Button then Widget._loadButtonSupport() end
 	options = options or {}
 	options.action = Widget.Button.PushButton.TYPE
 	--==--
-	print("\n\n\n\nCREATING BUTT\n\n")
 	return Widget.Button.create( options )
 end
 
 function Widget.newRadioButton( options )
-	if not Widget.Button then loadButtonSupport() end
+	if not Widget.Button then Widget._loadButtonSupport() end
 	options = options or {}
 	options.action = Widget.Button.RadioButton.TYPE
 	--==--
@@ -238,7 +236,7 @@ function Widget.newRadioButton( options )
 end
 
 function Widget.newToggleButton( options )
-	if not Widget.Button then loadButtonSupport() end
+	if not Widget.Button then Widget._loadButtonSupport() end
 	options = options or {}
 	options.action = Widget.Button.ToggleButton.TYPE
 	--==--
@@ -263,6 +261,7 @@ end
 
 function Widget.newFormatter( options )
 	if type(options)=='string' then
+		-- wrap option in a params table
 		options = { type=options }
 	end
 	return Widget.Formatter.create( options )
@@ -299,8 +298,6 @@ function Widget.newPopover( options )
 	local widget = Widget.Popover
 	return widget:new( options, theme )
 end
-
-
 
 
 
@@ -344,28 +341,32 @@ end
 --== newText widget
 
 
-loadTextSupport = function()
-	-- print("loadTextSupport")
+function Widget._loadTextSupport()
+	-- print( "Widget._loadTextSupport" )
+
+	--== Text Components
+
 	local Text = require( PATH .. '.' .. 'widget_text' )
 	local TextStyle = require( PATH .. '.' .. 'widget_style.text_style' )
 
 	Widget.Text=Text
 	Widget.Style.Text=TextStyle
 
-	Text.initialize( Widget )
+	--== Reverse order
 	TextStyle.initialize( Widget )
+	Text.initialize( Widget )
 end
 
 
 function Widget.newText( options )
-	-- print("Widget.newText")
-	if not Widget.Text then loadTextSupport() end
+	-- print( "Widget.newText" )
+	if not Widget.Text then Widget._loadTextSupport() end
 	return Widget.Text:new( options )
 end
 
 function Widget.newTextStyle( style_info )
-	-- print("Widget.newTextStyle")
-	if not Widget.Style.Text then loadTextSupport() end
+	-- print( "Widget.newTextStyle" )
+	if not Widget.Style.Text then Widget._loadTextSupport() end
 	return Widget.Style.Text:createStyleFrom{ data=style_info }
 end
 
@@ -375,13 +376,13 @@ end
 --== TextField support
 
 
-loadTextFieldSupport = function()
-	-- print("loadTextFieldSupport")
+function Widget._loadTextFieldSupport()
+	-- print( "Widget._loadTextFieldSupport" )
 
 	--== Dependencies
 
-	loadBackgroundSupport()
-	loadTextSupport()
+	Widget._loadBackgroundSupport()
+	Widget._loadTextSupport()
 
 	--== TextField Components
 
@@ -391,41 +392,22 @@ loadTextFieldSupport = function()
 	Widget.TextField=TextField
 	Widget.Style.TextField=TextFieldStyle
 
-	TextField.initialize( Widget )
+	--== Reverse order
 	TextFieldStyle.initialize( Widget )
+	TextField.initialize( Widget )
 end
 
 
 function Widget.newTextField( options )
-	-- print("Widget.newTextField")
-	if not Widget.TextField then loadTextFieldSupport() end
+	-- print( "Widget.newTextField" )
+	if not Widget.TextField then Widget._loadTextFieldSupport() end
 	return Widget.TextField:new( options )
 end
 
 function Widget.newTextFieldStyle( style_info )
-	-- print("Widget.newTextFieldStyle")
-	if not Widget.Style.TextField then loadTextFieldSupport() end
+	-- print( "Widget.newTextFieldStyle" )
+	if not Widget.Style.TextField then Widget._loadTextFieldSupport() end
 	return Widget.Style.TextField:createStyleFrom{ data=style_info }
-end
-
-
---===================================================================--
---== newTextFieldStyle
-
-
-
-
-
---===================================================================--
---== newToggleButton widget
-
-
-function Widget.newToggleButton( options )
-	options = options or {}
-	--==--
-	local theme = nil
-	options.type = Widget.Button.ToggleButton.TYPE
-	return Widget.Button.create( options, theme )
 end
 
 
