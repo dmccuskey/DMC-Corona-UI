@@ -341,11 +341,15 @@ end
 
 function Widget.newRectangleBackground( options )
 	if not Widget.Background then Widget._loadBackgroundSupport() end
+	options = options or {}
+	options.defaultViewType=Widget.Style.BackgroundFactory.Rectangle.TYPE
 	return Widget.Background:new( options )
 end
 
 function Widget.newRoundedBackground( options )
 	if not Widget.Background then Widget._loadBackgroundSupport() end
+	options = options or {}
+	options.defaultViewType=Widget.Style.BackgroundFactory.Rounded.TYPE
 	return Widget.Background:new( options )
 end
 

@@ -192,8 +192,8 @@ ButtonStyle._STYLE_DEFAULTS = {
 			textColor={0,1,0,0.5}
 		},
 		background={
+			type='rectangle',
 			view={
-				type='rounded',
 				cornerRadius = 10,
 				fillColor={0,1,1,1},
 				strokeWidth=1,
@@ -218,8 +218,8 @@ ButtonStyle._STYLE_DEFAULTS = {
 			fontSize=10
 		},
 		background={
+			type='rectangle',
 			view={
-				type='rounded',
 				cornerRadius = 10,
 				fillColor={0,1,0,1},
 				strokeWidth=1,

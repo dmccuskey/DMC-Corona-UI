@@ -258,7 +258,7 @@ function Style._verifyClassProperties( src, excl  )
 	if not src.width and not excl.width then
 		print(sformat(emsg,'width')) ; is_valid=false
 	end
-if not src.height and not excl.height then
+	if not src.height and not excl.height then
 		print(sformat(emsg,'height')) ; is_valid=false
 	end
 	if not src.anchorX then

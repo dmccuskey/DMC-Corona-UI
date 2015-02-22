@@ -1253,7 +1253,8 @@ Buttons.RadioButton = RadioButton
 
 function Buttons.create( params )
 	-- print( "Buttons.create", params.type )
-	assert( params.action, "newButton: expected param 'action'" )
+	params = params or {}
+	if params.action==nil then params.action=PushButton.TYPE end
 	--==--
 	local action = params.action
 

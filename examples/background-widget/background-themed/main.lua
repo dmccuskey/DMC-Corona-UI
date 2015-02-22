@@ -133,7 +133,7 @@ function run_example2()
 
 	bw1.x, bw1.y = H_CENTER, V_CENTER-100
 	bw1.y = V_CENTER-50
-	bw1.width, bw1.height = 10,10
+	bw1.width, bw1.height = 50, 25
 	-- bw1:setAnchor( {0,0} )
 	bw1:setAnchor( {0.5,0.5} )
 	-- bw1:setAnchor( {1,1} )
@@ -255,12 +255,11 @@ function run_example5()
 
 		width=150,
 		height=70,
-
 		anchorX=1,
 		anchorY=0.5,
 
+		type='rounded',
 		view={
-			type='rounded',
 			-- cornerRadius=10,
 			strokeWidth=5,
 			strokeColor={0,0,0},
@@ -297,7 +296,7 @@ end
 
 function run_example6()
 
-	local bw4 = Widgets.newBackground{}
+	local bw4 = Widgets.newBackground()
 	bw4:addEventListener( bw4.EVENT, widgetEvent_handler )
 
 	bw4.x = H_CENTER

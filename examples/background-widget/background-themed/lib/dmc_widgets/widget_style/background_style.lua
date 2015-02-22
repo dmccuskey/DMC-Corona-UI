@@ -203,10 +203,11 @@ function BackgroundStyle.initialize( manager )
 	Widgets = manager
 	StyleFactory = Widgets.Style.BackgroundFactory
 
-	BackgroundStyle._setDefaults( BackgroundStyle )
-
+	-- set LOCAL defaults before creating classes next
 	BackgroundStyle._DEFAULT_VIEWTYPE = StyleFactory.Rounded.TYPE
 	BackgroundStyle._STYLE_DEFAULTS.type = BackgroundStyle._DEFAULT_VIEWTYPE
+
+	BackgroundStyle._setDefaults( BackgroundStyle )
 end
 
 
@@ -494,7 +495,7 @@ function BackgroundStyle:_prepareData( data )
 	if data.isa and data:isa( BackgroundStyle ) then
 		--== Instance
 		local o = data
-		data = o.type
+		data = {view=o.type}
 
 	else
 		--== Lua structure
