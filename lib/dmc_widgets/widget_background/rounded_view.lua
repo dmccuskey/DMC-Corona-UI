@@ -66,7 +66,7 @@ local widget_find = dmc_widget_func.find
 
 local Objects = require 'dmc_objects'
 local LifecycleMixModule = require 'dmc_lifecycle_mix'
-local ThemeMixModule = require( dmc_widget_func.find( 'widget_theme_mix' ) )
+local StyleMixModule = require( dmc_widget_func.find( 'widget_style_mix' ) )
 
 --== To be set in initialize()
 local StyleFactory = nil
@@ -84,7 +84,7 @@ local newClass = Objects.newClass
 local ComponentBase = Objects.ComponentBase
 
 local LifecycleMix = LifecycleMixModule.LifecycleMix
-local ThemeMix = ThemeMixModule.ThemeMix
+local StyleMix = StyleMixModule.StyleMix
 
 
 
@@ -94,7 +94,7 @@ local ThemeMix = ThemeMixModule.ThemeMix
 
 
 local RoundedView = newClass(
-	{ ThemeMix, ComponentBase, LifecycleMix },
+	{ StyleMix, ComponentBase, LifecycleMix },
 	{name="Rounded Background View"}
 )
 
@@ -136,7 +136,7 @@ function RoundedView:__init__( params )
 
 	self:superCall( LifecycleMix, '__init__', params )
 	self:superCall( ComponentBase, '__init__', params )
-	self:superCall( ThemeMix, '__init__', params )
+	self:superCall( StyleMix, '__init__', params )
 	--==--
 
 	--== Create Properties ==--
@@ -171,7 +171,7 @@ end
 function RoundedView:__undoInit__()
 	-- print( "RoundedView:__undoInit__" )
 	--==--
-	self:superCall( ThemeMix, '__undoInit__' )
+	self:superCall( StyleMix, '__undoInit__' )
 	self:superCall( ComponentBase, '__undoInit__' )
 	self:superCall( LifecycleMix, '__undoInit__' )
 end

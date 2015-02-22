@@ -1,5 +1,5 @@
 --====================================================================--
--- dmc_widgets/widget_theme_mix.lua
+-- dmc_widgets/widget_style_mix.lua
 --
 -- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
@@ -466,7 +466,7 @@ end
 
 
 return {
-	ThemeMix=Theme,
+	StyleMix=Theme,
 	patch=_patch,
 }
 
