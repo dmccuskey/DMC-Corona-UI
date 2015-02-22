@@ -136,7 +136,7 @@ function Style:__init__( params )
 	params = params or {}
 	params.data = params.data
 	if params.inherit==nil then
-		params.inherit=self.class.__base_style__
+		params.inherit=self:_getBaseStyle( params.data )
 	end
 	params.name = params.name
 	params.widget = params.widget
@@ -212,7 +212,7 @@ end
 -- Note: usually used by OTHER classes
 --
 function Style.addMissingDestProperties( dest, src, params )
-	print( "OVERRIDE Style.addMissingDestProperties" )
+	-- print( "OVERRIDE Style.addMissingDestProperties" )
 	-- process local properties
 	-- pass along to add child properties
 	Style._addMissingChildProperties( dest, src )
@@ -226,7 +226,7 @@ end
 -- 'src' allows us to send in some default properties
 --
 function Style._addMissingChildProperties( dest, src )
-	print( "OVERRIDE Style._addMissingChildProperties" )
+	-- print( "OVERRIDE Style._addMissingChildProperties" )
 	return dest
 end
 
@@ -350,10 +350,16 @@ function Style:getDefaultStyles()
 end
 
 
--- params:
--- data
--- widget
--- name
+-- createStyleFrom()
+-- important method to create a new style object
+-- given different parameters
+--
+-- @param params, table of options
+-- data, -- either nil, Lua structure, or Style object
+-- copy, whether to use style Object as is, or make a copy
+-- other params, given to Style Constructor
+-- (eg, name, inherit, parent, widget, etc)
+--
 function Style:createStyleFrom( params )
 	-- print( "Style:createStyleFrom", params, params.copy )
 	params = params or {}
@@ -365,16 +371,19 @@ function Style:createStyleFrom( params )
 	local StyleClass = self.class
 	local style
 	if data==nil then
+		-- no data, so create with given params
 		style = StyleClass:new( params )
-	elseif type(data.isa)=='function' then
 
+	elseif type(data.isa)=='function' then
+		-- data is a Style object, use directly or make copy
 		if not copy then
 			style = data
 		else
 			style = data:copyStyle( params )
 		end
+
 	else
-		-- Lua structure
+		-- data is Lua structure
 		style = StyleClass:new( params )
 	end
 
@@ -800,9 +809,18 @@ end
 --======================================================--
 -- Style Class setup
 
+
+function Style:_getBaseStyle()
+	-- print( "Style:_getBaseStyle", self )
+	return self.class.__base_style__
+end
+
+
 -- _prepareData()
 -- if necessary, modify data before we process it
 -- usually this is to copy styles from parent to child
+-- the goal is to have enough of a structure to be able
+-- to process with _parseData()
 --
 function Style:_prepareData( data )
 	-- print( "OVERRIDE Style:_prepareData", self )
@@ -964,7 +982,7 @@ function Style:_parentStyleEvent_handler( event )
 			if func then
 				func( self, value, true )
 			else
-				error("[WARNING] Known property ".. property .. tostring(self) )
+				error("[WARNING] Unknown property ".. property .. tostring(self) )
 			end
 		end
 	end
