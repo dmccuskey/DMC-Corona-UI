@@ -102,16 +102,6 @@ dmc_lib_info = dmc_lib_data.dmc_corona
 --== Imports
 
 
---== Managers
-
-Widget.FontMgr = require( PATH .. '.' .. 'font_manager' )
-Widget.ThemeMgr = require( PATH .. '.' .. 'theme_manager' )
-
---== Styles
-
-local BaseStyle = require( PATH .. '.' .. 'widget_style.base_style' )
-
-
 -- Widgets
 Widget.ButtonGroup = require( PATH .. '.' .. 'button_group' )
 Widget.Formatter = require( PATH .. '.' .. 'data_formatters' )
@@ -124,12 +114,102 @@ Widget.PopoverMixModule = require( PATH .. '.' .. 'widget_popover.popover_mix' )
 --== Setup, Constants
 
 
-Widget.WIDTH = display.contentWidth
-Widget.HEIGHT = display.contentHeight
+local WIDTH, HEIGHT = display.contentWidth, display.contentHeight
 
-Widget.Style = {
-	Base=BaseStyle.Base
+local sformat = string.format
+
+
+
+--===================================================================--
+--== Support Functions
+
+
+local function initialize( manager )
+	-- print( "Widgets.initialize" )
+
+	--== Load Managers
+
+	local FontMgr = require( PATH .. '.' .. 'font_manager' )
+	local ThemeMgr = require( PATH .. '.' .. 'theme_manager' )
+
+	Widget.FontMgr = FontMgr
+	Widget.StyleMgr = StyleMgr
+	Widget.ThemeMgr = ThemeMgr
+
+	--== Load Base Style
+
+	local BaseStyle = require( PATH .. '.' .. 'widget_style.base_style' )
+	Widget.Style.Base=BaseStyle
+
+	--== Set UI/UX
+
+	local platformName = system.getInfo( 'platformName' )
+	if platformName=='Android' then
+		manager.setOS( manager.ANDROID )
+	elseif platformName=='WinPhone' then
+		manager.setOS( manager.WINDOWS )
+	elseif platformName=='iPhone' then
+		manager.setOS( manager.IOS )
+	else
+		manager.setOS( manager.IOS )
+	end
+
+end
+
+
+--====================================================================--
+--== Widget Manager
+--====================================================================--
+
+
+-- local Widget = {}
+
+--== Class Constants
+
+Widget.WIDTH = WIDTH
+Widget.HEIGHT = HEIGHT
+
+Widget.__os__ = nil -- 'iOS', 'android'
+Widget.__osVersion__ = nil -- 'iOS'-'8.0', 'android'-'2.1'
+
+Widget.IOS = 'iOS'
+Widget.ANDROID = 'Android'
+Widget.WINDOWS = 'WinPhone'
+
+Widget.IOS = 'iOS'
+
+Widget._VALID_OS = {
+	[Widget.IOS]=Widget.IOS,
+	[Widget.ANDROID]=Widget.ANDROID,
+	default=Widget.IOS,
+	-- [Widget.WINDOWS]=Widget.WINDOWS
 }
+
+Widget.IOS_7x = "7.0.0"
+Widget.IOS_8x = "8.0.0"
+
+Widget.ANDROID_20 = "2.0.0"
+Widget.ANDROID_21 = "2.1.0"
+
+Widget._VALID_OS_VERSION = {
+
+	[Widget.IOS]={
+		default=Widget.IOS_8x,
+		[Widget.IOS_8x]=Widget.IOS_8x
+	},
+
+	[Widget.ANDROID]={
+		default=Widget.ANDROID_21,
+		[Widget.ANDROID_20]=Widget.ANDROID_20,
+		[Widget.ANDROID_21]=Widget.ANDROID_21
+	},
+	-- [Widget.WINDOWS]=true
+}
+
+
+--== Access to all style classes (once loaded)
+
+Widget.Style = {}
 
 --== Give widgets access to Widget (do this last)
 
@@ -139,8 +219,95 @@ Widget.PopoverMixModule.__setWidgetManager( Widget )
 
 
 --===================================================================--
---== newText widget
+--== Theme Methods
 
+
+function Widget.activateTheme( name )
+end
+
+function Widget.getTheme( name )
+end
+
+function Widget.addTheme( theme )
+end
+
+function Widget.deleteTheme( name )
+end
+
+function Widget.loadTheme( file )
+end
+
+function Widget.unloadTheme( name )
+end
+
+function Widget.reloadTheme( name )
+end
+
+
+
+--===================================================================--
+--== Style Methods
+
+
+function Widget.addStyle( style, theme )
+	local s = Widget.StyleMgr:addStyle( style )
+	if s.name and theme then
+		Widget.ThemeMgr:addStyle( s, theme )
+	end
+end
+
+function Widget.deleteStyle( name )
+end
+
+function Widget.loadStyles( file )
+end
+
+
+
+--===================================================================--
+--== Misc Methods
+
+
+function Widget.setOS( platform, version )
+	-- print( "Widget.setOS", platform, version )
+
+	--== Set OS
+
+	local os = Widget._VALID_OS[ platform ]
+	if not os then
+		os = Widget._VALID_OS.default
+		print( sformat( "[WARNING] Widgets.setOS() unknown OS '%s'", tostring(platform) ))
+		print( sformat( "Setting to default '%s'", tostring( os ) ) )
+	end
+	Widget.__os__ = os
+
+	--== Set OS Version
+
+	local versions = Widget._VALID_OS_VERSION[ os ]
+	local value = versions[ version ]
+	if not value then
+		value = versions.default
+		if LOCAL_DEBUG then
+			print( sformat( "[WARNING] Widgets.setOS() unknown OS Version '%s'", tostring( version )))
+			print( sformat( "Setting to default '%s'", tostring( value ) ) )
+		end
+	end
+	Widget.__osVersion__ = value
+
+	if LOCAL_DEBUG then
+		print( "Widget theme set for ", os, value )
+	end
+
+end
+
+
+
+--===================================================================--
+--== Widget Methods
+
+
+--======================================================--
+-- newText Support
 
 function Widget._loadBackgroundSupport()
 	-- print( "Widget._loadBackgroundSupport" )
@@ -166,7 +333,6 @@ function Widget._loadBackgroundSupport()
 	Background.initialize( Widget )
 end
 
-
 function Widget.newBackground( options )
 	if not Widget.Background then Widget._loadBackgroundSupport() end
 	return Widget.Background:new( options )
@@ -180,10 +346,8 @@ function Widget.newBackgroundStyle( style_info )
 end
 
 
-
---===================================================================--
---== newButton widget
-
+--======================================================--
+-- newButton Support
 
 function Widget._loadButtonSupport()
 	-- print( "Widget._loadButtonSupport" )
@@ -208,7 +372,6 @@ function Widget._loadButtonSupport()
 	ButtonStyle.initialize( Widget )
 	Button.initialize( Widget )
 end
-
 
 function Widget.newButton( options )
 	if not Widget.Button then Widget._loadButtonSupport() end
@@ -240,20 +403,16 @@ function Widget.newToggleButton( options )
 end
 
 
-
---===================================================================--
---== newButtonGroup widget
-
+--======================================================--
+-- newButtonGroup Support
 
 function Widget.newButtonGroup( options )
 	return Widget.ButtonGroup.create( options )
 end
 
 
-
---===================================================================--
---== newFormatter widget
-
+--======================================================--
+-- newFormatter Support
 
 function Widget.newFormatter( options )
 	if type(options)=='string' then
@@ -264,10 +423,8 @@ function Widget.newFormatter( options )
 end
 
 
-
---===================================================================--
---== newNavBar widget
-
+--======================================================--
+-- newNavBar Support
 
 function Widget._loadNavBarSupport()
 	-- print( "Widget._loadNavBarSupport" )
@@ -289,12 +446,10 @@ function Widget._loadNavBarSupport()
 	NavBar.initialize( Widget )
 end
 
-
 function Widget.newNavBar( options )
 	if not Widget.Background then Widget._loadNavBarSupport() end
 	return Widget.NavBar:new( options )
 end
-
 
 function Widget.newNavItem( options )
 	if not Widget.Background then Widget._loadNavBarSupport() end
@@ -302,10 +457,8 @@ function Widget.newNavItem( options )
 end
 
 
-
---===================================================================--
---== newPopover widget
-
+--======================================================--
+-- newPopover Support
 
 function Widget.newPopover( options )
 	local theme = nil
@@ -314,10 +467,8 @@ function Widget.newPopover( options )
 end
 
 
-
---===================================================================--
---== newScroller widget
-
+--======================================================--
+-- newScroller Support
 
 -- function Widget.newScroller( options )
 -- 	local theme = nil
@@ -326,10 +477,8 @@ end
 -- end
 
 
-
---===================================================================--
---== newSlideView widget
-
+--======================================================--
+-- newSlideView Support
 
 function Widget.newSlideView( options )
 	local theme = nil
@@ -338,10 +487,8 @@ function Widget.newSlideView( options )
 end
 
 
-
---===================================================================--
---== newTableView widget
-
+--======================================================--
+-- newTableView Support
 
 function Widget.newTableView( options )
 	local theme = nil
@@ -350,10 +497,8 @@ function Widget.newTableView( options )
 end
 
 
-
---===================================================================--
---== newText widget
-
+--======================================================--
+-- newText Support
 
 function Widget._loadTextSupport()
 	-- print( "Widget._loadTextSupport" )
@@ -371,7 +516,6 @@ function Widget._loadTextSupport()
 	Text.initialize( Widget )
 end
 
-
 function Widget.newText( options )
 	-- print( "Widget.newText" )
 	if not Widget.Text then Widget._loadTextSupport() end
@@ -385,10 +529,8 @@ function Widget.newTextStyle( style_info )
 end
 
 
-
---===================================================================--
---== TextField support
-
+--======================================================--
+-- TextField Support
 
 function Widget._loadTextFieldSupport()
 	-- print( "Widget._loadTextFieldSupport" )
@@ -411,7 +553,6 @@ function Widget._loadTextFieldSupport()
 	TextField.initialize( Widget )
 end
 
-
 function Widget.newTextField( options )
 	-- print( "Widget.newTextField" )
 	if not Widget.TextField then Widget._loadTextFieldSupport() end
@@ -425,10 +566,8 @@ function Widget.newTextFieldStyle( style_info )
 end
 
 
-
---===================================================================--
---== newViewPager widget
-
+--======================================================--
+-- newViewPager Support
 
 -- function Widget.newViewPager( options )
 -- 	local theme = nil
@@ -437,6 +576,13 @@ end
 -- end
 
 
+
+--====================================================================--
+--== Init Widgets
+--====================================================================--
+
+
+initialize( Widget )
 
 
 return Widget

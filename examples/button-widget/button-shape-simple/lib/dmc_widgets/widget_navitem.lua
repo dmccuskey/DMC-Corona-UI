@@ -146,13 +146,13 @@ function NavItem:__initComplete__()
 
 	o = Widgets.newPushButton{
 		id='button-back',
-		labelText="Press",
+		labelText="Back",
 
 		style={
 			debugOn=false,
 
 			width=80,
-			height=40,
+			height=35,
 
 			inactive={
 				label = {
@@ -190,13 +190,13 @@ function NavItem:__initComplete__()
 
 	o = Widgets.newPushButton{
 		id='button-title',
-		labelText="Press",
+		labelText="Title",
 
 		style={
 			debugOn=false,
 
 			width=80,
-			height=40,
+			height=35,
 
 			inactive={
 				label = {

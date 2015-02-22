@@ -67,7 +67,7 @@ local widget_find = dmc_widget_func.find
 local LifecycleMixModule = require 'dmc_lifecycle_mix'
 local Objects = require 'dmc_objects'
 local StatesMixModule = require 'dmc_states_mix'
-local ThemeMixModule = require( dmc_widget_func.find( 'widget_theme_mix' ) )
+local StyleMixModule = require( dmc_widget_func.find( 'widget_style_mix' ) )
 local Utils = require 'dmc_utils'
 
 --== To be set in initialize()
@@ -85,7 +85,7 @@ local ComponentBase = Objects.ComponentBase
 
 local LifecycleMix = LifecycleMixModule.LifecycleMix
 local StatesMix = StatesMixModule.StatesMix
-local ThemeMix = ThemeMixModule.ThemeMix
+local StyleMix = StyleMixModule.StyleMix
 
 
 
@@ -100,10 +100,10 @@ local ThemeMix = ThemeMixModule.ThemeMix
 --====================================================================--
 
 
--- ! put ThemeMix first !
+-- ! put StyleMix first !
 
 local ButtonBase = newClass(
-	{ ThemeMix, ComponentBase, StatesMix, LifecycleMix },
+	{ StyleMix, ComponentBase, StatesMix, LifecycleMix },
 	{name="Button Base"}
 )
 
@@ -151,7 +151,7 @@ function ButtonBase:__init__( params )
 	self:superCall( LifecycleMix, '__init__', params )
 	self:superCall( StatesMix, '__init__', params )
 	self:superCall( ComponentBase, '__init__', params )
-	self:superCall( ThemeMix, '__init__', params )
+	self:superCall( StyleMix, '__init__', params )
 	--==--
 
 	--== Create Properties ==--
@@ -236,7 +236,7 @@ end
 function ButtonBase:__undoInit__()
 	-- print( "ButtonBase:__undoInit__" )
 	--==--
-	self:superCall( ThemeMix, '__undoInit__' )
+	self:superCall( StyleMix, '__undoInit__' )
 	self:superCall( ComponentBase, '__undoInit__' )
 	self:superCall( StatesMix, '__undoInit__' )
 	self:superCall( LifecycleMix, '__undoInit__' )
@@ -1228,7 +1228,6 @@ end
 --===================================================================--
 
 
-
 local function initializeButtons( manager )
 	-- print( "Buttons.initialize" )
 	Widgets = manager
@@ -1238,7 +1237,6 @@ local function initializeButtons( manager )
 
 	ThemeMgr:registerWidget( ButtonBase.THEME_ID, ButtonBase )
 end
-
 
 
 local Buttons = {}
@@ -1273,52 +1271,6 @@ function Buttons.create( params )
 
 	end
 end
-
-
-
-
---[[
-getters sttters
-
-
-
---== hitMarginX
-
-
-
-complete prperties
-
--- if self._hitX_dirty or self._anchorX_dirty then
--- 	local width = style.width
--- 	hit.x = width/2+(-width*style.anchorX)
--- 	self._hitX_dirty=false
--- 	self._anchorX_dirty=false
--- end
--- if self._hitY_dirty or self._anchorY_dirty then
--- 	local height = style.height
--- 	hit.y = height/2+(-height*style.anchorY)
--- 	self._hitY_dirty=false
--- 	self._anchorY_dirty=false
--- end
-
-
-
-
-
-
-in event handler
-
-
-elseif property=='hitMarginX' then
-	self._hitMarginX_dirty=true
-elseif property=='hitMarginY' then
-	self._hitMarginY_dirty=true
-elseif property=='isHitActive' then
-	self._isHitActive_dirty=true
-elseif property=='isHitTestable' then
-	self._isHitTestable_dirty=true
-
---]]
 
 
 return Buttons
