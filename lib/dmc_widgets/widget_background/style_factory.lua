@@ -91,15 +91,20 @@ local function initializeFactory( manager )
 end
 
 
-local function createStyle( style_type, params )
-	-- print( "StyleFactory.createStyle", style_type )
-	if style_type==Rectangle.TYPE then
-		return Rectangle:new( params )
-	elseif style_type==Rounded.TYPE then
-		return Rounded:new( params )
-	else
-		error( sformat( "StyleFactory: Unknown style type '%s'", tostring( style_type )))
-	end
+local function getStyleNames()
+	-- print( "StyleFactory.getStyleNames" )
+	return {
+		Rectangle.TYPE,
+		Rounded.TYPE
+	}
+end
+
+local function getStyleClasses()
+	-- print( "StyleFactory.getStyleClasses" )
+	return {
+		Rectangle,
+		Rounded
+	}
 end
 
 
@@ -112,6 +117,13 @@ local function getStyleClass( style_type )
 	else
 		error( sformat( "StyleFactory: Unknown style type '%s'", tostring( style_type )))
 	end
+end
+
+
+local function createStyle( style_type, params )
+	-- print( "StyleFactory.createStyle", style_type )
+	local StyleClass = getStyleClass( style_type )
+	return StyleClass:new( params )
 end
 
 
@@ -129,5 +141,8 @@ return {
 	Rounded = Rounded,
 
 	create = createStyle,
-	getClass = getStyleClass
+	getClass = getStyleClass,
+
+	getStyleNames = getStyleNames,
+	getStyleClasses = getStyleClasses
 }
