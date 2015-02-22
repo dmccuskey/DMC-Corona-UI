@@ -45,7 +45,7 @@ module_config = {
 			"dmc_widgets/widget_tableview.lua",
 			"dmc_widgets/widget_text.lua",
 			"dmc_widgets/widget_textfield.lua",
-			"dmc_widgets/widget_theme_mix.lua",
+			"dmc_widgets/widget_style_mix.lua",
 			"dmc_widgets/widget_utils.lua",
 			"dmc_widgets/widget_viewpager.lua"
 		],
