@@ -495,7 +495,7 @@ function BackgroundStyle:_prepareData( data )
 	if data.isa and data:isa( BackgroundStyle ) then
 		--== Instance
 		local o = data
-		data = o.type
+		data = {view=o.type}
 
 	else
 		--== Lua structure
