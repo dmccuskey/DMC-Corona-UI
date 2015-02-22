@@ -1,5 +1,5 @@
 --====================================================================--
--- dmc_widgets/widget_theme_mix.lua
+-- dmc_widgets/widget_style_mix.lua
 --
 -- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
@@ -225,7 +225,7 @@ function Theme.setActiveStyle( self, data, params )
 		style=self.__default_style
 	elseif not params.copy then
 		-- use style handed to us
-		assert( data.isa and data:isa(StyleClass), sformat( "Style isn't of class '%s'", tostring(StyleClass) ))
+		assert( data.isa and data:isa(StyleClass), sformat( "Style not Class '%s'", tostring(StyleClass) ))
 		style = data
 	else
 		-- Utils.print( data )
@@ -466,7 +466,7 @@ end
 
 
 return {
-	ThemeMix=Theme,
+	StyleMix=Theme,
 	patch=_patch,
 }
 
