@@ -130,7 +130,6 @@ local function initialize( manager )
 	--== Load Managers
 
 	local FontMgr = require( PATH .. '.' .. 'font_manager' )
-	local StyleMgr = require( PATH .. '.' .. 'style_manager' )
 	local ThemeMgr = require( PATH .. '.' .. 'theme_manager' )
 
 	Widget.FontMgr = FontMgr
@@ -334,16 +333,42 @@ function Widget._loadBackgroundSupport()
 	Background.initialize( Widget )
 end
 
+
 function Widget.newBackground( options )
 	if not Widget.Background then Widget._loadBackgroundSupport() end
 	return Widget.Background:new( options )
 end
+
+function Widget.newRectangleBackground( options )
+	if not Widget.Background then Widget._loadBackgroundSupport() end
+	return Widget.Background:new( options )
+end
+
+function Widget.newRoundedBackground( options )
+	if not Widget.Background then Widget._loadBackgroundSupport() end
+	return Widget.Background:new( options )
+end
+
 
 function Widget.newBackgroundStyle( style_info )
 	-- print("Widget.newBackgroundStyle")
 	-- assert( type(style_info)=='table' and style_info.type, "newBackgroundStyle: missing style property 'type'" )
 	if not Widget.Style.Background then Widget._loadBackgroundSupport() end
 	return Widget.Style.Background:createStyleFrom{ data=style_info }
+end
+
+function Widget.newRectangleBackgroundStyle( style_info )
+	style_info = style_info or {}
+	if not Widget.Background then Widget._loadBackgroundSupport() end
+	style_info.type = Widget.Style.BackgroundFactory.Rectangle.TYPE
+	return Widget.newBackgroundStyle( style_info )
+end
+
+function Widget.newRoundedBackgroundStyle( style_info )
+	style_info = style_info or {}
+	if not Widget.Background then Widget._loadBackgroundSupport() end
+	style_info.type = Widget.Style.BackgroundFactory.Rounded.TYPE
+	return Widget.newBackgroundStyle( style_info )
 end
 
 
