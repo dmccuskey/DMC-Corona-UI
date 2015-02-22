@@ -1228,7 +1228,6 @@ end
 --===================================================================--
 
 
-
 local function initializeButtons( manager )
 	-- print( "Buttons.initialize" )
 	Widgets = manager
@@ -1238,7 +1237,6 @@ local function initializeButtons( manager )
 
 	ThemeMgr:registerWidget( ButtonBase.THEME_ID, ButtonBase )
 end
-
 
 
 local Buttons = {}
@@ -1273,52 +1271,6 @@ function Buttons.create( params )
 
 	end
 end
-
-
-
-
---[[
-getters sttters
-
-
-
---== hitMarginX
-
-
-
-complete prperties
-
--- if self._hitX_dirty or self._anchorX_dirty then
--- 	local width = style.width
--- 	hit.x = width/2+(-width*style.anchorX)
--- 	self._hitX_dirty=false
--- 	self._anchorX_dirty=false
--- end
--- if self._hitY_dirty or self._anchorY_dirty then
--- 	local height = style.height
--- 	hit.y = height/2+(-height*style.anchorY)
--- 	self._hitY_dirty=false
--- 	self._anchorY_dirty=false
--- end
-
-
-
-
-
-
-in event handler
-
-
-elseif property=='hitMarginX' then
-	self._hitMarginX_dirty=true
-elseif property=='hitMarginY' then
-	self._hitMarginY_dirty=true
-elseif property=='isHitActive' then
-	self._isHitActive_dirty=true
-elseif property=='isHitTestable' then
-	self._isHitTestable_dirty=true
-
---]]
 
 
 return Buttons
