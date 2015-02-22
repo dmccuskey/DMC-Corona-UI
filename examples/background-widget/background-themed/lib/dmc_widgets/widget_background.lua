@@ -66,9 +66,9 @@ local widget_find = dmc_widget_func.find
 
 local Objects = require 'dmc_objects'
 local LifecycleMixModule = require 'dmc_lifecycle_mix'
-local ThemeMixModule = require( widget_find( 'widget_theme_mix' ) )
+local StyleMixModule = require( widget_find( 'widget_style_mix' ) )
 
--- these set in initialize()
+--== To be set in initialize()
 local Widgets = nil
 local ThemeMgr = nil
 local ViewFactory = nil
@@ -83,7 +83,7 @@ local newClass = Objects.newClass
 local ComponentBase = Objects.ComponentBase
 
 local LifecycleMix = LifecycleMixModule.LifecycleMix
-local ThemeMix = ThemeMixModule.ThemeMix
+local StyleMix = StyleMixModule.StyleMix
 
 
 
@@ -92,9 +92,12 @@ local ThemeMix = ThemeMixModule.ThemeMix
 --====================================================================--
 
 
--- ! put ThemeMix first !
+-- ! put StyleMix first !
 
-local Background = newClass( {ThemeMix,ComponentBase,LifecycleMix}, {name="Background Widget"} )
+local Background = newClass(
+	{ StyleMix, ComponentBase, LifecycleMix },
+	{name="Background Widget"}
+)
 
 --== Theme Constants
 
@@ -129,19 +132,19 @@ function Background:__init__( params )
 
 	self:superCall( LifecycleMix, '__init__', params )
 	self:superCall( ComponentBase, '__init__', params )
-	self:superCall( ThemeMix, '__init__', params )
+	self:superCall( StyleMix, '__init__', params )
 	--==--
 
 	--== Create Properties ==--
 
-	-- Class properties
+	-- properties stored in Class
 
 	self._x = params.x
 	self._x_dirty=true
 	self._y = params.y
 	self._y_dirty=true
 
-	-- Style properties
+	-- properties stored in Style
 
 	self._debugOn_dirty=true
 	self._width_dirty=true
@@ -165,7 +168,7 @@ end
 function Background:__undoInit__()
 	-- print( "Background:__undoInit__" )
 	--==--
-	self:superCall( ThemeMix, '__undoInit__' )
+	self:superCall( StyleMix, '__undoInit__' )
 	self:superCall( ComponentBase, '__undoInit__' )
 	self:superCall( LifecycleMix, '__undoInit__' )
 end
@@ -231,8 +234,11 @@ end
 --== Public Methods
 
 
---== X
+--======================================================--
+-- Local Properties
 
+-- .X
+--
 function Background.__getters:x()
 	return self._x
 end
@@ -245,8 +251,8 @@ function Background.__setters:x( value )
 	self:__invalidateProperties__()
 end
 
---== Y
-
+-- .Y
+--
 function Background.__getters:y()
 	return self._y
 end
@@ -261,7 +267,7 @@ end
 
 
 --======================================================--
---== View Style Methods
+--== View Style Properties
 
 --== cornerRadius
 
@@ -275,36 +281,31 @@ end
 
 --== viewStrokeWidth
 
-function Background.__getters:strokeWidth()
+function Background.__getters:viewStrokeWidth()
 	return self.curr_style.view.strokeWidth
 end
-function Background.__setters:strokeWidth( value )
+function Background.__setters:viewStrokeWidth( value )
 	-- print( "Background.__setters:viewStrokeWidth", value )
 	self.curr_style.view.strokeWidth = value
 end
 
 --== setViewFillColor
 
-function Background:setFillColor( ... )
-	-- print( "Background:setFillColor" )
+function Background:setViewFillColor( ... )
+	-- print( "Background:setViewFillColor" )
 	self.curr_style.view.fillColor = {...}
 end
 
 --== setViewStrokeColor
 
-function Background:setStrokeColor( ... )
-	-- print( "Background:setVtrokeColor" )
+function Background:setViewStrokeColor( ... )
+	-- print( "Background:setViewStrokeColor" )
 	self.curr_style.view.strokeColor = {...}
 end
 
 
 --======================================================--
 --== Theme Mix Methods
-
-function Background:clearStyle()
-	self.curr_style:clearProperties()
-end
-
 
 function Background:afterAddStyle()
 	-- print( "Background:afterAddStyle" )
@@ -350,11 +351,6 @@ function Background:_createBackgroundView()
 	o:setActiveStyle( style.view, {copy=false} )
 	self._wgtView = o
 
-	--== Unset create conditions
-
-	self._wgtView_dirty=false
-	self._wgtViewStyle_dirty=false
-
 	--== Reset properties
 
 	-- none
@@ -368,6 +364,8 @@ function Background:__commitProperties__()
 
 	if self._wgtView_dirty or self._wgtViewStyle_dirty then
 		self:_createBackgroundView()
+		self._wgtView_dirty=false
+		self._wgtViewStyle_dirty=false
 	end
 
 	--== Update Widget View

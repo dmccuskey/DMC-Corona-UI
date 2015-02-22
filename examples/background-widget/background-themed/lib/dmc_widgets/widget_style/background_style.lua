@@ -104,12 +104,21 @@ BackgroundStyle.__base_style__ = nil
 BackgroundStyle.VIEW_KEY = 'view'
 BackgroundStyle.VIEW_NAME = 'background-view'
 
+BackgroundStyle._DEFAULT_VIEWTYPE = nil -- set later
+
+-- create multiple base-styles for Background class
+-- one for each available view
+--
+BackgroundStyle._BASE_STYLES = {}
+
+
 BackgroundStyle._VALID_PROPERTIES = {
 	debugOn=true,
 	width=true,
 	height=true,
 	anchorX=true,
-	anchorY=true
+	anchorY=true,
+	type=true
 }
 
 BackgroundStyle._EXCLUDE_PROPERTY_CHECK = nil
@@ -122,7 +131,9 @@ BackgroundStyle._STYLE_DEFAULTS = {
 	anchorX=0.5,
 	anchorY=0.5,
 
-	view={
+	type=nil, -- set later to DEFAULT
+
+	view = {
 		--[[
 		Copied from Background
 		debugOn
@@ -131,20 +142,12 @@ BackgroundStyle._STYLE_DEFAULTS = {
 		anchorX
 		anchorY
 		--]]
-		type='rectangle',
 		fillColor={1,1,1,1},
 		strokeWidth=1,
 		strokeColor={0,0,0,1},
 	},
 
 }
-
--- BackgroundStyle._VIEW_DEFAULTS = {
--- 	rounded=nil,
--- 	rectangle=nil,
--- 	polygon=nil,
--- 	shape=nil
--- }
 
 --== Event Constants
 
@@ -173,14 +176,12 @@ function BackgroundStyle:__init__( params )
 
 	-- self._name
 	-- self._debugOn
+	-- self._width
+	-- self._height
+	-- self._anchorX
+	-- self._anchorY
 
-	--== Local style properties
-
-	self._width = nil
-	self._height = nil
-
-	self._anchorX = nil
-	self._anchorY = nil
+	self._type = nil
 
 	--== Object Refs ==--
 
@@ -202,19 +203,53 @@ function BackgroundStyle.initialize( manager )
 	Widgets = manager
 	StyleFactory = Widgets.Style.BackgroundFactory
 
-	BackgroundStyle._setDefaults()
+	BackgroundStyle._setDefaults( BackgroundStyle )
+
+	BackgroundStyle._DEFAULT_VIEWTYPE = StyleFactory.Rounded.TYPE
+	BackgroundStyle._STYLE_DEFAULTS.type = BackgroundStyle._DEFAULT_VIEWTYPE
 end
 
 
 -- create empty Background Style structure
-function BackgroundStyle.createStateStructure( data )
-	-- print( "BackgroundStyle.createStateStructure", data )
+function BackgroundStyle.createStyleStructure( data )
+	-- print( "BackgroundStyle.createStyleStructure", data )
+	data = data or self._DEFAULT_VIEWTYPE
 	return {
 		view={
 			type=data
 		}
 	}
 end
+
+
+function BackgroundStyle.addMissingDestProperties( dest, src, params )
+	-- print( "BackgroundStyle.addMissingDestProperties", dest, src )
+	params = params or {}
+	if params.force==nil then params.force=false end
+	assert( dest )
+	--==--
+	local force=params.force
+	local srcs = { BackgroundStyle._STYLE_DEFAULTS }
+	if src then tinsert( srcs, 1, src ) end
+
+	for i=1,#srcs do
+		local src = srcs[i]
+
+		if dest.debugOn==nil or force then dest.debugOn=src.debugOn end
+
+		if dest.width==nil or force then dest.width=src.width end
+		if dest.height==nil or force then dest.height=src.height end
+
+		if dest.anchorX==nil or force then dest.anchorX=src.anchorX end
+		if dest.anchorY==nil or force then dest.anchorY=src.anchorY end
+
+	end
+
+	BackgroundStyle._addMissingChildProperties( dest, src )
+
+	return dest
+end
+
 
 
 -- to a new stucture
@@ -248,35 +283,6 @@ function BackgroundStyle.copyExistingSrcProperties( dest, src, params )
 	return dest
 end
 
-
-function BackgroundStyle.addMissingDestProperties( dest, src, params )
-	-- print( "BackgroundStyle.addMissingDestProperties", dest, src )
-	params = params or {}
-	if params.force==nil then params.force=false end
-	assert( dest )
-	--==--
-	local force=params.force
-	local srcs = { BackgroundStyle._STYLE_DEFAULTS }
-	if src then tinsert( srcs, 1, src ) end
-
-	for i=1,#srcs do
-		local src = srcs[i]
-
-		if dest.debugOn==nil or force then dest.debugOn=src.debugOn end
-
-		if dest.width==nil or force then dest.width=src.width end
-		if dest.height==nil or force then dest.height=src.height end
-
-		if dest.anchorX==nil or force then dest.anchorX=src.anchorX end
-		if dest.anchorY==nil or force then dest.anchorY=src.anchorY end
-
-	end
-
-	BackgroundStyle._addMissingChildProperties( dest, src )
-
-	return dest
-end
-
 --
 -- copy properties to sub-styles
 --
@@ -294,22 +300,6 @@ function BackgroundStyle._addMissingChildProperties( dest, src  )
 end
 
 
-function BackgroundStyle._setDefaults()
-	-- print( "BackgroundStyle._setDefaults" )
-
-	local defaults = BackgroundStyle._STYLE_DEFAULTS
-
-	defaults = BackgroundStyle._addMissingChildProperties( defaults, defaults )
-	-- Utils.print( defaults )
-
-	local style = BackgroundStyle:new{
-		data=defaults
-	}
-	BackgroundStyle.__base_style__ = style
-end
-
-
-
 
 function BackgroundStyle._verifyClassProperties( src )
 	-- print( "BackgroundStyle._verifyClassProperties" )
@@ -318,21 +308,6 @@ function BackgroundStyle._verifyClassProperties( src )
 	local emsg = "Style: requires property '%s'"
 
 	local is_valid = BaseStyle._verifyClassProperties( src )
-
-	if not src.width then
-		print(sformat(emsg,'width')) ; is_valid=false
-	end
-	if not src.height then
-		print(sformat(emsg,'height')) ; is_valid=false
-	end
-	if not src.anchorX then
-		print(sformat(emsg,'anchorX')) ; is_valid=false
-	end
-	if not src.anchorY then
-		print(sformat(emsg,'anchorY')) ; is_valid=false
-	end
-
-	-- check sub-styles ??
 
 	local StyleClass
 
@@ -343,6 +318,25 @@ function BackgroundStyle._verifyClassProperties( src )
 	return is_valid
 end
 
+
+-- _setDefaults()
+-- create one of each style
+--
+function BackgroundStyle._setDefaults( StyleClass )
+	-- print( "BackgroundStyle._setDefaults", StyleClass )
+	local BASE_STYLES = StyleClass._BASE_STYLES
+	local defaults = StyleClass._STYLE_DEFAULTS
+
+	local classes = StyleFactory.getStyleClasses()
+
+	for _, Cls in ipairs( classes ) do
+		local cls_type = Cls.TYPE
+		local def = Utils.extend( defaults, {view={type=cls_type}} )
+		StyleClass._addMissingChildProperties( def, def )
+		BASE_STYLES[ cls_type ] = StyleClass:new{ data=def }
+	end
+
+end
 
 
 
@@ -385,7 +379,8 @@ end
 
 
 -- createStyleFromType()
--- looks for style class based on view type
+-- method processes data from the 'view' setter
+-- looks for style class based on type
 -- then calls to create the style
 --
 function BackgroundStyle:createStyleFromType( params )
@@ -397,7 +392,7 @@ function BackgroundStyle:createStyleFromType( params )
 
 	-- look around for our style 'type'
 	if data==nil then
-		style_type = StyleFactory.Rectangle.TYPE
+		style_type = self._DEFAULT_VIEWTYPE
 	elseif type(data)=='string' then
 		-- we have type already
 		style_type = data
@@ -429,35 +424,97 @@ function BackgroundStyle:verifyClassProperties()
 end
 
 
+--== type
+
+function BackgroundStyle.__getters:type()
+	-- print( 'BackgroundStyle.__getters:type', self._inherit )
+	local value = self._type
+	if value==nil and self._inherit then
+		value = self._inherit.type
+	end
+	return value
+end
+function BackgroundStyle.__setters:type( value )
+	-- print( 'BackgroundStyle.__setters:type', value )
+	assert( (value==nil and self._inherit) or type(value)=='string' )
+	--==--
+	if value == self._type then return end
+	self._type = value
+end
+
+
 
 --====================================================================--
 --== Private Methods
 
 
+function BackgroundStyle:_getBaseStyle( data )
+	-- print( "BackgroundStyle:_getBaseStyle", self, data )
+	local BASE_STYLES = self._BASE_STYLES
+	local viewType, style
+
+	if data==nil then
+		viewType = self._DEFAULT_VIEWTYPE
+	elseif type(data)=='string' then
+		viewType = data
+	elseif data.isa and data:isa( BackgroundStyle ) then
+		--== Instance
+		viewType = data.type
+	else
+		--== Lua structure
+		viewType = data.type
+	end
+
+	style = BASE_STYLES[ viewType ]
+	if not style then
+		style = BASE_STYLES[ self._DEFAULT_VIEWTYPE ]
+	end
+
+	return style
+end
+
+
+-- this would clear any local modifications on style class
+-- called by clearProperties()
+--
+function BackgroundStyle:_clearProperties()
+	-- print( "BackgroundStyle:_clearProperties" )
+	self:superCall( '_clearProperties' )
+	--== no local properties to update
+end
+
+
 -- we could have nil, Lua structure, or Instance
 --
 function BackgroundStyle:_prepareData( data )
-	-- print("BackgroundStyle:_prepareData", data, self )
+	-- print( "BackgroundStyle:_prepareData", data, self )
 	if not data then return end
+	--==--
 
 	if data.isa and data:isa( BackgroundStyle ) then
 		--== Instance
 		local o = data
-		data = { view=o.view.type } -- setting to string, special case
+		data = o.type
 
 	else
 		--== Lua structure
 		local StyleClass
 		local src, dest = data, nil
 
-		dest = src.view
-		if dest==nil then
-			dest = { type=StyleFactory.Rectangle.TYPE }
-			print( "[WARNING] Defaulting to Rectangle style", type(dest.type) )
-			src.view = dest
+		if src.type==nil then
+			src.type = self._DEFAULT_VIEWTYPE
+			print( "[WARNING] Defaulting to style: ", src.type )
 		end
-		StyleClass = StyleFactory.getClass( dest.type )
-		StyleClass.copyExistingSrcProperties( dest, src )
+
+		dest = src.view
+		if not dest then
+			src.view = src.type -- using string
+		else
+			dest.type = src.type -- add our type to view
+			StyleClass = StyleFactory.getClass( src.type )
+			StyleClass.copyExistingSrcProperties( dest, src )
+		end
+
 
 	end
 
@@ -470,18 +527,6 @@ function BackgroundStyle:_checkChildren()
 	-- using setters !!!
 	if self._view==nil then self.view=nil end
 end
-
-
-
--- this would clear any local modifications on style class
--- called by clearProperties()
---
-function BackgroundStyle:_clearProperties()
-	-- print( "BackgroundStyle:_clearProperties" )
-	self:superCall( '_clearProperties' )
-	--== no local properties to update
-end
-
 
 
 

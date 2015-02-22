@@ -94,10 +94,37 @@ end
 setupBackground()
 
 
+
+--======================================================--
+--== create widgets, default style, then  delete
+
+function run_example1()
+
+	local bg1 = Widgets.newBackground()
+	local bg2 = Widgets.newRectangleBackground()
+	local bg3 = Widgets.newRoundedBackground()
+
+	bg1.x, bg1.y = H_CENTER, V_CENTER-100
+	bg2.x, bg2.y = H_CENTER, V_CENTER
+	bg3.x, bg3.y = H_CENTER, V_CENTER+100
+
+	timer.performWithDelay( 2000, function()
+		print( "\n\n Delete Widgets" )
+
+		bg1:removeSelf()
+		bg2:removeSelf()
+		bg3:removeSelf()
+	end)
+
+end
+
+run_example1()
+
+
 --======================================================--
 --== create background widget, default style
 
-function run_example1()
+function run_example2()
 
 	local bw1 = Widgets.newBackground{}
 
@@ -125,13 +152,47 @@ function run_example1()
 
 end
 
--- run_example1()
+-- run_example2()
+
+
+--======================================================--
+--== create background widget, default style
+
+function run_example3()
+
+	local bw1 = Widgets.newBackground{}
+
+	bw1:addEventListener( bw1.EVENT, widgetEvent_handler )
+	-- bw1.onProperty = widgetOnPropertyEvent_handler
+
+	bw1.x, bw1.y = H_CENTER, V_CENTER-100
+	bw1.y = V_CENTER-50
+	bw1.width, bw1.height = 10,10
+	-- bw1:setAnchor( {0,0} )
+	bw1:setAnchor( {0.5,0.5} )
+	-- bw1:setAnchor( {1,1} )
+	bw1:setViewFillColor(1,0,0 )
+
+
+	timer.performWithDelay( 1000, function()
+		print( "\n\nUpdate style" )
+		bw1.style=nil -- shouldn't change, already default
+	end)
+
+	timer.performWithDelay( 2000, function()
+		print( "\n\nClear properties" )
+		bw1:clearStyle() -- clear our changes
+	end)
+
+end
+
+-- run_example3()
 
 
 --======================================================--
 --== create background, inline style
 
-function run_example2()
+function run_example4()
 	local bw2 = Widgets.newBackground{
 		x=100,
 		y=100,
@@ -179,13 +240,13 @@ function run_example2()
 
 end
 
--- run_example2()
+-- run_example4()
 
 
 --======================================================--
 --== Create Style, add to Widget
 
-function run_example3()
+function run_example5()
 
 	local st3, bw3
 
@@ -228,13 +289,13 @@ function run_example3()
 
 end
 
--- run_example3()
+-- run_example5()
 
 
 --======================================================--
 --== create background widget, test hit area
 
-function run_example4()
+function run_example6()
 
 	local bw4 = Widgets.newBackground{}
 	bw4:addEventListener( bw4.EVENT, widgetEvent_handler )
@@ -276,5 +337,5 @@ function run_example4()
 
 end
 
-run_example4()
+-- run_example6()
 

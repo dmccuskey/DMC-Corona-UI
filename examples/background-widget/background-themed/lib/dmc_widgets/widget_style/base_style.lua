@@ -136,7 +136,7 @@ function Style:__init__( params )
 	params = params or {}
 	params.data = params.data
 	if params.inherit==nil then
-		params.inherit=self.class.__base_style__
+		params.inherit=self:_getBaseStyle( params.data )
 	end
 	params.name = params.name
 	params.widget = params.widget
@@ -194,14 +194,42 @@ end
 --== Static Methods
 
 
+function Style.initialize( manager )
+	error( "OVERRIDE Style.addMissingDestProperties" )
+end
+
+
+-- create empty Style structure (default)
+function Style.createStyleStructure( data )
+	-- print( "Style.createStyleStructure", data )
+	return {}
+end
+
+
 -- addMissingDestProperties()
 -- copies properties from src structure to dest structure
 -- if property isn't already in dest
 -- Note: usually used by OTHER classes
 --
 function Style.addMissingDestProperties( dest, src, params )
-	error( "OVERRIDE Style.addMissingDestProperties" )
+	-- print( "OVERRIDE Style.addMissingDestProperties" )
+	-- process local properties
+	-- pass along to add child properties
+	Style._addMissingChildProperties( dest, src )
 end
+
+
+-- _addMissingChildProperties()
+-- take destination and source. pass along destination
+-- to sub-style classes and let them fill in information
+-- as needed.
+-- 'src' allows us to send in some default properties
+--
+function Style._addMissingChildProperties( dest, src )
+	-- print( "OVERRIDE Style._addMissingChildProperties" )
+	return dest
+end
+
 
 -- addMissingDestProperties()
 -- copies properties from src structure to dest structure
@@ -213,8 +241,9 @@ function Style.copyExistingSrcProperties( dest, src, params )
 end
 
 
-function Style._verifyClassProperties( src )
+function Style._verifyClassProperties( src, excl  )
 	-- print( "Style:_verifyClassProperties" )
+	excl = excl or {}
 	assert( src, "Style:_verifyClassProperties missing source" )
 	--==--
 	local emsg = "Style: requires property '%s'"
@@ -226,10 +255,10 @@ function Style._verifyClassProperties( src )
 	if type(src.debugOn)~='boolean' then
 		print(sformat(emsg,'debugOn')) ; is_valid=false
 	end
-	if not src.width then
+	if not src.width and not excl.width then
 		print(sformat(emsg,'width')) ; is_valid=false
 	end
-	if not src.height then
+if not src.height and not excl.height then
 		print(sformat(emsg,'height')) ; is_valid=false
 	end
 	if not src.anchorX then
@@ -243,7 +272,19 @@ function Style._verifyClassProperties( src )
 end
 
 
+-- _setDefaults()
+-- generic method to set defaults
+function Style._setDefaults( StyleClass )
+	-- print( "Style._setDefaults" )
+	local defaults = StyleClass._STYLE_DEFAULTS
 
+	defaults = StyleClass._addMissingChildProperties( defaults, defaults )
+
+	local style = StyleClass:new{
+		data=defaults
+	}
+	StyleClass.__base_style__ = style
+end
 
 
 
@@ -309,10 +350,16 @@ function Style:getDefaultStyles()
 end
 
 
--- params:
--- data
--- widget
--- name
+-- createStyleFrom()
+-- important method to create a new style object
+-- given different parameters
+--
+-- @param params, table of options
+-- data, -- either nil, Lua structure, or Style object
+-- copy, whether to use style Object as is, or make a copy
+-- other params, given to Style Constructor
+-- (eg, name, inherit, parent, widget, etc)
+--
 function Style:createStyleFrom( params )
 	-- print( "Style:createStyleFrom", params, params.copy )
 	params = params or {}
@@ -324,16 +371,19 @@ function Style:createStyleFrom( params )
 	local StyleClass = self.class
 	local style
 	if data==nil then
+		-- no data, so create with given params
 		style = StyleClass:new( params )
-	elseif type(data.isa)=='function' then
 
+	elseif type(data.isa)=='function' then
+		-- data is a Style object, use directly or make copy
 		if not copy then
 			style = data
 		else
 			style = data:copyStyle( params )
 		end
+
 	else
-		-- Lua structure
+		-- data is Lua structure
 		style = StyleClass:new( params )
 	end
 
@@ -759,9 +809,18 @@ end
 --======================================================--
 -- Style Class setup
 
+
+function Style:_getBaseStyle()
+	-- print( "Style:_getBaseStyle", self )
+	return self.class.__base_style__
+end
+
+
 -- _prepareData()
 -- if necessary, modify data before we process it
 -- usually this is to copy styles from parent to child
+-- the goal is to have enough of a structure to be able
+-- to process with _parseData()
 --
 function Style:_prepareData( data )
 	-- print( "OVERRIDE Style:_prepareData", self )
@@ -919,7 +978,12 @@ function Style:_parentStyleEvent_handler( event )
 		-- however, check to see if property is valid
 		-- parent could have other properties
 		if self._VALID_PROPERTIES[property] then
-			self.__setters[property]( self, value, true )
+			local func = self.__setters[property]
+			if func then
+				func( self, value, true )
+			else
+				error("[WARNING] Unknown property ".. property .. tostring(self) )
+			end
 		end
 	end
 

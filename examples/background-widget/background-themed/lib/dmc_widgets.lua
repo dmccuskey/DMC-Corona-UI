@@ -101,20 +101,10 @@ dmc_lib_info = dmc_lib_data.dmc_corona
 --===================================================================--
 --== Imports
 
--- Managers
-Widget.FontMgr = require( PATH .. '.' .. 'font_manager' )
-Widget.ThemeMgr = require( PATH .. '.' .. 'theme_manager' )
-
--- Styles
-local BaseStyle = require( PATH .. '.' .. 'widget_style.base_style' )
-
 
 -- Widgets
-Widget.Button = require( PATH .. '.' .. 'widget_button' )
 Widget.ButtonGroup = require( PATH .. '.' .. 'button_group' )
 Widget.Formatter = require( PATH .. '.' .. 'data_formatters' )
-Widget.NavBar = require( PATH .. '.' .. 'widget_navbar' )
-Widget.NavItem = require( PATH .. '.' .. 'widget_navitem' )
 Widget.Popover = require( PATH .. '.' .. 'widget_popover' )
 Widget.PopoverMixModule = require( PATH .. '.' .. 'widget_popover.popover_mix' )
 
@@ -124,32 +114,205 @@ Widget.PopoverMixModule = require( PATH .. '.' .. 'widget_popover.popover_mix' )
 --== Setup, Constants
 
 
-Widget.WIDTH = display.contentWidth
-Widget.HEIGHT = display.contentHeight
+local WIDTH, HEIGHT = display.contentWidth, display.contentHeight
 
-Widget.Style = {
-	Base=BaseStyle.Base
-}
-
---== Give widgets access to Widget (do this last)
-
-Widget.NavBar.__setWidgetManager( Widget )
-Widget.NavItem.__setWidgetManager( Widget )
-Widget.Popover.__setWidgetManager( Widget )
-Widget.PopoverMixModule.__setWidgetManager( Widget )
-
-
-local loadBackgroundSupport, loadButtonSupport
-local loadTextSupport, loadTextFieldSupport
+local sformat = string.format
 
 
 
 --===================================================================--
---== newText widget
+--== Support Functions
 
 
-loadBackgroundSupport = function()
-	-- print("loadBackgroundSupport")
+local function initialize( manager )
+	-- print( "Widgets.initialize" )
+
+	--== Load Managers
+
+	local FontMgr = require( PATH .. '.' .. 'font_manager' )
+	local ThemeMgr = require( PATH .. '.' .. 'theme_manager' )
+
+	Widget.FontMgr = FontMgr
+	Widget.StyleMgr = StyleMgr
+	Widget.ThemeMgr = ThemeMgr
+
+	--== Load Base Style
+
+	local BaseStyle = require( PATH .. '.' .. 'widget_style.base_style' )
+	Widget.Style.Base=BaseStyle
+
+	--== Set UI/UX
+
+	local platformName = system.getInfo( 'platformName' )
+	if platformName=='Android' then
+		manager.setOS( manager.ANDROID )
+	elseif platformName=='WinPhone' then
+		manager.setOS( manager.WINDOWS )
+	elseif platformName=='iPhone' then
+		manager.setOS( manager.IOS )
+	else
+		manager.setOS( manager.IOS )
+	end
+
+end
+
+
+--====================================================================--
+--== Widget Manager
+--====================================================================--
+
+
+-- local Widget = {}
+
+--== Class Constants
+
+Widget.WIDTH = WIDTH
+Widget.HEIGHT = HEIGHT
+
+Widget.__os__ = nil -- 'iOS', 'android'
+Widget.__osVersion__ = nil -- 'iOS'-'8.0', 'android'-'2.1'
+
+Widget.IOS = 'iOS'
+Widget.ANDROID = 'Android'
+Widget.WINDOWS = 'WinPhone'
+
+Widget.IOS = 'iOS'
+
+Widget._VALID_OS = {
+	[Widget.IOS]=Widget.IOS,
+	[Widget.ANDROID]=Widget.ANDROID,
+	default=Widget.IOS,
+	-- [Widget.WINDOWS]=Widget.WINDOWS
+}
+
+Widget.IOS_7x = "7.0.0"
+Widget.IOS_8x = "8.0.0"
+
+Widget.ANDROID_20 = "2.0.0"
+Widget.ANDROID_21 = "2.1.0"
+
+Widget._VALID_OS_VERSION = {
+
+	[Widget.IOS]={
+		default=Widget.IOS_8x,
+		[Widget.IOS_8x]=Widget.IOS_8x
+	},
+
+	[Widget.ANDROID]={
+		default=Widget.ANDROID_21,
+		[Widget.ANDROID_20]=Widget.ANDROID_20,
+		[Widget.ANDROID_21]=Widget.ANDROID_21
+	},
+	-- [Widget.WINDOWS]=true
+}
+
+
+--== Access to all style classes (once loaded)
+
+Widget.Style = {}
+
+--== Give widgets access to Widget (do this last)
+
+Widget.Popover.__setWidgetManager( Widget )
+Widget.PopoverMixModule.__setWidgetManager( Widget )
+
+
+
+--===================================================================--
+--== Theme Methods
+
+
+function Widget.activateTheme( name )
+end
+
+function Widget.getTheme( name )
+end
+
+function Widget.addTheme( theme )
+end
+
+function Widget.deleteTheme( name )
+end
+
+function Widget.loadTheme( file )
+end
+
+function Widget.unloadTheme( name )
+end
+
+function Widget.reloadTheme( name )
+end
+
+
+
+--===================================================================--
+--== Style Methods
+
+
+function Widget.addStyle( style, theme )
+	local s = Widget.StyleMgr:addStyle( style )
+	if s.name and theme then
+		Widget.ThemeMgr:addStyle( s, theme )
+	end
+end
+
+function Widget.deleteStyle( name )
+end
+
+function Widget.loadStyles( file )
+end
+
+
+
+--===================================================================--
+--== Misc Methods
+
+
+function Widget.setOS( platform, version )
+	-- print( "Widget.setOS", platform, version )
+
+	--== Set OS
+
+	local os = Widget._VALID_OS[ platform ]
+	if not os then
+		os = Widget._VALID_OS.default
+		print( sformat( "[WARNING] Widgets.setOS() unknown OS '%s'", tostring(platform) ))
+		print( sformat( "Setting to default '%s'", tostring( os ) ) )
+	end
+	Widget.__os__ = os
+
+	--== Set OS Version
+
+	local versions = Widget._VALID_OS_VERSION[ os ]
+	local value = versions[ version ]
+	if not value then
+		value = versions.default
+		if LOCAL_DEBUG then
+			print( sformat( "[WARNING] Widgets.setOS() unknown OS Version '%s'", tostring( version )))
+			print( sformat( "Setting to default '%s'", tostring( value ) ) )
+		end
+	end
+	Widget.__osVersion__ = value
+
+	if LOCAL_DEBUG then
+		print( "Widget theme set for ", os, value )
+	end
+
+end
+
+
+
+--===================================================================--
+--== Widget Methods
+
+
+--======================================================--
+-- newText Support
+
+function Widget._loadBackgroundSupport()
+	-- print( "Widget._loadBackgroundSupport" )
+
+	--== Background Components
 
 	local Background = require( PATH .. '.' .. 'widget_background' )
 	local BackgroundStyle = require( PATH .. '.' .. 'widget_style.background_style' )
@@ -163,51 +326,86 @@ loadBackgroundSupport = function()
 	Widget.Style.Background=BackgroundStyle
 	Widget.Style.BackgroundFactory=BackgroundStyleFactory
 
-	Background.initialize( Widget )
+	--== Reverse order
 	BackgroundViewFactory.initialize( Widget )
-	BackgroundStyle.initialize( Widget )
 	BackgroundStyleFactory.initialize( Widget )
+	BackgroundStyle.initialize( Widget )
+	Background.initialize( Widget )
 end
 
 
 function Widget.newBackground( options )
-	if not Widget.Background then loadBackgroundSupport() end
+	if not Widget.Background then Widget._loadBackgroundSupport() end
 	return Widget.Background:new( options )
 end
+
+function Widget.newRectangleBackground( options )
+	if not Widget.Background then Widget._loadBackgroundSupport() end
+	return Widget.Background:new( options )
+end
+
+function Widget.newRoundedBackground( options )
+	if not Widget.Background then Widget._loadBackgroundSupport() end
+	return Widget.Background:new( options )
+end
+
 
 function Widget.newBackgroundStyle( style_info )
 	-- print("Widget.newBackgroundStyle")
 	-- assert( type(style_info)=='table' and style_info.type, "newBackgroundStyle: missing style property 'type'" )
-	if not Widget.Style.Background then loadBackgroundSupport() end
+	if not Widget.Style.Background then Widget._loadBackgroundSupport() end
 	return Widget.Style.Background:createStyleFrom{ data=style_info }
 end
 
+function Widget.newRectangleBackgroundStyle( style_info )
+	style_info = style_info or {}
+	if not Widget.Background then Widget._loadBackgroundSupport() end
+	style_info.type = Widget.Style.BackgroundFactory.Rectangle.TYPE
+	return Widget.newBackgroundStyle( style_info )
+end
 
-
---===================================================================--
---== newButton widget
-
-
-loadButtonSupport = function()
-	-- print("loadButtonSupport")
-	local Button = require( PATH .. '.' .. 'widget_button' )
-	local ButtonStyle = require( PATH .. '.' .. 'widget_style.button_style' )
-
-	Widget.Button=Button
-	Widget.Style.Button=ButtonStyle
-
-	Button.initialize( Widget )
-	ButtonStyle.initialize( Widget )
+function Widget.newRoundedBackgroundStyle( style_info )
+	style_info = style_info or {}
+	if not Widget.Background then Widget._loadBackgroundSupport() end
+	style_info.type = Widget.Style.BackgroundFactory.Rounded.TYPE
+	return Widget.newBackgroundStyle( style_info )
 end
 
 
+--======================================================--
+-- newButton Support
+
+function Widget._loadButtonSupport()
+	-- print( "Widget._loadButtonSupport" )
+
+	--== Dependencies
+
+	Widget._loadBackgroundSupport()
+	Widget._loadTextSupport()
+
+	--== Button Components
+
+	local Button = require( PATH .. '.' .. 'widget_button' )
+	local ButtonStyle = require( PATH .. '.' .. 'widget_style.button_style' )
+	local ButtonStateStyle = require( PATH .. '.' .. 'widget_button.button_state_style' )
+
+	Widget.Button=Button
+	Widget.Style.Button=ButtonStyle
+	Widget.Style.ButtonState=ButtonStateStyle
+
+	--== Reverse order
+	ButtonStateStyle.initialize( Widget )
+	ButtonStyle.initialize( Widget )
+	Button.initialize( Widget )
+end
+
 function Widget.newButton( options )
-	if not Widget.Button then loadButtonSupport() end
+	if not Widget.Button then Widget._loadButtonSupport() end
 	return Widget.Button.create( options )
 end
 
 function Widget.newPushButton( options )
-	if not Widget.Button then loadButtonSupport() end
+	if not Widget.Button then Widget._loadButtonSupport() end
 	options = options or {}
 	options.action = Widget.Button.PushButton.TYPE
 	--==--
@@ -215,7 +413,7 @@ function Widget.newPushButton( options )
 end
 
 function Widget.newRadioButton( options )
-	if not Widget.Button then loadButtonSupport() end
+	if not Widget.Button then Widget._loadButtonSupport() end
 	options = options or {}
 	options.action = Widget.Button.RadioButton.TYPE
 	--==--
@@ -223,7 +421,7 @@ function Widget.newRadioButton( options )
 end
 
 function Widget.newToggleButton( options )
-	if not Widget.Button then loadButtonSupport() end
+	if not Widget.Button then Widget._loadButtonSupport() end
 	options = options or {}
 	options.action = Widget.Button.ToggleButton.TYPE
 	--==--
@@ -231,53 +429,62 @@ function Widget.newToggleButton( options )
 end
 
 
-
---===================================================================--
---== newButtonGroup widget
-
+--======================================================--
+-- newButtonGroup Support
 
 function Widget.newButtonGroup( options )
 	return Widget.ButtonGroup.create( options )
 end
 
 
-
---===================================================================--
---== newFormatter widget
-
+--======================================================--
+-- newFormatter Support
 
 function Widget.newFormatter( options )
 	if type(options)=='string' then
+		-- wrap option in a params table
 		options = { type=options }
 	end
 	return Widget.Formatter.create( options )
 end
 
 
+--======================================================--
+-- newNavBar Support
 
---===================================================================--
---== newNavBar widget
+function Widget._loadNavBarSupport()
+	-- print( "Widget._loadNavBarSupport" )
 
+	--== Dependencies
+
+	Widget._loadButtonSupport()
+
+	--== Nav Bar Components
+
+	local NavBar = require( PATH .. '.' .. 'widget_navbar' )
+	local NavItem = require( PATH .. '.' .. 'widget_navitem' )
+
+	Widget.NavBar=NavBar
+	Widget.NavItem=NavItem
+
+	--== Reverse order
+	NavItem.initialize( Widget )
+	NavBar.initialize( Widget )
+end
 
 function Widget.newNavBar( options )
+	if not Widget.Background then Widget._loadNavBarSupport() end
 	return Widget.NavBar:new( options )
 end
 
-
-
---===================================================================--
---== newNavItem widget
-
-
 function Widget.newNavItem( options )
+	if not Widget.Background then Widget._loadNavBarSupport() end
 	return Widget.NavItem:new( options )
 end
 
 
-
---===================================================================--
---== newPopover widget
-
+--======================================================--
+-- newPopover Support
 
 function Widget.newPopover( options )
 	local theme = nil
@@ -286,12 +493,8 @@ function Widget.newPopover( options )
 end
 
 
-
-
-
---===================================================================--
---== newScroller widget
-
+--======================================================--
+-- newScroller Support
 
 -- function Widget.newScroller( options )
 -- 	local theme = nil
@@ -300,10 +503,8 @@ end
 -- end
 
 
-
---===================================================================--
---== newSlideView widget
-
+--======================================================--
+-- newSlideView Support
 
 function Widget.newSlideView( options )
 	local theme = nil
@@ -312,10 +513,8 @@ function Widget.newSlideView( options )
 end
 
 
-
---===================================================================--
---== newTableView widget
-
+--======================================================--
+-- newTableView Support
 
 function Widget.newTableView( options )
 	local theme = nil
@@ -324,96 +523,77 @@ function Widget.newTableView( options )
 end
 
 
+--======================================================--
+-- newText Support
 
---===================================================================--
---== newText widget
+function Widget._loadTextSupport()
+	-- print( "Widget._loadTextSupport" )
 
+	--== Text Components
 
-loadTextSupport = function()
-	-- print("loadTextSupport")
 	local Text = require( PATH .. '.' .. 'widget_text' )
 	local TextStyle = require( PATH .. '.' .. 'widget_style.text_style' )
 
 	Widget.Text=Text
 	Widget.Style.Text=TextStyle
 
-	Text.initialize( Widget )
+	--== Reverse order
 	TextStyle.initialize( Widget )
+	Text.initialize( Widget )
 end
 
-
 function Widget.newText( options )
-	-- print("Widget.newText")
-	if not Widget.Text then loadTextSupport() end
+	-- print( "Widget.newText" )
+	if not Widget.Text then Widget._loadTextSupport() end
 	return Widget.Text:new( options )
 end
 
 function Widget.newTextStyle( style_info )
-	-- print("Widget.newTextStyle")
-	if not Widget.Style.Text then loadTextSupport() end
+	-- print( "Widget.newTextStyle" )
+	if not Widget.Style.Text then Widget._loadTextSupport() end
 	return Widget.Style.Text:createStyleFrom{ data=style_info }
 end
 
 
+--======================================================--
+-- TextField Support
 
---===================================================================--
---== TextField support
+function Widget._loadTextFieldSupport()
+	-- print( "Widget._loadTextFieldSupport" )
 
+	--== Dependencies
 
-loadTextFieldSupport = function()
-	-- print("loadTextFieldSupport")
-	-- dependencies
-	loadBackgroundSupport()
-	loadTextSupport()
+	Widget._loadBackgroundSupport()
+	Widget._loadTextSupport()
 
-	TextField = require( PATH .. '.' .. 'widget_textfield' )
-	TextFieldStyle = require( PATH .. '.' .. 'widget_style.textfield_style' )
+	--== TextField Components
+
+	local TextField = require( PATH .. '.' .. 'widget_textfield' )
+	local TextFieldStyle = require( PATH .. '.' .. 'widget_style.textfield_style' )
 
 	Widget.TextField=TextField
 	Widget.Style.TextField=TextFieldStyle
 
-	TextField.initialize( Widget )
+	--== Reverse order
 	TextFieldStyle.initialize( Widget )
+	TextField.initialize( Widget )
 end
 
-
 function Widget.newTextField( options )
-	-- print("Widget.newTextField")
-	if not Widget.TextField then loadTextFieldSupport() end
+	-- print( "Widget.newTextField" )
+	if not Widget.TextField then Widget._loadTextFieldSupport() end
 	return Widget.TextField:new( options )
 end
 
 function Widget.newTextFieldStyle( style_info )
-	-- print("Widget.newTextFieldStyle")
-	if not Widget.Style.TextField then loadTextFieldSupport() end
+	-- print( "Widget.newTextFieldStyle" )
+	if not Widget.Style.TextField then Widget._loadTextFieldSupport() end
 	return Widget.Style.TextField:createStyleFrom{ data=style_info }
 end
 
 
---===================================================================--
---== newTextFieldStyle
-
-
-
-
-
---===================================================================--
---== newToggleButton widget
-
-
-function Widget.newToggleButton( options )
-	options = options or {}
-	--==--
-	local theme = nil
-	options.type = Widget.Button.ToggleButton.TYPE
-	return Widget.Button.create( options, theme )
-end
-
-
-
---===================================================================--
---== newViewPager widget
-
+--======================================================--
+-- newViewPager Support
 
 -- function Widget.newViewPager( options )
 -- 	local theme = nil
@@ -422,6 +602,13 @@ end
 -- end
 
 
+
+--====================================================================--
+--== Init Widgets
+--====================================================================--
+
+
+initialize( Widget )
 
 
 return Widget

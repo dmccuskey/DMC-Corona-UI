@@ -66,10 +66,10 @@ dmc_widget_func = dmc_widget_data.func
 
 local Objects = require 'dmc_objects'
 
---== Components
-
-local Widgets -- set later
-local NavItem -- set later
+--== To be set in initialize()
+local Widgets = nil
+local ThemeMgr = nil
+local NavItem = nil
 
 
 
@@ -77,7 +77,6 @@ local NavItem -- set later
 --== Setup, Constants
 
 
--- setup some aliases to make code cleaner
 local newClass = Objects.newClass
 local ComponentBase = Objects.ComponentBase
 
@@ -104,6 +103,10 @@ NavBar.FORWARD = 'forward-trans'
 NavBar.REVERSE = 'reverse-trans'
 NavBar.TRANSITION_TIME = 400
 
+--== Theme Constants
+
+NavBar.THEME_ID = 'navbar'
+NavBar.STYLE_CLASS = nil -- added later
 
 --== Event Constants
 
@@ -224,10 +227,13 @@ end
 --== Static Methods
 
 
-function NavBar.__setWidgetManager( manager )
-	-- print( "NavBar.__setWidgetManager" )
+function NavBar.initialize( manager )
+	-- print( "NavBar.initialize" )
 	Widgets = manager
-	NavItem = manager.NavItem
+	ThemeMgr = Widgets.ThemeMgr
+	NavItem = Widgets.NavItem
+
+	ThemeMgr:registerWidget( NavBar.THEME_ID, NavBar )
 end
 
 
