@@ -220,7 +220,51 @@ Widget.PopoverMixModule.__setWidgetManager( Widget )
 
 
 --===================================================================--
---== newText widget
+--== Theme Methods
+
+
+function Widget.activateTheme( name )
+end
+
+function Widget.getTheme( name )
+end
+
+function Widget.addTheme( theme )
+end
+
+function Widget.deleteTheme( name )
+end
+
+function Widget.loadTheme( file )
+end
+
+function Widget.unloadTheme( name )
+end
+
+function Widget.reloadTheme( name )
+end
+
+
+
+--===================================================================--
+--== Style Methods
+
+
+function Widget.addStyle( style, theme )
+	local s = Widget.StyleMgr:addStyle( style )
+	if s.name and theme then
+		Widget.ThemeMgr:addStyle( s, theme )
+	end
+end
+
+function Widget.deleteStyle( name )
+end
+
+function Widget.loadStyles( file )
+end
+
+
+
 --===================================================================--
 --== Misc Methods
 
@@ -259,6 +303,13 @@ end
 
 
 
+--===================================================================--
+--== Widget Methods
+
+
+--======================================================--
+-- newText Support
+
 function Widget._loadBackgroundSupport()
 	-- print( "Widget._loadBackgroundSupport" )
 
@@ -283,7 +334,6 @@ function Widget._loadBackgroundSupport()
 	Background.initialize( Widget )
 end
 
-
 function Widget.newBackground( options )
 	if not Widget.Background then Widget._loadBackgroundSupport() end
 	return Widget.Background:new( options )
@@ -297,10 +347,8 @@ function Widget.newBackgroundStyle( style_info )
 end
 
 
-
---===================================================================--
---== newButton widget
-
+--======================================================--
+-- newButton Support
 
 function Widget._loadButtonSupport()
 	-- print( "Widget._loadButtonSupport" )
@@ -325,7 +373,6 @@ function Widget._loadButtonSupport()
 	ButtonStyle.initialize( Widget )
 	Button.initialize( Widget )
 end
-
 
 function Widget.newButton( options )
 	if not Widget.Button then Widget._loadButtonSupport() end
@@ -357,20 +404,16 @@ function Widget.newToggleButton( options )
 end
 
 
-
---===================================================================--
---== newButtonGroup widget
-
+--======================================================--
+-- newButtonGroup Support
 
 function Widget.newButtonGroup( options )
 	return Widget.ButtonGroup.create( options )
 end
 
 
-
---===================================================================--
---== newFormatter widget
-
+--======================================================--
+-- newFormatter Support
 
 function Widget.newFormatter( options )
 	if type(options)=='string' then
@@ -381,10 +424,8 @@ function Widget.newFormatter( options )
 end
 
 
-
---===================================================================--
---== newNavBar widget
-
+--======================================================--
+-- newNavBar Support
 
 function Widget._loadNavBarSupport()
 	-- print( "Widget._loadNavBarSupport" )
@@ -406,12 +447,10 @@ function Widget._loadNavBarSupport()
 	NavBar.initialize( Widget )
 end
 
-
 function Widget.newNavBar( options )
 	if not Widget.Background then Widget._loadNavBarSupport() end
 	return Widget.NavBar:new( options )
 end
-
 
 function Widget.newNavItem( options )
 	if not Widget.Background then Widget._loadNavBarSupport() end
@@ -419,10 +458,8 @@ function Widget.newNavItem( options )
 end
 
 
-
---===================================================================--
---== newPopover widget
-
+--======================================================--
+-- newPopover Support
 
 function Widget.newPopover( options )
 	local theme = nil
@@ -431,10 +468,8 @@ function Widget.newPopover( options )
 end
 
 
-
---===================================================================--
---== newScroller widget
-
+--======================================================--
+-- newScroller Support
 
 -- function Widget.newScroller( options )
 -- 	local theme = nil
@@ -443,10 +478,8 @@ end
 -- end
 
 
-
---===================================================================--
---== newSlideView widget
-
+--======================================================--
+-- newSlideView Support
 
 function Widget.newSlideView( options )
 	local theme = nil
@@ -455,10 +488,8 @@ function Widget.newSlideView( options )
 end
 
 
-
---===================================================================--
---== newTableView widget
-
+--======================================================--
+-- newTableView Support
 
 function Widget.newTableView( options )
 	local theme = nil
@@ -467,10 +498,8 @@ function Widget.newTableView( options )
 end
 
 
-
---===================================================================--
---== newText widget
-
+--======================================================--
+-- newText Support
 
 function Widget._loadTextSupport()
 	-- print( "Widget._loadTextSupport" )
@@ -488,7 +517,6 @@ function Widget._loadTextSupport()
 	Text.initialize( Widget )
 end
 
-
 function Widget.newText( options )
 	-- print( "Widget.newText" )
 	if not Widget.Text then Widget._loadTextSupport() end
@@ -502,10 +530,8 @@ function Widget.newTextStyle( style_info )
 end
 
 
-
---===================================================================--
---== TextField support
-
+--======================================================--
+-- TextField Support
 
 function Widget._loadTextFieldSupport()
 	-- print( "Widget._loadTextFieldSupport" )
@@ -528,7 +554,6 @@ function Widget._loadTextFieldSupport()
 	TextField.initialize( Widget )
 end
 
-
 function Widget.newTextField( options )
 	-- print( "Widget.newTextField" )
 	if not Widget.TextField then Widget._loadTextFieldSupport() end
@@ -542,10 +567,8 @@ function Widget.newTextFieldStyle( style_info )
 end
 
 
-
---===================================================================--
---== newViewPager widget
-
+--======================================================--
+-- newViewPager Support
 
 -- function Widget.newViewPager( options )
 -- 	local theme = nil
