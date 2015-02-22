@@ -102,16 +102,6 @@ dmc_lib_info = dmc_lib_data.dmc_corona
 --== Imports
 
 
---== Managers
-
-Widget.FontMgr = require( PATH .. '.' .. 'font_manager' )
-Widget.ThemeMgr = require( PATH .. '.' .. 'theme_manager' )
-
---== Styles
-
-local BaseStyle = require( PATH .. '.' .. 'widget_style.base_style' )
-
-
 -- Widgets
 Widget.ButtonGroup = require( PATH .. '.' .. 'button_group' )
 Widget.Formatter = require( PATH .. '.' .. 'data_formatters' )
@@ -124,12 +114,103 @@ Widget.PopoverMixModule = require( PATH .. '.' .. 'widget_popover.popover_mix' )
 --== Setup, Constants
 
 
-Widget.WIDTH = display.contentWidth
-Widget.HEIGHT = display.contentHeight
+local WIDTH, HEIGHT = display.contentWidth, display.contentHeight
 
-Widget.Style = {
-	Base=BaseStyle.Base
+local sformat = string.format
+
+
+
+--===================================================================--
+--== Support Functions
+
+
+local function initialize( manager )
+	-- print( "Widgets.initialize" )
+
+	--== Load Managers
+
+	local FontMgr = require( PATH .. '.' .. 'font_manager' )
+	local StyleMgr = require( PATH .. '.' .. 'style_manager' )
+	local ThemeMgr = require( PATH .. '.' .. 'theme_manager' )
+
+	Widget.FontMgr = FontMgr
+	Widget.StyleMgr = StyleMgr
+	Widget.ThemeMgr = ThemeMgr
+
+	--== Load Base Style
+
+	local BaseStyle = require( PATH .. '.' .. 'widget_style.base_style' )
+	Widget.Style.Base=BaseStyle
+
+	--== Set UI/UX
+
+	local platformName = system.getInfo( 'platformName' )
+	if platformName=='Android' then
+		manager.setOS( manager.ANDROID )
+	elseif platformName=='WinPhone' then
+		manager.setOS( manager.WINDOWS )
+	elseif platformName=='iPhone' then
+		manager.setOS( manager.IOS )
+	else
+		manager.setOS( manager.IOS )
+	end
+
+end
+
+
+--====================================================================--
+--== Widget Manager
+--====================================================================--
+
+
+-- local Widget = {}
+
+--== Class Constants
+
+Widget.WIDTH = WIDTH
+Widget.HEIGHT = HEIGHT
+
+Widget.__os__ = nil -- 'iOS', 'android'
+Widget.__osVersion__ = nil -- 'iOS'-'8.0', 'android'-'2.1'
+
+Widget.IOS = 'iOS'
+Widget.ANDROID = 'Android'
+Widget.WINDOWS = 'WinPhone'
+
+Widget.IOS = 'iOS'
+
+Widget._VALID_OS = {
+	[Widget.IOS]=Widget.IOS,
+	[Widget.ANDROID]=Widget.ANDROID,
+	default=Widget.IOS,
+	-- [Widget.WINDOWS]=Widget.WINDOWS
 }
+
+Widget.IOS_7x = "7.0.0"
+Widget.IOS_8x = "8.0.0"
+
+Widget.ANDROID_20 = "2.0.0"
+Widget.ANDROID_21 = "2.1.0"
+
+Widget._VALID_OS_VERSION = {
+
+	[Widget.IOS]={
+		default=Widget.IOS_8x,
+		[Widget.IOS_8x]=Widget.IOS_8x
+	},
+
+	[Widget.ANDROID]={
+		default=Widget.ANDROID_21,
+		[Widget.ANDROID_20]=Widget.ANDROID_20,
+		[Widget.ANDROID_21]=Widget.ANDROID_21
+	},
+	-- [Widget.WINDOWS]=true
+}
+
+
+--== Access to all style classes (once loaded)
+
+Widget.Style = {}
 
 --== Give widgets access to Widget (do this last)
 
@@ -140,6 +221,42 @@ Widget.PopoverMixModule.__setWidgetManager( Widget )
 
 --===================================================================--
 --== newText widget
+--===================================================================--
+--== Misc Methods
+
+
+function Widget.setOS( platform, version )
+	-- print( "Widget.setOS", platform, version )
+
+	--== Set OS
+
+	local os = Widget._VALID_OS[ platform ]
+	if not os then
+		os = Widget._VALID_OS.default
+		print( sformat( "[WARNING] Widgets.setOS() unknown OS '%s'", tostring(platform) ))
+		print( sformat( "Setting to default '%s'", tostring( os ) ) )
+	end
+	Widget.__os__ = os
+
+	--== Set OS Version
+
+	local versions = Widget._VALID_OS_VERSION[ os ]
+	local value = versions[ version ]
+	if not value then
+		value = versions.default
+		if LOCAL_DEBUG then
+			print( sformat( "[WARNING] Widgets.setOS() unknown OS Version '%s'", tostring( version )))
+			print( sformat( "Setting to default '%s'", tostring( value ) ) )
+		end
+	end
+	Widget.__osVersion__ = value
+
+	if LOCAL_DEBUG then
+		print( "Widget theme set for ", os, value )
+	end
+
+end
+
 
 
 function Widget._loadBackgroundSupport()
@@ -437,6 +554,13 @@ end
 -- end
 
 
+
+--====================================================================--
+--== Init Widgets
+--====================================================================--
+
+
+initialize( Widget )
 
 
 return Widget
