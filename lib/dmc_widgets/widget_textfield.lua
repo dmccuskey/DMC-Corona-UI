@@ -311,6 +311,7 @@ end
 
 function TextField:__initComplete__()
 	-- print( "TextField:__initComplete__" )
+	self:superCall( StyleMix, '__initComplete__' )
 	self:superCall( ComponentBase, '__initComplete__' )
 	--==--
 	self._rctHit_f = self:createCallback( self._hitAreaTouch_handler )
@@ -342,6 +343,7 @@ function TextField:__undoInitComplete__()
 	self._rctHit_f = nil
 	--==--
 	self:superCall( ComponentBase, '__undoInitComplete__' )
+	self:superCall( StyleMix, '__undoInitComplete__' )
 end
 
 -- END: Setup DMC Objects
