@@ -220,6 +220,7 @@ end
 
 function Text:__initComplete__()
 	-- print( "Text:__initComplete__" )
+	self:superCall( StyleMix, '__initComplete__' )
 	self:superCall( ComponentBase, '__initComplete__' )
 	--==--
 	self.style = self._tmp_style
@@ -232,6 +233,7 @@ function Text:__undoInitComplete__()
 	self.style = nil
 	--==--
 	self:superCall( ComponentBase, '__undoInitComplete__' )
+	self:superCall( StyleMix, '__undoInitComplete__' )
 end
 
 --== END: Setup DMC Objects

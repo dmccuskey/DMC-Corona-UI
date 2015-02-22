@@ -269,6 +269,7 @@ end
 
 function ButtonBase:__initComplete__()
 	-- print( "ButtonBase:__initComplete__" )
+	self:superCall( StyleMix, '__initComplete__' )
 	self:superCall( ComponentBase, '__initComplete__' )
 	--==--
 	self._rctHit_f = self:createCallback( self._hitAreaTouch_handler )
@@ -297,6 +298,7 @@ function ButtonBase:__undoInitComplete__()
 	self._rctHit_f = nil
 	--==--
 	self:superCall( ComponentBase, '__undoInitComplete__' )
+	self:superCall( StyleMix, '__undoInitComplete__' )
 end
 
 -- END: Setup DMC Objects
