@@ -222,6 +222,9 @@ end
 -- if property isn't already in dest
 -- this is used to make a structure with ALL properties
 -- Note: usually used by OTHER classes
+
+-- 'dest' should be basic structure of Style type
+-- 'src' can usually be anything, but usually parent of Style
 --
 function Style.addMissingDestProperties( dest, src, params )
 	-- print( "OVERRIDE Style.addMissingDestProperties" )
