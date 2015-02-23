@@ -898,8 +898,9 @@ end
 -- an substyles as we loop through
 --
 function Style:_parseData( data )
-	-- print( "Style:_parseData", self, data )
-	if data==nil then return end
+	print( ">>>>>>>>> Style:_parseData", self, data )
+	if data==nil then data={} end
+	--==--
 
 	-- Utils.print( data )
 	-- prep tables of things to exclude, etc
