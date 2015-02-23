@@ -147,8 +147,8 @@ ButtonStateStyle._STYLE_DEFAULTS = {
 		fontSize=10
 	},
 	background={
+		type='rectangle',
 		view={
-			type='rectangle',
 			fillColor={1,1,0.5, 0.5},
 			strokeWidth=6,
 			strokeColor={1,0,0,0.5},
