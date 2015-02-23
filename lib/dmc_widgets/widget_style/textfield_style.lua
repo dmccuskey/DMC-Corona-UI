@@ -97,6 +97,12 @@ TextFieldStyle.TYPE = 'textfield'
 
 TextFieldStyle.__base_style__ = nil
 
+TextFieldStyle._CHILDREN = {
+	background=true,
+	hint=true,
+	display=true
+}
+
 -- child styles
 TextFieldStyle.BACKGROUND_KEY = 'background'
 TextFieldStyle.BACKGROUND_NAME = 'textfield-background'
@@ -847,15 +853,6 @@ function TextFieldStyle:_prepareData( data )
 	end
 
 	return data
-end
-
-function TextFieldStyle:_checkChildren()
-	-- print( "TextFieldStyle:_checkChildren" )
-
-	-- using setters !!!
-	if self._background==nil then self.background=nil end
-	if self._hint==nil then self.hint=nil end
-	if self._display==nil then self.display=nil end
 end
 
 

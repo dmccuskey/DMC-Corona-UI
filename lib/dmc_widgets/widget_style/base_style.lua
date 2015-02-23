@@ -99,6 +99,8 @@ Style._VALID_PROPERTIES = {}
 --
 Style._EXCLUDE_PROPERTY_CHECK = {} -- d
 
+Style._CHILDREN = {}
+
 Style._STYLE_DEFAULTS = nil
 
 --== Event Constants
@@ -172,7 +174,6 @@ function Style:__initComplete__()
 	local data = self:_prepareData( self._tmp_data )
 	self._tmp_data = nil
 	self:_parseData( data )
-	self:_checkChildren()
 
 	-- do this after style/children constructed --
 
@@ -192,6 +193,16 @@ end
 
 --====================================================================--
 --== Static Methods
+
+
+Style._CHILDREN = {}
+
+function Style:isChild( name )
+	return (self._CHILDREN[ name ]~=nil)
+end
+function Style:getChildren( name )
+	return self._CHILDREN
+end
 
 
 function Style.initialize( manager )
@@ -879,16 +890,6 @@ function Style:_prepareData( data )
 	return data
 end
 
--- _checkChildren()
--- check children after class initialization
--- eg, if a style doesn't have any child properties (eg, background)
--- to actually create the substyle
---
-function Style:_checkChildren()
-	-- print("OVERRIDE Style:_checkChildren")
-end
-
-
 -- _parseData()
 -- parse through the Lua data given, creating properties
 -- an substyles as we loop through
@@ -902,13 +903,25 @@ function Style:_parseData( data )
 	local DEF = self._STYLE_DEFAULTS
 	local EXCL = self._EXCLUDE_PROPERTY_CHECK
 
-	for k,v in pairs( data ) do
-		-- print(k,v)
-		if DEF[k]==nil and not EXCL[k] then
-			error( sformat( "Style: invalid property style found '%s'", tostring(k) ) )
+	--== process properties, skip children
+
+	for prop, value in pairs( data ) do
+		print( prop, value )
+		if DEF[ prop ]==nil and not EXCL[ prop ] then
+			error( sformat( "Style: invalid property style found '%s'", tostring( prop ) ) )
 		end
-		self[k]=v
+		if not self:isChild( prop ) then
+			self[ prop ]=value
+		end
 	end
+
+	--== process children
+
+	for prop, _ in pairs( self:getChildren() ) do
+		print( prop, _ )
+		self[ prop ] = data[ prop ]
+	end
+
 end
 
 

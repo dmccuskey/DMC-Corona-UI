@@ -111,6 +111,9 @@ BackgroundStyle._DEFAULT_VIEWTYPE = nil -- set later
 --
 BackgroundStyle._BASE_STYLES = {}
 
+BackgroundStyle._CHILDREN = {
+	view=true
+}
 
 BackgroundStyle._VALID_PROPERTIES = {
 	debugOn=true,
@@ -522,13 +525,6 @@ function BackgroundStyle:_prepareData( data )
 	end
 
 	return data
-end
-
-function BackgroundStyle:_checkChildren()
-	-- print( "BackgroundStyle:_checkChildren" )
-
-	-- using setters !!!
-	if self._view==nil then self.view=nil end
 end
 
 

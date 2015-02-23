@@ -112,6 +112,13 @@ ButtonStyle.TYPE = 'button'
 
 ButtonStyle.__base_style__ = nil  -- set in initialize()
 
+TextFieldStyle._CHILDREN = {
+	inactive=true,
+	active=true,
+	disabled=true
+}
+
+
 -- child styles
 ButtonStyle.INACTIVE_KEY = 'inactive'
 ButtonStyle.INACTIVE_NAME = 'button-inactive-state'
@@ -686,16 +693,6 @@ function ButtonStyle:_prepareData( data )
 	end
 
 	return data
-end
-
-
-function ButtonStyle:_checkChildren()
-	-- print( "ButtonStyle:_checkChildren" )
-
-	-- using setters !!!
-	if self._inactive==nil then self.inactive=nil end
-	if self._active==nil then self.active=nil end
-	if self._disabled==nil then self.disabled=nil end
 end
 
 
