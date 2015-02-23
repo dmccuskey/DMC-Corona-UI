@@ -224,29 +224,16 @@ function RectangleStyle.copyExistingSrcProperties( dest, src, params )
 	--==--
 	local force=params.force
 
-	if (src.debugOn~=nil and dest.debugOn==nil) or force then
-		src.debugOn=src.debugOn
-	end
-	if (src.width~=nil and dest.width==nil) or force then
-		src.width=src.width
-	end
-	if (src.height~=nil and dest.height==nil) or force then
-		src.height=src.height
-	end
-	if (src.anchorX~=nil and dest.anchorX==nil) or force then
-		src.anchorX=src.anchorX
-	end
-	if (src.anchorY~=nil and dest.anchorY==nil) or force then
-		src.anchorY=src.anchorY
-	end
+	BaseStyle.copyExistingSrcProperties( dest, src, params )
+
 	if (src.fillColor~=nil and dest.fillColor==nil) or force then
-		src.fillColor=src.fillColor
+		dest.fillColor=src.fillColor
 	end
 	if (src.strokeColor~=nil and dest.strokeColor==nil) or force then
-		src.strokeColor=src.strokeColor
+		dest.strokeColor=src.strokeColor
 	end
 	if (src.strokeWidth~=nil and dest.strokeWidth==nil) or force then
-		src.strokeWidth=src.strokeWidth
+		dest.strokeWidth=src.strokeWidth
 	end
 
 	return dest
