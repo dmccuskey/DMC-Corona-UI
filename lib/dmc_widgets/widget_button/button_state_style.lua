@@ -97,6 +97,11 @@ local ButtonStateStyle = newClass( BaseStyle, {name="Button State Style"} )
 
 ButtonStateStyle.TYPE = 'button-state'
 
+ButtonStateStyle._CHILDREN = {
+	label=true,
+	background=true
+}
+
 ButtonStateStyle.__base_style__ = nil
 
 -- child styles
