@@ -229,3 +229,21 @@ function test_verifyStyleProperties()
 
 end
 
+
+
+
+function test_defaultInheritance()
+	print( "test_defaultInheritance" )
+	local Background = Widgets.Style.Background
+	local StyleFactory = Widgets.Style.BackgroundFactory
+	local RoundedStyle = StyleFactory.Rounded
+	local StyleBase
+
+	local s1 = Widgets.newRoundedBackgroundStyle()
+	StyleBase = Background:_getBaseStyle( s1.type )
+
+	styleInheritsFrom( s1, StyleBase )
+	hasValidStyleProperties( RoundedStyle, s1.view )
+
+end
+

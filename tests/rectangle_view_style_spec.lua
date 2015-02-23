@@ -226,3 +226,20 @@ end
 
 
 
+
+function test_defaultInheritance()
+	print( "test_defaultInheritance" )
+	local Background = Widgets.Style.Background
+	local StyleFactory = Widgets.Style.BackgroundFactory
+	local RectangleStyle = StyleFactory.Rectangle
+	local StyleBase
+
+	local s1 = Widgets.newRectangleBackgroundStyle()
+	StyleBase = Background:_getBaseStyle( s1.type )
+
+	styleInheritsFrom( s1, StyleBase )
+	hasValidStyleProperties( RectangleStyle, s1.view )
+
+end
+
+
