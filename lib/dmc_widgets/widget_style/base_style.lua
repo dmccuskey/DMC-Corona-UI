@@ -241,17 +241,16 @@ function Style.copyExistingSrcProperties( dest, src, params )
 end
 
 
-function Style._verifyClassProperties( src, excl  )
-	-- print( "Style:_verifyClassProperties" )
+function Style._verifyStyleProperties( src, excl )
+	-- print( "Style:_verifyStyleProperties", src )
 	excl = excl or {}
-	assert( src, "Style:_verifyClassProperties missing source" )
 	--==--
-	local emsg = "Style: requires property '%s'"
+	local emsg = "Style requires property '%s'"
 	local is_valid = true
 
-	if type(src.name)~='string' then
-		print(sformat(emsg,'name')) ; is_valid=false
-	end
+	-- if type(src.name)~='string' then
+	-- 	print(sformat(emsg,'name')) ; is_valid=false
+	-- end
 	if type(src.debugOn)~='boolean' then
 		print(sformat(emsg,'debugOn')) ; is_valid=false
 	end
@@ -795,10 +794,11 @@ end
 
 -- verifyClassProperties()
 -- ability to check properties to make sure everything went well
+-- this is used with a Style instance
 --
 function Style:verifyClassProperties()
 	-- print( "Style:verifyClassProperties" )
-	return Style._verifyClassProperties( self )
+	return Style._verifyStyleProperties( self )
 end
 
 

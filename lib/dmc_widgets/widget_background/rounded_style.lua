@@ -266,17 +266,12 @@ function RoundedStyle.copyExistingSrcProperties( dest, src, params )
 end
 
 
-function RoundedStyle._verifyClassProperties( src )
-	-- print( "RoundedStyle._verifyClassProperties" )
-	assert( src )
-	--==--
+function RoundedStyle._verifyStyleProperties( src )
+	-- print( "RoundedStyle._verifyStyleProperties" )
 	local emsg = "Style: requires property '%s'"
 
-	local is_valid = BaseStyle._verifyClassProperties( src )
+	local is_valid = BaseStyle._verifyStyleProperties( src )
 
-	if not src.type then
-		print(sformat(emsg,'type')) ; is_valid=false
-	end
 	if not src.cornerRadius then
 		print(sformat(emsg,'cornerRadius')) ; is_valid=false
 	end
@@ -372,7 +367,7 @@ function RoundedStyle:verifyClassProperties()
 		RoundedStyle.addMissingDestProperties( self, RoundedStyle._STYLE_DEFAULTS )
 	end
 
-	return RoundedStyle._verifyClassProperties( self )
+	return RoundedStyle._verifyStyleProperties( self )
 end
 
 

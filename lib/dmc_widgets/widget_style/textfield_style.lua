@@ -392,9 +392,6 @@ end
 
 function TextFieldStyle._verifyClassProperties( src )
 	-- print("TextFieldStyle._verifyClassProperties", src )
-	if not src then return end
-	assert( src )
-	--==--
 	local emsg = "Style: requires property '%s'"
 
 	local is_valid = BaseStyle._verifyClassProperties( src )

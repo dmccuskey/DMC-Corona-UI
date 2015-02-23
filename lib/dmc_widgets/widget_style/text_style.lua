@@ -300,18 +300,10 @@ end
 --
 function TextStyle._verifyClassProperties( src )
 	-- print( "TextStyle._verifyClassProperties", src )
-	assert( src )
-	--==--
-	local emsg = "Style: requires property '%s'"
+	local emsg = "Style requires property '%s'"
 
-	local is_valid = BaseStyle._verifyClassProperties( src, {width=true,height=true} )
-
-	--[[
-	we don't check for width/height because nil is valid value
-	sometimes we just use width/height of the text object
-	-- if not self.width then print(sformat(emsg,'width')) ; is_valid=false end
-	-- if not self.height then print(sformat(emsg,'height')) ; is_valid=false end
-	--]]
+	-- exclude width/height because nil is valid value
+	local is_valid = BaseStyle._verifyClassProperties( src, {width=true, height=true} )
 
 	if not src.align then
 		print(sformat(emsg,'align')) ; is_valid=false

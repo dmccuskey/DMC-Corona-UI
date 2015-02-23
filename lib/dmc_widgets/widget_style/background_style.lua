@@ -302,13 +302,15 @@ end
 
 
 
-function BackgroundStyle._verifyClassProperties( src )
-	-- print( "BackgroundStyle._verifyClassProperties" )
-	assert( src )
-	--==--
-	local emsg = "Style: requires property '%s'"
+function BackgroundStyle._verifyStyleProperties( src )
+	-- print( "BackgroundStyle._verifyStyleProperties" )
+	local emsg = "Style requires property '%s'"
 
-	local is_valid = BaseStyle._verifyClassProperties( src )
+	local is_valid = BaseStyle._verifyStyleProperties( src )
+
+	if not src.type then
+		print(sformat(emsg,'type')) ; is_valid=false
+	end
 
 	local StyleClass
 
@@ -421,7 +423,7 @@ end
 
 function BackgroundStyle:verifyClassProperties()
 	-- print( "BackgroundStyle:verifyClassProperties" )
-	return BackgroundStyle._verifyClassProperties( self )
+	return BackgroundStyle._verifyStyleProperties( self )
 end
 
 

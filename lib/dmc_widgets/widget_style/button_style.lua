@@ -423,27 +423,20 @@ end
 
 
 
-function ButtonStyle._verifyClassProperties( src )
-	-- print( "ButtonStyle._verifyClassProperties", src )
-	assert( src )
-	--==--
-	local emsg = "Style: requires property '%s'"
+function ButtonStyle._verifyStyleProperties( src )
+	-- print( "ButtonStyle._verifyStyleProperties", src )
+	local emsg = "Style requires property '%s'"
 
-	local is_valid = BaseStyle._verifyClassProperties( src )
+	local is_valid = BaseStyle._verifyStyleProperties( src )
 
-	-- TODO: add more tests
-
-	if not src.width then
-		print(sformat(emsg,'width')) ; is_valid=false
+	if not src.hitMarginX then
+		print(sformat(emsg,'hitMarginX')) ; is_valid=false
 	end
-	if not src.height then
-		print(sformat(emsg,'height')) ; is_valid=false
+	if not src.hitMarginY then
+		print(sformat(emsg,'hitMarginY')) ; is_valid=false
 	end
-	if not src.anchorX then
-		print(sformat(emsg,'anchorX')) ; is_valid=false
-	end
-	if not src.anchorY then
-		print(sformat(emsg,'anchorY')) ; is_valid=false
+	if not src.isHitActive then
+		print(sformat(emsg,'isHitActive')) ; is_valid=false
 	end
 
 	local StyleClass
@@ -621,7 +614,7 @@ end
 
 function ButtonStyle:verifyClassProperties()
 	-- print( "ButtonStyle:verifyClassProperties" )
-	return ButtonStyle._verifyClassProperties( self )
+	return ButtonStyle._verifyStyleProperties( self )
 end
 
 

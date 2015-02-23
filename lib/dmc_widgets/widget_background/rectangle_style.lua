@@ -253,17 +253,12 @@ function RectangleStyle.copyExistingSrcProperties( dest, src, params )
 end
 
 
-function RectangleStyle._verifyClassProperties( src )
-	-- print( "RectangleStyle._verifyClassProperties", src )
-	assert( src )
-	--==--
-	local emsg = "Style: requires property '%s'"
+function RectangleStyle._verifyStyleProperties( src )
+	print( "RectangleStyle._verifyStyleProperties", src )
+	local emsg = "Style requires property '%s'"
 
-	local is_valid = BaseStyle._verifyClassProperties( src )
+	local is_valid = BaseStyle._verifyStyleProperties( src )
 
-	if not src.type then
-		print(sformat(emsg,'type')) ; is_valid=false
-	end
 	if not src.fillColor then
 		print(sformat(emsg,'fillColor')) ; is_valid=false
 	end
@@ -319,10 +314,10 @@ function RectangleStyle:updateStyle( src, params )
 	RectangleStyle.copyExistingSrcProperties( self, src, params )
 end
 
---== verifyClassProperties
+--== verifyProperties
 
-function RectangleStyle:verifyClassProperties()
-	-- print( "RectangleStyle.verifyClassProperties" )
+function RectangleStyle:verifyProperties()
+	-- print( "RectangleStyle:verifyProperties" )
 
 	--== Check Inheritance
 
@@ -336,7 +331,7 @@ function RectangleStyle:verifyClassProperties()
 		RectangleStyle.addMissingDestProperties( self, RectangleStyle._STYLE_DEFAULTS )
 	end
 
-	return RectangleStyle._verifyClassProperties( self )
+	return RectangleStyle._verifyStyleProperties( self )
 end
 
 
