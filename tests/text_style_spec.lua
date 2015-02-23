@@ -29,16 +29,20 @@ local W, H = display.contentWidth, display.contentHeight
 local H_CENTER, V_CENTER = W*0.5, H*0.5
 
 
-local styleInheritsFrom = Utils.styleInheritsFrom
+local hasPropertyValue = TestUtils.hasPropertyValue
+local hasValidStyleProperties = TestUtils.hasValidStyleProperties
+local hasInvalidStyleProperties = TestUtils.hasInvalidStyleProperties
 
-local styleRawPropertyValueIs = Utils.styleRawPropertyValueIs
-local stylePropertyValueIs = Utils.stylePropertyValueIs
+local styleInheritsFrom = TestUtils.styleInheritsFrom
 
-local styleHasProperty = Utils.styleHasProperty
-local styleInheritsProp = Utils.styleInheritsProp
+local styleRawPropertyValueIs = TestUtils.styleRawPropertyValueIs
+local stylePropertyValueIs = TestUtils.stylePropertyValueIs
 
-local styleHasPropertyValue = Utils.styleHasPropertyValue
-local styleInheritsPropertyValueFrom = Utils.styleInheritsPropertyValueFrom
+local styleHasProperty = TestUtils.styleHasProperty
+local styleInheritsProp = TestUtils.styleInheritsProp
+
+local styleHasPropertyValue = TestUtils.styleHasPropertyValue
+local styleInheritsPropertyValueFrom = TestUtils.styleInheritsPropertyValueFrom
 
 
 
@@ -143,8 +147,7 @@ function test_copyingProperties()
 	assert_equal( dest.strokeWidth, src.strokeWidth, "property incorrect: strokeWidth" )
 	assert_equal( dest.textColor, src.textColor, "property incorrect: textColor" )
 
-
-	assert_true( TextStyle._verifyClassProperties( dest ), "missing properties" )
+	hasValidStyleProperties( TextStyle, dest )
 
 
 	src = { width=10, height=10, anchorX=10, }
