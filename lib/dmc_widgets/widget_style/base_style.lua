@@ -209,6 +209,7 @@ end
 -- addMissingDestProperties()
 -- copies properties from src structure to dest structure
 -- if property isn't already in dest
+-- this is used to make a structure with ALL properties
 -- Note: usually used by OTHER classes
 --
 function Style.addMissingDestProperties( dest, src, params )
@@ -223,6 +224,7 @@ end
 -- take destination and source. pass along destination
 -- to sub-style classes and let them fill in information
 -- as needed.
+-- this is used to make a structure with ALL properties
 -- 'src' allows us to send in some default properties
 --
 function Style._addMissingChildProperties( dest, src )
@@ -231,13 +233,58 @@ function Style._addMissingChildProperties( dest, src )
 end
 
 
--- addMissingDestProperties()
+-- copyExistingSrcProperties()
 -- copies properties from src structure to dest structure
--- if property isn't already in dest
--- Note: usually used by OTHER classes
---
+-- only if src has property and dest does not
+-- purpose is to allow property overrides and inheritance
+-- copied down from parent style
+-- force makes exact copy of source
+--[[
+source = {
+	fillColor={}
+	strokeWidth=4,
+
+	view = {
+
+	}
+}
+src=source, dest=source.view <send view>
+source = {
+	fillColor={}
+	strokeWidth=4,
+
+	view = {
+		fillColor={},
+		strokeWidth=4
+	}
+}
+--]]
 function Style.copyExistingSrcProperties( dest, src, params )
-	error( "OVERRIDE Style.copyExistingSrcProperties" )
+	-- print( "Style.copyExistingSrcProperties", dest, src )
+	params = params or {}
+	if params.force==nil then params.force=false end
+	assert( dest )
+	if not src then return end
+	--==--
+	local force=params.force
+
+	if (src.debugOn~=nil and dest.debugOn==nil) or force
+		then dest.debugOn=src.debugOn
+	end
+	if (src.width~=nil and dest.width==nil) or force
+		then dest.width=src.width
+	end
+	if (src.height~=nil and dest.height==nil) or force
+		then dest.height=src.height
+	end
+	if (src.anchorX~=nil and dest.anchorX==nil) or force
+		then dest.anchorX=src.anchorX
+	end
+	if (src.anchorY~=nil and dest.anchorY==nil) or force
+		then dest.anchorY=src.anchorY
+	end
+
+	return dest
 end
 
 
