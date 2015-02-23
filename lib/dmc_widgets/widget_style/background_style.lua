@@ -254,6 +254,24 @@ function BackgroundStyle.addMissingDestProperties( dest, src, params )
 end
 
 
+-- _addMissingChildProperties()
+-- copy properties to sub-styles
+--
+function BackgroundStyle._addMissingChildProperties( dest, src  )
+	print("\nBackgroundStyle._addMissingChildProperties", dest, src  )
+	local eStr = "ERROR: Style missing property '%s'"
+	local StyleClass, child
+
+Utils.print( dest )
+	child = dest.view
+	assert( child, sformat( eStr, 'view' ) )
+	StyleClass = StyleFactory.getClass( dest.type )
+	StyleClass.addMissingDestProperties( child, src )
+
+	return dest
+end
+
+
 
 -- to a new stucture
 function BackgroundStyle.copyExistingSrcProperties( dest, src, params )
@@ -282,22 +300,6 @@ function BackgroundStyle.copyExistingSrcProperties( dest, src, params )
 	if (src.anchorY~=nil and dest.anchorY==nil) or force then
 		dest.anchorY=src.anchorY
 	end
-
-	return dest
-end
-
---
--- copy properties to sub-styles
---
-function BackgroundStyle._addMissingChildProperties( dest, src  )
-	-- print("BackgroundStyle._addMissingChildProperties", dest, src  )
-	local eStr = "ERROR: Style missing property '%s'"
-	local StyleClass, child
-
-	child = dest.view
-	assert( child, sformat( eStr, 'view' ) )
-	StyleClass = StyleFactory.getClass( src.type )
-	StyleClass.addMissingDestProperties( child, src )
 
 	return dest
 end
