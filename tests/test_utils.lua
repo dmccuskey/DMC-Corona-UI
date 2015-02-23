@@ -20,7 +20,7 @@ end
 function Utils.hasValidStyleProperties( class, source )
 	assert( class, "'class' missing from test" )
 	assert( source, "'source' missing from test" )
-	local emsg = sformat( "invalid class properties for '%s'", tostring( class.NAME ) )
+	local emsg = sformat( "invalid class properties for '%s'", tostring( class ) )
 	assert_true( class._verifyStyleProperties( source ), emsg )
 end
 
@@ -41,11 +41,11 @@ end
 -- tests to see if Style inheritance matches
 -- tests for Inherit match
 --
-function Utils.styleInheritsFrom( style, inherit )
+function Utils.styleInheritsFrom( style, class )
 	assert( style, "'style' missing from test" )
-	assert( inherit, "'inherit' missing from test" )
-	local emsg = sformat( "inherit value for '%s'", tostring( property ) )
-	assert_equal( style._inherit, inherit, emsg )
+	assert( class, "'class' missing from test" )
+	local emsg = sformat( "incorrect class value for '%s'", tostring( style ) )
+	assert_equal( style._inherit, class, emsg )
 end
 
 
