@@ -112,7 +112,7 @@ ButtonStyle.TYPE = 'button'
 
 ButtonStyle.__base_style__ = nil  -- set in initialize()
 
-TextFieldStyle._CHILDREN = {
+ButtonStyle._CHILDREN = {
 	inactive=true,
 	active=true,
 	disabled=true
