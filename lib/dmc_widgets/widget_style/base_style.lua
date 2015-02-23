@@ -180,7 +180,7 @@ function Style:__initComplete__()
 	self.parent = self._parent -- use setter
 	-- self.widget = self._widget -- use setter
 
-	assert( self:verifyClassProperties(), "Style: missing properties"..tostring(self.class) )
+	assert( self:verifyProperties(), "Style: missing properties"..tostring(self.class) )
 
 	self._is_initialized = true
 end
@@ -792,12 +792,12 @@ function Style.__setters:textColor( value )
 end
 
 
--- verifyClassProperties()
+-- verifyProperties()
 -- ability to check properties to make sure everything went well
 -- this is used with a Style instance
 --
-function Style:verifyClassProperties()
-	-- print( "Style:verifyClassProperties" )
+function Style:verifyProperties()
+	-- print( "Style:verifyProperties" )
 	return Style._verifyStyleProperties( self )
 end
 

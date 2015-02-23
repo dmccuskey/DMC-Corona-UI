@@ -612,8 +612,8 @@ function ButtonStyle:updateStyle( src, params )
 	ButtonStyle.copyExistingSrcProperties( self, src, params )
 end
 
-function ButtonStyle:verifyClassProperties()
-	-- print( "ButtonStyle:verifyClassProperties" )
+function ButtonStyle:verifyProperties()
+	-- print( "ButtonStyle:verifyProperties" )
 	return ButtonStyle._verifyStyleProperties( self )
 end
 

@@ -421,8 +421,8 @@ function BackgroundStyle:updateStyle( src, params )
 end
 
 
-function BackgroundStyle:verifyClassProperties()
-	-- print( "BackgroundStyle:verifyClassProperties" )
+function BackgroundStyle:verifyProperties()
+	-- print( "BackgroundStyle:verifyProperties" )
 	return BackgroundStyle._verifyStyleProperties( self )
 end
 

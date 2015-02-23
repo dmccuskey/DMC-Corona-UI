@@ -296,14 +296,14 @@ function TextStyle.copyExistingSrcProperties( dest, src, params )
 end
 
 
--- _verifyClassProperties()
+-- _verifyStyleProperties()
 --
-function TextStyle._verifyClassProperties( src )
-	-- print( "TextStyle._verifyClassProperties", src )
+function TextStyle._verifyStyleProperties( src )
+	-- print( "TextStyle._verifyStyleProperties", src )
 	local emsg = "Style requires property '%s'"
 
 	-- exclude width/height because nil is valid value
-	local is_valid = BaseStyle._verifyClassProperties( src, {width=true, height=true} )
+	local is_valid = BaseStyle._verifyStyleProperties( src, {width=true, height=true} )
 
 	if not src.align then
 		print(sformat(emsg,'align')) ; is_valid=false
@@ -351,11 +351,11 @@ function TextStyle:updateStyle( src, params )
 	TextStyle.copyExistingSrcProperties( self, src, params )
 end
 
---== verifyClassProperties
+--== verifyProperties
 
-function TextStyle:verifyClassProperties()
-	-- print( "TextStyle:verifyClassProperties" )
-	return TextStyle._verifyClassProperties( self )
+function TextStyle:verifyProperties()
+	-- print( "TextStyle:verifyProperties" )
+	return TextStyle._verifyStyleProperties( self )
 end
 
 

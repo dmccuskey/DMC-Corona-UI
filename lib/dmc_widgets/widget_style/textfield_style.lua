@@ -390,11 +390,11 @@ end
 
 
 
-function TextFieldStyle._verifyClassProperties( src )
-	-- print("TextFieldStyle._verifyClassProperties", src )
+function TextFieldStyle._verifyProperties( src )
+	-- print("TextFieldStyle._verifyProperties", src )
 	local emsg = "Style: requires property '%s'"
 
-	local is_valid = BaseStyle._verifyClassProperties( src )
+	local is_valid = BaseStyle._verifyProperties( src )
 
 	if not src.align then
 		print(sformat(emsg,'align')) ; is_valid=false
@@ -786,9 +786,9 @@ function TextFieldStyle:updateStyle( src, params )
 	TextFieldStyle.copyExistingSrcProperties( self, src, params )
 end
 
-function TextFieldStyle:verifyClassProperties()
-	-- print( "TextFieldStyle:verifyClassProperties" )
-	return TextFieldStyle._verifyClassProperties( self )
+function TextFieldStyle:verifyProperties()
+	-- print( "TextFieldStyle:verifyProperties" )
+	return TextFieldStyle._verifyProperties( self )
 end
 
 

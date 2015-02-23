@@ -332,8 +332,8 @@ function RoundedStyle:updateStyle( src, params )
 end
 
 
-function RoundedStyle:verifyClassProperties()
-	-- print( "RoundedStyle.verifyClassProperties" )
+function RoundedStyle:verifyProperties()
+	-- print( "RoundedStyle.verifyProperties" )
 	local emsg = "Style: requires property '%s'"
 
 	--== Check Inheritance
