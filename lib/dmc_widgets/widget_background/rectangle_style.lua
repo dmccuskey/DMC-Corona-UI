@@ -105,7 +105,6 @@ RectangleStyle._VALID_PROPERTIES = {
 	anchorX=true,
 	anchorY=true,
 
-	type=true,
 	fillColor=true,
 	strokeColor=true,
 	strokeWidth=true,

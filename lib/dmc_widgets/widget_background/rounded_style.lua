@@ -105,7 +105,6 @@ RoundedStyle._VALID_PROPERTIES = {
 	anchorX=true,
 	anchorY=true,
 
-	type=true,
 	cornerRadius=true,
 	fillColor=true,
 	strokeColor=true,
@@ -121,8 +120,6 @@ RoundedStyle._STYLE_DEFAULTS = {
 	height=30,
 	anchorX=0.5,
 	anchorY=0.5,
-
-	type=RoundedStyle.TYPE,
 
 	cornerRadius=6,
 	fillColor={1,1,1,1},
