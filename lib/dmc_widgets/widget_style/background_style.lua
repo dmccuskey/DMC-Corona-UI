@@ -219,9 +219,8 @@ function BackgroundStyle.createStyleStructure( data )
 	-- print( "BackgroundStyle.createStyleStructure", data )
 	data = data or self._DEFAULT_VIEWTYPE
 	return {
-		view={
-			type=data
-		}
+		type=data,
+		view={}
 	}
 end
 
@@ -297,7 +296,7 @@ function BackgroundStyle._addMissingChildProperties( dest, src  )
 
 	child = dest.view
 	assert( child, sformat( eStr, 'view' ) )
-	StyleClass = StyleFactory.getClass( child.type )
+	StyleClass = StyleFactory.getClass( src.type )
 	StyleClass.addMissingDestProperties( child, src )
 
 	return dest
@@ -337,7 +336,8 @@ function BackgroundStyle._setDefaults( StyleClass )
 
 	for _, Cls in ipairs( classes ) do
 		local cls_type = Cls.TYPE
-		local def = Utils.extend( defaults, {view={type=cls_type}} )
+		local struct = BackgroundStyle.createStyleStructure( cls_type )
+		local def = Utils.extend( defaults, struct )
 		StyleClass._addMissingChildProperties( def, def )
 		BASE_STYLES[ cls_type ] = StyleClass:new{ data=def }
 	end
@@ -404,7 +404,8 @@ function BackgroundStyle:createStyleFromType( params )
 		style_type = data
 		params.data=nil
 	elseif type(data)=='table' then
-		style_type = data.type
+		-- Lua structure, of View
+		style_type = self.type
 	end
 	assert( style_type and type(style_type)=='string', "Style: missing style property 'type'" )
 
@@ -500,27 +501,29 @@ function BackgroundStyle:_prepareData( data )
 	if data.isa and data:isa( BackgroundStyle ) then
 		--== Instance
 		local o = data
-		data = {view=o.type}
+		data = StyleClass.createStyleStructure( o.type )
 
 	else
 		--== Lua structure
 		local StyleClass
 		local src, dest = data, nil
 
+		-- make sure we have 'type' for our view
 		if src.type==nil then
 			src.type = self._DEFAULT_VIEWTYPE
-			print( "[WARNING] Defaulting to style: ", src.type )
+			print( "[WARNING] BackgroundStyle defaulting to style: ", src.type )
 		end
 
+		StyleClass = StyleFactory.getClass( src.type )
+
+		-- before we copy our defaults, make sure
+		-- structure for 'view' exists
 		dest = src.view
 		if not dest then
-			src.view = src.type -- using string
-		else
-			dest.type = src.type -- add our type to view
-			StyleClass = StyleFactory.getClass( src.type )
-			StyleClass.copyExistingSrcProperties( dest, src )
+			dest = StyleClass.createStyleStructure()
+			src.view = dest
 		end
-
+		StyleClass.copyExistingSrcProperties( dest, src )
 
 	end
 

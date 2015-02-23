@@ -156,9 +156,8 @@ TextFieldStyle._STYLE_DEFAULTS = {
 		* height
 		* anchorX/Y
 		--]]
+		type='rectangle',
 		view={
-			type='rectangle',
-
 			fillColor={0.5,0.5,0.2,1},
 			strokeWidth=2,
 			strokeColor={0,0,0,1},

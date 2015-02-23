@@ -253,11 +253,11 @@ ButtonStyle._STYLE_DEFAULTS = {
 			fontSize=10
 		},
 		background={
+			type='rounded',
 			view={
-				type='rounded',
 				cornerRadius = 10,
 				fillColor={0,0,1,1},
-				strokeWidth=1,
+				strokeWidth=4.5,
 				strokeColor={0,1,0,1},
 			},
 		}
