@@ -1,5 +1,5 @@
 --====================================================================--
--- dmc_widgets/widget_style/rectangle_style.lua
+-- dmc_widgets/widget_background/rectangle_style.lua
 --
 -- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
@@ -67,7 +67,7 @@ local widget_find = dmc_widget_func.find
 local Objects = require 'dmc_objects'
 local Utils = require 'dmc_utils'
 
-local BaseStyle = require( widget_find( 'widget_style.base_style' ) )
+local ViewStyle = require( widget_find( 'widget_background.base_view_style' ) )
 
 
 
@@ -76,7 +76,6 @@ local BaseStyle = require( widget_find( 'widget_style.base_style' ) )
 
 
 local newClass = Objects.newClass
-local ObjectBase = Objects.ObjectBase
 
 local sformat = string.format
 local tinsert = table.insert
@@ -91,7 +90,7 @@ local Widgets = nil
 --====================================================================--
 
 
-local RectangleStyle = newClass( BaseStyle, {name="Rectangle Background Style"} )
+local RectangleStyle = newClass( ViewStyle, {name="Rectangle Background Style"} )
 
 --== Class Constants
 
@@ -121,8 +120,6 @@ RectangleStyle._STYLE_DEFAULTS = {
 	height=30,
 	anchorX=0.5,
 	anchorY=0.5,
-
-	type=RectangleStyle.TYPE,
 
 	fillColor={1,1,1,1},
 	strokeColor={0,0,0,1},
@@ -160,8 +157,6 @@ function RectangleStyle:__init__( params )
 	-- self._height
 	-- self._anchorX
 	-- self._anchorY
-
-	self._type = nil
 
 	self._fillColor = nil
 	self._strokeColor = nil
@@ -224,7 +219,7 @@ function RectangleStyle.copyExistingSrcProperties( dest, src, params )
 	--==--
 	local force=params.force
 
-	BaseStyle.copyExistingSrcProperties( dest, src, params )
+	ViewStyle.copyExistingSrcProperties( dest, src, params )
 
 	if (src.fillColor~=nil and dest.fillColor==nil) or force then
 		dest.fillColor=src.fillColor
@@ -244,7 +239,7 @@ function RectangleStyle._verifyStyleProperties( src )
 	print( "RectangleStyle._verifyStyleProperties", src )
 	local emsg = "Style requires property '%s'"
 
-	local is_valid = BaseStyle._verifyStyleProperties( src )
+	local is_valid = ViewStyle._verifyStyleProperties( src )
 
 	if not src.fillColor then
 		print(sformat(emsg,'fillColor')) ; is_valid=false
@@ -267,27 +262,6 @@ end
 
 --======================================================--
 -- Access to style properties
-
---== type
-
-function RectangleStyle.__getters:type()
-	-- print( "RectangleStyle.__getters:type" )
-	local value = self._type
-	-- TODO, check inheritance
-	if value==nil and self._inherit then
-		value = self._inherit.type
-	end
-	return value
-end
-function RectangleStyle.__setters:type( value )
-	-- print( "RectangleStyle.__setters:type", value )
-	assert( type(value)=='string' or (value==nil and self._inherit) )
-	--==--
-	if value==self._type then return end
-	self._type = value
-	self:_dispatchChangeEvent( 'type', value )
-end
-
 
 --======================================================--
 -- Misc

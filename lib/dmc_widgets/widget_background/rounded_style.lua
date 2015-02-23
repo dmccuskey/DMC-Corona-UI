@@ -67,7 +67,7 @@ local widget_find = dmc_widget_func.find
 local Objects = require 'dmc_objects'
 local Utils = require 'dmc_utils'
 
-local BaseStyle = require( widget_find( 'widget_style.base_style' ) )
+local ViewStyle = require( widget_find( 'widget_background.base_view_style' ) )
 
 
 
@@ -76,7 +76,6 @@ local BaseStyle = require( widget_find( 'widget_style.base_style' ) )
 
 
 local newClass = Objects.newClass
-local ObjectBase = Objects.ObjectBase
 
 local sformat = string.format
 local tinsert = table.insert
@@ -91,7 +90,7 @@ local Widgets = nil
 --====================================================================--
 
 
-local RoundedStyle = newClass( BaseStyle, {name="Rounded Background Style"} )
+local RoundedStyle = newClass( ViewStyle, {name="Rounded Background Style"} )
 
 --== Class Constants
 
@@ -228,7 +227,7 @@ function RoundedStyle.copyExistingSrcProperties( dest, src, params )
 	--==--
 	local force=params.force
 
-	BaseStyle.copyExistingSrcProperties( dest, src, params )
+	ViewStyle.copyExistingSrcProperties( dest, src, params )
 
 	if (src.cornerRadius~=nil and dest.cornerRadius==nil) or force
 		then dest.cornerRadius=src.cornerRadius
@@ -251,7 +250,7 @@ function RoundedStyle._verifyStyleProperties( src )
 	-- print( "RoundedStyle._verifyStyleProperties" )
 	local emsg = "Style: requires property '%s'"
 
-	local is_valid = BaseStyle._verifyStyleProperties( src )
+	local is_valid = ViewStyle._verifyStyleProperties( src )
 
 	if not src.cornerRadius then
 		print(sformat(emsg,'cornerRadius')) ; is_valid=false
@@ -296,27 +295,6 @@ function RoundedStyle.__setters:cornerRadius( value )
 	self._cornerRadius = value
 	self:_dispatchChangeEvent( 'cornerRadius', value )
 end
-
---== type
-
-function RoundedStyle.__getters:type()
-	-- print( "RoundedStyle.__getters:type" )
-	local value = self._type
-	-- TODO, check inheritance
-	if value==nil and self._inherit then
-		value = self._inherit.type
-	end
-	return value
-end
-function RoundedStyle.__setters:type( value )
-	-- print( "RoundedStyle.__setters:type", value )
-	assert( type(value)=='string' or (value==nil and self._inherit) )
-	--==--
-	if value==self._type then return end
-	self._type = value
-	self:_dispatchChangeEvent( 'type', value )
-end
-
 
 
 --======================================================--
