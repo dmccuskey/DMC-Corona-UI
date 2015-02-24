@@ -602,8 +602,253 @@ end
 
 
 
+--[[
+tests when changing inheritance using the property 'inherit'
+--]]
+--[[
+--]]
+function test_inheritanceChangesUsingInheritancePropertyMismatch()
+	-- print( "test_inheritanceChangesUsingInheritancePropertyMismatch" )
+	local Background = Widgets.Style.Background
+	local StyleFactory = Widgets.Style.BackgroundFactory
+	local Rectangle = StyleFactory.Rectangle
+	local Rounded = StyleFactory.Rounded
+	local StyleDefault
+
+	local s1, sView
+	local inherit, iView
+	local sDefaults, prevView
+	local receivedResetEvent, callback
+	local c1, c2 = {1,1,1}, {0,0,0}
+
+
+	--======================================================--
+	-- Example one, Rectangle and Rounded
+
+	--== start
+
+	inherit = Widgets.newRectangleBackgroundStyle{
+		view={
+			fillColor=c2,
+			strokeWidth=65
+		}
+	}
+
+	s1 = Widgets.newRoundedBackgroundStyle{
+		view={
+			cornerRadius=100,
+			fillColor=c1,
+			strokeWidth=99
+		}
+	}
+
+	sView, iView = s1.view, inherit.view
+
+
+	sDefaults = Rounded:getBaseStyle()
+
+	TestUtils.verifyBackgroundStyle( s1 )
+	styleInheritsFrom( s1, nil )
+	styleInheritsFrom( sView, nil )
+	styleHasPropertyValue( s1, 'type', 'rounded' )
+	hasPropertyValue( sView, 'type', 'rounded' )
+
+	styleHasPropertyValue( sView, 'cornerRadius', 100 )
+	styleHasPropertyValue( sView, 'fillColor', c1 )
+	styleHasPropertyValue( sView, 'strokeColor', sDefaults.strokeColor )
+	styleHasPropertyValue( sView, 'strokeWidth', 99 )
+
+
+	sDefaults = Rectangle:getBaseStyle()
+
+	TestUtils.verifyBackgroundStyle( inherit )
+	styleInheritsFrom( inherit, nil )
+	styleInheritsFrom( iView, nil )
+	styleHasPropertyValue( inherit, 'type', 'rectangle' )
+	hasPropertyValue( iView, 'type', 'rectangle' )
+
+	styleHasPropertyValue( iView, 'fillColor', c2 )
+	styleHasPropertyValue( iView, 'strokeColor', sDefaults.strokeColor )
+	styleHasPropertyValue( iView, 'strokeWidth', 65 )
+
+
+	--== update inheritance, rectangle
+
+	receivedResetEvent = false
+	callback = function(e)
+		if e.type==s1.view.STYLE_RESET then receivedResetEvent=true end
+	end
+	s1:addEventListener( s1.EVENT, callback )
+
+	prevView = sView
+	s1.inherit = inherit
+
+	sView, iView = s1.view, inherit.view
+
+	TestUtils.verifyBackgroundStyle( s1 )
+	assert_true( receivedResetEvent, "missing reset event" )
+
+	styleInheritsFrom( s1, inherit )
+	styleInheritsPropertyValue( s1, 'type', inherit.type )
+	stylePropertyValueIs( sView , 'type', iView.type )
+
+	styleRawPropertyValueIs( sView, 'cornerRadius', nil ) -- erased
+	styleInheritsPropertyValue( sView, 'fillColor', c2 )
+	styleInheritsPropertyValue( sView, 'strokeColor', sDefaults.strokeColor )
+	styleInheritsPropertyValue( sView, 'strokeWidth', 65 )
+
+
+	--======================================================--
+	-- Example Two, Rectangle and Rounded
+
+	--== start
+
+	inherit = Widgets.newRectangleBackgroundStyle{
+		view={
+			fillColor=c2,
+			strokeWidth=65
+		}
+	}
+
+	s1 = Widgets.newRoundedBackgroundStyle({
+		view={
+			cornerRadius=100,
+			fillColor=c1,
+			strokeWidth=99
+		}
+	},
+	{inherit=inherit}
+	)
+
+	sView, iView = s1.view, inherit.view
+
+	styleInheritsFrom( s1, inherit )
+	styleInheritsPropertyValue( s1, 'type', inherit.type )
+	stylePropertyValueIs( sView , 'type', iView.type )
+
+	styleRawPropertyValueIs( sView, 'cornerRadius', nil ) -- erased
+	styleInheritsPropertyValue( sView, 'fillColor', c2 )
+	styleInheritsPropertyValue( sView, 'strokeColor', sDefaults.strokeColor )
+	styleInheritsPropertyValue( sView, 'strokeWidth', 65 )
+
+end
 
 
 
+
+--[[
+tests when changing inheritance using the property 'type'
+--]]
+--[[
+--]]
+function test_initializeStyleWithLuaStructure()
+	-- print( "test_initializeStyleWithLuaStructure" )
+	local Background = Widgets.Style.Background
+	local StyleFactory = Widgets.Style.BackgroundFactory
+	local RectangleBackground = StyleFactory.Rectangle
+	local Rounded = StyleFactory.Rounded
+	local StyleDefault
+
+	local s1, sView
+	local inherit, iView
+	local sDefaults, prevView
+	local receivedResetEvent, callback
+
+
+	sDefaults = Rounded:getBaseStyle()
+
+	s1 = Widgets.newRoundedBackgroundStyle{
+		view={
+			cornerRadius=100,
+			strokeWidth=99
+		}
+	}
+
+	sView = s1.view
+
+	styleInheritsFrom( s1, nil )
+	styleInheritsFrom( sView, nil )
+	styleHasPropertyValue( s1, 'type', 'rounded' )
+	hasPropertyValue( sView, 'type', 'rounded' )
+
+	styleHasPropertyValue( sView, 'cornerRadius', 100 )
+	styleHasPropertyValue( sView, 'fillColor', sDefaults.fillColor )
+	styleHasPropertyValue( sView, 'strokeColor', sDefaults.strokeColor )
+	styleHasPropertyValue( sView, 'strokeWidth', 99 )
+
+
+	--== with inherit in params
+
+	inherit = sDefaults
+
+	s1 = Widgets.newRoundedBackgroundStyle( {
+			view={
+				cornerRadius=100,
+				strokeWidth=99
+			}
+		},
+		{inherit=inherit}
+	)
+
+	sView, iView = s1.view, inherit.view
+
+	styleInheritsFrom( s1, sDefaults )
+	styleInheritsFrom( sView, iView )
+	styleInheritsPropertyValue( s1, 'type', 'rounded' )
+	hasPropertyValue( sView, 'type', 'rounded' )
+
+	styleHasPropertyValue( sView, 'cornerRadius', 100 )
+	styleHasPropertyValue( sView, 'fillColor', sDefaults.fillColor )
+	styleHasPropertyValue( sView, 'strokeColor', sDefaults.strokeColor )
+	styleHasPropertyValue( sView, 'strokeWidth', 99 )
+
+
+	--== any type is overridden
+
+	s1 = Widgets.newRoundedBackgroundStyle( {
+			type='rectangle',
+			view={
+				cornerRadius=100,
+				strokeWidth=99
+			}
+		},
+		{inherit=inherit}
+	)
+
+	sView, iView = s1.view, inherit.view
+
+	styleInheritsFrom( s1, sDefaults )
+	styleInheritsFrom( sView, iView )
+	styleInheritsPropertyValue( s1, 'type', 'rounded' )
+	hasPropertyValue( sView, 'type', 'rounded' )
+
+	styleHasPropertyValue( sView, 'cornerRadius', 100 )
+	styleHasPropertyValue( sView, 'fillColor', sDefaults.fillColor )
+	styleHasPropertyValue( sView, 'strokeColor', sDefaults.strokeColor )
+	styleHasPropertyValue( sView, 'strokeWidth', 99 )
+
+
+	--== no inherit, no type, so go to default view
+
+	s1 = Widgets.newBackgroundStyle{
+		view={
+			cornerRadius=100,
+			strokeWidth=99
+		}
+	}
+
+	sView = s1.view
+
+	styleInheritsFrom( s1, nil )
+	styleInheritsFrom( sView, nil )
+	styleHasPropertyValue( s1, 'type', 'rounded' )
+	hasPropertyValue( sView, 'type', 'rounded' )
+
+	styleHasPropertyValue( sView, 'cornerRadius', 100 )
+	styleHasPropertyValue( sView, 'fillColor', sDefaults.fillColor )
+	styleHasPropertyValue( sView, 'strokeColor', sDefaults.strokeColor )
+	styleHasPropertyValue( sView, 'strokeWidth', 99 )
+
+end
 
 
