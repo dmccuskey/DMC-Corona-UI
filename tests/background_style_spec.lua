@@ -72,6 +72,11 @@ function suite_setup()
 end
 
 
+
+--====================================================================--
+--== Test Static Functions
+
+
 --[[
 Test to ensure that the correct property values are
 copied during initialization
@@ -110,6 +115,11 @@ end
 --]]
 
 
+
+--====================================================================--
+--== Test Class Methods
+
+
 --[[
 test basic characteristics
 --]]
@@ -119,9 +129,37 @@ function test_backgroundStyleClassBasics()
 	-- print( "test_backgroundStyleClassBasics" )
 	local Background = Widgets.Style.Background
 	local BaseStyle, style
+	local Default = Background:getDefaultStyleValues()
 
-	BaseStyle = Background:_getBaseStyle()
+	--== rounded
+
+	BaseStyle = Background:getBaseStyle( 'rounded' )
 	TestUtils.verifyBackgroundStyle( BaseStyle )
+
+	-- check properties initialized to the default values
+
+	styleHasPropertyValue( BaseStyle, 'debugOn', Default.debugOn )
+	styleHasPropertyValue( BaseStyle, 'width', Default.width )
+	styleHasPropertyValue( BaseStyle, 'height', Default.height )
+	styleHasPropertyValue( BaseStyle, 'anchorX', Default.anchorX )
+	styleHasPropertyValue( BaseStyle, 'anchorY', Default.anchorY )
+	styleHasPropertyValue( BaseStyle, 'type', 'rounded' )
+
+	--== rectangle
+
+	BaseStyle = Background:getBaseStyle( 'rectangle' )
+	TestUtils.verifyBackgroundStyle( BaseStyle )
+
+	-- check properties initialized to the default values
+
+	styleHasPropertyValue( BaseStyle, 'debugOn', Default.debugOn )
+	styleHasPropertyValue( BaseStyle, 'width', Default.width )
+	styleHasPropertyValue( BaseStyle, 'height', Default.height )
+	styleHasPropertyValue( BaseStyle, 'anchorX', Default.anchorX )
+	styleHasPropertyValue( BaseStyle, 'anchorY', Default.anchorY )
+	styleHasPropertyValue( BaseStyle, 'type', 'rectangle' )
+
+	--== Test constructors
 
 	style = Widgets.newBackgroundStyle()
 	TestUtils.verifyBackgroundStyle( style )
@@ -148,7 +186,7 @@ function test_defaultInheritance()
 	-- default
 
 	s1 = Widgets.newBackgroundStyle()
-	StyleBase = Background:_getBaseStyle( s1.type )
+	StyleBase = Background:getBaseStyle( s1.type )
 
 	styleInheritsFrom( s1, StyleBase )
 	hasValidStyleProperties( Background, s1 )
@@ -159,7 +197,6 @@ function test_defaultInheritance()
 
 
 	-- change inheritance, same type
-
 
 	s2 = Widgets.newBackgroundStyle()
 
@@ -181,7 +218,7 @@ function test_defaultInheritance()
 	-- rectangle
 
 	s1 = Widgets.newRectangleBackgroundStyle()
-	StyleBase = Background:_getBaseStyle( s1.type )
+	StyleBase = Background:getBaseStyle( s1.type )
 
 	styleInheritsFrom( s1, StyleBase )
 	hasValidStyleProperties( Background, s1 )
@@ -191,7 +228,7 @@ function test_defaultInheritance()
 	-- rounded
 
 	s1 = Widgets.newRoundedBackgroundStyle()
-	StyleBase = Background:_getBaseStyle( s1.type )
+	StyleBase = Background:getBaseStyle( s1.type )
 
 	styleInheritsFrom( s1, StyleBase )
 	hasValidStyleProperties( Background, s1 )
@@ -220,10 +257,12 @@ function test_similarInheritance()
 	local sDefaults, prevView
 	local receivedResetEvent, callback
 
+
 	--== start
 
 	s1 = Widgets.newBackgroundStyle()
 	inherit = Widgets.newBackgroundStyle()
+
 
 	inherit.view.strokeWidth=4
 	styleHasPropertyValue( inherit.view, 'strokeWidth', 4 )
@@ -276,7 +315,7 @@ function test_similarInheritance()
 	styleHasPropertyValue( sView, 'cornerRadius', iView.cornerRadius )
 	styleHasPropertyValue( sView, 'fillColor', iView.fillColor )
 	styleHasPropertyValue( sView, 'strokeColor', iView.strokeColor )
-	styleHasPropertyValue( sView, 'strokeWidth', 0 )
+	styleHasPropertyValue( sView, 'strokeWidth', iView.strokeWidth )
 
 
 	--== unblock inheritance, unset type
@@ -508,6 +547,7 @@ function test_inheritanceChangesUsingInheritanceProperty()
 	--== update inheritance, rounded
 
 	inherit = Widgets.newRoundedBackgroundStyle()
+
 
 	receivedResetEvent = false
 	callback = function(e)

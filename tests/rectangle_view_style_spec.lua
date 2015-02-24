@@ -320,8 +320,6 @@ function test_clearProperties()
 	end
 	s1:addEventListener( s1.EVENT, callback )
 
-	print( "\n\n\n My Testing \n\n\n" )
-
 	s1:clearProperties()
 
 	styleInheritsFrom( s1, nil )

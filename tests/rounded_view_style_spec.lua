@@ -356,8 +356,6 @@ function test_clearProperties()
 
 	-- verify all properties have been copied
 
-	print( "\n\n\n My Test \n\n\n" )
-
 	styleHasPropertyValue( s1, 'cornerRadius', 99 )
 	styleHasPropertyValue( s1, 'fillColor', inherit.fillColor )
 	styleHasPropertyValue( s1, 'strokeColor', inherit.strokeColor )
