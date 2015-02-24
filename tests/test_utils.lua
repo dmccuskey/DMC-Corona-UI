@@ -61,6 +61,11 @@ local sformat = string.format
 local Utils = {}
 
 
+function Utils.outputMarker()
+	print( "\n\n\n MARKER \n\n\n" )
+end
+
+
 --======================================================--
 -- Base Style Verification
 
@@ -331,7 +336,6 @@ end
 -- checks all possibilities
 --
 function Utils.styleInheritsPropertyValue( style, property, value )
-	print( ">>", style, property, value )
 	Utils.stylePropertyValueIs( style, property, value )
 	Utils.styleInheritsProperty( style, property )
 	Utils.styleRawPropertyValueIs( style, property, nil )

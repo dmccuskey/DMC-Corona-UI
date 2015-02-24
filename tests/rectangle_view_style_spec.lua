@@ -254,16 +254,13 @@ function test_clearProperties()
 	StyleClass = s1.class
 	StyleBase = StyleClass:getBaseStyle()
 	assert_equal( StyleClass, RectangleStyle )
-	styleInheritsFrom( s1, StyleBase )
-
-	inherit = StyleBase
-	sView, iView = s1.view, inherit.view
+	styleInheritsFrom( s1, nil )
 
 	-- test inherited properties
 
-	styleInheritsPropertyValue( s1, 'fillColor', inherit.fillColor )
-	styleInheritsPropertyValue( s1, 'strokeColor', inherit.strokeColor )
-	styleInheritsPropertyValue( s1, 'strokeWidth', inherit.strokeWidth )
+	styleHasPropertyValue( s1, 'fillColor', StyleBase.fillColor )
+	styleHasPropertyValue( s1, 'strokeColor', StyleBase.strokeColor )
+	styleHasPropertyValue( s1, 'strokeWidth', StyleBase.strokeWidth )
 
 	-- set some properties, to make local
 
@@ -274,7 +271,7 @@ function test_clearProperties()
 	verifyBackgroundViewStyle( s1 )
 
 	styleHasPropertyValue( s1, 'fillColor', my_fill )
-	styleInheritsPropertyValue( s1, 'strokeColor', inherit.strokeColor )
+	styleHasPropertyValue( s1, 'strokeColor', StyleBase.strokeColor )
 	styleHasPropertyValue( s1, 'strokeWidth', 98 )
 
 	--== Clear Properties, with inherit
@@ -287,12 +284,12 @@ function test_clearProperties()
 
 	s1:clearProperties()
 
-	styleInheritsFrom( s1, inherit )
+	styleInheritsFrom( s1, nil )
 	assert_true( receivedClearedEvent, "missing clear event" )
 
-	styleInheritsPropertyValue( s1, 'fillColor', inherit.fillColor )
-	styleInheritsPropertyValue( s1, 'strokeColor', inherit.strokeColor )
-	styleInheritsPropertyValue( s1, 'strokeWidth', inherit.strokeWidth )
+	styleHasPropertyValue( s1, 'fillColor', StyleBase.fillColor )
+	styleHasPropertyValue( s1, 'strokeColor', StyleBase.strokeColor )
+	styleHasPropertyValue( s1, 'strokeWidth', StyleBase.strokeWidth )
 
 	-- set local properties
 
@@ -307,9 +304,9 @@ function test_clearProperties()
 
 	-- verify all properties have been copied
 
-	styleHasPropertyValue( s1, 'fillColor', inherit.fillColor )
-	styleHasPropertyValue( s1, 'strokeColor', inherit.strokeColor )
-	styleHasPropertyValue( s1, 'strokeWidth', 98 )
+	styleHasPropertyValue( s1, 'fillColor', StyleBase.fillColor )
+	styleHasPropertyValue( s1, 'strokeColor', StyleBase.strokeColor )
+	styleHasPropertyValue( s1, 'strokeWidth', StyleBase.strokeWidth )
 
 
 	--== Clear Properties, without Inherit
@@ -325,9 +322,9 @@ function test_clearProperties()
 	styleInheritsFrom( s1, nil )
 	assert_true( receivedClearedEvent, "missing clear event" )
 
-	styleHasPropertyValue( s1, 'fillColor', inherit.fillColor )
-	styleHasPropertyValue( s1, 'strokeColor', inherit.strokeColor )
-	styleHasPropertyValue( s1, 'strokeWidth', inherit.strokeWidth )
+	styleHasPropertyValue( s1, 'fillColor', StyleBase.fillColor )
+	styleHasPropertyValue( s1, 'strokeColor', StyleBase.strokeColor )
+	styleHasPropertyValue( s1, 'strokeWidth', StyleBase.strokeWidth )
 
 end
 

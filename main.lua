@@ -32,7 +32,6 @@ lunatest.suite( 'tests.rounded_view_style_spec' ) -- ok
 -- Styles with children
 
 lunatest.suite( 'tests.background_style_spec' ) -- ok
-
 -- lunatest.suite( 'tests.button_style_spec' )
 
 lunatest.run()

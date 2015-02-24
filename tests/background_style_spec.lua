@@ -54,9 +54,7 @@ local styleInheritsPropertyValue = TestUtils.styleInheritsPropertyValue
 local styleInheritsPropertyValueFrom = TestUtils.styleInheritsPropertyValueFrom
 
 
-
---====================================================================--
---== Support Functions
+local marker = TestUtils.outputMarker
 
 
 
@@ -136,6 +134,8 @@ function test_backgroundStyleClassBasics()
 	BaseStyle = Background:getBaseStyle( 'rounded' )
 	TestUtils.verifyBackgroundStyle( BaseStyle )
 
+	styleInheritsFrom( BaseStyle, nil )
+
 	-- check properties initialized to the default values
 
 	styleHasPropertyValue( BaseStyle, 'debugOn', Default.debugOn )
@@ -150,6 +150,8 @@ function test_backgroundStyleClassBasics()
 	BaseStyle = Background:getBaseStyle( 'rectangle' )
 	TestUtils.verifyBackgroundStyle( BaseStyle )
 
+	styleInheritsFrom( BaseStyle, nil )
+
 	-- check properties initialized to the default values
 
 	styleHasPropertyValue( BaseStyle, 'debugOn', Default.debugOn )
@@ -162,13 +164,19 @@ function test_backgroundStyleClassBasics()
 	--== Test constructors
 
 	style = Widgets.newBackgroundStyle()
+
 	TestUtils.verifyBackgroundStyle( style )
+	styleInheritsFrom( BaseStyle, nil )
 
 	style = Widgets.newRoundedBackgroundStyle()
+
 	TestUtils.verifyBackgroundStyle( style )
+	styleInheritsFrom( BaseStyle, nil )
 
 	style = Widgets.newRectangleBackgroundStyle()
+
 	TestUtils.verifyBackgroundStyle( style )
+	styleInheritsFrom( BaseStyle, nil )
 
 end
 
@@ -180,60 +188,71 @@ function test_defaultInheritance()
 	-- print( "test_defaultInheritance" )
 	local Background = Widgets.Style.Background
 	local StyleDefault
+	local StyleBase
 
-	local s1, s2
+	local s1, s1View
+	local inherit, iView
 
 	-- default
 
 	s1 = Widgets.newBackgroundStyle()
+	s1View = s1.view
+
 	StyleBase = Background:getBaseStyle( s1.type )
 
-	styleInheritsFrom( s1, StyleBase )
+	styleInheritsFrom( s1, nil )
 	hasValidStyleProperties( Background, s1 )
 
-	assert_true( s1.type, s1.view.type, "incorrect type" )
-
-	styleInheritsProperty( s1, 'type' )
+	styleHasProperty( s1, 'type' )
+	assert_true( s1.type, s1View.type, "incorrect type" )
 
 
 	-- change inheritance, same type
 
-	s2 = Widgets.newBackgroundStyle()
+	inherit = Widgets.newBackgroundStyle()
+	iView = inherit.view
 
-	s2.view.strokeWidth=4
+	styleInheritsFrom( s1, nil )
+	hasValidStyleProperties( Background, s1 )
 
-	styleHasPropertyValue( s2.view, 'strokeWidth', 4 )
+	styleInheritsFrom( iView, nil )
 
-	s1.inherit = s2
+	styleHasProperty( inherit, 'type' )
+	assert_true( inherit.type, iView.type, "incorrect type" )
 
-	styleInheritsPropertyValue( s1.view, 'strokeWidth', 4 )
+	iView.strokeWidth=4
+	styleHasPropertyValue( iView, 'strokeWidth', 4 )
 
-	s2.view.strokeWidth=6
-	styleInheritsPropertyValue( s1.view, 'strokeWidth', 6 )
+	s1.inherit = inherit
 
+	styleInheritsFrom( s1View, iView )
+	styleInheritsPropertyValue( s1View, 'strokeWidth', 4 )
+
+	-- set property on inherited, see in sub view
+	iView.strokeWidth=6
+	styleInheritsPropertyValue( s1View, 'strokeWidth', 6 )
 
 	styleInheritsPropertyValue( s1, 'debugOn', false )
-
 
 	-- rectangle
 
 	s1 = Widgets.newRectangleBackgroundStyle()
 	StyleBase = Background:getBaseStyle( s1.type )
 
-	styleInheritsFrom( s1, StyleBase )
+	styleInheritsFrom( s1, nil )
 	hasValidStyleProperties( Background, s1 )
 
-	assert_true( s1.type, s1.view.type, "incorrect type" )
+	assert_true( s1.type, s1View.type, "incorrect type" )
 
 	-- rounded
 
 	s1 = Widgets.newRoundedBackgroundStyle()
 	StyleBase = Background:getBaseStyle( s1.type )
 
-	styleInheritsFrom( s1, StyleBase )
+	styleInheritsFrom( s1, nil )
 	hasValidStyleProperties( Background, s1 )
 
-	assert_true( s1.type, s1.view.type, "incorrect type" )
+	assert_true( s1.type, s1View.type, "incorrect type" )
 
 end
 
@@ -263,9 +282,11 @@ function test_similarInheritance()
 	s1 = Widgets.newBackgroundStyle()
 	inherit = Widgets.newBackgroundStyle()
 
+	sView = s1.view
+	iView = inherit.view
 
-	inherit.view.strokeWidth=4
-	styleHasPropertyValue( inherit.view, 'strokeWidth', 4 )
+	iView.strokeWidth=4
+	styleHasPropertyValue( iView, 'strokeWidth', 4 )
 
 
 	--== update inheritance
@@ -280,12 +301,13 @@ function test_similarInheritance()
 
 	assert_true( receivedResetEvent, "missing reset event" )
 
-	styleInheritsProperty( inherit, 'type' )
 	styleInheritsFrom( s1, inherit )
+	styleInheritsFrom( sView, iView )
+	styleInheritsProperty( s1, 'type' )
 
-	styleInheritsPropertyValue( s1.view, 'strokeWidth', 4 )
+	styleInheritsPropertyValue( sView, 'strokeWidth', 4 )
 	inherit.view.strokeWidth=6
-	styleInheritsPropertyValue( s1.view, 'strokeWidth', 6 )
+	styleInheritsPropertyValue( sView, 'strokeWidth', 6 )
 
 
 	--== block inheritance, set type
@@ -298,15 +320,16 @@ function test_similarInheritance()
 
 	s1.type = 'rounded'
 
-	assert_true( receivedResetEvent, "missing reset event" )
-	styleRawPropertyValueIs( s1, 'type', 'rounded' )
-	styleInheritsFrom( s1, inherit )
-
 	sView, iView = s1.view, inherit.view
+
+	assert_true( receivedResetEvent, "missing reset event" )
+
+	styleInheritsFrom( s1, inherit )
+	styleInheritsFrom( sView, nil )
+	styleRawPropertyValueIs( s1, 'type', 'rounded' )
 
 	-- style view inherit inactive, all properties local
 
-	styleInheritsFrom( sView, nil )
 	styleHasPropertyValue( sView, 'debugOn', iView.debugOn )
 	styleHasPropertyValue( sView, 'width', iView.width )
 	styleHasPropertyValue( sView, 'height', iView.height )
@@ -328,17 +351,19 @@ function test_similarInheritance()
 
 	s1.type = nil
 
-	assert_true( receivedResetEvent, "missing reset event" )
-	styleRawPropertyValueIs( s1, 'type', nil )
-	styleInheritsPropertyValue( s1, 'type', inherit.type )
-	styleInheritsFrom( s1, inherit )
+	sView, iView = s1.view, inherit.view
+
 	assert_true( receivedResetEvent, "missing reset event" )
 
-	sView, iView = s1.view, inherit.view
+	styleInheritsFrom( s1, inherit )
+	styleInheritsFrom( sView, iView )
+	styleRawPropertyValueIs( s1, 'type', nil )
+	styleInheritsPropertyValue( s1, 'type', inherit.type )
+
+	assert_true( receivedResetEvent, "missing reset event" )
 
 	-- style view inherit active, all properties inherited
 
-	styleInheritsFrom( sView, iView )
 	styleInheritsPropertyValue( sView, 'debugOn', iView.debugOn )
 	styleInheritsPropertyValue( sView, 'width', iView.width )
 	styleInheritsPropertyValue( sView, 'height', iView.height )
@@ -371,24 +396,29 @@ function test_inheritanceChangesUsingTypeProperty()
 	local sDefaults, prevView
 	local receivedResetEvent, callback
 
-	s1 = Widgets.newBackgroundStyle()
+	s1 = Widgets.newRoundedBackgroundStyle()
 	inherit = Widgets.newBackgroundStyle()
+
+	sView, iView = s1.view, inherit.view
+
+	styleHasPropertyValue( s1, 'type', 'rounded' )
 
 	--== start
 
-	inherit.view.strokeWidth=4
-	styleHasPropertyValue( inherit.view, 'strokeWidth', 4 )
-
+	iView.strokeWidth=4
+	styleHasPropertyValue( iView, 'strokeWidth', 4 )
 
 	--== update inheritance
 
 	s1.inherit = inherit
 
-	styleInheritsProperty( inherit, 'type' )
-	styleInheritsPropertyValue( s1.view, 'strokeWidth', 4 )
+	sView, iView = s1.view, inherit.view
 
-	inherit.view.strokeWidth=6
-	styleInheritsPropertyValue( s1.view, 'strokeWidth', 6 )
+	styleInheritsProperty( s1, 'type' )
+	styleInheritsPropertyValue( sView, 'strokeWidth', 4 )
+
+	iView.strokeWidth=6
+	styleInheritsPropertyValue( sView, 'strokeWidth', 6 )
 
 
 	--== block inheritance, type='rectangle'
@@ -404,17 +434,19 @@ function test_inheritanceChangesUsingTypeProperty()
 	prevView = sView
 	s1.type = 'rectangle'
 
-	assert_true( receivedResetEvent, "missing reset event" )
-	styleRawPropertyValueIs( s1, 'type', 'rectangle' )
-	styleInheritsFrom( s1, inherit )
-
 	sView, iView = s1.view, inherit.view
-	assert_true( sView~=prevView )
+
+	assert_true( sView~=prevView, "incorrect views" )
+	assert_true( receivedResetEvent, "missing reset event" )
+
+	styleInheritsFrom( s1, inherit )
+	styleInheritsFrom( sView, nil )
+	styleRawPropertyValueIs( s1, 'type', 'rectangle' )
+
 	styleIsa( sView, RectangleBackground )
 
 	-- style view inherit inactive, all properties local
 
-	styleInheritsFrom( sView, nil )
 	styleHasPropertyValue( sView, 'debugOn', sDefaults.debugOn )
 	styleHasPropertyValue( sView, 'width', sDefaults.width )
 	styleHasPropertyValue( sView, 'height', sDefaults.height )
@@ -438,16 +470,17 @@ function test_inheritanceChangesUsingTypeProperty()
 	prevView = sView
 	s1.type = 'rounded'
 
-	assert_true( receivedResetEvent, "missing reset event" )
-	styleRawPropertyValueIs( s1, 'type', 'rounded' )
-	styleInheritsFrom( s1, inherit )
-
 	sView, iView = s1.view, inherit.view
-	assert_true( sView~=prevView )
+
+	assert_true( sView~=prevView, "incorrect views" )
+	assert_true( receivedResetEvent, "missing reset event" )
+
+	styleInheritsFrom( s1, inherit )
+	styleInheritsFrom( sView, nil )
+	styleRawPropertyValueIs( s1, 'type', 'rounded' )
 
 	-- style view inherit inactive, all properties local
 
-	styleInheritsFrom( sView, nil )
 	styleHasPropertyValue( sView, 'debugOn', sDefaults.debugOn )
 	styleHasPropertyValue( sView, 'width', sDefaults.width )
 	styleHasPropertyValue( sView, 'height', sDefaults.height )
@@ -470,19 +503,18 @@ function test_inheritanceChangesUsingTypeProperty()
 	prevView = sView
 	s1.type = nil
 
+	sView, iView = s1.view, inherit.view
+
+	assert_true( sView==prevView, "incorrect views" )
 	assert_true( receivedResetEvent, "missing reset event" )
+
+	styleInheritsFrom( s1, inherit )
+	styleInheritsFrom( sView, iView )
 	styleRawPropertyValueIs( s1, 'type', nil )
 	styleInheritsPropertyValue( s1, 'type', inherit.type )
-	styleInheritsFrom( s1, inherit )
-
-	sView, iView = s1.view, inherit.view
-	-- assert_true( sView~=prevView )
 
 	-- style view inherit active, all properties inherited
 
-	sView, iView = s1.view, inherit.view
-
-	styleInheritsFrom( sView, iView )
 	styleInheritsPropertyValue( sView, 'debugOn', iView.debugOn )
 	styleInheritsPropertyValue( sView, 'width', iView.width )
 	styleInheritsPropertyValue( sView, 'height', iView.height )
@@ -520,7 +552,6 @@ function test_inheritanceChangesUsingInheritanceProperty()
 	s1 = Widgets.newRoundedBackgroundStyle()
 	TestUtils.verifyBackgroundStyle( s1 )
 
-
 	--== update inheritance, rectangle
 
 	inherit = Widgets.newRectangleBackgroundStyle()
@@ -534,13 +565,13 @@ function test_inheritanceChangesUsingInheritanceProperty()
 	prevView = sView
 	s1.inherit = inherit
 
-	assert_true( receivedResetEvent, "missing reset event" )
-	styleInheritsFrom( s1, inherit )
-	styleInheritsPropertyValue( s1, 'type', inherit.type )
-	TestUtils.verifyBackgroundStyle( s1 )
-
 	sView, iView = s1.view, inherit.view
 
+	TestUtils.verifyBackgroundStyle( s1 )
+	assert_true( receivedResetEvent, "missing reset event" )
+
+	styleInheritsFrom( s1, inherit )
+	styleInheritsPropertyValue( s1, 'type', inherit.type )
 	stylePropertyValueIs( sView , 'type', iView.type )
 
 
@@ -568,5 +599,11 @@ function test_inheritanceChangesUsingInheritanceProperty()
 	stylePropertyValueIs( sView , 'type', iView.type )
 
 end
+
+
+
+
+
+
 
 
