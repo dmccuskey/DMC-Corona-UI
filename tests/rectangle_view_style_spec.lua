@@ -29,19 +29,28 @@ local W, H = display.contentWidth, display.contentHeight
 local H_CENTER, V_CENTER = W*0.5, H*0.5
 
 
+local verifyBackgroundViewStyle = Utils.verifyBackgroundViewStyle
+
+local hasProperty = TestUtils.hasProperty
 local hasPropertyValue = TestUtils.hasPropertyValue
+
 local hasValidStyleProperties = TestUtils.hasValidStyleProperties
 local hasInvalidStyleProperties = TestUtils.hasInvalidStyleProperties
 
+
 local styleInheritsFrom = TestUtils.styleInheritsFrom
+local styleIsa = TestUtils.styleIsa
 
 local styleRawPropertyValueIs = TestUtils.styleRawPropertyValueIs
 local stylePropertyValueIs = TestUtils.stylePropertyValueIs
 
 local styleHasProperty = TestUtils.styleHasProperty
-local styleInheritsProp = TestUtils.styleInheritsProp
+local styleInheritsProperty = TestUtils.styleInheritsProperty
+
 
 local styleHasPropertyValue = TestUtils.styleHasPropertyValue
+local styleInheritsPropertyValue = TestUtils.styleInheritsPropertyValue
+
 local styleInheritsPropertyValueFrom = TestUtils.styleInheritsPropertyValueFrom
 
 
@@ -232,14 +241,57 @@ function test_defaultInheritance()
 	local Background = Widgets.Style.Background
 	local StyleFactory = Widgets.Style.BackgroundFactory
 	local RectangleStyle = StyleFactory.Rectangle
+	local StyleDefault
+
+	local s1 = Widgets.newRectangleBackgroundStyle()
+
+	StyleDefault = Background:_getBaseStyle( s1.type )
+	assert( StyleDefault )
+	print( "> TYPE", s1.type, s1.view, s1.view._inherit, StyleDefault )
+	styleInheritsFrom( s1.view, StyleDefault.view )
+	-- hasValidStyleProperties( RectangleStyle, s1.view )
+
+end
+
+
+
+-- function test_removeInheritance()
+-- 	print( "test_removeInheritance" )
+-- 	local Background = Widgets.Style.Background
+-- 	local StyleFactory = Widgets.Style.BackgroundFactory
+-- 	local RectangleStyle = StyleFactory.Rectangle
+-- 	local StyleBase
+
+-- 	local s1 = Widgets.newRectangleBackgroundStyle()
+-- 	StyleBase = Background:_getBaseStyle( s1.type )
+
+-- 	styleInheritsFrom( s1, StyleBase )
+-- 	hasValidStyleProperties( RectangleStyle, s1.view )
+
+-- end
+
+
+--[[
+function test_mismatchedInheritance()
+	print( "test_mismatchedInheritance" )
+	local Background = Widgets.Style.Background
+	local StyleFactory = Widgets.Style.BackgroundFactory
+	local RectangleStyle = StyleFactory.Rectangle
 	local StyleBase
 
 	local s1 = Widgets.newRectangleBackgroundStyle()
 	StyleBase = Background:_getBaseStyle( s1.type )
 
+	print( ">>> styles", s1.type, StyleBase, s1 )
+	assert( s1 )
+
+	print( s1.inherit )
 	styleInheritsFrom( s1, StyleBase )
-	hasValidStyleProperties( RectangleStyle, s1.view )
+
+	-- hasValidStyleProperties( RectangleStyle, s1 )
+
 
 end
+--]]
 
 

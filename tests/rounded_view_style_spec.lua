@@ -29,19 +29,28 @@ local W, H = display.contentWidth, display.contentHeight
 local H_CENTER, V_CENTER = W*0.5, H*0.5
 
 
+local verifyBackgroundViewStyle = Utils.verifyBackgroundViewStyle
+
+local hasProperty = TestUtils.hasProperty
 local hasPropertyValue = TestUtils.hasPropertyValue
+
 local hasValidStyleProperties = TestUtils.hasValidStyleProperties
 local hasInvalidStyleProperties = TestUtils.hasInvalidStyleProperties
 
+
 local styleInheritsFrom = TestUtils.styleInheritsFrom
+local styleIsa = TestUtils.styleIsa
 
 local styleRawPropertyValueIs = TestUtils.styleRawPropertyValueIs
 local stylePropertyValueIs = TestUtils.stylePropertyValueIs
 
 local styleHasProperty = TestUtils.styleHasProperty
-local styleInheritsProp = TestUtils.styleInheritsProp
+local styleInheritsProperty = TestUtils.styleInheritsProperty
+
 
 local styleHasPropertyValue = TestUtils.styleHasPropertyValue
+local styleInheritsPropertyValue = TestUtils.styleInheritsPropertyValue
+
 local styleInheritsPropertyValueFrom = TestUtils.styleInheritsPropertyValueFrom
 
 
@@ -67,7 +76,7 @@ end
 Test to ensure that the correct property values are
 copied during initialization
 --]]
-function test_addMissingProperties_Rounded()
+function test_addMissingProperties()
 
 	local BackgroundFactory = Widgets.Style.BackgroundFactory
 	local RoundedView = BackgroundFactory.Rounded
@@ -233,7 +242,7 @@ end
 
 
 function test_defaultInheritance()
-	print( "test_defaultInheritance" )
+	-- print( "test_defaultInheritance" )
 	local Background = Widgets.Style.Background
 	local StyleFactory = Widgets.Style.BackgroundFactory
 	local RoundedStyle = StyleFactory.Rounded
@@ -244,6 +253,26 @@ function test_defaultInheritance()
 
 	styleInheritsFrom( s1, StyleBase )
 	hasValidStyleProperties( RoundedStyle, s1.view )
+
+end
+
+
+
+function test_mismatchedInheritance()
+	-- print( "test_mismatchedInheritance" )
+	local Background = Widgets.Style.Background
+	local StyleFactory = Widgets.Style.BackgroundFactory
+	local RoundedStyle = StyleFactory.Rounded
+	local StyleBase
+
+	local s1 = Widgets.newRoundedBackgroundStyle()
+	StyleBase = Background:_getBaseStyle( s1.type )
+
+	assert( s1 )
+
+	print( s1.inherit )
+	styleInheritsFrom( s1, StyleBase )
+
 
 end
 

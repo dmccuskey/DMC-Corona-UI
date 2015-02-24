@@ -23,7 +23,9 @@ require 'tests.lunatest'
 --== Setup test suites and run
 
 
-lunatest.suite( 'tests.text_style_spec' )
-lunatest.suite( 'tests.rounded_view_style_spec' )
+-- lunatest.suite( 'tests.text_style_spec' )
+lunatest.suite( 'tests.background_style_spec' )
 lunatest.suite( 'tests.rectangle_view_style_spec' )
+lunatest.suite( 'tests.rounded_view_style_spec' )
+-- lunatest.suite( 'tests.button_style_spec' )
 lunatest.run()
