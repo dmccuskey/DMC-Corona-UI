@@ -189,16 +189,11 @@ function RectangleStyle.addMissingDestProperties( dest, src, params )
 	local srcs = { RectangleStyle._STYLE_DEFAULTS }
 	if src then tinsert( srcs, 1, src ) end
 
+	dest = ViewStyle.addMissingDestProperties( dest, src, params )
+
 	for i=1,#srcs do
 		local src = srcs[i]
 
-		if dest.debugOn==nil or force then dest.debugOn=src.debugOn end
-
-		if dest.width==nil or force then dest.width=src.width end
-		if dest.height==nil or force then dest.height=src.height end
-
-		if dest.anchorX==nil or force then dest.anchorX=src.anchorX end
-		if dest.anchorY==nil or force then dest.anchorY=src.anchorY end
 		if dest.fillColor==nil or force then dest.fillColor=src.fillColor end
 		if dest.strokeColor==nil or force then dest.strokeColor=src.strokeColor end
 		if dest.strokeWidth==nil or force then dest.strokeWidth=src.strokeWidth end
@@ -235,7 +230,7 @@ end
 
 
 function RectangleStyle._verifyStyleProperties( src )
-	print( "RectangleStyle._verifyStyleProperties", src )
+	-- print( "RectangleStyle._verifyStyleProperties", src )
 	local emsg = "Style requires property '%s'"
 
 	local is_valid = ViewStyle._verifyStyleProperties( src )
@@ -259,40 +254,7 @@ end
 --== Public Methods
 
 
---======================================================--
--- Access to style properties
-
---======================================================--
--- Misc
-
---== updateStyle
-
--- force is used when making exact copy of data
---
-function RectangleStyle:updateStyle( src, params )
-	-- print( "RectangleStyle:updateStyle", src )
-	RectangleStyle.copyExistingSrcProperties( self, src, params )
-end
-
---== verifyProperties
-
-function RectangleStyle:verifyProperties()
-	-- print( "RectangleStyle:verifyProperties" )
-
-	--== Check Inheritance
-
-	-- if inheritance is not of similar type then
-	-- then make sure we have default data
-
-	local inherit_type = self._inherit and self._inherit.type or nil
-
-	if self.type ~= inherit_type and inherit_type~=nil then
-		print( sformat("[NOTICE] Style inheritance mismatch '%s'<>'%s'", tostring(self.type), tostring(inherit_type) ))
-		RectangleStyle.addMissingDestProperties( self, RectangleStyle._STYLE_DEFAULTS )
-	end
-
-	return RectangleStyle._verifyStyleProperties( self )
-end
+-- none
 
 
 
@@ -300,16 +262,7 @@ end
 --== Private Methods
 
 
--- clear any local modifications on style class
--- called by clearProperties()
---
-function RectangleStyle:_clearProperties()
-	-- print( "RectangleStyle:_clearProperties" )
-	self:superCall( '_clearProperties' )
-	self.fillColor=nil
-	self.strokeColor=nil
-	self.strokeWidth=nil
-end
+-- none
 
 
 
@@ -318,6 +271,7 @@ end
 
 
 -- none
+
 
 
 

@@ -118,6 +118,34 @@ ViewStyle.EVENT = 'view-style-event'
 --== Public Methods
 
 
+function ViewStyle:copyProperties( src, params )
+	-- print( "ViewStyle:copyProperties", src, self )
+	params = params or {}
+	if params.force==nil then params.force=false end
+	--==--
+	local StyleClass = self.class
+	local BaseStyle = self:getBaseStyle()
+
+	local isTable, isObj, isValid = false, false, false
+	isTable = ( type(src)=='table' )
+	isObj = ( isTable and type(src.isa)=='function' )
+	isValid = ( isObj and src:isa(StyleClass) )
+
+	if isTable and not isObject then
+		-- we have a plain table, ok
+		-- pass
+	elseif isValid then
+		-- have instance of our view, ok
+		-- pass
+	else
+		src = BaseStyle
+	end
+
+	StyleClass.copyExistingSrcProperties( self, src, params )
+
+end
+
+
 --======================================================--
 -- Access to style properties
 
@@ -135,7 +163,23 @@ end
 --== Private Methods
 
 
--- none
+function ViewStyle:_clearProperties( src )
+	-- print( "ViewStyle:_clearProperties", src, self )
+	local StyleClass = self.class
+	local inherit = self._inherit
+	local p = {force=true}
+
+	if src and type(src.isa=='function') and src:isa(StyleClass) then
+		p.force=false
+	elseif inherit and inherit:isa(StyleClass) then
+		-- if inherit, then use empty to clear all properties
+		src = {}
+		p.force=true
+	else
+		src=nil
+	end
+	self:copyProperties( src, p )
+end
 
 
 

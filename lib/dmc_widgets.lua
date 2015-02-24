@@ -354,25 +354,32 @@ function Widget.newRoundedBackground( options )
 end
 
 
-function Widget.newBackgroundStyle( style_info )
-	-- print("Widget.newBackgroundStyle")
-	-- assert( type(style_info)=='table' and style_info.type, "newBackgroundStyle: missing style property 'type'" )
+function Widget.newBackgroundStyle( style_info, params )
+	-- print( "Widget.newBackgroundStyle" )
+	style_info = style_info or {}
+	params = params or {}
+	--==--
+	params.data = style_info
 	if not Widget.Style.Background then Widget._loadBackgroundSupport() end
-	return Widget.Style.Background:createStyleFrom{ data=style_info }
+	return Widget.Style.Background:createStyleFrom( params )
 end
 
-function Widget.newRectangleBackgroundStyle( style_info )
+function Widget.newRectangleBackgroundStyle( style_info, params )
 	style_info = style_info or {}
+	params = params or {}
+	--==--
 	if not Widget.Background then Widget._loadBackgroundSupport() end
 	style_info.type = Widget.Style.BackgroundFactory.Rectangle.TYPE
-	return Widget.newBackgroundStyle( style_info )
+	return Widget.newBackgroundStyle( style_info, params )
 end
 
-function Widget.newRoundedBackgroundStyle( style_info )
+function Widget.newRoundedBackgroundStyle( style_info, params )
 	style_info = style_info or {}
+	params = params or {}
+	--==--
 	if not Widget.Background then Widget._loadBackgroundSupport() end
 	style_info.type = Widget.Style.BackgroundFactory.Rounded.TYPE
-	return Widget.newBackgroundStyle( style_info )
+	return Widget.newBackgroundStyle( style_info, params )
 end
 
 
@@ -430,6 +437,17 @@ function Widget.newToggleButton( options )
 	options.action = Widget.Button.ToggleButton.TYPE
 	--==--
 	return Widget.Button.create( options )
+end
+
+
+function Widget.newButtonStyle( style_info, params )
+	-- print("Widget.newButtonStyle")
+	style_info = style_info or {}
+	params = params or {}
+	--==--
+	params.data = style_info
+	if not Widget.Style.Button then Widget._loadButtonSupport() end
+	return Widget.Style.Button:createStyleFrom( params )
 end
 
 
@@ -552,10 +570,14 @@ function Widget.newText( options )
 	return Widget.Text:new( options )
 end
 
-function Widget.newTextStyle( style_info )
+function Widget.newTextStyle( style_info, params )
 	-- print( "Widget.newTextStyle" )
+	style_info = style_info or {}
+	params = params or {}
+	--==--
+	params.data = style_info
 	if not Widget.Style.Text then Widget._loadTextSupport() end
-	return Widget.Style.Text:createStyleFrom{ data=style_info }
+	return Widget.Style.Text:createStyleFrom( params )
 end
 
 
@@ -589,10 +611,14 @@ function Widget.newTextField( options )
 	return Widget.TextField:new( options )
 end
 
-function Widget.newTextFieldStyle( style_info )
+function Widget.newTextFieldStyle( style_info, params )
 	-- print( "Widget.newTextFieldStyle" )
+	style_info = style_info or {}
+	params = params or {}
+	--==--
+	params.data = style_info
 	if not Widget.Style.TextField then Widget._loadTextFieldSupport() end
-	return Widget.Style.TextField:createStyleFrom{ data=style_info }
+	return Widget.Style.TextField:createStyleFrom( params )
 end
 
 

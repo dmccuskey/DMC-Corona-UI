@@ -162,7 +162,6 @@ function TextStyle:__init__( params )
 
 	--== Style Properties ==--
 
-	-- self._data
 	-- self._inherit
 	-- self._widget
 	-- self._parent
@@ -213,17 +212,12 @@ function TextStyle.addMissingDestProperties( dest, src, params )
 	local srcs = { TextStyle._STYLE_DEFAULTS }
 	if src then tinsert( srcs, 1, src ) end
 
+	dest = BaseStyle.addMissingDestProperties( dest, src, params )
+
 	for i=1,#srcs do
 		local src = srcs[i]
 
-		if dest.debugOn==nil or force then dest.debugOn=src.debugOn end
-
-		if dest.width==nil or force then dest.width=src.width end
-		if dest.height==nil or force then dest.height=src.height end
-
 		if dest.align==nil or force then dest.align=src.align end
-		if dest.anchorX==nil or force then dest.anchorX=src.anchorX end
-		if dest.anchorY==nil or force then dest.anchorY=src.anchorY end
 		if dest.fillColor==nil or force then dest.fillColor=src.fillColor end
 		if dest.font==nil or force then dest.font=src.font end
 		if dest.fontSize==nil or force then dest.fontSize=src.fontSize end
@@ -243,29 +237,17 @@ end
 --
 function TextStyle.copyExistingSrcProperties( dest, src, params )
 	-- print( "TextStyle.copyExistingSrcProperties", dest, src )
-	if not dest or not src then return end
+	assert( dest )
+	if not src then return end
 	params = params or {}
 	if params.force==nil then params.force=false end
 	--==--
 	local force=params.force
 
-	if (src.debugOn~=nil and dest.debugOn==nil) or force then
-		dest.debugOn=src.debugOn
-	end
-	if (src.width~=nil and dest.width==nil) or force then
-		dest.width=src.width
-	end
-	if (src.height~=nil and dest.height==nil) or force then
-		dest.height=src.height
-	end
+	BaseStyle.copyExistingSrcProperties( dest, src, params )
+
 	if (src.align~=nil and dest.align==nil) or force then
 		dest.align=src.align
-	end
-	if (src.anchorX~=nil and dest.anchorX==nil) or force then
-		dest.anchorX=src.anchorX
-	end
-	if (src.anchorY~=nil and dest.anchorY==nil) or force then
-		dest.anchorY=src.anchorY
 	end
 	if (src.fillColor~=nil and dest.fillColor==nil) or force then
 		dest.fillColor=src.fillColor
@@ -342,15 +324,6 @@ end
 --== Public Methods
 
 
---== updateStyle
-
--- force is used when making exact copy of data, incl 'nil's
---
-function TextStyle:updateStyle( src, params )
-	-- print( "TextStyle:updateStyle" )
-	TextStyle.copyExistingSrcProperties( self, src, params )
-end
-
 --== verifyProperties
 
 function TextStyle:verifyProperties()
@@ -364,20 +337,7 @@ end
 --== Private Methods
 
 
--- clear any local modifications on style class
--- called by clearProperties()
---
-function TextStyle:_clearProperties()
-	-- print( "TextStyle:_clearProperties" )
-	self:superCall( '_clearProperties' )
-	self.align=nil
-	self.fillColor=nil
-	self.font=nil
-	self.fontSize=nil
-	self.marginX=nil
-	self.marginY=nil
-	self.textColor=nil
-end
+-- none
 
 
 

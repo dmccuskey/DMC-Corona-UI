@@ -118,7 +118,6 @@ ButtonStyle._CHILDREN = {
 	disabled=true
 }
 
-
 -- child styles
 ButtonStyle.INACTIVE_KEY = 'inactive'
 ButtonStyle.INACTIVE_NAME = 'button-inactive-state'
@@ -140,8 +139,6 @@ ButtonStyle._VALID_PROPERTIES = {
 	isHitActive=true,
 	marginX=true,
 	marginY=true,
-	offsetX=true,
-	offsetY=true
 }
 
 ButtonStyle._EXCLUDE_PROPERTY_CHECK = {
@@ -164,12 +161,6 @@ ButtonStyle._STYLE_DEFAULTS = {
 	isHitActive=true,
 	marginX=0,
 	marginY=5,
-	offsetX=0,
-	offsetY=0,
-
-	label={
-		anchorY=99999
-	},
 
 	--[[
 	When defining a style in code, 'label' and 'background'
@@ -201,9 +192,8 @@ ButtonStyle._STYLE_DEFAULTS = {
 		background={
 			type='rectangle',
 			view={
-				cornerRadius = 10,
 				fillColor={0,1,1,1},
-				strokeWidth=1,
+				strokeWidth=2.5,
 				strokeColor={1,0,0,1},
 			}
 		}
@@ -227,9 +217,8 @@ ButtonStyle._STYLE_DEFAULTS = {
 		background={
 			type='rectangle',
 			view={
-				cornerRadius = 10,
 				fillColor={0,1,0,1},
-				strokeWidth=1,
+				strokeWidth=3.5,
 				strokeColor={0,0,0,1},
 			},
 		}
@@ -255,7 +244,7 @@ ButtonStyle._STYLE_DEFAULTS = {
 		background={
 			type='rounded',
 			view={
-				cornerRadius = 10,
+				cornerRadius=10,
 				fillColor={0,0,1,1},
 				strokeWidth=4.5,
 				strokeColor={0,1,0,1},
@@ -302,6 +291,8 @@ function ButtonStyle:__init__( params )
 	self._hitMarginX = nil
 	self._hitMarginY = nil
 	self._isHitActive = nil
+	self._marginX = nil
+	self._marginY = nil
 
 	--== Object Refs ==--
 
@@ -354,26 +345,52 @@ function ButtonStyle.addMissingDestProperties( dest, src, params )
 	local srcs = { ButtonStateStyle._STYLE_DEFAULTS }
 	if src then tinsert( srcs, 1, src ) end
 
+	dest = BaseStyle.addMissingDestProperties( dest, src, params )
+
 	for i=1,#srcs do
 		local src = srcs[i]
 
-		if dest.debugOn==nil or force then dest.debugOn=src.debugOn end
-
-		if dest.width==nil or force then dest.width=src.width end
-		if dest.height==nil or force then dest.height=src.height end
-
-		if dest.anchorX==nil or force then dest.anchorX=src.anchorX end
-		if dest.anchorY==nil or force then dest.anchorY=src.anchorY end
-		if dest.fillColor==nil or force then dest.fillColor=src.fillColor end
-		if dest.strokeColor==nil or force then dest.strokeColor=src.strokeColor end
-		if dest.strokeWidth==nil or force then dest.strokeWidth=src.strokeWidth end
+		if dest.align==nil or force then dest.align=src.align end
+		if dest.hitMarginX==nil or force then dest.hitMarginX=src.hitMarginX end
+		if dest.hitMarginY==nil or force then dest.hitMarginY=src.hitMarginY end
+		if dest.isHitActive==nil or force then dest.isHitActive=src.isHitActive end
+		if dest.marginX==nil or force then dest.marginX=src.marginX end
+		if dest.marginX==nil or force then dest.marginX=src.marginX end
 
 	end
 
-	ButtonStyle._addMissingChildProperties( dest, src )
+	dest = ButtonStyle._addMissingChildProperties( dest, src, params )
 
 	return dest
 end
+
+
+--
+-- copy properties to sub-styles
+--
+function ButtonStyle._addMissingChildProperties( dest, src, params )
+	-- print("ButtonStyle._addMissingChildProperties", dest, src )
+	local eStr = "ERROR: Style missing property '%s'"
+	local StyleClass, child
+
+	child = dest.inactive
+	assert( child, sformat( eStr, 'inactive' ) )
+	StyleClass = Widgets.Style.ButtonState
+	dest.inactive = StyleClass.addMissingDestProperties( child, src, params )
+
+	child = dest.active
+	assert( child, sformat( eStr, 'active' ) )
+	StyleClass = Widgets.Style.ButtonState
+	dest.active = StyleClass.addMissingDestProperties( child, src, params )
+
+	child = dest.disabled
+	assert( child, sformat( eStr, 'disabled' ) )
+	StyleClass = Widgets.Style.ButtonState
+	dest.disabled = StyleClass.addMissingDestProperties( child, src, params )
+
+	return dest
+end
+
 
 
 function ButtonStyle.copyExistingSrcProperties( dest, src, params )
@@ -385,45 +402,26 @@ function ButtonStyle.copyExistingSrcProperties( dest, src, params )
 	--==--
 	local force=params.force
 
-	if (src.debugOn~=nil and dest.debugOn==nil) or force then
-		dest.debugOn=src.debugOn
-	end
-	if (src.width~=nil and dest.width==nil) or force then
-		dest.width=src.width
-	end
-	if (src.height~=nil and dest.height==nil) or force then
-		dest.height=src.height
-	end
+	dest = BaseStyle.copyExistingSrcProperties( dest, src, params )
+
 	if (src.align~=nil and dest.align==nil) or force then
 		dest.align=src.align
 	end
-
-	return dest
-end
-
-
---
--- copy properties to sub-styles
---
-function ButtonStyle._addMissingChildProperties( dest, src )
-	-- print("ButtonStyle._addMissingChildProperties", dest, src )
-	local eStr = "ERROR: Style missing property '%s'"
-	local StyleClass, child
-
-	child = dest.inactive
-	assert( child, sformat( eStr, 'inactive' ) )
-	StyleClass = Widgets.Style.ButtonState
-	StyleClass.addMissingDestProperties( child, src )
-
-	child = dest.active
-	assert( child, sformat( eStr, 'active' ) )
-	StyleClass = Widgets.Style.ButtonState
-	StyleClass.addMissingDestProperties( child, src )
-
-	child = dest.disabled
-	assert( child, sformat( eStr, 'disabled' ) )
-	StyleClass = Widgets.Style.ButtonState
-	StyleClass.addMissingDestProperties( child, src )
+	if (src.hitMarginX~=nil and dest.hitMarginX==nil) or force then
+		dest.hitMarginX=src.hitMarginX
+	end
+	if (src.hitMarginY~=nil and dest.hitMarginY==nil) or force then
+		dest.hitMarginY=src.hitMarginY
+	end
+	if (src.isHitActive~=nil and dest.isHitActive==nil) or force then
+		dest.isHitActive=src.isHitActive
+	end
+	if (src.marginX~=nil and dest.marginX==nil) or force then
+		dest.marginX=src.marginX
+	end
+	if (src.marginY~=nil and dest.marginY==nil) or force then
+		dest.marginY=src.marginY
+	end
 
 	return dest
 end
@@ -432,10 +430,13 @@ end
 
 function ButtonStyle._verifyStyleProperties( src )
 	-- print( "ButtonStyle._verifyStyleProperties", src )
-	local emsg = "Style requires property '%s'"
+	local emsg = "Style (ButtonStyle) requires property '%s'"
 
 	local is_valid = BaseStyle._verifyStyleProperties( src )
 
+	if not src.align then
+		print(sformat(emsg,'align')) ; is_valid=false
+	end
 	if not src.hitMarginX then
 		print(sformat(emsg,'hitMarginX')) ; is_valid=false
 	end
@@ -445,17 +446,32 @@ function ButtonStyle._verifyStyleProperties( src )
 	if not src.isHitActive then
 		print(sformat(emsg,'isHitActive')) ; is_valid=false
 	end
+	if not src.marginX then
+		print(sformat(emsg,'marginX')) ; is_valid=false
+	end
+	if not src.marginY then
+		print(sformat(emsg,'marginY')) ; is_valid=false
+	end
 
-	local StyleClass
+	local child, StyleClass
 
-	StyleClass = src._inactive.class
-	-- if not StyleClass._checkProperties( src._inactive ) then is_valid=false end
+	child = src._inactive
+	StyleClass = child.class
+	if not StyleClass._verifyStyleProperties( child, exclude ) then
+		is_valid=false
+	end
 
-	StyleClass = src._active.class
-	-- if not StyleClass._checkProperties( src._active ) then is_valid=false end
+	child = src._active
+	StyleClass = child.class
+	if not StyleClass._verifyStyleProperties( child, exclude ) then
+		is_valid=false
+	end
 
-	StyleClass = src._disabled.class
-	-- if not StyleClass._checkProperties( src._disabled ) then is_valid=false end
+	child = src._disabled
+	StyleClass = child.class
+	if not StyleClass._verifyStyleProperties( child, exclude ) then
+		is_valid=false
+	end
 
 	return is_valid
 end
@@ -539,7 +555,7 @@ end
 --== hitMarginX
 
 function ButtonStyle.__getters:hitMarginX()
-	-- print( "ButtonStyle.__getters:hitMarginX" )
+	-- print( "ButtonStyle.__getters:hitMarginX", self._inherit )
 	local value = self._hitMarginX
 	if value==nil and self._inherit then
 		value = self._inherit.hitMarginX
@@ -547,7 +563,7 @@ function ButtonStyle.__getters:hitMarginX()
 	return value
 end
 function ButtonStyle.__setters:hitMarginX( value )
-	-- print( "ButtonStyle.__setters:hitMarginX", value )
+	-- print( "ButtonStyle.__setters:hitMarginX", value, self._inherit )
 	assert( (type(value)=='number' and value>=0) or (value==nil and self._inherit) )
 	--==--
 	if value == self._hitMarginX then return end
@@ -600,51 +616,17 @@ end
 
 --== inherit
 
-function ButtonStyle.__setters:inherit( value )
-	-- print( "ButtonStyle.__setters:inherit", value )
-	BaseStyle.__setters.inherit( self, value )
-	--==--
+function ButtonStyle:_doChildrenInherit( value )
+	-- print( "ButtonStyle", value, self )
 	self._inactive.inherit = value and value.inactive or nil
 	self._active.inherit = value and value.active or nil
 	self._disabled.inherit = value and value.disabled or nil
 end
 
 
---== updateStyle
-
--- force is used when making exact copy of data
---
-function ButtonStyle:updateStyle( src, params )
-	-- print( "ButtonStyle:updateStyle", src )
-	ButtonStyle.copyExistingSrcProperties( self, src, params )
-end
-
-function ButtonStyle:verifyProperties()
-	-- print( "ButtonStyle:verifyProperties" )
-	return ButtonStyle._verifyStyleProperties( self )
-end
-
-
 
 --====================================================================--
 --== Private Methods
-
-
--- this would clear any local modifications on style class
--- called by clearProperties()
---
-function ButtonStyle:_clearProperties()
-	-- print( "ButtonStyle:_clearProperties" )
-	self:superCall( '_clearProperties' )
-	self.align=nil
-	self.hitMarginX=nil
-	self.hitMarginY=nil
-	self.isHitActive=nil
-	self.marginX=nil
-	self.marginY=nil
-	self.offsetX=nil
-	self.offsetY=nil
-end
 
 
 -- we could have nil, Lua structure, or Instance

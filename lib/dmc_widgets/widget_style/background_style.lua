@@ -124,7 +124,11 @@ BackgroundStyle._VALID_PROPERTIES = {
 	type=true
 }
 
-BackgroundStyle._EXCLUDE_PROPERTY_CHECK = nil
+BackgroundStyle._EXCLUDE_PROPERTY_CHECK = {
+	type=true,
+	view=true
+}
+
 
 BackgroundStyle._STYLE_DEFAULTS = {
 	name='background-default-style',
@@ -134,22 +138,9 @@ BackgroundStyle._STYLE_DEFAULTS = {
 	anchorX=0.5,
 	anchorY=0.5,
 
-	type=nil, -- set later to DEFAULT
-
-	view = {
-		--[[
-		Copied from Background
-		debugOn
-		width
-		height
-		anchorX
-		anchorY
-		--]]
-		fillColor={1,1,1,1},
-		strokeWidth=1,
-		strokeColor={0,0,0,1},
-	},
-
+	-- these values can change
+	type=nil,
+	view=nil
 }
 
 --== Event Constants
@@ -208,7 +199,6 @@ function BackgroundStyle.initialize( manager )
 
 	-- set LOCAL defaults before creating classes next
 	BackgroundStyle._DEFAULT_VIEWTYPE = StyleFactory.Rounded.TYPE
-	BackgroundStyle._STYLE_DEFAULTS.type = BackgroundStyle._DEFAULT_VIEWTYPE
 
 	BackgroundStyle._setDefaults( BackgroundStyle )
 end
@@ -217,7 +207,7 @@ end
 -- create empty Background Style structure
 function BackgroundStyle.createStyleStructure( data )
 	-- print( "BackgroundStyle.createStyleStructure", data )
-	data = data or self._DEFAULT_VIEWTYPE
+	data = data or BackgroundStyle._DEFAULT_VIEWTYPE
 	return {
 		type=data,
 		view={}
@@ -235,20 +225,16 @@ function BackgroundStyle.addMissingDestProperties( dest, src, params )
 	local srcs = { BackgroundStyle._STYLE_DEFAULTS }
 	if src then tinsert( srcs, 1, src ) end
 
+	dest = BaseStyle.addMissingDestProperties( dest, src, params )
+
 	for i=1,#srcs do
 		local src = srcs[i]
 
-		if dest.debugOn==nil or force then dest.debugOn=src.debugOn end
-
-		if dest.width==nil or force then dest.width=src.width end
-		if dest.height==nil or force then dest.height=src.height end
-
-		if dest.anchorX==nil or force then dest.anchorX=src.anchorX end
-		if dest.anchorY==nil or force then dest.anchorY=src.anchorY end
+		if dest.type==nil or force then dest.type=src.type end
 
 	end
 
-	BackgroundStyle._addMissingChildProperties( dest, src )
+	dest = BackgroundStyle._addMissingChildProperties( dest, src, params )
 
 	return dest
 end
@@ -257,70 +243,57 @@ end
 -- _addMissingChildProperties()
 -- copy properties to sub-styles
 --
-function BackgroundStyle._addMissingChildProperties( dest, src  )
-	print("\nBackgroundStyle._addMissingChildProperties", dest, src  )
-	local eStr = "ERROR: Style missing property '%s'"
+function BackgroundStyle._addMissingChildProperties( dest, src, params  )
+	-- print( "BackgroundStyle._addMissingChildProperties", dest, src )
+	local eStr = "ERROR: Style (BackgroundStyle) missing property '%s'"
 	local StyleClass, child
 
-Utils.print( dest )
 	child = dest.view
 	assert( child, sformat( eStr, 'view' ) )
 	StyleClass = StyleFactory.getClass( dest.type )
-	StyleClass.addMissingDestProperties( child, src )
+	dest.view = StyleClass.addMissingDestProperties( child, src, params )
 
 	return dest
 end
-
 
 
 -- to a new stucture
 function BackgroundStyle.copyExistingSrcProperties( dest, src, params )
 	-- print( "BackgroundStyle.copyExistingSrcProperties", dest, src )
+	assert( dest )
 	if not src then return end
 	params = params or {}
 	if params.force==nil then params.force=false end
-	assert( dest )
 	--==--
 	local force=params.force
 
-	if (src.debugOn~=nil and dest.debugOn==nil) or force then
-		dest.debugOn=src.debugOn
-	end
+	dest = BaseStyle.copyExistingSrcProperties( dest, src, params )
 
-	if (src.width~=nil and dest.width==nil) or force then
-		dest.width=src.width
-	end
-	if (src.height~=nil and dest.height==nil) or force then
-		dest.height=src.height
-	end
-
-	if (src.anchorX~=nil and dest.anchorX==nil) or force then
-		dest.anchorX=src.anchorX
-	end
-	if (src.anchorY~=nil and dest.anchorY==nil) or force then
-		dest.anchorY=src.anchorY
+	if (src.type~=nil and dest.type==nil) or force then
+		dest.type=src.type
 	end
 
 	return dest
 end
 
 
+function BackgroundStyle._verifyStyleProperties( src, exclude )
+	-- print( "BackgroundStyle._verifyStyleProperties", src, exclude )
+	local emsg = "Style (BackgroundStyle) requires property '%s'"
 
-function BackgroundStyle._verifyStyleProperties( src )
-	-- print( "BackgroundStyle._verifyStyleProperties" )
-	local emsg = "Style requires property '%s'"
-
-	local is_valid = BaseStyle._verifyStyleProperties( src )
+	local is_valid = BaseStyle._verifyStyleProperties( src, exclude )
 
 	if not src.type then
 		print(sformat(emsg,'type')) ; is_valid=false
 	end
 
-	local StyleClass
+	local child, StyleClass
 
-	StyleClass = src._view.class
-	-- TODO
-	-- if not StyleClass._checkProperties( self._view ) then is_valid=false end
+	child = src.view
+	StyleClass = child.class
+	if not StyleClass._verifyStyleProperties( child, exclude ) then
+		is_valid=false
+	end
 
 	return is_valid
 end
@@ -341,7 +314,8 @@ function BackgroundStyle._setDefaults( StyleClass )
 		local struct = BackgroundStyle.createStyleStructure( cls_type )
 		local def = Utils.extend( defaults, struct )
 		StyleClass._addMissingChildProperties( def, def )
-		BASE_STYLES[ cls_type ] = StyleClass:new{ data=def }
+		local style = StyleClass:new{ data=def }
+		BASE_STYLES[ cls_type ] = style
 	end
 
 end
@@ -363,7 +337,7 @@ function BackgroundStyle.__setters:view( data )
 	-- print( 'BackgroundStyle.__setters:view', data )
 	assert( data==nil or type(data)=='string' or type( data )=='table' )
 	--==--
-	local inherit = self._inherit and self._inherit._view
+	local inherit = self._inherit and self._inherit._view or nil
 	self._view = self:createStyleFromType{
 		name=BackgroundStyle.VIEW_NAME,
 		inherit=inherit,
@@ -372,17 +346,29 @@ function BackgroundStyle.__setters:view( data )
 	}
 end
 
+--[[
+.inherit  (check type, if not same type, then create new view)
+link inheritance
+
+if set type, then recreate view, or use current
+if current, pull vars from inherited
+if new view, then populate with defaults
+
+if unset type:
+if same type, then clear properties
+	if different type then recreate view, relink
+--]]
+
 
 --======================================================--
 -- Misc
 
 --== inherit
 
-function BackgroundStyle.__setters:inherit( value )
-	-- print( "BackgroundStyle.__setters:inherit", value )
-	BaseStyle.__setters.inherit( self, value )
-	--==--
-	self._view.inherit = value and value.view or nil
+function BackgroundStyle:_doChildrenInherit( value )
+	-- print( "BackgroundStyle_doChildrenInherit", value, self )
+	self:_updateViewStyle()
+	self._view.inherit = value and value._view or nil
 end
 
 
@@ -417,6 +403,52 @@ function BackgroundStyle:createStyleFromType( params )
 end
 
 
+-- checks to maek sure things are equal
+--
+function BackgroundStyle:_updateViewStyle( params )
+	-- print( "BackgroundStyle:_updateViewStyle", params )
+	params = params or {}
+	if params.reset==nil then params.reset = false end
+	--==--
+	if not self.type then error("no type here") ; return end
+	local inheritanceInactive = (self._type==nil)
+	local haveInheritedStyle = (self._inherit~=nil)
+	local viewStyle = self._view
+	local inherit = self._inherit
+	local myType = self.type
+	local StyleClass
+
+	-- create a new view if one we have is of different type
+
+	if not viewStyle or viewStyle.type~=myType then
+		-- creating new view, same type as parent
+		self._view = self:createStyleFromType{
+			name=nil,
+			inherit=nil,
+			parent=self,
+			data=self.type
+		}
+		viewStyle = self._view
+	end
+
+	if self.inheritIsActive then
+		-- clear properties for inheritance action
+		viewStyle.inherit=self._inherit._view
+		-- viewStyle:_clearProperties() -- think this will be automatci
+
+	else
+		-- fill style with properties
+		-- from current inherit or Style Class
+		viewStyle.inherit=nil
+		StyleClass = viewStyle.class
+		local source = inherit and inherit.view
+		StyleClass.copyExistingSrcProperties( viewStyle, source )
+
+	end
+
+	self:_dispatchResetEvent()
+end
+
 --== updateStyle
 
 -- force is used when making exact copy of data
@@ -428,27 +460,34 @@ end
 
 
 function BackgroundStyle:verifyProperties()
-	-- print( "BackgroundStyle:verifyProperties" )
+	-- print( "BackgroundStyle:verifyProperties", self )
 	return BackgroundStyle._verifyStyleProperties( self )
 end
 
 
+function BackgroundStyle.__getters:inheritIsActive()
+	return (self._inherit~=nil and self._type==nil)
+end
+
 --== type
 
 function BackgroundStyle.__getters:type()
-	-- print( 'BackgroundStyle.__getters:type', self._inherit )
+	-- print( "BackgroundStyle.__getters:type", self._inherit )
 	local value = self._type
-	if value==nil and self._inherit then
+	if value==nil and self.inheritIsActive then
 		value = self._inherit.type
 	end
 	return value
 end
 function BackgroundStyle.__setters:type( value )
-	-- print( 'BackgroundStyle.__setters:type', value )
+	-- print( "BackgroundStyle.__setters:type", value, self )
 	assert( (value==nil and self._inherit) or type(value)=='string' )
 	--==--
 	if value == self._type then return end
 	self._type = value
+	if self._is_initialized then
+		self:_updateViewStyle()
+	end
 end
 
 
@@ -457,8 +496,8 @@ end
 --== Private Methods
 
 
-function BackgroundStyle:_getBaseStyle( data )
-	-- print( "BackgroundStyle:_getBaseStyle", self, data )
+function BackgroundStyle:getBaseStyle( data )
+	-- print( "BackgroundStyle:getBaseStyle", self, data )
 	local BASE_STYLES = self._BASE_STYLES
 	local viewType, style
 
@@ -483,49 +522,82 @@ function BackgroundStyle:_getBaseStyle( data )
 end
 
 
--- this would clear any local modifications on style class
--- called by clearProperties()
+-- copyProperties()
+-- copy properties from a source
+-- if no source, then copy from Base Style
 --
-function BackgroundStyle:_clearProperties()
-	-- print( "BackgroundStyle:_clearProperties" )
-	self:superCall( '_clearProperties' )
-	--== no local properties to update
+function BackgroundStyle:copyProperties( src, params )
+	-- print( "BackgroundStyle:copyProperties", src, self )
+	params = params or {}
+	if params.force==nil then params.force=false end
+	--==--
+	local StyleClass = self.class
+	if not src then src=StyleClass:getBaseStyle( self.type ) end
+	StyleClass.copyExistingSrcProperties( self, src, params )
 end
 
 
--- we could have nil, Lua structure, or Instance
+
+--[[
+Prepare Data
+we could have nil, Lua structure, or Instance
+
+no data, no inherit - create structure, set default type
+no data, inherit - create structure, use inherit value, unset type
+data, inherit - inherit.type (unset) or data.type (set) or default (set)
+--]]
+-- _prepareData()
 --
 function BackgroundStyle:_prepareData( data )
 	-- print( "BackgroundStyle:_prepareData", data, self )
-	if not data then return end
-	--==--
+	local inherit = self._inherit
 
-	if data.isa and data:isa( BackgroundStyle ) then
+	if not data then
+		data = BackgroundStyle.createStyleStructure()
+		if inherit then
+			data.type = nil -- unset for inheritance
+			data.view = inherit.type -- notify of type
+		end
+
+	elseif data.isa and data:isa( BackgroundStyle ) then
 		--== Instance
 		local o = data
-		data = StyleClass.createStyleStructure( o.type )
+		data = BackgroundStyle.createStyleStructure( o.type )
+		if inherit then
+			data.type = nil -- unset for inheritance
+			data.view = inherit.type -- notify of type
+		end
 
 	else
 		--== Lua structure
 		local StyleClass
 		local src, dest = data, nil
+		local stype
 
-		-- make sure we have 'type' for our view
-		if src.type==nil then
-			src.type = self._DEFAULT_VIEWTYPE
-			print( "[WARNING] BackgroundStyle defaulting to style: ", src.type )
+		if inherit then
+			stype = inherit.type
+			src.type = nil -- unset for inheritance
+		elseif src.type then
+			stype = src.type
+		else
+			stype = self._DEFAULT_VIEWTYPE
+			src.type = stype
 		end
 
-		StyleClass = StyleFactory.getClass( src.type )
+		if stype then
+			--== set child properties
 
-		-- before we copy our defaults, make sure
-		-- structure for 'view' exists
-		dest = src.view
-		if not dest then
-			dest = StyleClass.createStyleStructure()
-			src.view = dest
+			StyleClass = StyleFactory.getClass( stype )
+
+			-- before we copy our defaults, make sure
+			-- structure for 'view' exists
+			dest = src.view
+			if not dest then
+				dest = StyleClass.createStyleStructure()
+				src.view = dest
+			end
+			StyleClass.copyExistingSrcProperties( dest, src )
 		end
-		StyleClass.copyExistingSrcProperties( dest, src )
 
 	end
 

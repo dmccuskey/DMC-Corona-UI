@@ -65,6 +65,7 @@ local widget_find = dmc_widget_func.find
 
 local Widgets = nil -- set later
 
+local BaseStyle = require( widget_find( 'widget_style.base_style' ) )
 local Rectangle = require( widget_find( 'widget_background.rectangle_style' ) )
 local Rounded = require( widget_find( 'widget_background.rounded_style' ) )
 
@@ -135,14 +136,20 @@ end
 
 return {
 
-	initialize = initializeFactory,
+	initialize=initializeFactory,
 
-	Rectangle = Rectangle,
-	Rounded = Rounded,
+	Style={
+		Base=BaseStyle,
+		Rectangle=Rectangle,
+		Rounded=Rounded,
+	},
 
-	create = createStyle,
-	getClass = getStyleClass,
+	Rectangle=Rectangle,
+	Rounded=Rounded,
 
-	getStyleNames = getStyleNames,
-	getStyleClasses = getStyleClasses
+	create=createStyle,
+	getClass=getStyleClass,
+
+	getStyleNames=getStyleNames,
+	getStyleClasses=getStyleClasses
 }

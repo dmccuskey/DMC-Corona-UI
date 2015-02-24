@@ -159,8 +159,6 @@ function RoundedStyle:__init__( params )
 	-- self._anchorX
 	-- self._anchorY
 
-	self._type = nil
-
 	self._cornerRadius = nil
 	self._fillColor = nil
 	self._strokeColor = nil
@@ -195,14 +193,10 @@ function RoundedStyle.addMissingDestProperties( dest, src, params )
 	local srcs = { RoundedStyle._STYLE_DEFAULTS }
 	if src then tinsert( srcs, 1, src ) end
 
+	dest = ViewStyle.addMissingDestProperties( dest, src, params )
+
 	for i=1,#srcs do
 		local src = srcs[i]
-
-		if dest.debugOn==nil then dest.debugOn=src.debugOn end
-		if dest.width==nil then dest.width=src.width end
-		if dest.height==nil then dest.height=src.height end
-		if dest.anchorX==nil then dest.anchorX=src.anchorX end
-		if dest.anchorY==nil then dest.anchorY=src.anchorY end
 
 		if dest.cornerRadius==nil then dest.cornerRadius=src.cornerRadius end
 		if dest.fillColor==nil then dest.fillColor=src.fillColor end
@@ -216,7 +210,7 @@ end
 
 
 function RoundedStyle.copyExistingSrcProperties( dest, src, params )
-	-- print( "RoundedStyle.copyExistingSrcProperties", dest, src )
+	-- print( "RoundedStyle.copyExistingSrcProperties", dest, src, params )
 	assert( dest )
 	if not src then return end
 	params = params or {}
@@ -224,30 +218,30 @@ function RoundedStyle.copyExistingSrcProperties( dest, src, params )
 	--==--
 	local force=params.force
 
-	ViewStyle.copyExistingSrcProperties( dest, src, params )
+	dest = ViewStyle.copyExistingSrcProperties( dest, src, params )
 
-	if (src.cornerRadius~=nil and dest.cornerRadius==nil) or force
-		then dest.cornerRadius=src.cornerRadius
+	if (src.cornerRadius~=nil and dest.cornerRadius==nil) or force then
+		dest.cornerRadius=src.cornerRadius
 	end
-	if (src.fillColor~=nil and dest.fillColor==nil) or force
-		then dest.fillColor=src.fillColor
+	if (src.fillColor~=nil and dest.fillColor==nil) or force then
+		dest.fillColor=src.fillColor
 	end
-	if (src.strokeColor~=nil and dest.strokeColor==nil) or force
-		then dest.strokeColor=src.strokeColor
+	if (src.strokeColor~=nil and dest.strokeColor==nil) or force then
+		dest.strokeColor=src.strokeColor
 	end
-	if (src.strokeWidth~=nil and dest.strokeWidth==nil) or force
-		then dest.strokeWidth=src.strokeWidth
+	if (src.strokeWidth~=nil and dest.strokeWidth==nil) or force then
+		dest.strokeWidth=src.strokeWidth
 	end
 
 	return dest
 end
 
 
-function RoundedStyle._verifyStyleProperties( src )
+function RoundedStyle._verifyStyleProperties( src, exclude )
 	-- print( "RoundedStyle._verifyStyleProperties" )
 	local emsg = "Style: requires property '%s'"
 
-	local is_valid = ViewStyle._verifyStyleProperties( src )
+	local is_valid = ViewStyle._verifyStyleProperties( src, exclude )
 
 	if not src.cornerRadius then
 		print(sformat(emsg,'cornerRadius')) ; is_valid=false
@@ -294,55 +288,12 @@ function RoundedStyle.__setters:cornerRadius( value )
 end
 
 
---======================================================--
--- Misc
-
---== updateStyle
-
--- force is used when making exact copy of data
---
-function RoundedStyle:updateStyle( src, params )
-	-- print( "RoundedStyle:updateStyle", src )
-	RoundedStyle.copyExistingSrcProperties( self, src, params )
-end
-
-
-function RoundedStyle:verifyProperties()
-	-- print( "RoundedStyle.verifyProperties" )
-	local emsg = "Style: requires property '%s'"
-
-	--== Check Inheritance
-
-	-- if inheritance is not of similar type then
-	-- then make sure we have default data
-
-	local inherit_type = self._inherit and self._inherit.type or nil
-
-	if self.type ~= inherit_type and inherit_type~=nil then
-		print( sformat("[NOTICE] Style inheritance mismatch '%s'<>'%s'", tostring(self.type), tostring(inherit_type) ))
-		RoundedStyle.addMissingDestProperties( self, RoundedStyle._STYLE_DEFAULTS )
-	end
-
-	return RoundedStyle._verifyStyleProperties( self )
-end
-
-
 
 --====================================================================--
 --== Private Methods
 
 
--- this would clear any local modifications on style class
--- called by clearProperties()
---
-function RoundedStyle:_clearProperties()
-	-- print( "RoundedStyle:_clearProperties" )
-	self:superCall( '_clearProperties' )
-	self.cornerRadius=nil
-	self.fillColor=nil
-	self.strokeColor=nil
-	self.strokeWidth=nil
-end
+-- none
 
 
 
