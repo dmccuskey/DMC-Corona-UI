@@ -16,6 +16,7 @@ local VERSION = "0.1.0"
 
 
 local Widgets = require 'lib.dmc_widgets'
+
 local TestUtils = require 'tests.test_utils'
 local Utils = require 'dmc_utils'
 
@@ -29,7 +30,7 @@ local W, H = display.contentWidth, display.contentHeight
 local H_CENTER, V_CENTER = W*0.5, H*0.5
 
 
-local verifyBackgroundViewStyle = Utils.verifyBackgroundViewStyle
+local verifyBackgroundViewStyle = TestUtils.verifyBackgroundViewStyle
 
 local hasProperty = TestUtils.hasProperty
 local hasPropertyValue = TestUtils.hasPropertyValue
@@ -72,11 +73,16 @@ function suite_setup()
 end
 
 
+--====================================================================--
+--== Test Static Functions
+
+
 --[[
 Test to ensure that the correct property values are
 copied during initialization
 --]]
 function test_addMissingProperties()
+	-- print( "test_addMissingProperties" )
 
 	local BackgroundFactory = Widgets.Style.BackgroundFactory
 	local RoundedView = BackgroundFactory.Rounded
@@ -125,6 +131,7 @@ function test_copyExistingSrcProperties()
 
 	hasPropertyValue( src.view, 'hitMarginX', nil )
 
+
 	--== test non-empty destination
 
 	src = {
@@ -155,6 +162,7 @@ function test_copyExistingSrcProperties()
 	hasPropertyValue( src.view, 'strokeWidth', 6 )
 
 	hasPropertyValue( src.view, 'hitMarginX', nil )
+
 
 	--== test non-empty destination, force
 
@@ -240,39 +248,139 @@ end
 
 
 
+--====================================================================--
+--== Test Class Methods
 
-function test_defaultInheritance()
-	-- print( "test_defaultInheritance" )
-	local Background = Widgets.Style.Background
+
+--[[
+--]]
+function test_styleClassBasics()
+	-- print( "test_styleClassBasics" )
 	local StyleFactory = Widgets.Style.BackgroundFactory
-	local RoundedStyle = StyleFactory.Rounded
-	local StyleBase
+	local RoundedView = StyleFactory.Rounded
 
-	local s1 = Widgets.newRoundedBackgroundStyle()
-	StyleBase = Background:_getBaseStyle( s1.type )
+	local Default = RoundedView:getDefaultStyleValues()
+	local BaseStyle, style
 
-	styleInheritsFrom( s1, StyleBase )
-	hasValidStyleProperties( RoundedStyle, s1.view )
+	BaseStyle = RoundedView:getBaseStyle()
+	TestUtils.verifyBackgroundViewStyle( BaseStyle )
+
+	-- check properties initialized to the default values
+
+	styleHasPropertyValue( BaseStyle, 'debugOn', Default.debugOn )
+	styleHasPropertyValue( BaseStyle, 'width', Default.width )
+	styleHasPropertyValue( BaseStyle, 'height', Default.height )
+	styleHasPropertyValue( BaseStyle, 'anchorX', Default.anchorX )
+	styleHasPropertyValue( BaseStyle, 'anchorY', Default.anchorY )
+
+	styleHasPropertyValue( BaseStyle, 'cornerRadius', Default.cornerRadius )
+	styleHasPropertyValue( BaseStyle, 'fillColor', Default.fillColor )
+	styleHasPropertyValue( BaseStyle, 'strokeColor', Default.strokeColor )
+	styleHasPropertyValue( BaseStyle, 'strokeWidth', Default.strokeWidth )
 
 end
 
 
-
-function test_mismatchedInheritance()
-	-- print( "test_mismatchedInheritance" )
-	local Background = Widgets.Style.Background
+--[[
+--]]
+function test_clearProperties()
+	-- print( "test_clearProperties" )
 	local StyleFactory = Widgets.Style.BackgroundFactory
 	local RoundedStyle = StyleFactory.Rounded
-	local StyleBase
 
-	local s1 = Widgets.newRoundedBackgroundStyle()
-	StyleBase = Background:_getBaseStyle( s1.type )
+	local StyleBase, StyleClass
+	local s1, inherit
+	local receivedClearedEvent, callback
 
-	assert( s1 )
 
-	print( s1.inherit )
+	-- by default, style inherits properties from StyleBase
+
+	s1 = StyleFactory.create( 'rounded' )
+
+	StyleClass = s1.class
+	StyleBase = StyleClass:getBaseStyle()
+	assert_equal( StyleClass, RoundedStyle )
 	styleInheritsFrom( s1, StyleBase )
 
+	inherit = StyleBase
+	sView, iView = s1.view, inherit.view
+
+	-- test inherited properties
+
+	styleInheritsPropertyValue( s1, 'cornerRadius', inherit.cornerRadius )
+	styleInheritsPropertyValue( s1, 'fillColor', inherit.fillColor )
+	styleInheritsPropertyValue( s1, 'strokeColor', inherit.strokeColor )
+	styleInheritsPropertyValue( s1, 'strokeWidth', inherit.strokeWidth )
+
+	-- set some properties, to make local
+
+	s1.cornerRadius = 99
+	s1.strokeWidth = 98
+
+	verifyBackgroundViewStyle( s1 )
+
+	styleHasPropertyValue( s1, 'cornerRadius', 99 )
+	styleInheritsPropertyValue( s1, 'fillColor', inherit.fillColor )
+	styleInheritsPropertyValue( s1, 'strokeColor', inherit.strokeColor )
+	styleHasPropertyValue( s1, 'strokeWidth', 98 )
+
+	--== Clear Properties, with inherit
+
+	receivedClearedEvent = false
+	callback = function(e)
+		if e.type==s1.STYLE_CLEARED then receivedClearedEvent=true end
+	end
+	s1:addEventListener( s1.EVENT, callback )
+
+	s1:clearProperties()
+
+	styleInheritsFrom( s1, inherit )
+	assert_true( receivedClearedEvent, "missing clear event" )
+
+	styleInheritsPropertyValue( s1, 'cornerRadius', inherit.cornerRadius )
+	styleInheritsPropertyValue( s1, 'fillColor', inherit.fillColor )
+	styleInheritsPropertyValue( s1, 'strokeColor', inherit.strokeColor )
+	styleInheritsPropertyValue( s1, 'strokeWidth', inherit.strokeWidth )
+
+	-- set local properties
+
+	s1.cornerRadius = 99
+	s1.strokeWidth = 98
+
+	--== Break inheritance
+
+	s1.inherit = nil
+
+	verifyBackgroundViewStyle( s1 )
+	styleInheritsFrom( s1, nil )
+
+	-- verify all properties have been copied
+
+	print( "\n\n\n My Test \n\n\n" )
+
+	styleHasPropertyValue( s1, 'cornerRadius', 99 )
+	styleHasPropertyValue( s1, 'fillColor', inherit.fillColor )
+	styleHasPropertyValue( s1, 'strokeColor', inherit.strokeColor )
+	styleHasPropertyValue( s1, 'strokeWidth', 98 )
+
+
+	--== Clear Properties, without Inherit
+
+	receivedClearedEvent = false
+	callback = function(e)
+		if e.type==s1.STYLE_CLEARED then receivedClearedEvent=true end
+	end
+	s1:addEventListener( s1.EVENT, callback )
+
+	s1:clearProperties()
+
+	styleInheritsFrom( s1, nil )
+	assert_true( receivedClearedEvent, "missing clear event" )
+
+	styleHasPropertyValue( s1, 'cornerRadius', inherit.cornerRadius )
+	styleHasPropertyValue( s1, 'fillColor', inherit.fillColor )
+	styleHasPropertyValue( s1, 'strokeColor', inherit.strokeColor )
+	styleHasPropertyValue( s1, 'strokeWidth', inherit.strokeWidth )
 
 end
 

@@ -29,7 +29,7 @@ local W, H = display.contentWidth, display.contentHeight
 local H_CENTER, V_CENTER = W*0.5, H*0.5
 
 
-local verifyBackgroundViewStyle = Utils.verifyBackgroundViewStyle
+local verifyBackgroundViewStyle = TestUtils.verifyBackgroundViewStyle
 
 local hasProperty = TestUtils.hasProperty
 local hasPropertyValue = TestUtils.hasPropertyValue
@@ -235,63 +235,103 @@ end
 
 
 
-
-function test_defaultInheritance()
-	print( "test_defaultInheritance" )
-	local Background = Widgets.Style.Background
-	local StyleFactory = Widgets.Style.BackgroundFactory
-	local RectangleStyle = StyleFactory.Rectangle
-	local StyleDefault
-
-	local s1 = Widgets.newRectangleBackgroundStyle()
-
-	StyleDefault = Background:_getBaseStyle( s1.type )
-	assert( StyleDefault )
-	print( "> TYPE", s1.type, s1.view, s1.view._inherit, StyleDefault )
-	styleInheritsFrom( s1.view, StyleDefault.view )
-	-- hasValidStyleProperties( RectangleStyle, s1.view )
-
-end
-
-
-
--- function test_removeInheritance()
--- 	print( "test_removeInheritance" )
--- 	local Background = Widgets.Style.Background
--- 	local StyleFactory = Widgets.Style.BackgroundFactory
--- 	local RectangleStyle = StyleFactory.Rectangle
--- 	local StyleBase
-
--- 	local s1 = Widgets.newRectangleBackgroundStyle()
--- 	StyleBase = Background:_getBaseStyle( s1.type )
-
--- 	styleInheritsFrom( s1, StyleBase )
--- 	hasValidStyleProperties( RectangleStyle, s1.view )
-
--- end
-
-
 --[[
-function test_mismatchedInheritance()
-	print( "test_mismatchedInheritance" )
-	local Background = Widgets.Style.Background
+--]]
+function test_clearProperties()
+	-- print( "test_clearProperties" )
 	local StyleFactory = Widgets.Style.BackgroundFactory
 	local RectangleStyle = StyleFactory.Rectangle
-	local StyleBase
 
-	local s1 = Widgets.newRectangleBackgroundStyle()
-	StyleBase = Background:_getBaseStyle( s1.type )
+	local StyleBase, StyleClass
+	local s1, inherit
+	local receivedClearedEvent, callback
 
-	print( ">>> styles", s1.type, StyleBase, s1 )
-	assert( s1 )
 
-	print( s1.inherit )
+	-- by default, style inherits properties from StyleBase
+
+	s1 = StyleFactory.create( 'rectangle' )
+
+	StyleClass = s1.class
+	StyleBase = StyleClass:getBaseStyle()
+	assert_equal( StyleClass, RectangleStyle )
 	styleInheritsFrom( s1, StyleBase )
 
-	-- hasValidStyleProperties( RectangleStyle, s1 )
+	inherit = StyleBase
+	sView, iView = s1.view, inherit.view
 
+	-- test inherited properties
+
+	styleInheritsPropertyValue( s1, 'fillColor', inherit.fillColor )
+	styleInheritsPropertyValue( s1, 'strokeColor', inherit.strokeColor )
+	styleInheritsPropertyValue( s1, 'strokeWidth', inherit.strokeWidth )
+
+	-- set some properties, to make local
+
+	local my_fill = {1,1,1}
+	s1.fillColor = my_fill
+	s1.strokeWidth = 98
+
+	verifyBackgroundViewStyle( s1 )
+
+	styleHasPropertyValue( s1, 'fillColor', my_fill )
+	styleInheritsPropertyValue( s1, 'strokeColor', inherit.strokeColor )
+	styleHasPropertyValue( s1, 'strokeWidth', 98 )
+
+	--== Clear Properties, with inherit
+
+	receivedClearedEvent = false
+	callback = function(e)
+		if e.type==s1.STYLE_CLEARED then receivedClearedEvent=true end
+	end
+	s1:addEventListener( s1.EVENT, callback )
+
+	s1:clearProperties()
+
+	styleInheritsFrom( s1, inherit )
+	assert_true( receivedClearedEvent, "missing clear event" )
+
+	styleInheritsPropertyValue( s1, 'fillColor', inherit.fillColor )
+	styleInheritsPropertyValue( s1, 'strokeColor', inherit.strokeColor )
+	styleInheritsPropertyValue( s1, 'strokeWidth', inherit.strokeWidth )
+
+	-- set local properties
+
+	s1.strokeWidth = 98
+
+	--== Break inheritance
+
+	s1.inherit = nil
+
+	verifyBackgroundViewStyle( s1 )
+	styleInheritsFrom( s1, nil )
+
+	-- verify all properties have been copied
+
+	styleHasPropertyValue( s1, 'fillColor', inherit.fillColor )
+	styleHasPropertyValue( s1, 'strokeColor', inherit.strokeColor )
+	styleHasPropertyValue( s1, 'strokeWidth', 98 )
+
+
+	--== Clear Properties, without Inherit
+
+	receivedClearedEvent = false
+	callback = function(e)
+		if e.type==s1.STYLE_CLEARED then receivedClearedEvent=true end
+	end
+	s1:addEventListener( s1.EVENT, callback )
+
+	print( "\n\n\n My Testing \n\n\n" )
+
+	s1:clearProperties()
+
+	styleInheritsFrom( s1, nil )
+	assert_true( receivedClearedEvent, "missing clear event" )
+
+	styleHasPropertyValue( s1, 'fillColor', inherit.fillColor )
+	styleHasPropertyValue( s1, 'strokeColor', inherit.strokeColor )
+	styleHasPropertyValue( s1, 'strokeWidth', inherit.strokeWidth )
 
 end
---]]
+
 
 

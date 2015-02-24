@@ -6,11 +6,11 @@
 --[[
 copy the following into test file
 
-local verifyButtonStyle = Utils.verifyButtonStyle
-local verifyButtonStateStyle = Utils.verifyButtonStateStyle
-local verifyBackgroundStyle = Utils.verifyBackgroundStyle
-local verifyBackgroundViewStyle = Utils.verifyBackgroundViewStyle
-local verifyTextStyle = Utils.verifyTextStyle
+local verifyButtonStyle = TestUtils.verifyButtonStyle
+local verifyButtonStateStyle = TestUtils.verifyButtonStateStyle
+local verifyBackgroundStyle = TestUtils.verifyBackgroundStyle
+local verifyBackgroundViewStyle = TestUtils.verifyBackgroundViewStyle
+local verifyTextStyle = TestUtils.verifyTextStyle
 
 local hasProperty = TestUtils.hasProperty
 local hasPropertyValue = TestUtils.hasPropertyValue
@@ -66,8 +66,28 @@ local Utils = {}
 
 function Utils.verifyTextStyle( style )
 	assert( style, "Utils.verifyTextStyle missing arg 'style'" )
+	local Text = Widgets.Style.Text
 
-	local child
+	Utils.styleIsa( style, Text )
+
+	Utils.hasProperty( style, 'debugOn' )
+	--[[
+	width & height can be optional
+	-- Utils.hasProperty( style, 'width' )
+	-- Utils.hasProperty( style, 'height' )
+	--]]
+	Utils.hasProperty( style, 'anchorX' )
+	Utils.hasProperty( style, 'anchorY' )
+
+	Utils.hasProperty( style, 'align' )
+	Utils.hasProperty( style, 'fillColor' )
+	Utils.hasProperty( style, 'font' )
+	Utils.hasProperty( style, 'fontSize' )
+	Utils.hasProperty( style, 'marginX' )
+	Utils.hasProperty( style, 'marginY' )
+	Utils.hasProperty( style, 'strokeColor' )
+	Utils.hasProperty( style, 'strokeWidth' )
+	Utils.hasProperty( style, 'textColor' )
 
 end
 

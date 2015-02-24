@@ -17,6 +17,8 @@ local VERSION = "0.1.0"
 
 
 local Widgets = require 'lib.dmc_widgets'
+
+local TestUtils = require 'tests.test_utils'
 local Utils = require 'tests.test_utils'
 
 
@@ -29,19 +31,28 @@ local W, H = display.contentWidth, display.contentHeight
 local H_CENTER, V_CENTER = W*0.5, H*0.5
 
 
+local verifyTextStyle = TestUtils.verifyTextStyle
+
+local hasProperty = TestUtils.hasProperty
 local hasPropertyValue = TestUtils.hasPropertyValue
+
 local hasValidStyleProperties = TestUtils.hasValidStyleProperties
 local hasInvalidStyleProperties = TestUtils.hasInvalidStyleProperties
 
+
 local styleInheritsFrom = TestUtils.styleInheritsFrom
+local styleIsa = TestUtils.styleIsa
 
 local styleRawPropertyValueIs = TestUtils.styleRawPropertyValueIs
 local stylePropertyValueIs = TestUtils.stylePropertyValueIs
 
 local styleHasProperty = TestUtils.styleHasProperty
-local styleInheritsProp = TestUtils.styleInheritsProp
+local styleInheritsProperty = TestUtils.styleInheritsProperty
+
 
 local styleHasPropertyValue = TestUtils.styleHasPropertyValue
+local styleInheritsPropertyValue = TestUtils.styleInheritsPropertyValue
+
 local styleInheritsPropertyValueFrom = TestUtils.styleInheritsPropertyValueFrom
 
 
@@ -51,42 +62,10 @@ local styleInheritsPropertyValueFrom = TestUtils.styleInheritsPropertyValueFrom
 
 
 
-
-local function textStyleInheritsFrom( style, inherit )
-
-	styleInheritsPropFrom( style, 'align', inherit )
-end
-
-
 --====================================================================--
 --== Module Testing
 --====================================================================--
 
-
--- function test_moduleBasics()
-
--- 	assert_equal( type(_G.getDMCObject), 'function', "should be function" )
-
--- 	assert_equal( _G.getDMCObject( { __dmc_ref=true } ), true, "should be true" )
-
--- 	assert_error( "not true", function() _G.getDMCObject( {} ) end )
-
--- end
-
-
--- assert_equal( ObjectBase.NAME, "Object Class", "name is incorrect" )
-
--- assert_true( ws_handshake.checkResponse( response, key ), "should be true" )
-
--- assert_false( ws_handshake.checkResponse( response, key ), "should be false" )
-
--- assert_error( function() ws_handshake.checkResponse( {}, nil ) end, "should be error" )
-
-
-
---====================================================================--
---== ObjectBase Testing
---====================================================================--
 
 function suite_setup()
 
@@ -95,102 +74,243 @@ function suite_setup()
 end
 
 
-function test_TextStyleClass()
 
-	local TextStyle = Widgets.Style.Text
-	local BaseStyle = Widgets.Style.Base
-
-	local DefaultStyle = TextStyle:_getBaseStyle()
-
-	assert_equal( TextStyle.NAME, "Text Style", "name is incorrect" )
-
-	assert_equal( DefaultStyle.NAME, "Text Style", "NAME is incorrect" )
-	-- assert_true( DefaultStyle:isa(BaseStyle), "Class is incorrect" )
-	assert_true( DefaultStyle:isa(TextStyle), "Class is incorrect" )
-
-end
+--====================================================================--
+--== Test Static Functions
 
 
 --[[
 Test to ensure that the correct property values are
 copied during initialization
 --]]
-function test_copyingProperties()
-
+function test_addMissingProperties()
+	-- print( "test_addMissingProperties" )
 	local TextStyle = Widgets.Style.Text
-	local DefaultStyle = TextStyle:_getBaseStyle()
 
 	local src, dest
 
-	src = TextStyle._STYLE_DEFAULTS
-	dest = { name="albert", width=1, anchorX=100 }
 
-	TextStyle.addMissingDestProperties( dest, src )
+	--== test empty destination
 
-	assert_equal( dest.debugOn, src.debugOn, "property incorrect: debugOn" )
+	--== test non-empty destination
 
-	assert_equal( dest.width, 1, "property incorrect: width" )
-	assert_equal( dest.height, src.height, "property incorrect: width" )
-
-	stylePropertyValueIs( dest, 'align', src.align )
-	stylePropertyValueIs( dest, 'anchorX', 100 )
-
-	assert_equal( dest.align, src.align, "property incorrect: align" )
-	assert_equal( dest.anchorX, 100, "property incorrect: anchorX" )
-	assert_equal( dest.anchorY, src.anchorY, "property incorrect: anchorY" )
-	assert_equal( dest.fillColor, src.fillColor, "property incorrect: fillColor" )
-	assert_equal( dest.font, src.font, "property incorrect: font" )
-	assert_equal( dest.fontSize, src.fontSize, "property incorrect: fontSize" )
-	assert_equal( dest.marginX, src.marginX, "property incorrect: marginX" )
-	assert_equal( dest.marginY, src.marginY, "property incorrect: marginY" )
-	assert_equal( dest.strokeColor, src.strokeColor, "property incorrect: strokeColor" )
-	assert_equal( dest.strokeWidth, src.strokeWidth, "property incorrect: strokeWidth" )
-	assert_equal( dest.textColor, src.textColor, "property incorrect: textColor" )
-
-	hasValidStyleProperties( TextStyle, dest )
-
-
-	src = { width=10, height=10, anchorX=10, }
-	dest = { width=1, anchorY=100, fontSize=24 }
-
-	TextStyle.copyExistingSrcProperties( dest, src )
-
-	assert_equal( dest.debugOn, nil, "property incorrect: debugOn" )
-
-	assert_equal( dest.width, 1, "property incorrect: width" )
-	assert_equal( dest.height, 10, "property incorrect: height" )
-
-	assert_equal( dest.align, src.align, "property incorrect: align" )
-	assert_equal( dest.anchorX, 10, "property incorrect: anchorX" )
-	assert_equal( dest.anchorY, 100, "property incorrect: anchorY" )
-	assert_equal( dest.fillColor, nil, "property incorrect: fillColor" )
-	assert_equal( dest.font, nil, "property incorrect: font" )
-	assert_equal( dest.fontSize, 24, "property incorrect: fontSize" )
-	assert_equal( dest.marginX, nil, "property incorrect: marginX" )
-	assert_equal( dest.marginY, nil, "property incorrect: marginY" )
-	assert_equal( dest.strokeColor, nil, "property incorrect: strokeColor" )
-	assert_equal( dest.strokeWidth, nil, "property incorrect: strokeWidth" )
-	assert_equal( dest.textColor, nil, "property incorrect: textColor" )
 
 end
 
 
+
 --[[
-Test to ensure that the Default Text Style has all
-of its properties initialized to the default values
+Test to ensure that the correct property values are
+copied during initialization
 --]]
-function test_defaultPropertyValues()
+function test_copyExistingSrcProperties()
+	print( "test_copyExistingSrcProperties" )
+	local TextStyle = Widgets.Style.Text
 
-	local TextStyle = Widgets.Style.Text -- after creation
-	local Default = TextStyle:getDefaultStyles()
-	local BaseStyle = TextStyle:_getBaseStyle()
+	local src, dest
 
-	assert( Default )
-	assert( BaseStyle )
+	--== test empty destination
+
+	src = {
+		debugOn=false,
+
+		hitMarginX=4,
+		type='rectangle',
+		width=4,
+
+		align='right',
+		fontSize=4,
+		strokeColor={0,0,1},
+		textColor={0,1,0},
+
+		label = {}
+	}
+
+	TextStyle.copyExistingSrcProperties( src.label, src )
+
+	hasPropertyValue( src.label, 'debugOn', src.debugOn )
+	hasPropertyValue( src.label, 'width', src.width )
+	hasPropertyValue( src.label, 'height', nil )
+	hasPropertyValue( src.label, 'anchorX', nil )
+	hasPropertyValue( src.label, 'anchorY', nil )
+	hasPropertyValue( src.label, 'align', src.align )
+	hasPropertyValue( src.label, 'fillColor', nil )
+	hasPropertyValue( src.label, 'font', nil )
+	hasPropertyValue( src.label, 'fontSize', src.fontSize )
+	hasPropertyValue( src.label, 'marginX', nil )
+	hasPropertyValue( src.label, 'marginY', nil )
+	hasPropertyValue( src.label, 'strokeColor', src.strokeColor )
+	hasPropertyValue( src.label, 'strokeWidth', nil )
+	hasPropertyValue( src.label, 'textColor', src.textColor )
+
+	hasPropertyValue( src.label, 'hitMarginX', nil )
+	hasPropertyValue( src.label, 'type', nil )
+
+
+	--== test non-empty destination
+
+	src = {
+		debugOn=false,
+
+		hitMarginX=4,
+		type='rectangle',
+		width=4,
+
+		align='right',
+		fontSize=4,
+		marginX=0,
+		strokeColor={0,0,1},
+		textColor={0,1,0},
+
+		label = {
+			fontSize=24,
+			marginX=10,
+			height=10
+		}
+	}
+
+	TextStyle.copyExistingSrcProperties( src.label, src )
+
+	hasPropertyValue( src.label, 'debugOn', src.debugOn )
+	hasPropertyValue( src.label, 'width', src.width )
+	hasPropertyValue( src.label, 'height', 10 )
+	hasPropertyValue( src.label, 'anchorX', nil )
+	hasPropertyValue( src.label, 'anchorY', nil )
+	hasPropertyValue( src.label, 'align', src.align )
+	hasPropertyValue( src.label, 'fillColor', nil )
+	hasPropertyValue( src.label, 'font', nil )
+	hasPropertyValue( src.label, 'fontSize', 24 )
+	hasPropertyValue( src.label, 'marginX', 10 )
+	hasPropertyValue( src.label, 'marginY', nil )
+	hasPropertyValue( src.label, 'strokeColor', src.strokeColor )
+	hasPropertyValue( src.label, 'strokeWidth', nil )
+	hasPropertyValue( src.label, 'textColor', src.textColor )
+
+	hasPropertyValue( src.label, 'hitMarginX', nil )
+	hasPropertyValue( src.label, 'type', nil )
+
+
+	--== test non-empty destination, force
+
+	src = {
+		debugOn=false,
+
+		hitMarginX=4,
+		type='rectangle',
+		width=4,
+
+		align='right',
+		fontSize=4,
+		marginX=0,
+		strokeColor={0,0,1},
+		textColor={0,1,0},
+
+		label = {
+			fontSize=24,
+			marginX=10,
+			height=10
+		}
+	}
+
+	TextStyle.copyExistingSrcProperties( src.label, src, {force=true} )
+
+	hasPropertyValue( src.label, 'debugOn', src.debugOn )
+	hasPropertyValue( src.label, 'width', src.width )
+	hasPropertyValue( src.label, 'height', nil )
+	hasPropertyValue( src.label, 'anchorX', nil )
+	hasPropertyValue( src.label, 'anchorY', nil )
+	hasPropertyValue( src.label, 'align', src.align )
+	hasPropertyValue( src.label, 'fillColor', nil )
+	hasPropertyValue( src.label, 'font', nil )
+	hasPropertyValue( src.label, 'fontSize', src.fontSize )
+	hasPropertyValue( src.label, 'marginX', src.marginX )
+	hasPropertyValue( src.label, 'marginY', nil )
+	hasPropertyValue( src.label, 'strokeColor', src.strokeColor )
+	hasPropertyValue( src.label, 'strokeWidth', nil )
+	hasPropertyValue( src.label, 'textColor', src.textColor )
+
+	hasPropertyValue( src.label, 'hitMarginX', nil )
+	hasPropertyValue( src.label, 'type', nil )
+
+end
+
+
+function test_verifyStyleProperties()
+	-- print( "test_verifyStyleProperties" )
+	local Text = Widgets.Style.Text
+
+	local src
+
+	src = {
+		debugOn=true,
+		width=4,
+		height=nil,
+		anchorX=1,
+		anchorY=5,
+
+		align='right',
+		fillColor={1,1,0},
+		font=native.systemFont,
+		fontSize=5,
+		marginX=15,
+		marginY=4,
+		strokeColor={1,1,1},
+		strokeWidth=4,
+		textColor={0.5,1,1}
+	}
+	hasValidStyleProperties( Text, src )
+
+	src = {
+		debugOn=nil, -- <<
+		width=4,
+		height=10,
+		anchorX=1,
+		anchorY=5,
+		cornerRadius=5,
+		fillColor={},
+		strokeColor=1,
+		strokeWidth=4
+	}
+	hasInvalidStyleProperties( Text, src )
+
+	src = {
+		debugOn=true,
+		width=4,
+		height=10,
+		anchorX=1,
+		anchorY=5,
+		cornerRadius=nil,
+		fillColor=nil,
+		strokeColor=1,
+		strokeWidth=4
+	}
+	hasInvalidStyleProperties( Text, src )
+
+end
+
+
+
+--====================================================================--
+--== Test Class Methods
+
+
+function test_styleClassBasics()
+	-- print( "test_styleClassBasics" )
+	local Text = Widgets.Style.Text
+	local BaseStyle, style
+	local Default = Text:getDefaultStyleValues()
+
+	BaseStyle = Text:getBaseStyle()
+	TestUtils.verifyTextStyle( BaseStyle )
+
+	-- check properties initialized to the default values
 
 	styleHasPropertyValue( BaseStyle, 'debugOn', Default.debugOn )
-	styleRawPropertyValueIs( BaseStyle, 'width', Default.width )
-	styleRawPropertyValueIs( BaseStyle, 'height', Default.height )
+	--[[
+	-- width/height can be nil
+	-- styleHasPropertyValue( BaseStyle, 'width', Default.width )
+	-- styleHasPropertyValue( BaseStyle, 'height', Default.height )
+	--]]
 	styleHasPropertyValue( BaseStyle, 'anchorX', Default.anchorX )
 	styleHasPropertyValue( BaseStyle, 'anchorY', Default.anchorY )
 	styleHasPropertyValue( BaseStyle, 'align', Default.align )
@@ -201,31 +321,137 @@ function test_defaultPropertyValues()
 	styleHasPropertyValue( BaseStyle, 'marginY', Default.marginY )
 	styleHasPropertyValue( BaseStyle, 'textColor', Default.textColor )
 
-end
+	-- verify a new text style
 
-
-
-function test_TextStyleInheritanceClass()
-
-	local o = Widgets.newTextStyle()
-
-	local TextStyle = Widgets.Style.Text
-	local BaseStyle = Widgets.Style.Base
-
-	local DefaultStyle = TextStyle:_getBaseStyle()
-
-	assert_equal( DefaultStyle, o.inherit, "inheritance is incorrect" )
+	style = Widgets.newTextStyle()
+	TestUtils.verifyTextStyle( style )
 
 end
 
 
-function test_eventMixinBasics()
 
-	-- assert_equal( type(ObjectBase.dispatchEvent), 'function', "should be function" )
-	-- assert_equal( type(ObjectBase.addEventListener), 'function', "should be function" )
-	-- assert_equal( type(ObjectBase.removeEventListener), 'function', "should be function" )
+--[[
+--]]
+function test_clearProperties()
+	-- print( "test_clearProperties" )
+	local Text = Widgets.Style.Text
+
+	local StyleBase, StyleClass
+	local s1, inherit
+	local receivedClearedEvent, callback
+
+
+	-- by default, style inherits properties from StyleBase
+
+	s1 = Widgets.newTextStyle()
+
+	StyleClass = s1.class
+	StyleBase = StyleClass:getBaseStyle()
+	assert_equal( StyleClass, Text )
+	styleInheritsFrom( s1, StyleBase )
+
+	inherit = StyleBase
+
+	-- test inherited properties
+
+	styleInheritsPropertyValue( s1, 'align', inherit.align )
+	styleInheritsPropertyValue( s1, 'fillColor', inherit.fillColor )
+	styleInheritsPropertyValue( s1, 'font', inherit.font )
+	styleInheritsPropertyValue( s1, 'fontSize', inherit.fontSize )
+	styleInheritsPropertyValue( s1, 'marginX', inherit.marginX )
+	styleInheritsPropertyValue( s1, 'marginY', inherit.marginY )
+	styleInheritsPropertyValue( s1, 'strokeColor', inherit.strokeColor )
+	styleInheritsPropertyValue( s1, 'strokeWidth', inherit.strokeWidth )
+	styleInheritsPropertyValue( s1, 'textColor', inherit.textColor )
+
+	-- set some properties, to make local
+
+	s1.align = 'left'
+	s1.marginX = 99
+
+	verifyTextStyle( s1 )
+
+	styleHasPropertyValue( s1, 'align', 'left' )
+	styleInheritsPropertyValue( s1, 'fillColor', inherit.fillColor )
+	styleInheritsPropertyValue( s1, 'font', inherit.font )
+	styleInheritsPropertyValue( s1, 'fontSize', inherit.fontSize )
+	styleHasPropertyValue( s1, 'marginX', 99 )
+	styleInheritsPropertyValue( s1, 'marginY', inherit.marginY )
+	styleInheritsPropertyValue( s1, 'strokeColor', inherit.strokeColor )
+	styleInheritsPropertyValue( s1, 'strokeWidth', inherit.strokeWidth )
+	styleInheritsPropertyValue( s1, 'textColor', inherit.textColor )
+
+
+	--== Clear Properties, with inherit
+
+	receivedClearedEvent = false
+	callback = function(e)
+		if e.type==s1.STYLE_CLEARED then receivedClearedEvent=true end
+	end
+	s1:addEventListener( s1.EVENT, callback )
+
+	s1:clearProperties()
+
+	styleInheritsFrom( s1, inherit )
+	assert_true( receivedClearedEvent, "missing clear event" )
+
+	styleInheritsPropertyValue( s1, 'align', inherit.align )
+	styleInheritsPropertyValue( s1, 'fillColor', inherit.fillColor )
+	styleInheritsPropertyValue( s1, 'font', inherit.font )
+	styleInheritsPropertyValue( s1, 'fontSize', inherit.fontSize )
+	styleInheritsPropertyValue( s1, 'marginX', inherit.marginX )
+	styleInheritsPropertyValue( s1, 'marginY', inherit.marginY )
+	styleInheritsPropertyValue( s1, 'strokeColor', inherit.strokeColor )
+	styleInheritsPropertyValue( s1, 'strokeWidth', inherit.strokeWidth )
+	styleInheritsPropertyValue( s1, 'textColor', inherit.textColor )
+
+	-- set local properties
+
+	s1.align = 'left'
+	s1.marginX = 99
+
+	--== Break inheritance
+
+	s1.inherit = nil
+
+	verifyTextStyle( s1 )
+	styleInheritsFrom( s1, nil )
+
+	-- verify all properties have been copied
+
+	styleHasPropertyValue( s1, 'align', 'left' )
+	styleHasPropertyValue( s1, 'fillColor', inherit.fillColor )
+	styleHasPropertyValue( s1, 'font', inherit.font )
+	styleHasPropertyValue( s1, 'fontSize', inherit.fontSize )
+	styleHasPropertyValue( s1, 'marginX', 99 )
+	styleHasPropertyValue( s1, 'marginY', inherit.marginY )
+	styleHasPropertyValue( s1, 'strokeColor', inherit.strokeColor )
+	styleHasPropertyValue( s1, 'strokeWidth', inherit.strokeWidth )
+	styleHasPropertyValue( s1, 'textColor', inherit.textColor )
+
+
+	--== Clear Properties, without Inherit
+
+	receivedClearedEvent = false
+	callback = function(e)
+		if e.type==s1.STYLE_CLEARED then receivedClearedEvent=true end
+	end
+	s1:addEventListener( s1.EVENT, callback )
+
+	s1:clearProperties()
+
+	styleInheritsFrom( s1, nil )
+	assert_true( receivedClearedEvent, "missing clear event" )
+
+	styleHasPropertyValue( s1, 'align', inherit.align )
+	styleHasPropertyValue( s1, 'fillColor', inherit.fillColor )
+	styleHasPropertyValue( s1, 'font', inherit.font )
+	styleHasPropertyValue( s1, 'fontSize', inherit.fontSize )
+	styleHasPropertyValue( s1, 'marginX', inherit.marginX )
+	styleHasPropertyValue( s1, 'marginY', inherit.marginY )
+	styleHasPropertyValue( s1, 'strokeColor', inherit.strokeColor )
+	styleHasPropertyValue( s1, 'strokeWidth', inherit.strokeWidth )
+	styleHasPropertyValue( s1, 'textColor', inherit.textColor )
 
 end
-
-
 
