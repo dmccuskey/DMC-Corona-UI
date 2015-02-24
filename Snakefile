@@ -19,6 +19,7 @@ module_config = {
 			"dmc_widgets/scroller_view_base.lua",
 			"dmc_widgets/theme_manager.lua",
 			"dmc_widgets/widget_background.lua",
+			"dmc_widgets/widget_background/base_view_style.lua",
 			"dmc_widgets/widget_background/rectangle_style.lua",
 			"dmc_widgets/widget_background/rectangle_view.lua",
 			"dmc_widgets/widget_background/rounded_style.lua",
