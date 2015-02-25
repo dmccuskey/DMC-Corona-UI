@@ -78,6 +78,7 @@ local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
 
 local sformat = string.format
+local tinsert = table.insert
 
 --== To be set in initialize()
 local Widgets = nil
@@ -103,14 +104,6 @@ TextFieldStyle._CHILDREN = {
 	display=true
 }
 
--- child styles
-TextFieldStyle.BACKGROUND_KEY = 'background'
-TextFieldStyle.BACKGROUND_NAME = 'textfield-background'
-TextFieldStyle.HINT_KEY = 'hint'
-TextFieldStyle.HINT_NAME = 'textfield-hint'
-TextFieldStyle.DISPLAY_KEY = 'display'
-TextFieldStyle.DISPLAY_NAME = 'textfield-display'
-
 TextFieldStyle._VALID_PROPERTIES = {
 	debugOn=true,
 	width=true,
@@ -129,7 +122,11 @@ TextFieldStyle._VALID_PROPERTIES = {
 	returnKey=true,
 }
 
-TextFieldStyle._EXCLUDE_PROPERTY_CHECK = nil
+TextFieldStyle._EXCLUDE_PROPERTY_CHECK = {
+	background=true,
+	hint=true,
+	display=true
+}
 
 TextFieldStyle._STYLE_DEFAULTS = {
 	name='textfield-default-style',
@@ -226,13 +223,10 @@ function TextFieldStyle:__init__( params )
 	-- self._anchorX
 	-- self._anchorY
 
-	--== Local style properties
-
 	self._align = nil
 	self._bgStyle = nil
 	self._inputType = nil
 	self._isHitActive = nil
-	self._isHitTestable = nil
 	self._isSecure = nil
 	self._marginX = nil
 	self._marginY = nil
@@ -279,31 +273,68 @@ end
 function TextFieldStyle.addMissingDestProperties( dest, src, params )
 	-- print( "TextFieldStyle.addMissingDestProperties", dest, src )
 	assert( dest )
-	if not src then return end
 	params = params or {}
 	if params.force==nil then params.force=false end
 	--==--
 	local force=params.force
+	local srcs = { TextFieldStyle._STYLE_DEFAULTS }
+	if src then tinsert( srcs, 1, src ) end
 
-	if dest.debugOn==nil or force then dest.debugOn=src.debugOn end
+	dest = BaseStyle.addMissingDestProperties( dest, src, params )
 
-	if dest.width==nil or force then dest.width=src.width end
-	if dest.height==nil or force then dest.height=src.height end
+	for i=1,#srcs do
+		local src = srcs[i]
 
-	if dest.align==nil or force then dest.align=src.align end
-	if dest.anchorX==nil or force then dest.anchorX=src.anchorX end
-	if dest.anchorY==nil or force then dest.anchorY=src.anchorY end
-	if dest.backgroundStyle==nil or force then dest.backgroundStyle=src.backgroundStyle end
-	if dest.inputType==nil or force then dest.inputType=src.inputType end
-	if dest.isHitActive==nil or force then dest.isHitActive=src.isHitActive end
-	if dest.isHitTestable==nil or force then dest.isHitTestable=src.isHitTestable end
-	if dest.isSecure==nil or force then dest.isSecure=src.isSecure end
-	if dest.marginX==nil or force then dest.marginX=src.marginX end
-	if dest.marginY==nil or force then dest.marginY=src.marginY end
-	if dest.returnKey==nil or force then dest.returnKey=src.returnKey end
+		if dest.debugOn==nil or force then dest.debugOn=src.debugOn end
+
+		if dest.width==nil or force then dest.width=src.width end
+		if dest.height==nil or force then dest.height=src.height end
+
+		if dest.align==nil or force then dest.align=src.align end
+		if dest.anchorX==nil or force then dest.anchorX=src.anchorX end
+		if dest.anchorY==nil or force then dest.anchorY=src.anchorY end
+		if dest.backgroundStyle==nil or force then dest.backgroundStyle=src.backgroundStyle end
+		if dest.inputType==nil or force then dest.inputType=src.inputType end
+		if dest.isHitActive==nil or force then dest.isHitActive=src.isHitActive end
+		if dest.isHitTestable==nil or force then dest.isHitTestable=src.isHitTestable end
+		if dest.isSecure==nil or force then dest.isSecure=src.isSecure end
+		if dest.marginX==nil or force then dest.marginX=src.marginX end
+		if dest.marginY==nil or force then dest.marginY=src.marginY end
+		if dest.returnKey==nil or force then dest.returnKey=src.returnKey end
+
+	end
+
+	dest = TextFieldStyle._addMissingChildProperties( dest, src, params )
 
 	return dest
 end
+
+
+
+
+function TextFieldStyle._addMissingChildProperties( dest, src, params )
+	-- print("TextFieldStyle._addMissingChildProperties", dest, src )
+	local eStr = "ERROR: Style missing property '%s'"
+	local StyleClass, child
+
+	child = dest.background
+	assert( child, sformat( eStr, 'background' ) )
+	StyleClass = Widgets.Style.Background
+	dest.background = StyleClass.addMissingDestProperties( child, src, params )
+
+	child = dest.hint
+	assert( child, sformat( eStr, 'hint' ) )
+	StyleClass = Widgets.Style.Text
+	dest.hint = StyleClass.addMissingDestProperties( child, src, params )
+
+	child = dest.display
+	assert( child, sformat( eStr, 'display' ) )
+	StyleClass = Widgets.Style.Text
+	dest.display = StyleClass.addMissingDestProperties( child, src, params )
+
+	return dest
+end
+
 
 
 -- src is "master" source
@@ -316,23 +347,10 @@ function TextFieldStyle.copyExistingSrcProperties( dest, src, params)
 	--==--
 	local force=params.force
 
-	if (src.debugOn~=nil and dest.debugOn==nil) or force then
-		src.debugOn=src.debugOn
-	end
-	if (src.width~=nil and dest.width==nil) or force then
-		src.width=src.width
-	end
-	if (src.height~=nil and dest.height==nil) or force then
-		src.height=src.height
-	end
+	dest = BaseStyle.copyExistingSrcProperties( dest, src, params )
+
 	if (src.align~=nil and dest.align==nil) or force then
 		src.align=src.align
-	end
-	if (src.anchorX~=nil and dest.anchorX==nil) or force then
-		src.anchorX=src.anchorX
-	end
-	if (src.anchorY~=nil and dest.anchorY==nil) or force then
-		src.anchorY=src.anchorY
 	end
 	if (src.backgroundStyle~=nil and dest.backgroundStyle==nil) or force then
 		src.backgroundStyle=src.backgroundStyle
@@ -342,12 +360,6 @@ function TextFieldStyle.copyExistingSrcProperties( dest, src, params)
 	end
 	if (src.isHitActive~=nil and dest.isHitActive==nil) or force then
 		src.isHitActive=src.isHitActive
-	end
-	if (src.fillColor~=nil and dest.fillColor==nil) or force then
-		src.fillColor=src.fillColor
-	end
-	if (src.isHitTestable~=nil and dest.isHitTestable==nil) or force then
-		src.isHitTestable=src.isHitTestable
 	end
 	if (src.isSecure~=nil and dest.isSecure==nil) or force then
 		src.isSecure=src.isSecure
@@ -368,38 +380,11 @@ end
 
 
 
-function TextFieldStyle._pushMissingProperties( src )
-	-- print("TextFieldStyle._pushMissingProperties", src )
-	if not src then return end
-
-	local eStr = "ERROR: Style missing property '%s'"
-	local StyleClass, dest
-
-	dest = src.background
-	assert( dest, sformat( eStr, 'background' ) )
-	StyleClass = Widgets.Style.Background
-	StyleClass.addMissingDestProperties( dest, src )
-
-	dest = src.hint
-	assert( dest, sformat( eStr, 'hint' ) )
-	StyleClass = Widgets.Style.Text
-	StyleClass.addMissingDestProperties( dest, src )
-
-	dest = src.display
-	assert( dest, sformat( eStr, 'display' ) )
-	StyleClass = Widgets.Style.Text
-	StyleClass.addMissingDestProperties( dest, src )
-
-	return src
-end
-
-
-
-function TextFieldStyle._verifyProperties( src )
-	-- print("TextFieldStyle._verifyProperties", src )
+function TextFieldStyle._verifyProperties( src, exclude )
+	-- print("TextFieldStyle._verifyProperties", src, exclude )
 	local emsg = "Style: requires property '%s'"
 
-	local is_valid = BaseStyle._verifyProperties( src )
+	local is_valid = BaseStyle._verifyProperties( src, exclude )
 
 	if not src.align then
 		print(sformat(emsg,'align')) ; is_valid=false
@@ -411,9 +396,6 @@ function TextFieldStyle._verifyProperties( src )
 	end
 	if src.isHitActive==nil then
 		print(sformat(emsg,'isHitActive')) ; is_valid=false
-	end
-	if src.isHitTestable==nil then
-		print(sformat(emsg,'isHitTestable')) ; is_valid=false
 	end
 	if src.isSecure==nil then
 		print(sformat(emsg,'isSecure')) ; is_valid=false
@@ -428,37 +410,29 @@ function TextFieldStyle._verifyProperties( src )
 		print(sformat(emsg,'returnKey')) ; is_valid=false
 	end
 
-	-- check sub-styles
+	local child, StyleClass
 
-	local StyleClass
+	child = src._inactive
+	StyleClass = child.class
+	if not StyleClass._verifyStyleProperties( child, exclude ) then
+		is_valid=false
+	end
 
-	StyleClass = src._background.class
-	-- if not StyleClass._checkProperties( src._background ) then is_valid=false end
+	child = src._hint
+	StyleClass = child.class
+	if not StyleClass._verifyStyleProperties( child, exclude ) then
+		is_valid=false
+	end
 
-	StyleClass = src._hint.class
-	-- if not StyleClass._checkProperties( src._hint ) then is_valid=false end
-
-	StyleClass = src._display.class
-	-- if not StyleClass._checkProperties( self._display ) then is_valid=false end
+	child = src._display
+	StyleClass = child.class
+	if not StyleClass._verifyStyleProperties( child, exclude ) then
+		is_valid=false
+	end
 
 	return is_valid
 end
 
-
-
-function TextFieldStyle._setDefaults( StyleClass )
-	-- print( "TextFieldStyle._setDefaults" )
-
-	local defaults = StyleClass._STYLE_DEFAULTS
-
-	defaults = StyleClass._pushMissingProperties( defaults )
-
-	local style = StyleClass:new{
-		data=defaults
-	}
-	StyleClass.__base_style__ = style
-
-end
 
 
 --====================================================================--
@@ -703,25 +677,6 @@ function TextFieldStyle.__setters:isHitActive( value )
 	self:_dispatchChangeEvent( 'isHitActive', value )
 end
 
---== isHitTestable
-
-function TextFieldStyle.__getters:isHitTestable()
-	-- print( "TextFieldStyle.__getters:isHitTestable" )
-	local value = self._isHitTestable
-	if value==nil and self._inherit then
-		value = self._inherit.isHitTestable
-	end
-	return value
-end
-function TextFieldStyle.__setters:isHitTestable( value )
-	-- print( "TextFieldStyle.__setters:isHitTestable", value )
-	assert( type(value)=='boolean' or (value==nil and self._inherit) )
-	--==--
-	if value==self._isHitTestable then return end
-	self._isHitTestable = value
-	self:_dispatchChangeEvent( 'isHitTestable', value )
-end
-
 --== isSecure
 
 function TextFieldStyle.__getters:isSecure()
@@ -772,53 +727,17 @@ end
 
 --== inherit
 
-function TextFieldStyle.__setters:inherit( value )
-	-- print( "TextFieldStyle.__setters:inherit", value )
-	BaseStyle.__setters.inherit( self, value )
-	--==--
+function TextFieldStyle:_doChildrenInherit( value )
+	-- print( "TextFieldStyle:_doChildrenInherit", value )
 	self._background.inherit = value and value.background or nil
 	self._hint.inherit = value and value.hint or nil
 	self._display.inherit = value and value.display or nil
 end
 
 
---== updateStyle
-
--- force is used when making exact copy of data
---
-function TextFieldStyle:updateStyle( src, params )
-	-- print( "TextFieldStyle:updateStyle" )
-	TextFieldStyle.copyExistingSrcProperties( self, src, params )
-end
-
-function TextFieldStyle:verifyProperties()
-	-- print( "TextFieldStyle:verifyProperties" )
-	return TextFieldStyle._verifyProperties( self )
-end
-
-
 
 --====================================================================--
 --== Private Methods
-
-
--- clear any local modifications on style class
--- called by clearProperties()
---
-function TextFieldStyle:_clearProperties()
-	-- print( "TextFieldStyle:_clearProperties" )
-	self:superCall( '_clearProperties' )
-	self.align=nil
-	self.backgroundStyle=nil
-	self.inputType=nil
-	self.isHitTestable=nil
-	self.isHitActive=nil
-	self.isSecure=nil
-	self.marginX=nil
-	self.marginY=nil
-	self.returnKey=nil
-end
-
 
 
 function TextFieldStyle:_prepareData( data )
