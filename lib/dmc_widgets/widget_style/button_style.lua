@@ -79,6 +79,7 @@ local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
 
 local sformat = string.format
+local tinsert = table.insert
 
 --== To be set in initialize()
 local Widgets = nil
@@ -94,20 +95,6 @@ local ButtonStyle = newClass( BaseStyle, {name="Button Style"} )
 
 --== Class Constants
 
---[[
-
-obj - state - part
-button1.active.label
-button1.disabled.background
-
-button1.labelText="hello"
-button1.labelFontSize=native.systemFont
-button.anchorX
-
-button1.active.labelText="pressed"
-
---]]
-
 ButtonStyle.TYPE = 'button'
 
 ButtonStyle.__base_style__ = nil  -- set in initialize()
@@ -117,14 +104,6 @@ ButtonStyle._CHILDREN = {
 	active=true,
 	disabled=true
 }
-
--- child styles
-ButtonStyle.INACTIVE_KEY = 'inactive'
-ButtonStyle.INACTIVE_NAME = 'button-inactive-state'
-ButtonStyle.ACTIVE_KEY = 'active'
-ButtonStyle.ACTIVE_NAME = 'button-active-state'
-ButtonStyle.DISABLED_KEY = 'disabled'
-ButtonStyle.DISABLED_NAME = 'button-disabled-state'
 
 ButtonStyle._VALID_PROPERTIES = {
 	debugOn=true,
@@ -337,9 +316,9 @@ end
 
 function ButtonStyle.addMissingDestProperties( dest, src, params )
 	-- print( "ButtonStyle.addMissingDestProperties", dest, src )
+	assert( dest )
 	params = params or {}
 	if params.force==nil then params.force=false end
-	assert( dest )
 	--==--
 	local force=params.force
 	local srcs = { ButtonStateStyle._STYLE_DEFAULTS }
@@ -617,7 +596,7 @@ end
 --== inherit
 
 function ButtonStyle:_doChildrenInherit( value )
-	-- print( "ButtonStyle", value, self )
+	-- print( "ButtonStyle:_doChildrenInherit", value, self )
 	self._inactive.inherit = value and value.inactive or nil
 	self._active.inherit = value and value.active or nil
 	self._disabled.inherit = value and value.disabled or nil

@@ -129,7 +129,6 @@ BackgroundStyle._EXCLUDE_PROPERTY_CHECK = {
 	view=true
 }
 
-
 BackgroundStyle._STYLE_DEFAULTS = {
 	name='background-default-style',
 	debugOn=false,
@@ -217,9 +216,9 @@ end
 
 function BackgroundStyle.addMissingDestProperties( dest, src, params )
 	-- print( "BackgroundStyle.addMissingDestProperties", dest, src )
+	assert( dest )
 	params = params or {}
 	if params.force==nil then params.force=false end
-	assert( dest )
 	--==--
 	local force=params.force
 	local srcs = { BackgroundStyle._STYLE_DEFAULTS }
