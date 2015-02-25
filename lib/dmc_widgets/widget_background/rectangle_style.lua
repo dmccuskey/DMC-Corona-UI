@@ -179,24 +179,24 @@ function RectangleStyle.initialize( manager )
 end
 
 
-function RectangleStyle.addMissingDestProperties( dest, src, params )
-	-- print( "RectangleStyle.addMissingDestProperties", dest, src )
+-- srcs, should be a table
+-- contains
+function RectangleStyle.addMissingDestProperties( dest, srcs, params )
+	-- print( "RectangleStyle.addMissingDestProperties", dest, srcs )
+	srcs = srcs or {}
 	params = params or {}
-	if params.force==nil then params.force=false end
 	assert( dest )
 	--==--
-	local force=params.force
-	local srcs = { RectangleStyle._STYLE_DEFAULTS }
-	if src then tinsert( srcs, 1, src ) end
+	tinsert( srcs, #srcs+1, RectangleStyle._STYLE_DEFAULTS )
 
-	dest = ViewStyle.addMissingDestProperties( dest, src, params )
+	dest = ViewStyle.addMissingDestProperties( dest, srcs, params )
 
 	for i=1,#srcs do
 		local src = srcs[i]
 
-		if dest.fillColor==nil or force then dest.fillColor=src.fillColor end
-		if dest.strokeColor==nil or force then dest.strokeColor=src.strokeColor end
-		if dest.strokeWidth==nil or force then dest.strokeWidth=src.strokeWidth end
+		if dest.fillColor==nil then dest.fillColor=src.fillColor end
+		if dest.strokeColor==nil then dest.strokeColor=src.strokeColor end
+		if dest.strokeWidth==nil then dest.strokeWidth=src.strokeWidth end
 
 	end
 

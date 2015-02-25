@@ -202,17 +202,15 @@ function TextStyle.initialize( manager )
 end
 
 
-function TextStyle.addMissingDestProperties( dest, src, params )
-	-- print( "TextStyle.addMissingDestProperties", dest, src )
+function TextStyle.addMissingDestProperties( dest, srcs, params )
+	-- print( "TextStyle.addMissingDestProperties", dest, srcs )
+	srcs = srcs or {}
 	params = params or {}
-	if params.force==nil then params.force=false end
 	assert( dest )
 	--==--
-	local force=params.force
-	local srcs = { TextStyle._STYLE_DEFAULTS }
-	if src then tinsert( srcs, 1, src ) end
+	tinsert( srcs, #srcs+1, TextStyle._STYLE_DEFAULTS )
 
-	dest = BaseStyle.addMissingDestProperties( dest, src, params )
+	dest = BaseStyle.addMissingDestProperties( dest, srcs, params )
 
 	for i=1,#srcs do
 		local src = srcs[i]

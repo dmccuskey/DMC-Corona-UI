@@ -236,21 +236,19 @@ end
 -- addMissingDestProperties()
 -- copies properties from src structure to dest structure
 -- if property isn't already in dest
--- this is used to make a structure with ALL properties
+-- this is used layer in all properties
 -- Note: usually used by OTHER classes
 
 -- 'dest' should be basic structure of Style type
--- 'src' can usually be anything, but usually parent of Style
+-- 'srcs' table of sources usually be anything, but usually parent of Style
 --
-function Style.addMissingDestProperties( dest, src, params )
-	-- print( "Style.addMissingDestProperties", dest, src )
+function Style.addMissingDestProperties( dest, srcs, params )
+	-- print( "Style.addMissingDestProperties", dest, srcs )
+	srcs = srcs or {}
 	params = params or {}
-	if params.force==nil then params.force=false end
 	assert( dest )
 	--==--
-	local force=params.force
-	local srcs = { Style._STYLE_DEFAULTS }
-	if src then tinsert( srcs, 1, src ) end
+	tinsert( srcs, #srcs+1, Style._STYLE_DEFAULTS )
 
 	for i=1,#srcs do
 		local src = srcs[i]
@@ -273,7 +271,7 @@ end
 -- as needed.
 -- this is used to make a structure with ALL properties
 -- 'src' allows us to send in some default properties
---
+-- src should be a table of items, things to copy and class master
 function Style._addMissingChildProperties( dest, src, params )
 	-- print( "OVERRIDE Style._addMissingChildProperties" )
 	return dest

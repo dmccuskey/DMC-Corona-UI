@@ -183,17 +183,15 @@ end
 
 
 
-function RoundedStyle.addMissingDestProperties( dest, src, params )
-	-- print( "RoundedStyle.addMissingDestProperties", dest, src )
+function RoundedStyle.addMissingDestProperties( dest, srcs, params )
+	-- print( "RoundedStyle.addMissingDestProperties", dest, srcs )
+	srcs = srcs or {}
 	params = params or {}
-	if params.force==nil then params.force=false end
 	assert( dest )
 	--==--
-	local force=params.force
-	local srcs = { RoundedStyle._STYLE_DEFAULTS }
-	if src then tinsert( srcs, 1, src ) end
+	tinsert( srcs, #srcs+1, RoundedStyle._STYLE_DEFAULTS )
 
-	dest = ViewStyle.addMissingDestProperties( dest, src, params )
+	dest = ViewStyle.addMissingDestProperties( dest, srcs, params )
 
 	for i=1,#srcs do
 		local src = srcs[i]

@@ -214,17 +214,15 @@ function BackgroundStyle.createStyleStructure( data )
 end
 
 
-function BackgroundStyle.addMissingDestProperties( dest, src, params )
-	-- print( "BackgroundStyle.addMissingDestProperties", dest, src )
+function BackgroundStyle.addMissingDestProperties( dest, srcs, params )
+	-- print( "BackgroundStyle.addMissingDestProperties", dest, srcs )
+	srcs = srcs or {}
 	assert( dest )
 	params = params or {}
-	if params.force==nil then params.force=false end
 	--==--
-	local force=params.force
-	local srcs = { BackgroundStyle._STYLE_DEFAULTS }
-	if src then tinsert( srcs, 1, src ) end
+	tinsert( srcs, #srcs+1, BackgroundStyle._STYLE_DEFAULTS )
 
-	dest = BaseStyle.addMissingDestProperties( dest, src, params )
+	dest = BaseStyle.addMissingDestProperties( dest, srcs, params )
 
 	for i=1,#srcs do
 		local src = srcs[i]
@@ -233,7 +231,7 @@ function BackgroundStyle.addMissingDestProperties( dest, src, params )
 
 	end
 
-	dest = BackgroundStyle._addMissingChildProperties( dest, src, params )
+	dest = BackgroundStyle._addMissingChildProperties( dest, {dest}, params )
 
 	return dest
 end
@@ -242,15 +240,17 @@ end
 -- _addMissingChildProperties()
 -- copy properties to sub-styles
 --
-function BackgroundStyle._addMissingChildProperties( dest, src, params  )
-	-- print( "BackgroundStyle._addMissingChildProperties", dest, src )
+function BackgroundStyle._addMissingChildProperties( dest, srcs, params  )
+	-- print( "BackgroundStyle._addMissingChildProperties", dest, srcs )
 	local eStr = "ERROR: Style (BackgroundStyle) missing property '%s'"
 	local StyleClass, child
+	srcs = srcs or {}
+	tinsert( srcs, #srcs+1, BackgroundStyle._STYLE_DEFAULTS )
 
 	child = dest.view
 	assert( child, sformat( eStr, 'view' ) )
 	StyleClass = StyleFactory.getClass( dest.type )
-	dest.view = StyleClass.addMissingDestProperties( child, src, params )
+	dest.view = StyleClass.addMissingDestProperties( child, srcs, params )
 
 	return dest
 end
@@ -312,7 +312,7 @@ function BackgroundStyle._setDefaults( StyleClass )
 		local cls_type = Cls.TYPE
 		local struct = BackgroundStyle.createStyleStructure( cls_type )
 		local def = Utils.extend( defaults, struct )
-		StyleClass._addMissingChildProperties( def, def )
+		StyleClass._addMissingChildProperties( def, {def} )
 		local style = StyleClass:new{ data=def }
 		BASE_STYLES[ cls_type ] = style
 	end
