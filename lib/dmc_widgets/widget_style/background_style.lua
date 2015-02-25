@@ -65,6 +65,7 @@ local widget_find = dmc_widget_func.find
 
 
 local Objects = require 'dmc_objects'
+local WidgetUtils = require(widget_find( 'widget_utils' ))
 local Utils = require 'dmc_utils'
 
 local BaseStyle = require( widget_find( 'widget_style.base_style' ) )
@@ -214,24 +215,23 @@ function BackgroundStyle.createStyleStructure( data )
 end
 
 
-function BackgroundStyle.addMissingDestProperties( dest, srcs, params )
+function BackgroundStyle.addMissingDestProperties( dest, srcs )
 	-- print( "BackgroundStyle.addMissingDestProperties", dest, srcs )
 	srcs = srcs or {}
 	assert( dest )
-	params = params or {}
-	--==--
 	tinsert( srcs, #srcs+1, BackgroundStyle._STYLE_DEFAULTS )
+	--==--
 
-	dest = BaseStyle.addMissingDestProperties( dest, srcs, params )
+	dest = BaseStyle.addMissingDestProperties( dest, srcs )
 
 	for i=1,#srcs do
 		local src = srcs[i]
 
-		if dest.type==nil or force then dest.type=src.type end
+		if dest.type==nil then dest.type=src.type end
 
 	end
 
-	dest = BackgroundStyle._addMissingChildProperties( dest, {dest}, params )
+	dest = BackgroundStyle._addMissingChildProperties( dest, srcs )
 
 	return dest
 end
@@ -239,18 +239,32 @@ end
 
 -- _addMissingChildProperties()
 -- copy properties to sub-styles
---
-function BackgroundStyle._addMissingChildProperties( dest, srcs, params  )
+-- dest, Style instance
+-- srcs, array of data elements
+function BackgroundStyle._addMissingChildProperties( dest, srcs )
 	-- print( "BackgroundStyle._addMissingChildProperties", dest, srcs )
-	local eStr = "ERROR: Style (BackgroundStyle) missing property '%s'"
-	local StyleClass, child
 	srcs = srcs or {}
-	tinsert( srcs, #srcs+1, BackgroundStyle._STYLE_DEFAULTS )
+	--==--
+	local eStr = "ERROR: Style (BackgroundStyle) missing property '%s'"
+	local filter = WidgetUtils.filter
+	local StyleClass, child
+	local sources
+
+	local function gen( n )
+		-- sources, name
+		return function( s )
+			-- source, from filter()
+			return (s[n]~=nil) -- has name
+		end
+	end
 
 	child = dest.view
-	assert( child, sformat( eStr, 'view' ) )
+	-- assert( child, sformat( eStr, 'view' ) )
 	StyleClass = StyleFactory.getClass( dest.type )
-	dest.view = StyleClass.addMissingDestProperties( child, srcs, params )
+	sources = filter( gen('view'), srcs )
+	tinsert( sources, #sources+1, dest )
+	-- TODO create other local defaults for each view type
+	dest.view = StyleClass.addMissingDestProperties( child, sources )
 
 	return dest
 end

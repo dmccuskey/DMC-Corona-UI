@@ -242,22 +242,21 @@ end
 -- 'dest' should be basic structure of Style type
 -- 'srcs' table of sources usually be anything, but usually parent of Style
 --
-function Style.addMissingDestProperties( dest, srcs, params )
+function Style.addMissingDestProperties( dest, srcs )
 	-- print( "Style.addMissingDestProperties", dest, srcs )
 	srcs = srcs or {}
-	params = params or {}
 	assert( dest )
-	--==--
 	tinsert( srcs, #srcs+1, Style._STYLE_DEFAULTS )
+	--==--
 
 	for i=1,#srcs do
 		local src = srcs[i]
 
-		if dest.debugOn==nil or force then dest.debugOn=src.debugOn end
-		if dest.width==nil or force then dest.width=src.width end
-		if dest.height==nil or force then dest.height=src.height end
-		if dest.anchorX==nil or force then dest.anchorX=src.anchorX end
-		if dest.anchorY==nil or force then dest.anchorY=src.anchorY end
+		if dest.debugOn==nil then dest.debugOn=src.debugOn end
+		if dest.width==nil then dest.width=src.width end
+		if dest.height==nil then dest.height=src.height end
+		if dest.anchorX==nil then dest.anchorX=src.anchorX end
+		if dest.anchorY==nil then dest.anchorY=src.anchorY end
 
 	end
 
@@ -272,7 +271,7 @@ end
 -- this is used to make a structure with ALL properties
 -- 'src' allows us to send in some default properties
 -- src should be a table of items, things to copy and class master
-function Style._addMissingChildProperties( dest, src, params )
+function Style._addMissingChildProperties( dest, srcs )
 	-- print( "OVERRIDE Style._addMissingChildProperties" )
 	return dest
 end
@@ -366,7 +365,7 @@ function Style._setDefaults( StyleClass )
 	-- print( "Style._setDefaults" )
 	local defaults = StyleClass._STYLE_DEFAULTS
 
-	defaults = StyleClass._addMissingChildProperties( defaults, defaults )
+	defaults = StyleClass._addMissingChildProperties( defaults, {defaults} )
 
 	local style = StyleClass:new{
 		data=defaults

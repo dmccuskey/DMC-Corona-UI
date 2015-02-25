@@ -65,6 +65,7 @@ local widget_find = dmc_widget_func.find
 
 
 local Objects = require 'dmc_objects'
+local Utils = require 'dmc_utils'
 
 local BaseStyle = require( widget_find( 'widget_style.base_style' ) )
 
@@ -134,10 +135,10 @@ TextStyle._STYLE_DEFAULTS = {
 	align='center',
 	fillColor={1,1,1,0},
 	font=native.systemFont,
-	fontSize=24,
+	fontSize=18,
 	marginX=0,
 	marginY=0,
-	textColor={0,0,0,1},
+	textColor={0.5,0,0,1},
 
 	strokeColor={0,0,0,1},
 	strokeWidth=0,

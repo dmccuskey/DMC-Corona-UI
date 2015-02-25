@@ -181,15 +181,14 @@ end
 
 -- srcs, should be a table
 -- contains
-function RectangleStyle.addMissingDestProperties( dest, srcs, params )
+function RectangleStyle.addMissingDestProperties( dest, srcs )
 	-- print( "RectangleStyle.addMissingDestProperties", dest, srcs )
 	srcs = srcs or {}
-	params = params or {}
 	assert( dest )
 	--==--
 	tinsert( srcs, #srcs+1, RectangleStyle._STYLE_DEFAULTS )
 
-	dest = ViewStyle.addMissingDestProperties( dest, srcs, params )
+	dest = ViewStyle.addMissingDestProperties( dest, srcs )
 
 	for i=1,#srcs do
 		local src = srcs[i]
