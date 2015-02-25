@@ -398,7 +398,7 @@ function Widget._loadButtonSupport()
 
 	local Button = require( PATH .. '.' .. 'widget_button' )
 	local ButtonStyle = require( PATH .. '.' .. 'widget_style.button_style' )
-	local ButtonStateStyle = require( PATH .. '.' .. 'widget_button.button_state_style' )
+	local ButtonStateStyle = require( PATH .. '.' .. 'widget_style.button_state' )
 
 	Widget.Button=Button
 	Widget.Style.Button=ButtonStyle
