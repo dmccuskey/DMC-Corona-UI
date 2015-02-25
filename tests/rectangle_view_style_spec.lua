@@ -77,13 +77,133 @@ Test to ensure that the correct property values are
 copied during initialization
 --]]
 function test_addMissingProperties()
-
 	local BackgroundFactory = Widgets.Style.BackgroundFactory
-	local RectangleStyle = BackgroundFactory.Rectangle
+	local Rectangle = BackgroundFactory.Rectangle
+	local defaults = Rectangle:getDefaultStyleValues()
+	local srcs, src, base, dest, child
 
 
-	local src, dest
+	--== test empty base, empty source, empty destination
 
+	src = {
+		child = {}
+	}
+	base = {}
+	child = src.child
+
+	Rectangle.addMissingDestProperties( child, {src, base} )
+
+	hasPropertyValue( child, 'debugOn', defaults.debugOn )
+	hasPropertyValue( child, 'width', defaults.width )
+	hasPropertyValue( child, 'height', defaults.height )
+	hasPropertyValue( child, 'anchorX', defaults.anchorX )
+	hasPropertyValue( child, 'anchorY', defaults.anchorY )
+
+	hasPropertyValue( child, 'fillColor', defaults.fillColor )
+	hasPropertyValue( child, 'strokeColor', defaults.strokeColor )
+	hasPropertyValue( child, 'strokeWidth', defaults.strokeWidth )
+
+
+	--== test partial base, empty source, empty destination
+
+	src = {
+		child = {}
+	}
+	base = {
+		hitMarginX=130,
+		type='four',
+
+		debugOn=100,
+		anchorX=400,
+		width=402,
+	}
+	child = src.child
+
+	Rectangle.addMissingDestProperties( child, {src, base} )
+
+	hasPropertyValue( child, 'debugOn', base.debugOn )
+	hasPropertyValue( child, 'width', base.width )
+	hasPropertyValue( child, 'height', defaults.height )
+	hasPropertyValue( child, 'anchorX', base.anchorX )
+	hasPropertyValue( child, 'anchorY', defaults.anchorY )
+
+	hasPropertyValue( child, 'fillColor', defaults.fillColor )
+	hasPropertyValue( child, 'strokeColor', defaults.strokeColor )
+	hasPropertyValue( child, 'strokeWidth', defaults.strokeWidth )
+
+	hasPropertyValue( child, 'hitMarginX', nil )
+	hasPropertyValue( child, 'type', nil )
+
+
+	--== test partial base, partial source, empty destination
+
+	src = {
+		anchorX=210,
+		anchorY=212,
+		fillColor=220,
+		child = {}
+	}
+	base = {
+		hitMarginX=130,
+		type='four',
+
+		debugOn=100,
+		anchorX=400,
+		width=402,
+	}
+	child = src.child
+
+	Rectangle.addMissingDestProperties( child, {src, base} )
+
+	hasPropertyValue( child, 'debugOn', base.debugOn )
+	hasPropertyValue( child, 'width', base.width )
+	hasPropertyValue( child, 'height', defaults.height )
+	hasPropertyValue( child, 'anchorX', src.anchorX )
+	hasPropertyValue( child, 'anchorY', src.anchorY )
+
+	hasPropertyValue( child, 'fillColor', src.fillColor )
+	hasPropertyValue( child, 'strokeColor', defaults.strokeColor )
+	hasPropertyValue( child, 'strokeWidth', defaults.strokeWidth )
+
+	hasPropertyValue( child, 'hitMarginX', nil )
+	hasPropertyValue( child, 'type', nil )
+
+	--== test partial base, partial source, partial destination
+
+	src = {
+		width=200,
+		debugOn=202,
+		anchorX=210,
+		fontSize=220,
+		child = {
+			debugOn=300,
+			width=306,
+		}
+	}
+	base = {
+		hitMarginX=130,
+		type='four',
+
+		width=400,
+		anchorY=402,
+		fillColor=404,
+	}
+	child = src.child
+
+	Rectangle.addMissingDestProperties( child, {src, base} )
+
+	hasPropertyValue( child, 'debugOn', child.debugOn )
+	hasPropertyValue( child, 'width', child.width )
+	hasPropertyValue( child, 'height', defaults.height )
+	hasPropertyValue( child, 'anchorX', src.anchorX )
+	hasPropertyValue( child, 'anchorY', base.anchorY )
+
+	hasPropertyValue( child, 'fillColor', base.fillColor )
+	hasPropertyValue( child, 'strokeColor', defaults.strokeColor )
+	hasPropertyValue( child, 'strokeWidth', defaults.strokeWidth )
+
+	hasPropertyValue( child, 'hitMarginX', nil )
+	hasPropertyValue( child, 'type', nil )
 
 end
 
@@ -255,6 +375,7 @@ function test_clearProperties()
 	StyleBase = StyleClass:getBaseStyle()
 	assert_equal( StyleClass, RectangleStyle )
 	styleInheritsFrom( s1, nil )
+	styleHasPropertyValue( s1, 'master', s1 )
 
 	-- test inherited properties
 

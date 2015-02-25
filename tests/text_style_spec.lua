@@ -89,14 +89,172 @@ copied during initialization
 function test_addMissingProperties()
 	-- print( "test_addMissingProperties" )
 	local TextStyle = Widgets.Style.Text
+	local defaults = TextStyle:getDefaultStyleValues()
+	local srcs, src, base, dest, label
 
-	local src, dest
+
+	--== test empty base, empty source, empty destination
+
+	src = {
+		label = {}
+	}
+	base = {}
+	label = src.label
+
+	TextStyle.addMissingDestProperties( label, {src, base} )
+
+	hasPropertyValue( label, 'debugOn', defaults.debugOn )
+	hasPropertyValue( label, 'width', defaults.width )
+	hasPropertyValue( label, 'height', defaults.height )
+	hasPropertyValue( label, 'anchorX', defaults.anchorX )
+	hasPropertyValue( label, 'anchorY', defaults.anchorY )
+
+	hasPropertyValue( label, 'align', defaults.align )
+	hasPropertyValue( label, 'fillColor', defaults.fillColor )
+	hasPropertyValue( label, 'font', defaults.font )
+	hasPropertyValue( label, 'fontSize', defaults.fontSize )
+	hasPropertyValue( label, 'marginX', defaults.marginX )
+	hasPropertyValue( label, 'marginY', defaults.marginY )
+	hasPropertyValue( label, 'strokeColor', defaults.strokeColor )
+	hasPropertyValue( label, 'strokeWidth', defaults.strokeWidth )
+	hasPropertyValue( label, 'textColor', defaults.textColor )
 
 
-	--== test empty destination
+	--== test partial base, empty source, empty destination
 
-	--== test non-empty destination
+	src = {
+		label = {}
+	}
+	base = {
+		hitMarginX=130,
+		type='four',
 
+		debugOn=100,
+		anchorX=400,
+		marginY=402,
+		textColor=404,
+
+		strokeColor=410,
+		strokeWidth=412
+	}
+	label = src.label
+
+	TextStyle.addMissingDestProperties( label, {src, base} )
+
+	hasPropertyValue( label, 'debugOn', base.debugOn )
+	hasPropertyValue( label, 'width', defaults.width )
+	hasPropertyValue( label, 'height', defaults.height )
+	hasPropertyValue( label, 'anchorX', base.anchorX )
+	hasPropertyValue( label, 'anchorY', defaults.anchorY )
+
+	hasPropertyValue( label, 'align', defaults.align )
+	hasPropertyValue( label, 'fillColor', defaults.fillColor )
+	hasPropertyValue( label, 'font', defaults.font )
+	hasPropertyValue( label, 'fontSize', defaults.fontSize )
+	hasPropertyValue( label, 'marginX', defaults.marginX )
+	hasPropertyValue( label, 'marginY', base.marginY )
+	hasPropertyValue( label, 'strokeColor', base.strokeColor )
+	hasPropertyValue( label, 'strokeWidth', base.strokeWidth )
+	hasPropertyValue( label, 'textColor', base.textColor )
+
+	hasPropertyValue( label, 'hitMarginX', nil )
+	hasPropertyValue( label, 'type', nil )
+
+
+	--== test partial base, partial source, empty destination
+
+	src = {
+		width=200,
+		debugOn=202,
+		anchorX=210,
+		anchorY=212,
+		fontSize=220,
+		label = {}
+	}
+	base = {
+		hitMarginX=130,
+		type='four',
+
+		debugOn=100,
+		anchorX=400,
+		marginY=402,
+		textColor=404,
+
+		strokeColor=410,
+		strokeWidth=412
+	}
+	label = src.label
+
+	TextStyle.addMissingDestProperties( label, {src, base} )
+
+	hasPropertyValue( label, 'debugOn', src.debugOn )
+	hasPropertyValue( label, 'width', src.width )
+	hasPropertyValue( label, 'height', defaults.height )
+	hasPropertyValue( label, 'anchorX', src.anchorX )
+	hasPropertyValue( label, 'anchorY', src.anchorY )
+
+	hasPropertyValue( label, 'align', defaults.align )
+	hasPropertyValue( label, 'fillColor', defaults.fillColor )
+	hasPropertyValue( label, 'font', defaults.font )
+	hasPropertyValue( label, 'fontSize', src.fontSize )
+	hasPropertyValue( label, 'marginX', defaults.marginX )
+	hasPropertyValue( label, 'marginY', base.marginY )
+	hasPropertyValue( label, 'strokeColor', base.strokeColor )
+	hasPropertyValue( label, 'strokeWidth', base.strokeWidth )
+	hasPropertyValue( label, 'textColor', base.textColor )
+
+	hasPropertyValue( label, 'hitMarginX', nil )
+	hasPropertyValue( label, 'type', nil )
+
+	--== test partial base, partial source, partial destination
+
+	src = {
+		width=200,
+		debugOn=202,
+		anchorX=210,
+		anchorY=212,
+		fontSize=220,
+		label = {
+			debugOn=300,
+			anchorY=302,
+			marginX=306,
+			textColor=304,
+		}
+	}
+	base = {
+		hitMarginX=130,
+		type='four',
+
+		debugOn=100,
+		anchorX=400,
+		marginY=402,
+		textColor=404,
+
+		strokeColor=410,
+		strokeWidth=412
+	}
+	label = src.label
+
+	TextStyle.addMissingDestProperties( label, {src, base} )
+
+	hasPropertyValue( label, 'debugOn', label.debugOn )
+	hasPropertyValue( label, 'width', src.width )
+	hasPropertyValue( label, 'height', defaults.height )
+	hasPropertyValue( label, 'anchorX', src.anchorX )
+	hasPropertyValue( label, 'anchorY', label.anchorY )
+
+	hasPropertyValue( label, 'align', defaults.align )
+	hasPropertyValue( label, 'fillColor', defaults.fillColor )
+	hasPropertyValue( label, 'font', defaults.font )
+	hasPropertyValue( label, 'fontSize', src.fontSize )
+	hasPropertyValue( label, 'marginX', label.marginX )
+	hasPropertyValue( label, 'marginY', base.marginY )
+	hasPropertyValue( label, 'strokeColor', base.strokeColor )
+	hasPropertyValue( label, 'strokeWidth', base.strokeWidth )
+	hasPropertyValue( label, 'textColor', label.textColor )
+
+	hasPropertyValue( label, 'hitMarginX', nil )
+	hasPropertyValue( label, 'type', nil )
 
 end
 
@@ -308,9 +466,10 @@ end
 function test_styleClassBasics()
 	-- print( "test_styleClassBasics" )
 	local Text = Widgets.Style.Text
-	local BaseStyle, style
-	local Default = Text:getDefaultStyleValues()
+	local BaseStyle, defaultStyles
+	local style
 
+	defaultStyles = Text:getDefaultStyleValues()
 	BaseStyle = Text:getBaseStyle()
 
 	TestUtils.verifyTextStyle( BaseStyle )
@@ -318,20 +477,21 @@ function test_styleClassBasics()
 
 	-- check properties initialized to the default values
 
-	styleHasPropertyValue( BaseStyle, 'debugOn', Default.debugOn )
+	styleHasPropertyValue( BaseStyle, 'debugOn', defaultStyles.debugOn )
 	-- width/height can be nil
-	hasPropertyValue( BaseStyle, 'width', Default.width )
-	hasPropertyValue( BaseStyle, 'height', Default.height )
-	styleHasPropertyValue( BaseStyle, 'anchorX', Default.anchorX )
-	styleHasPropertyValue( BaseStyle, 'anchorY', Default.anchorY )
-	styleHasPropertyValue( BaseStyle, 'align', Default.align )
-	styleHasPropertyValue( BaseStyle, 'fillColor', Default.fillColor )
-	styleHasPropertyValue( BaseStyle, 'font', Default.font )
-	styleHasPropertyValue( BaseStyle, 'fontSize', Default.fontSize )
-	styleHasPropertyValue( BaseStyle, 'marginX', Default.marginX )
-	styleHasPropertyValue( BaseStyle, 'marginY', Default.marginY )
-	styleHasPropertyValue( BaseStyle, 'textColor', Default.textColor )
+	hasPropertyValue( BaseStyle, 'width', defaultStyles.width )
+	hasPropertyValue( BaseStyle, 'height', defaultStyles.height )
+	styleHasPropertyValue( BaseStyle, 'anchorX', defaultStyles.anchorX )
+	styleHasPropertyValue( BaseStyle, 'anchorY', defaultStyles.anchorY )
+	styleHasPropertyValue( BaseStyle, 'align', defaultStyles.align )
+	styleHasPropertyValue( BaseStyle, 'fillColor', defaultStyles.fillColor )
+	styleHasPropertyValue( BaseStyle, 'font', defaultStyles.font )
+	styleHasPropertyValue( BaseStyle, 'fontSize', defaultStyles.fontSize )
+	styleHasPropertyValue( BaseStyle, 'marginX', defaultStyles.marginX )
+	styleHasPropertyValue( BaseStyle, 'marginY', defaultStyles.marginY )
+	styleHasPropertyValue( BaseStyle, 'textColor', defaultStyles.textColor )
 
+	styleHasPropertyValue( BaseStyle, 'master', BaseStyle )
 
 	--== Verify verify a new text style
 
@@ -339,6 +499,7 @@ function test_styleClassBasics()
 
 	TestUtils.verifyTextStyle( style )
 	styleInheritsFrom( style, nil )
+	styleHasPropertyValue( style, 'master', style )
 
 end
 
@@ -364,6 +525,7 @@ function test_clearPropertiesWithoutInherit()
 
 	assert_equal( StyleClass, Text )
 	styleInheritsFrom( s1, nil )
+	styleHasPropertyValue( s1, 'master', s1 )
 
 	-- test inherited properties
 

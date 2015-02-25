@@ -80,13 +80,200 @@ Test to ensure that the correct property values are
 copied during initialization
 --]]
 --[[
-function test_addMissingProperties()
-
-	local Background = Widgets.Style.Background
-
-	local src, dest
-end
 --]]
+function test_addMissingProperties_Rectangle()
+	-- print( "test_addMissingProperties_Rectangle" )
+	local BackgroundFactory = Widgets.Style.BackgroundFactory
+	local Rectangle = BackgroundFactory.Rectangle
+	local Background = Widgets.Style.Background
+	local defaults, vDefaults
+	local src, base
+	local child, label
+
+	--== Rectangle ==--
+
+	defaults = Background:getDefaultStyleValues()
+	vDefaults = Rectangle:getDefaultStyleValues()
+
+	--== test empty base, empty source, empty destination
+
+	src = {
+		child = {
+			type='rectangle',
+			view={}
+		}
+	}
+	base = {}
+	child = src.child
+	view = child.view
+
+	Background.addMissingDestProperties( child, {src, base} )
+
+	hasPropertyValue( child, 'debugOn', defaults.debugOn )
+	hasPropertyValue( child, 'width', defaults.width )
+	hasPropertyValue( child, 'height', defaults.height )
+	hasPropertyValue( child, 'anchorX', defaults.anchorX )
+	hasPropertyValue( child, 'anchorY', defaults.anchorY )
+
+	hasPropertyValue( child, 'type', child.type )
+
+	hasPropertyValue( view, 'fillColor', vDefaults.fillColor )
+	hasPropertyValue( view, 'strokeColor', vDefaults.strokeColor )
+	hasPropertyValue( view, 'strokeWidth', vDefaults.strokeWidth )
+
+
+	--== test partial base, empty source, empty destination
+
+	src = {
+		child = {
+			type='rectangle',
+			view={}
+		}
+	}
+	base = {
+		debugOn=100,
+		anchorX=102,
+		strokeWidth=104
+	}
+	child = src.child
+	view = child.view
+
+	Background.addMissingDestProperties( child, {src, base} )
+
+	hasPropertyValue( child, 'debugOn', base.debugOn )
+	hasPropertyValue( child, 'width', defaults.width )
+	hasPropertyValue( child, 'height', defaults.height )
+	hasPropertyValue( child, 'anchorX', base.anchorX )
+	hasPropertyValue( child, 'anchorY', defaults.anchorY )
+
+	hasPropertyValue( child, 'type', child.type )
+
+	hasPropertyValue( view, 'fillColor', vDefaults.fillColor )
+	hasPropertyValue( view, 'strokeColor', vDefaults.strokeColor )
+	hasPropertyValue( view, 'strokeWidth', vDefaults.strokeWidth )
+
+
+	--== test partial base, partial source, empty destination
+
+	src = {
+		debugOn=200,
+		width=202,
+		fillColor={0,1,1,1,1,},
+
+		child = {
+			type='rectangle',
+			view={}
+		}
+	}
+	base = {
+		debugOn=100,
+		anchorX=102,
+		strokeWidth=104
+	}
+	child = src.child
+	view = child.view
+
+	Background.addMissingDestProperties( child, {src, base} )
+
+	hasPropertyValue( child, 'debugOn', src.debugOn )
+	hasPropertyValue( child, 'width', src.width )
+	hasPropertyValue( child, 'height', defaults.height )
+	hasPropertyValue( child, 'anchorX', base.anchorX )
+	hasPropertyValue( child, 'anchorY', defaults.anchorY )
+
+	hasPropertyValue( child, 'type', child.type )
+
+	hasPropertyValue( view, 'fillColor', vDefaults.fillColor )
+	hasPropertyValue( view, 'strokeColor', vDefaults.strokeColor )
+	hasPropertyValue( view, 'strokeWidth', vDefaults.strokeWidth )
+
+
+	--== test partial base, partial source, partial destination
+
+	src = {
+		debugOn=200,
+		width=202,
+		fillColor={0,1,1,1,1,},
+
+		child = {
+			type='rectangle',
+			debugOn=304,
+			height=300,
+			anchorY=302,
+			anchorX=310,
+			view={}
+		}
+	}
+	base = {
+		debugOn=100,
+		anchorX=102,
+		strokeWidth=104
+	}
+	child = src.child
+	view = child.view
+
+	Background.addMissingDestProperties( child, {src, base} )
+
+	hasPropertyValue( child, 'debugOn', child.debugOn )
+	hasPropertyValue( child, 'width', src.width )
+	hasPropertyValue( child, 'height', child.height )
+	hasPropertyValue( child, 'anchorX', child.anchorX )
+	hasPropertyValue( child, 'anchorY', child.anchorY )
+
+	hasPropertyValue( child, 'type', child.type )
+
+	hasPropertyValue( view, 'fillColor', vDefaults.fillColor )
+	hasPropertyValue( view, 'strokeColor', vDefaults.strokeColor )
+	hasPropertyValue( view, 'strokeWidth', vDefaults.strokeWidth )
+
+
+	--== test partial base, partial source, partial destination, partial view
+
+	src = {
+		debugOn=200,
+		width=202,
+		fillColor={0,1,1,1,1,},
+
+		child = {
+			type='rectangle',
+			height=300,
+			anchorY=302,
+			view={
+				debugOn=400,
+				anchorX=402,
+				height=404
+			}
+		}
+	}
+	base = {
+		debugOn=100,
+		anchorX=102,
+		strokeWidth=104
+	}
+	child = src.child
+	view = child.view
+
+	Background.addMissingDestProperties( child, {src, base} )
+
+	hasPropertyValue( child, 'debugOn', src.debugOn )
+	hasPropertyValue( child, 'width', src.width )
+	hasPropertyValue( child, 'height', child.height )
+	hasPropertyValue( child, 'anchorX', base.anchorX )
+	hasPropertyValue( child, 'anchorY', child.anchorY )
+
+	hasPropertyValue( child, 'type', child.type )
+
+	hasPropertyValue( view, 'debugOn', view.debugOn )
+	hasPropertyValue( view, 'width', src.width )
+	hasPropertyValue( view, 'height', view.height )
+	hasPropertyValue( view, 'anchorX', view.anchorX )
+	hasPropertyValue( view, 'anchorY', child.anchorY )
+
+	hasPropertyValue( view, 'fillColor', vDefaults.fillColor )
+	hasPropertyValue( view, 'strokeColor', vDefaults.strokeColor )
+	hasPropertyValue( view, 'strokeWidth', vDefaults.strokeWidth )
+
+end
 
 
 --[[
@@ -126,8 +313,10 @@ test basic characteristics
 function test_backgroundStyleClassBasics()
 	-- print( "test_backgroundStyleClassBasics" )
 	local Background = Widgets.Style.Background
-	local BaseStyle, style
-	local Default = Background:getDefaultStyleValues()
+	local BaseStyle, defaults, vDefaults
+	local style, view
+
+	defaults = Background:getDefaultStyleValues()
 
 	--== rounded
 
@@ -135,15 +324,27 @@ function test_backgroundStyleClassBasics()
 	TestUtils.verifyBackgroundStyle( BaseStyle )
 
 	styleInheritsFrom( BaseStyle, nil )
+	styleHasPropertyValue( BaseStyle, 'master', BaseStyle )
 
 	-- check properties initialized to the default values
 
-	styleHasPropertyValue( BaseStyle, 'debugOn', Default.debugOn )
-	styleHasPropertyValue( BaseStyle, 'width', Default.width )
-	styleHasPropertyValue( BaseStyle, 'height', Default.height )
-	styleHasPropertyValue( BaseStyle, 'anchorX', Default.anchorX )
-	styleHasPropertyValue( BaseStyle, 'anchorY', Default.anchorY )
+	styleHasPropertyValue( BaseStyle, 'debugOn', defaults.debugOn )
+	styleHasPropertyValue( BaseStyle, 'width', defaults.width )
+	styleHasPropertyValue( BaseStyle, 'height', defaults.height )
+	styleHasPropertyValue( BaseStyle, 'anchorX', defaults.anchorX )
+	styleHasPropertyValue( BaseStyle, 'anchorY', defaults.anchorY )
 	styleHasPropertyValue( BaseStyle, 'type', 'rounded' )
+
+	view = BaseStyle.view
+	vDefaults = view:getDefaultStyleValues()
+	styleHasPropertyValue( view, 'debugOn', defaults.debugOn )
+	styleHasPropertyValue( view, 'width', defaults.width )
+	styleHasPropertyValue( view, 'height', defaults.height )
+	styleHasPropertyValue( view, 'anchorX', defaults.anchorX )
+	styleHasPropertyValue( view, 'anchorY', defaults.anchorY )
+	styleHasPropertyValue( view, 'fillColor', vDefaults.fillColor )
+	styleHasPropertyValue( view, 'strokeColor', vDefaults.strokeColor )
+	styleHasPropertyValue( view, 'strokeWidth', vDefaults.strokeWidth )
 
 	--== rectangle
 
@@ -151,15 +352,28 @@ function test_backgroundStyleClassBasics()
 	TestUtils.verifyBackgroundStyle( BaseStyle )
 
 	styleInheritsFrom( BaseStyle, nil )
+	styleHasPropertyValue( BaseStyle, 'master', BaseStyle )
 
 	-- check properties initialized to the default values
 
-	styleHasPropertyValue( BaseStyle, 'debugOn', Default.debugOn )
-	styleHasPropertyValue( BaseStyle, 'width', Default.width )
-	styleHasPropertyValue( BaseStyle, 'height', Default.height )
-	styleHasPropertyValue( BaseStyle, 'anchorX', Default.anchorX )
-	styleHasPropertyValue( BaseStyle, 'anchorY', Default.anchorY )
+	styleHasPropertyValue( BaseStyle, 'debugOn', defaults.debugOn )
+	styleHasPropertyValue( BaseStyle, 'width', defaults.width )
+	styleHasPropertyValue( BaseStyle, 'height', defaults.height )
+	styleHasPropertyValue( BaseStyle, 'anchorX', defaults.anchorX )
+	styleHasPropertyValue( BaseStyle, 'anchorY', defaults.anchorY )
 	styleHasPropertyValue( BaseStyle, 'type', 'rectangle' )
+
+	view = BaseStyle.view
+	vDefaults = view:getDefaultStyleValues()
+	styleHasPropertyValue( view, 'debugOn', defaults.debugOn )
+	styleHasPropertyValue( view, 'width', defaults.width )
+	styleHasPropertyValue( view, 'height', defaults.height )
+	styleHasPropertyValue( view, 'anchorX', defaults.anchorX )
+	styleHasPropertyValue( view, 'anchorY', defaults.anchorY )
+	styleHasPropertyValue( view, 'fillColor', vDefaults.fillColor )
+	styleHasPropertyValue( view, 'strokeColor', vDefaults.strokeColor )
+	styleHasPropertyValue( view, 'strokeWidth', vDefaults.strokeWidth )
+
 
 	--== Test constructors
 
@@ -167,16 +381,22 @@ function test_backgroundStyleClassBasics()
 
 	TestUtils.verifyBackgroundStyle( style )
 	styleInheritsFrom( BaseStyle, nil )
+	styleHasPropertyValue( style, 'master', style )
+	styleHasPropertyValue( style.view, 'master', style )
 
 	style = Widgets.newRoundedBackgroundStyle()
 
 	TestUtils.verifyBackgroundStyle( style )
 	styleInheritsFrom( BaseStyle, nil )
+	styleHasPropertyValue( style, 'master', style )
+	styleHasPropertyValue( style.view, 'master', style )
 
 	style = Widgets.newRectangleBackgroundStyle()
 
 	TestUtils.verifyBackgroundStyle( style )
 	styleInheritsFrom( BaseStyle, nil )
+	styleHasPropertyValue( style, 'master', style )
+	styleHasPropertyValue( style.view, 'master', style )
 
 end
 
@@ -232,7 +452,7 @@ function test_defaultInheritance()
 	iView.strokeWidth=6
 	styleInheritsPropertyValue( s1View, 'strokeWidth', 6 )
 
-	styleInheritsPropertyValue( s1, 'debugOn', false )
+	styleInheritsPropertyValue( s1, 'debugOn', StyleBase.debugOn )
 
 	-- rectangle
 
