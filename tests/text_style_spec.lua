@@ -98,10 +98,9 @@ function test_addMissingProperties()
 	src = {
 		label = {}
 	}
-	base = {}
 	label = src.label
 
-	TextStyle.addMissingDestProperties( label, {src, base} )
+	TextStyle.addMissingDestProperties( label, {parent=src} )
 
 	hasPropertyValue( label, 'debugOn', defaults.debugOn )
 	hasPropertyValue( label, 'width', defaults.width )
@@ -120,92 +119,6 @@ function test_addMissingProperties()
 	hasPropertyValue( label, 'textColor', defaults.textColor )
 
 
-	--== test partial base, empty source, empty destination
-
-	src = {
-		label = {}
-	}
-	base = {
-		hitMarginX=130,
-		type='four',
-
-		debugOn=100,
-		anchorX=400,
-		marginY=402,
-		textColor=404,
-
-		strokeColor=410,
-		strokeWidth=412
-	}
-	label = src.label
-
-	TextStyle.addMissingDestProperties( label, {src, base} )
-
-	hasPropertyValue( label, 'debugOn', base.debugOn )
-	hasPropertyValue( label, 'width', defaults.width )
-	hasPropertyValue( label, 'height', defaults.height )
-	hasPropertyValue( label, 'anchorX', base.anchorX )
-	hasPropertyValue( label, 'anchorY', defaults.anchorY )
-
-	hasPropertyValue( label, 'align', defaults.align )
-	hasPropertyValue( label, 'fillColor', defaults.fillColor )
-	hasPropertyValue( label, 'font', defaults.font )
-	hasPropertyValue( label, 'fontSize', defaults.fontSize )
-	hasPropertyValue( label, 'marginX', defaults.marginX )
-	hasPropertyValue( label, 'marginY', base.marginY )
-	hasPropertyValue( label, 'strokeColor', base.strokeColor )
-	hasPropertyValue( label, 'strokeWidth', base.strokeWidth )
-	hasPropertyValue( label, 'textColor', base.textColor )
-
-	hasPropertyValue( label, 'hitMarginX', nil )
-	hasPropertyValue( label, 'type', nil )
-
-
-	--== test partial base, partial source, empty destination
-
-	src = {
-		width=200,
-		debugOn=202,
-		anchorX=210,
-		anchorY=212,
-		fontSize=220,
-		label = {}
-	}
-	base = {
-		hitMarginX=130,
-		type='four',
-
-		debugOn=100,
-		anchorX=400,
-		marginY=402,
-		textColor=404,
-
-		strokeColor=410,
-		strokeWidth=412
-	}
-	label = src.label
-
-	TextStyle.addMissingDestProperties( label, {src, base} )
-
-	hasPropertyValue( label, 'debugOn', src.debugOn )
-	hasPropertyValue( label, 'width', src.width )
-	hasPropertyValue( label, 'height', defaults.height )
-	hasPropertyValue( label, 'anchorX', src.anchorX )
-	hasPropertyValue( label, 'anchorY', src.anchorY )
-
-	hasPropertyValue( label, 'align', defaults.align )
-	hasPropertyValue( label, 'fillColor', defaults.fillColor )
-	hasPropertyValue( label, 'font', defaults.font )
-	hasPropertyValue( label, 'fontSize', src.fontSize )
-	hasPropertyValue( label, 'marginX', defaults.marginX )
-	hasPropertyValue( label, 'marginY', base.marginY )
-	hasPropertyValue( label, 'strokeColor', base.strokeColor )
-	hasPropertyValue( label, 'strokeWidth', base.strokeWidth )
-	hasPropertyValue( label, 'textColor', base.textColor )
-
-	hasPropertyValue( label, 'hitMarginX', nil )
-	hasPropertyValue( label, 'type', nil )
-
 	--== test partial base, partial source, partial destination
 
 	src = {
@@ -221,36 +134,25 @@ function test_addMissingProperties()
 			textColor=304,
 		}
 	}
-	base = {
-		hitMarginX=130,
-		type='four',
-
-		debugOn=100,
-		anchorX=400,
-		marginY=402,
-		textColor=404,
-
-		strokeColor=410,
-		strokeWidth=412
-	}
 	label = src.label
 
-	TextStyle.addMissingDestProperties( label, {src, base} )
+	TextStyle.addMissingDestProperties( label, {parent=src} )
 
+	print( ">>", label.height )
 	hasPropertyValue( label, 'debugOn', label.debugOn )
 	hasPropertyValue( label, 'width', src.width )
-	hasPropertyValue( label, 'height', defaults.height )
-	hasPropertyValue( label, 'anchorX', src.anchorX )
+	hasPropertyValue( label, 'height', nil )
+	hasPropertyValue( label, 'anchorX', defaults.anchorX )
 	hasPropertyValue( label, 'anchorY', label.anchorY )
 
 	hasPropertyValue( label, 'align', defaults.align )
 	hasPropertyValue( label, 'fillColor', defaults.fillColor )
 	hasPropertyValue( label, 'font', defaults.font )
-	hasPropertyValue( label, 'fontSize', src.fontSize )
+	hasPropertyValue( label, 'fontSize', defaults.fontSize )
 	hasPropertyValue( label, 'marginX', label.marginX )
-	hasPropertyValue( label, 'marginY', base.marginY )
-	hasPropertyValue( label, 'strokeColor', base.strokeColor )
-	hasPropertyValue( label, 'strokeWidth', base.strokeWidth )
+	hasPropertyValue( label, 'marginY', defaults.marginY )
+	hasPropertyValue( label, 'strokeColor', defaults.strokeColor )
+	hasPropertyValue( label, 'strokeWidth', defaults.strokeWidth )
 	hasPropertyValue( label, 'textColor', label.textColor )
 
 	hasPropertyValue( label, 'hitMarginX', nil )

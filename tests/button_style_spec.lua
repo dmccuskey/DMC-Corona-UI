@@ -76,19 +76,219 @@ function suite_setup()
 end
 
 
+function test_addMissingProperties_Rounded()
+	-- print( "test_addMissingProperties_Rounded" )
+	local Button = Widgets.Style.Button
+	local Text = Widgets.Style.Text
+
+	local state, background, text
+
+	local defaults = Button:getDefaultStyleValues()
+	-- 	bDefaults = Background:getDefaultStyleValues()
+	local tDefaults = Text:getDefaultStyleValues()
+	-- 	vDefaults = Rectangle:getDefaultStyleValues()
+
+	hasPropertyValue( defaults, 'debugOn', defaults.debugOn )
+	hasPropertyValue( defaults, 'width', defaults.width )
+	hasPropertyValue( defaults, 'height', defaults.height )
+	hasPropertyValue( defaults, 'anchorX', defaults.anchorX )
+	hasPropertyValue( defaults, 'anchorY', defaults.anchorY )
+
+	hasPropertyValue( defaults, 'hitMarginX', defaults.hitMarginX )
+	hasPropertyValue( defaults, 'hitMarginY', defaults.hitMarginY )
+	hasPropertyValue( defaults, 'isHitActive', defaults.isHitActive )
+	hasPropertyValue( defaults, 'marginX', defaults.marginX )
+	hasPropertyValue( defaults, 'marginY', defaults.marginY )
+
+	state = defaults.inactive
+
+	hasPropertyValue( state, 'debugOn', defaults.debugOn )
+	hasPropertyValue( state, 'width', defaults.width )
+	hasPropertyValue( state, 'height', defaults.height )
+	hasPropertyValue( state, 'anchorX', defaults.anchorX )
+	hasPropertyValue( state, 'anchorY', defaults.anchorY )
+
+	hasPropertyValue( state, 'align', state.align )
+	hasPropertyValue( state, 'isHitActive', defaults.isHitActive )
+	hasPropertyValue( state, 'marginX', defaults.marginX )
+	hasPropertyValue( state, 'marginY', defaults.marginY )
+	-- hasPropertyValue( state, 'offsetX', defaults.offsetX )
+	-- hasPropertyValue( state, 'offsetY', defaults.offsetY )
+
+	text = state.label
+
+	hasPropertyValue( text, 'debugOn', defaults.debugOn )
+	hasPropertyValue( text, 'width', defaults.width )
+	hasPropertyValue( text, 'height', defaults.height )
+	hasPropertyValue( text, 'anchorX', defaults.anchorX )
+	hasPropertyValue( text, 'anchorY', defaults.anchorY )
+
+	hasPropertyValue( text, 'align', state.align )
+	hasPropertyValue( text, 'fillColor', tDefaults.fillColor )
+	hasPropertyValue( text, 'font', defaults.font )
+	hasPropertyValue( text, 'fontSize', defaults.fontSize )
+	hasPropertyValue( text, 'marginX', defaults.marginX )
+	hasPropertyValue( text, 'marginY', defaults.marginY )
+	hasPropertyValue( text, 'strokeColor', tDefaults.strokeColor )
+	hasPropertyValue( text, 'strokeWidth', tDefaults.strokeWidth )
+	hasPropertyValue( text, 'textColor', text.textColor )
+
+	background = state.background
+
+	hasPropertyValue( background, 'debugOn', defaults.debugOn )
+	hasPropertyValue( background, 'width', defaults.width )
+	hasPropertyValue( background, 'height', defaults.height )
+	hasPropertyValue( background, 'anchorX', defaults.anchorX )
+	hasPropertyValue( background, 'anchorY', defaults.anchorY )
+
+	hasPropertyValue( background, 'type', background.type )
+
+	view = background.view
+
+	Utils.print( view )
+
+	hasPropertyValue( view, 'debugOn', defaults.debugOn )
+	hasPropertyValue( view, 'width', defaults.width )
+	hasPropertyValue( view, 'height', defaults.height )
+	hasPropertyValue( view, 'anchorX', defaults.anchorX )
+	hasPropertyValue( view, 'anchorY', defaults.anchorY )
+
+	hasPropertyValue( view, 'type', view.type )
+
+	hasPropertyValue( view, 'fillColor', view.fillColor )
+	hasPropertyValue( view, 'strokeColor', view.strokeColor )
+	hasPropertyValue( view, 'strokeWidth', view.strokeWidth )
+
+end
+
+
+
 --[[
 Test to ensure that the correct property values are
 copied during initialization
 --]]
-function test_addMissingProperties_Rounded()
+-- function test_addMissingProperties_Rounded()
+-- 	-- print( "test_addMissingProperties_Rounded" )
+-- 	local BackgroundFactory = Widgets.Style.BackgroundFactory
+-- 	local Button = Widgets.Style.Button
+-- 	local Text = Widgets.Style.Text
+-- 	local Background = Widgets.Style.Background
+-- 	local Rectangle = BackgroundFactory.Rectangle
 
-	local Button = Widgets.Style.Button
+-- 	local defaults, bDefaults, tDefaults, vDefaults
+-- 	local src, base
+-- 	local child, label, background, view
+
+-- 	--== Rectangle ==--
+
+-- 	defaults = Button:getDefaultStyleValues()
+-- 	bDefaults = Background:getDefaultStyleValues()
+-- 	tDefaults = Text:getDefaultStyleValues()
+-- 	vDefaults = Rectangle:getDefaultStyleValues()
 
 
-	local src, dest
+-- 	--== test empty base, empty source, empty destination
+
+-- 	-- src is like our user item
+-- 	src = {
+-- 		name='Like the Button',
+-- 		button={
+-- 			inactive={
+-- 				label={
+-- 					hello="base label"
+
+-- 				},
+-- 				background={
+-- 					type='rounded',
+-- 					view={}
+-- 				}
+-- 			},
+-- 			active={
+-- 				label={},
+-- 				background={
+-- 					type='rounded',
+-- 					view={}
+-- 				}
+-- 			},
+-- 			disabled={
+-- 				label={},
+-- 				background={
+-- 					type='rounded',
+-- 					view={}
+-- 				}
+-- 			}
+-- 		}
+-- 	}
+-- 	child = src.button
+
+-- 	marker()
+
+	-- Button.addMissingDestProperties( child, {parent=src} )
+
+	-- Utils.print( child )
+
+	-- hasPropertyValue( child, 'debugOn', defaults.debugOn )
+	-- hasPropertyValue( child, 'width', defaults.width )
+	-- hasPropertyValue( child, 'height', defaults.height )
+	-- hasPropertyValue( child, 'anchorX', defaults.anchorX )
+	-- hasPropertyValue( child, 'anchorY', defaults.anchorY )
+	-- hasPropertyValue( child, 'hitMarginX', defaults.hitMarginX )
+	-- hasPropertyValue( child, 'hitMarginY', defaults.hitMarginY )
+	-- hasPropertyValue( child, 'isHitActive', defaults.isHitActive )
+	-- hasPropertyValue( child, 'marginX', defaults.marginX )
+	-- hasPropertyValue( child, 'marginY', defaults.marginY )
 
 
-end
+	-- state = child.inactive
+
+	-- Utils.print( state )
+
+	-- hasPropertyValue( state, 'debugOn', defaults.debugOn )
+	-- hasPropertyValue( state, 'width', defaults.width )
+	-- hasPropertyValue( state, 'height', defaults.height )
+	-- hasPropertyValue( state, 'anchorX', defaults.anchorX )
+	-- hasPropertyValue( state, 'anchorY', defaults.anchorY )
+	-- hasPropertyValue( state, 'align', defaults.inactive.align )
+	-- hasPropertyValue( state, 'isHitActive', defaults.isHitActive )
+	-- hasPropertyValue( state, 'marginX', defaults.marginX )
+	-- hasPropertyValue( state, 'marginY', defaults.marginY )
+
+	-- label = state.label
+
+	-- Utils.print( label )
+
+	-- hasPropertyValue( label, 'debugOn', defaults.debugOn )
+	-- hasPropertyValue( label, 'width', defaults.width )
+	-- hasPropertyValue( label, 'height', defaults.height )
+	-- hasPropertyValue( label, 'anchorX', defaults.anchorX )
+	-- hasPropertyValue( label, 'anchorY', defaults.anchorY )
+	-- hasPropertyValue( label, 'align', defaults.inactive.align )
+	-- hasPropertyValue( label, 'font', defaults.font )
+	-- hasPropertyValue( label, 'fontSize', defaults.fontSize )
+	-- hasPropertyValue( label, 'textColor', defaults.inactive.label.textColor )
+
+	-- background = state.background
+
+	-- hasPropertyValue( background, 'type', 'rounded' )
+	-- hasPropertyValue( background, 'debugOn', defaults.debugOn )
+	-- hasPropertyValue( background, 'width', defaults.width )
+	-- hasPropertyValue( background, 'height', defaults.height )
+	-- hasPropertyValue( background, 'anchorX', defaults.anchorX )
+	-- hasPropertyValue( background, 'anchorY', defaults.anchorY )
+
+	-- view = background.view
+
+	-- hasPropertyValue( view, 'debugOn', base.debugOn )
+	-- hasPropertyValue( view, 'width', defaults.width )
+	-- hasPropertyValue( view, 'height', defaults.height )
+	-- hasPropertyValue( view, 'anchorX', base.anchorX )
+	-- hasPropertyValue( view, 'anchorY', defaults.anchorY )
+	-- hasPropertyValue( view, 'fillColor', vDefaults.fillColor )
+	-- hasPropertyValue( view, 'strokeColor', vDefaults.strokeColor )
+	-- hasPropertyValue( view, 'strokeWidth', vDefaults.strokeWidth )
+
+
+-- end
 
 
 --[[
@@ -111,12 +311,12 @@ end
 --]]
 
 
-function test_defaultInheritance()
-	print( "test_defaultInheritance" )
-	local Button = Widgets.Style.Button
-	local StyleDefault = Button:getBaseStyle()
+-- function test_defaultInheritance()
+-- 	print( "test_defaultInheritance" )
+-- 	local Button = Widgets.Style.Button
+-- 	local StyleDefault = Button:getBaseStyle()
 
-	local s1, child
+-- 	local s1, child
 
 	-- Default Style
 
@@ -124,9 +324,8 @@ function test_defaultInheritance()
 
 	-- default button
 
-	marker()
 
-	b1 = Widgets.newButtonStyle()
+	-- b1 = Widgets.newButtonStyle()
 
 	-- styleInheritsFrom( b1, StyleDefault )
 	-- hasValidStyleProperties( Button, b1 )
@@ -161,7 +360,7 @@ function test_defaultInheritance()
 
 	-- assert_true( s1.type, s1.view.type, "incorrect type" )
 
-end
+-- end
 
 
 

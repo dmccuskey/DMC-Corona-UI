@@ -83,15 +83,14 @@ function test_addMissingProperties()
 	local srcs, src, base, dest, child
 
 
-	--== test empty base, empty source, empty destination
+	--== test empty source, empty destination
 
 	src = {
-		child = {}
+		view = {}
 	}
-	base = {}
-	child = src.child
+	child = src.view
 
-	Rectangle.addMissingDestProperties( child, {src, base} )
+	Rectangle.addMissingDestProperties( child, {parent=src} )
 
 	hasPropertyValue( child, 'debugOn', defaults.debugOn )
 	hasPropertyValue( child, 'width', defaults.width )
@@ -104,27 +103,25 @@ function test_addMissingProperties()
 	hasPropertyValue( child, 'strokeWidth', defaults.strokeWidth )
 
 
-	--== test partial base, empty source, empty destination
+	--== test partial source, empty destination
 
 	src = {
-		child = {}
-	}
-	base = {
 		hitMarginX=130,
 		type='four',
 
 		debugOn=100,
 		anchorX=400,
 		width=402,
+		view = {}
 	}
-	child = src.child
+	child = src.view
 
-	Rectangle.addMissingDestProperties( child, {src, base} )
+	Rectangle.addMissingDestProperties( child, {parent=src} )
 
-	hasPropertyValue( child, 'debugOn', base.debugOn )
-	hasPropertyValue( child, 'width', base.width )
+	hasPropertyValue( child, 'debugOn', defaults.debugOn )
+	hasPropertyValue( child, 'width', defaults.width )
 	hasPropertyValue( child, 'height', defaults.height )
-	hasPropertyValue( child, 'anchorX', base.anchorX )
+	hasPropertyValue( child, 'anchorX', defaults.anchorX )
 	hasPropertyValue( child, 'anchorY', defaults.anchorY )
 
 	hasPropertyValue( child, 'fillColor', defaults.fillColor )
@@ -135,70 +132,29 @@ function test_addMissingProperties()
 	hasPropertyValue( child, 'type', nil )
 
 
-	--== test partial base, partial source, empty destination
-
-	src = {
-		anchorX=210,
-		anchorY=212,
-		fillColor=220,
-		child = {}
-	}
-	base = {
-		hitMarginX=130,
-		type='four',
-
-		debugOn=100,
-		anchorX=400,
-		width=402,
-	}
-	child = src.child
-
-	Rectangle.addMissingDestProperties( child, {src, base} )
-
-	hasPropertyValue( child, 'debugOn', base.debugOn )
-	hasPropertyValue( child, 'width', base.width )
-	hasPropertyValue( child, 'height', defaults.height )
-	hasPropertyValue( child, 'anchorX', src.anchorX )
-	hasPropertyValue( child, 'anchorY', src.anchorY )
-
-	hasPropertyValue( child, 'fillColor', src.fillColor )
-	hasPropertyValue( child, 'strokeColor', defaults.strokeColor )
-	hasPropertyValue( child, 'strokeWidth', defaults.strokeWidth )
-
-	hasPropertyValue( child, 'hitMarginX', nil )
-	hasPropertyValue( child, 'type', nil )
-
-	--== test partial base, partial source, partial destination
+	--== test partial source, partial destination
 
 	src = {
 		width=200,
 		debugOn=202,
 		anchorX=210,
 		fontSize=220,
-		child = {
+		view = {
 			debugOn=300,
 			width=306,
 		}
 	}
-	base = {
-		hitMarginX=130,
-		type='four',
+	child = src.view
 
-		width=400,
-		anchorY=402,
-		fillColor=404,
-	}
-	child = src.child
-
-	Rectangle.addMissingDestProperties( child, {src, base} )
+	Rectangle.addMissingDestProperties( child, {parent=src} )
 
 	hasPropertyValue( child, 'debugOn', child.debugOn )
 	hasPropertyValue( child, 'width', child.width )
 	hasPropertyValue( child, 'height', defaults.height )
-	hasPropertyValue( child, 'anchorX', src.anchorX )
-	hasPropertyValue( child, 'anchorY', base.anchorY )
+	hasPropertyValue( child, 'anchorX', defaults.anchorX )
+	hasPropertyValue( child, 'anchorY', defaults.anchorY )
 
-	hasPropertyValue( child, 'fillColor', base.fillColor )
+	hasPropertyValue( child, 'fillColor', defaults.fillColor )
 	hasPropertyValue( child, 'strokeColor', defaults.strokeColor )
 	hasPropertyValue( child, 'strokeWidth', defaults.strokeWidth )
 
