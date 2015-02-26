@@ -138,7 +138,6 @@ function test_addMissingProperties()
 
 	TextStyle.addMissingDestProperties( label, {parent=src} )
 
-	print( ">>", label.height )
 	hasPropertyValue( label, 'debugOn', label.debugOn )
 	hasPropertyValue( label, 'width', src.width )
 	hasPropertyValue( label, 'height', nil )

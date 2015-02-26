@@ -304,7 +304,7 @@ function TextFieldStyle.addMissingDestProperties( dest, src, params )
 
 	end
 
-	dest = TextFieldStyle._addMissingChildProperties( dest, src, params )
+	dest = TextFieldStyle._addMissingChildProperties( dest, params )
 
 	return dest
 end

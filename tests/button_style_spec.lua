@@ -59,12 +59,6 @@ local marker = TestUtils.outputMarker
 
 
 --====================================================================--
---== Support Functions
-
-
-
-
---====================================================================--
 --== Module Testing
 --====================================================================--
 
@@ -76,8 +70,13 @@ function suite_setup()
 end
 
 
-function test_addMissingProperties_Rounded()
-	-- print( "test_addMissingProperties_Rounded" )
+
+--====================================================================--
+--== Test Static Functions
+
+
+function test_defaultStyleValues()
+	-- print( "test_defaultStyleValues" )
 	local Button = Widgets.Style.Button
 	local Text = Widgets.Style.Text
 
@@ -145,8 +144,6 @@ function test_addMissingProperties_Rounded()
 
 	view = background.view
 
-	Utils.print( view )
-
 	hasPropertyValue( view, 'debugOn', defaults.debugOn )
 	hasPropertyValue( view, 'width', defaults.width )
 	hasPropertyValue( view, 'height', defaults.height )
@@ -167,128 +164,184 @@ end
 Test to ensure that the correct property values are
 copied during initialization
 --]]
--- function test_addMissingProperties_Rounded()
--- 	-- print( "test_addMissingProperties_Rounded" )
--- 	local BackgroundFactory = Widgets.Style.BackgroundFactory
--- 	local Button = Widgets.Style.Button
--- 	local Text = Widgets.Style.Text
--- 	local Background = Widgets.Style.Background
--- 	local Rectangle = BackgroundFactory.Rectangle
+--[[
+function test_addMissingProperties_Rounded()
+	-- print( "test_addMissingProperties_Rounded" )
+	local BackgroundFactory = Widgets.Style.BackgroundFactory
+	local Button = Widgets.Style.Button
+	local Text = Widgets.Style.Text
+	local Background = Widgets.Style.Background
+	local Rectangle = BackgroundFactory.Rectangle
 
--- 	local defaults, bDefaults, tDefaults, vDefaults
--- 	local src, base
--- 	local child, label, background, view
+	local defaults, bDefaults, tDefaults, vDefaults
+	local src, base
+	local child, label, background, view
 
--- 	--== Rectangle ==--
+	--== Rectangle ==--
 
--- 	defaults = Button:getDefaultStyleValues()
--- 	bDefaults = Background:getDefaultStyleValues()
--- 	tDefaults = Text:getDefaultStyleValues()
--- 	vDefaults = Rectangle:getDefaultStyleValues()
-
-
--- 	--== test empty base, empty source, empty destination
-
--- 	-- src is like our user item
--- 	src = {
--- 		name='Like the Button',
--- 		button={
--- 			inactive={
--- 				label={
--- 					hello="base label"
-
--- 				},
--- 				background={
--- 					type='rounded',
--- 					view={}
--- 				}
--- 			},
--- 			active={
--- 				label={},
--- 				background={
--- 					type='rounded',
--- 					view={}
--- 				}
--- 			},
--- 			disabled={
--- 				label={},
--- 				background={
--- 					type='rounded',
--- 					view={}
--- 				}
--- 			}
--- 		}
--- 	}
--- 	child = src.button
-
--- 	marker()
-
-	-- Button.addMissingDestProperties( child, {parent=src} )
-
-	-- Utils.print( child )
-
-	-- hasPropertyValue( child, 'debugOn', defaults.debugOn )
-	-- hasPropertyValue( child, 'width', defaults.width )
-	-- hasPropertyValue( child, 'height', defaults.height )
-	-- hasPropertyValue( child, 'anchorX', defaults.anchorX )
-	-- hasPropertyValue( child, 'anchorY', defaults.anchorY )
-	-- hasPropertyValue( child, 'hitMarginX', defaults.hitMarginX )
-	-- hasPropertyValue( child, 'hitMarginY', defaults.hitMarginY )
-	-- hasPropertyValue( child, 'isHitActive', defaults.isHitActive )
-	-- hasPropertyValue( child, 'marginX', defaults.marginX )
-	-- hasPropertyValue( child, 'marginY', defaults.marginY )
+	defaults = Button:getDefaultStyleValues()
+	bDefaults = Background:getDefaultStyleValues()
+	tDefaults = Text:getDefaultStyleValues()
+	vDefaults = Rectangle:getDefaultStyleValues()
 
 
-	-- state = child.inactive
+	--== test empty base, empty source, empty destination
 
-	-- Utils.print( state )
+	-- src is like our user item
+	src = {
+		name='Like the Button',
+		button={
+			inactive={
+				label={
+					hello="base label"
 
-	-- hasPropertyValue( state, 'debugOn', defaults.debugOn )
-	-- hasPropertyValue( state, 'width', defaults.width )
-	-- hasPropertyValue( state, 'height', defaults.height )
-	-- hasPropertyValue( state, 'anchorX', defaults.anchorX )
-	-- hasPropertyValue( state, 'anchorY', defaults.anchorY )
-	-- hasPropertyValue( state, 'align', defaults.inactive.align )
-	-- hasPropertyValue( state, 'isHitActive', defaults.isHitActive )
-	-- hasPropertyValue( state, 'marginX', defaults.marginX )
-	-- hasPropertyValue( state, 'marginY', defaults.marginY )
+				},
+				background={
+					type='rounded',
+					view={}
+				}
+			},
+			active={
+				label={},
+				background={
+					type='rounded',
+					view={}
+				}
+			},
+			disabled={
+				label={},
+				background={
+					type='rounded',
+					view={}
+				}
+			}
+		}
+	}
+	child = src.button
 
-	-- label = state.label
+	marker()
 
-	-- Utils.print( label )
+	Button.addMissingDestProperties( child, {parent=src} )
 
-	-- hasPropertyValue( label, 'debugOn', defaults.debugOn )
-	-- hasPropertyValue( label, 'width', defaults.width )
-	-- hasPropertyValue( label, 'height', defaults.height )
-	-- hasPropertyValue( label, 'anchorX', defaults.anchorX )
-	-- hasPropertyValue( label, 'anchorY', defaults.anchorY )
-	-- hasPropertyValue( label, 'align', defaults.inactive.align )
-	-- hasPropertyValue( label, 'font', defaults.font )
-	-- hasPropertyValue( label, 'fontSize', defaults.fontSize )
-	-- hasPropertyValue( label, 'textColor', defaults.inactive.label.textColor )
+	Utils.print( child )
 
-	-- background = state.background
-
-	-- hasPropertyValue( background, 'type', 'rounded' )
-	-- hasPropertyValue( background, 'debugOn', defaults.debugOn )
-	-- hasPropertyValue( background, 'width', defaults.width )
-	-- hasPropertyValue( background, 'height', defaults.height )
-	-- hasPropertyValue( background, 'anchorX', defaults.anchorX )
-	-- hasPropertyValue( background, 'anchorY', defaults.anchorY )
-
-	-- view = background.view
-
-	-- hasPropertyValue( view, 'debugOn', base.debugOn )
-	-- hasPropertyValue( view, 'width', defaults.width )
-	-- hasPropertyValue( view, 'height', defaults.height )
-	-- hasPropertyValue( view, 'anchorX', base.anchorX )
-	-- hasPropertyValue( view, 'anchorY', defaults.anchorY )
-	-- hasPropertyValue( view, 'fillColor', vDefaults.fillColor )
-	-- hasPropertyValue( view, 'strokeColor', vDefaults.strokeColor )
-	-- hasPropertyValue( view, 'strokeWidth', vDefaults.strokeWidth )
+	hasPropertyValue( child, 'debugOn', defaults.debugOn )
+	hasPropertyValue( child, 'width', defaults.width )
+	hasPropertyValue( child, 'height', defaults.height )
+	hasPropertyValue( child, 'anchorX', defaults.anchorX )
+	hasPropertyValue( child, 'anchorY', defaults.anchorY )
+	hasPropertyValue( child, 'hitMarginX', defaults.hitMarginX )
+	hasPropertyValue( child, 'hitMarginY', defaults.hitMarginY )
+	hasPropertyValue( child, 'isHitActive', defaults.isHitActive )
+	hasPropertyValue( child, 'marginX', defaults.marginX )
+	hasPropertyValue( child, 'marginY', defaults.marginY )
 
 
--- end
+	state = child.inactive
+
+	Utils.print( state )
+
+	hasPropertyValue( state, 'debugOn', defaults.debugOn )
+	hasPropertyValue( state, 'width', defaults.width )
+	hasPropertyValue( state, 'height', defaults.height )
+	hasPropertyValue( state, 'anchorX', defaults.anchorX )
+	hasPropertyValue( state, 'anchorY', defaults.anchorY )
+	hasPropertyValue( state, 'align', defaults.inactive.align )
+	hasPropertyValue( state, 'isHitActive', defaults.isHitActive )
+	hasPropertyValue( state, 'marginX', defaults.marginX )
+	hasPropertyValue( state, 'marginY', defaults.marginY )
+
+	label = state.label
+
+	Utils.print( label )
+
+	hasPropertyValue( label, 'debugOn', defaults.debugOn )
+	hasPropertyValue( label, 'width', defaults.width )
+	hasPropertyValue( label, 'height', defaults.height )
+	hasPropertyValue( label, 'anchorX', defaults.anchorX )
+	hasPropertyValue( label, 'anchorY', defaults.anchorY )
+	hasPropertyValue( label, 'align', defaults.inactive.align )
+	hasPropertyValue( label, 'font', defaults.font )
+	hasPropertyValue( label, 'fontSize', defaults.fontSize )
+	hasPropertyValue( label, 'textColor', defaults.inactive.label.textColor )
+
+	background = state.background
+
+	hasPropertyValue( background, 'type', 'rounded' )
+	hasPropertyValue( background, 'debugOn', defaults.debugOn )
+	hasPropertyValue( background, 'width', defaults.width )
+	hasPropertyValue( background, 'height', defaults.height )
+	hasPropertyValue( background, 'anchorX', defaults.anchorX )
+	hasPropertyValue( background, 'anchorY', defaults.anchorY )
+
+	view = background.view
+
+	hasPropertyValue( view, 'debugOn', base.debugOn )
+	hasPropertyValue( view, 'width', defaults.width )
+	hasPropertyValue( view, 'height', defaults.height )
+	hasPropertyValue( view, 'anchorX', base.anchorX )
+	hasPropertyValue( view, 'anchorY', defaults.anchorY )
+	hasPropertyValue( view, 'fillColor', vDefaults.fillColor )
+	hasPropertyValue( view, 'strokeColor', vDefaults.strokeColor )
+	hasPropertyValue( view, 'strokeWidth', vDefaults.strokeWidth )
+
+end
+--]]
+
+
+
+function test_verifyStyleProperties()
+	-- print( "test_verifyStyleProperties" )
+	local BackgroundFactory = Widgets.Style.BackgroundFactory
+	local RoundedStyle = BackgroundFactory.Rounded
+
+	local src
+
+	src = {
+		debugOn=true,
+		width=4,
+		height=10,
+		anchorX=1,
+		anchorY=5,
+		cornerRadius=5,
+		fillColor={},
+		strokeColor=1,
+		strokeWidth=4
+	}
+	hasValidStyleProperties( RoundedStyle, src )
+
+	src = {
+		debugOn=nil, -- <<
+		width=4,
+		height=10,
+		anchorX=1,
+		anchorY=5,
+		cornerRadius=5,
+		fillColor={},
+		strokeColor=1,
+		strokeWidth=4
+	}
+	hasInvalidStyleProperties( RoundedStyle, src )
+
+	src = {
+		debugOn=true,
+		width=4,
+		height=10,
+		anchorX=1,
+		anchorY=5,
+		cornerRadius=nil,
+		fillColor=nil,
+		strokeColor=1,
+		strokeWidth=4
+	}
+	hasInvalidStyleProperties( RoundedStyle, src )
+
+end
+
+
+
+--====================================================================--
+--== Test Class Methods
 
 
 --[[
@@ -296,6 +349,7 @@ Test to ensure that the correct property values are
 copied during initialization
 --]]
 --[[
+--]]
 function test_basicStyleProperties()
 	-- print( "test_classBackgroundStyle" )
 	local Button = Widgets.Style.Button
@@ -308,149 +362,87 @@ function test_basicStyleProperties()
 	assert_true( StyleDefault:isa( Button ), "Class is incorrect" )
 
 end
---]]
 
 
--- function test_defaultInheritance()
--- 	print( "test_defaultInheritance" )
--- 	local Button = Widgets.Style.Button
--- 	local StyleDefault = Button:getBaseStyle()
+function test_defaultInheritance()
+	print( "test_defaultInheritance" )
+	local Button = Widgets.Style.Button
+	local StyleDefault = Button:getBaseStyle()
 
--- 	local s1, child
+	local s1, child
 
 	-- Default Style
 
-	-- verifyButtonStyle( StyleDefault )
+	verifyButtonStyle( StyleDefault )
 
 	-- default button
 
+	b1 = Widgets.newButtonStyle()
 
-	-- b1 = Widgets.newButtonStyle()
+	styleInheritsFrom( b1, StyleDefault )
+	hasValidStyleProperties( Button, b1 )
+	verifyButtonStyle( b1 )
 
-	-- styleInheritsFrom( b1, StyleDefault )
-	-- hasValidStyleProperties( Button, b1 )
-	-- verifyButtonStyle( b1 )
+	StyleDefault = Widgets.Style.Text:getBaseStyle()
 
-	-- print( ">>", b1.active.background.type, b1.inactive.background.type, b1.disabled.background.type )
+	styleInheritsFrom( child, nil )
 
-	-- StyleDefault = Widgets.Style.Text:getBaseStyle()
+	assert_true( b1.type, b1.view.type, "incorrect type" )
 
-	-- styleInheritsFrom( child, StyleBase )
+	-- rectangle
 
-	-- assert_true( b1.type, b1.view.type, "incorrect type" )
-	-- print( ">>", b1.type, b1.view )
+	s1 = Widgets.newRectangleBackgroundStyle()
+	StyleBase = Button:getBaseStyle()
 
-	-- -- rectangle
+	styleInheritsFrom( s1, nil )
+	hasValidStyleProperties( Button, s1 )
 
-	-- s1 = Widgets.newRectangleBackgroundStyle()
-	-- StyleBase = Button:getBaseStyle()
+	assert_true( s1.type, s1.view.type, "incorrect type" )
 
-	-- styleInheritsFrom( s1, StyleBase )
-	-- hasValidStyleProperties( Button, s1 )
+	-- rounded
 
-	-- assert_true( s1.type, s1.view.type, "incorrect type" )
+	s1 = Widgets.newRoundedBackgroundStyle()
+	StyleBase = Button:getBaseStyle()
 
-	-- -- rounded
+	styleInheritsFrom( s1, nil )
+	hasValidStyleProperties( Button, s1 )
 
-	-- s1 = Widgets.newRoundedBackgroundStyle()
-	-- StyleBase = Button:getBaseStyle()
+	assert_true( s1.type, s1.view.type, "incorrect type" )
 
-	-- styleInheritsFrom( s1, StyleBase )
-	-- hasValidStyleProperties( Button, s1 )
-
-	-- assert_true( s1.type, s1.view.type, "incorrect type" )
-
--- end
+end
 
 
 
+-- TODO
+function test_defaultInheritance()
+	-- print( "test_defaultInheritance" )
+	local Background = Widgets.Style.Background
+	local StyleFactory = Widgets.Style.BackgroundFactory
+	local RoundedStyle = StyleFactory.Rounded
+	local StyleBase
+
+	local s1 = Widgets.newRoundedBackgroundStyle()
+	StyleBase = Background:getBaseStyle( s1.type )
+
+	styleInheritsFrom( s1, nil )
+	hasValidStyleProperties( RoundedStyle, s1.view )
+
+end
 
 
 
--- function test_verifyStyleProperties()
--- 	-- print( "test_verifyStyleProperties" )
--- 	local BackgroundFactory = Widgets.Style.BackgroundFactory
--- 	local RoundedStyle = BackgroundFactory.Rounded
+-- TODO
+function test_mismatchedInheritance()
+	-- print( "test_mismatchedInheritance" )
+	local Background = Widgets.Style.Background
+	local StyleFactory = Widgets.Style.BackgroundFactory
+	local RoundedStyle = StyleFactory.Rounded
+	local StyleBase
 
--- 	local src
+	local s1 = Widgets.newRoundedBackgroundStyle()
+	StyleBase = Background:getBaseStyle( s1.type )
 
--- 	src = {
--- 		debugOn=true,
--- 		width=4,
--- 		height=10,
--- 		anchorX=1,
--- 		anchorY=5,
--- 		cornerRadius=5,
--- 		fillColor={},
--- 		strokeColor=1,
--- 		strokeWidth=4
--- 	}
--- 	hasValidStyleProperties( RoundedStyle, src )
+	styleInheritsFrom( s1, nil )
 
--- 	src = {
--- 		debugOn=nil, -- <<
--- 		width=4,
--- 		height=10,
--- 		anchorX=1,
--- 		anchorY=5,
--- 		cornerRadius=5,
--- 		fillColor={},
--- 		strokeColor=1,
--- 		strokeWidth=4
--- 	}
--- 	hasInvalidStyleProperties( RoundedStyle, src )
-
--- 	src = {
--- 		debugOn=true,
--- 		width=4,
--- 		height=10,
--- 		anchorX=1,
--- 		anchorY=5,
--- 		cornerRadius=nil,
--- 		fillColor=nil,
--- 		strokeColor=1,
--- 		strokeWidth=4
--- 	}
--- 	hasInvalidStyleProperties( RoundedStyle, src )
-
--- end
-
-
-
-
--- function test_defaultInheritance()
--- 	print( "test_defaultInheritance" )
--- 	local Background = Widgets.Style.Background
--- 	local StyleFactory = Widgets.Style.BackgroundFactory
--- 	local RoundedStyle = StyleFactory.Rounded
--- 	local StyleBase
-
--- 	local s1 = Widgets.newRoundedBackgroundStyle()
--- 	StyleBase = Background:getBaseStyle( s1.type )
-
--- 	styleInheritsFrom( s1, StyleBase )
--- 	hasValidStyleProperties( RoundedStyle, s1.view )
-
--- end
-
-
-
--- function test_mismatchedInheritance()
--- 	print( "test_mismatchedInheritance" )
--- 	local Background = Widgets.Style.Background
--- 	local StyleFactory = Widgets.Style.BackgroundFactory
--- 	local RoundedStyle = StyleFactory.Rounded
--- 	local StyleBase
-
--- 	local s1 = Widgets.newRoundedBackgroundStyle()
--- 	StyleBase = Background:getBaseStyle( s1.type )
-
--- 	print( ">>> styles", s1.type, StyleBase, s1 )
--- 	assert( s1 )
-
--- 	print( s1.inherit )
--- 	styleInheritsFrom( s1, StyleBase )
-
-
--- end
+end
 
