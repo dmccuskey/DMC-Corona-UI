@@ -133,12 +133,12 @@ TextStyle._STYLE_DEFAULTS = {
 	anchorY=0.5,
 
 	align='center',
-	fillColor={1,1,1,0},
+	fillColor={0.2,1.1,1.5,0},
 	font=native.systemFont,
-	fontSize=18,
+	fontSize=19,
 	marginX=0,
 	marginY=0,
-	textColor={0.5,0,0,1},
+	textColor={0.5,0.2,0.1,1},
 
 	strokeColor={0,0,0,1},
 	strokeWidth=0,
@@ -203,28 +203,30 @@ function TextStyle.initialize( manager )
 end
 
 
-function TextStyle.addMissingDestProperties( dest, srcs, params )
+function TextStyle.addMissingDestProperties( dest, srcs )
 	-- print( "TextStyle.addMissingDestProperties", dest, srcs )
-	srcs = srcs or {}
-	params = params or {}
 	assert( dest )
+	srcs = srcs or {}
+	local lsrc = Utils.extend( srcs, {} )
+	if lsrc.parent==nil then lsrc.parent=dest end
+	if lsrc.main==nil then lsrc.main=TextStyle._STYLE_DEFAULTS end
+	lsrc.widget = TextStyle._STYLE_DEFAULTS
 	--==--
-	tinsert( srcs, #srcs+1, TextStyle._STYLE_DEFAULTS )
 
-	dest = BaseStyle.addMissingDestProperties( dest, srcs, params )
+	dest = BaseStyle.addMissingDestProperties( dest, lsrc )
 
-	for i=1,#srcs do
-		local src = srcs[i]
+	for _, key in ipairs( { 'main', 'parent', 'widget' } ) do
+		local src = lsrc[key] or {}
 
-		if dest.align==nil or force then dest.align=src.align end
-		if dest.fillColor==nil or force then dest.fillColor=src.fillColor end
-		if dest.font==nil or force then dest.font=src.font end
-		if dest.fontSize==nil or force then dest.fontSize=src.fontSize end
-		if dest.marginX==nil or force then dest.marginX=src.marginX end
-		if dest.marginY==nil or force then dest.marginY=src.marginY end
-		if dest.strokeColor==nil or force then dest.strokeColor=src.strokeColor end
-		if dest.strokeWidth==nil or force then dest.strokeWidth=src.strokeWidth end
-		if dest.textColor==nil or force then dest.textColor=src.textColor end
+		if dest.align==nil then dest.align=src.align end
+		if dest.fillColor==nil then dest.fillColor=src.fillColor end
+		if dest.font==nil then dest.font=src.font end
+		if dest.fontSize==nil then dest.fontSize=src.fontSize end
+		if dest.marginX==nil then dest.marginX=src.marginX end
+		if dest.marginY==nil then dest.marginY=src.marginY end
+		if dest.strokeColor==nil then dest.strokeColor=src.strokeColor end
+		if dest.strokeWidth==nil then dest.strokeWidth=src.strokeWidth end
+		if dest.textColor==nil then dest.textColor=src.textColor end
 
 	end
 

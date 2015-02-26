@@ -217,21 +217,24 @@ end
 
 function BackgroundStyle.addMissingDestProperties( dest, srcs )
 	-- print( "BackgroundStyle.addMissingDestProperties", dest, srcs )
-	srcs = srcs or {}
 	assert( dest )
-	tinsert( srcs, #srcs+1, BackgroundStyle._STYLE_DEFAULTS )
+	srcs = srcs or {}
+	local lsrc = Utils.extend( srcs, {} )
+	if lsrc.parent==nil then lsrc.parent=dest end
+	if lsrc.main==nil then lsrc.main=BackgroundStyle._STYLE_DEFAULTS end
+	lsrc.widget = BackgroundStyle._STYLE_DEFAULTS
 	--==--
 
-	dest = BaseStyle.addMissingDestProperties( dest, srcs )
+	dest = BaseStyle.addMissingDestProperties( dest, lsrc )
 
-	for i=1,#srcs do
-		local src = srcs[i]
+	for _, key in ipairs( { 'main', 'parent', 'widget' } ) do
+		local src = lsrc[key] or {}
 
 		if dest.type==nil then dest.type=src.type end
 
 	end
 
-	dest = BackgroundStyle._addMissingChildProperties( dest, srcs )
+	dest = BackgroundStyle._addMissingChildProperties( dest, lsrc )
 
 	return dest
 end
@@ -243,28 +246,19 @@ end
 -- srcs, array of data elements
 function BackgroundStyle._addMissingChildProperties( dest, srcs )
 	-- print( "BackgroundStyle._addMissingChildProperties", dest, srcs )
+	assert( dest )
 	srcs = srcs or {}
+	local lsrc = { parent = dest }
 	--==--
 	local eStr = "ERROR: Style (BackgroundStyle) missing property '%s'"
-	local filter = WidgetUtils.filter
 	local StyleClass, child
-	local sources
-
-	local function gen( n )
-		-- sources, name
-		return function( s )
-			-- source, from filter()
-			return (s[n]~=nil) -- has name
-		end
-	end
 
 	child = dest.view
 	-- assert( child, sformat( eStr, 'view' ) )
 	StyleClass = StyleFactory.getClass( dest.type )
-	sources = filter( gen('view'), srcs )
-	tinsert( sources, #sources+1, dest )
+	lsrc.main = srcs.main and srcs.main.view
 	-- TODO create other local defaults for each view type
-	dest.view = StyleClass.addMissingDestProperties( child, sources )
+	dest.view = StyleClass.addMissingDestProperties( child, lsrc )
 
 	return dest
 end

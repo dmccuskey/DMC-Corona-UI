@@ -179,19 +179,20 @@ function RectangleStyle.initialize( manager )
 end
 
 
--- srcs, should be a table
--- contains
 function RectangleStyle.addMissingDestProperties( dest, srcs )
 	-- print( "RectangleStyle.addMissingDestProperties", dest, srcs )
-	srcs = srcs or {}
 	assert( dest )
+	srcs = srcs or {}
+	local lsrc = Utils.extend( srcs, {} )
+	if lsrc.parent==nil then lsrc.parent=dest end
+	if lsrc.main==nil then lsrc.main=RectangleStyle._STYLE_DEFAULTS end
+	lsrc.widget = RectangleStyle._STYLE_DEFAULTS
 	--==--
-	tinsert( srcs, #srcs+1, RectangleStyle._STYLE_DEFAULTS )
 
-	dest = ViewStyle.addMissingDestProperties( dest, srcs )
+	dest = ViewStyle.addMissingDestProperties( dest, lsrc )
 
-	for i=1,#srcs do
-		local src = srcs[i]
+	for _, key in ipairs( { 'main', 'parent', 'widget' } ) do
+		local src = lsrc[key] or {}
 
 		if dest.fillColor==nil then dest.fillColor=src.fillColor end
 		if dest.strokeColor==nil then dest.strokeColor=src.strokeColor end

@@ -185,16 +185,18 @@ end
 
 function RoundedStyle.addMissingDestProperties( dest, srcs, params )
 	-- print( "RoundedStyle.addMissingDestProperties", dest, srcs )
-	srcs = srcs or {}
-	params = params or {}
 	assert( dest )
+	srcs = srcs or {}
+	local lsrc = Utils.extend( srcs, {} )
+	if lsrc.parent==nil then lsrc.parent=dest end
+	if lsrc.main==nil then lsrc.main=RoundedStyle._STYLE_DEFAULTS end
+	lsrc.widget = RoundedStyle._STYLE_DEFAULTS
 	--==--
-	tinsert( srcs, #srcs+1, RoundedStyle._STYLE_DEFAULTS )
 
 	dest = ViewStyle.addMissingDestProperties( dest, srcs, params )
 
-	for i=1,#srcs do
-		local src = srcs[i]
+	for _, key in ipairs( { 'main', 'parent', 'widget' } ) do
+		local src = lsrc[key] or {}
 
 		if dest.cornerRadius==nil then dest.cornerRadius=src.cornerRadius end
 		if dest.fillColor==nil then dest.fillColor=src.fillColor end

@@ -244,13 +244,16 @@ end
 --
 function Style.addMissingDestProperties( dest, srcs )
 	-- print( "Style.addMissingDestProperties", dest, srcs )
-	srcs = srcs or {}
 	assert( dest )
-	tinsert( srcs, #srcs+1, Style._STYLE_DEFAULTS )
+	srcs = srcs or {}
+	local lsrc = Utils.extend( srcs, {} )
+	if lsrc.parent==nil then lsrc.parent=dest end
+	if lsrc.main==nil then lsrc.main=Style._STYLE_DEFAULTS end
+	lsrc.widget = Style._STYLE_DEFAULTS
 	--==--
 
-	for i=1,#srcs do
-		local src = srcs[i]
+	for _, key in ipairs( { 'main', 'parent', 'widget' } ) do
+		local src = lsrc[key] or {}
 
 		if dest.debugOn==nil then dest.debugOn=src.debugOn end
 		if dest.width==nil then dest.width=src.width end
@@ -365,7 +368,7 @@ function Style._setDefaults( StyleClass )
 	-- print( "Style._setDefaults" )
 	local defaults = StyleClass._STYLE_DEFAULTS
 
-	defaults = StyleClass._addMissingChildProperties( defaults, {defaults} )
+	defaults = StyleClass.addMissingDestProperties( defaults, {main=defaults} )
 
 	local style = StyleClass:new{
 		data=defaults
@@ -409,7 +412,7 @@ end
 -- if no source, then copy from Base Style
 --
 function Style:copyProperties( src, params )
-	-- print( "Style:copyProperties", src )
+	-- print( "Style:copyProperties", self, src )
 	params = params or {}
 	if params.force==nil then params.force=false end
 	--==--

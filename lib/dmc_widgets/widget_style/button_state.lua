@@ -234,54 +234,64 @@ function ButtonStateStyle.createStyleStructure( data )
 end
 
 
-function ButtonStateStyle.addMissingDestProperties( dest, src, params )
-	-- print( "ButtonStateStyle.addMissingDestProperties", dest, src )
-	params = params or {}
-	if params.force==nil then params.force=false end
+function ButtonStateStyle.addMissingDestProperties( dest, srcs )
+	-- print( "ButtonStateStyle.addMissingDestProperties", dest, srcs )
 	assert( dest )
+	srcs = srcs or {}
+	local lsrc = Utils.extend( srcs, {} )
+	if lsrc.parent==nil then lsrc.parent=dest end
+	if lsrc.main==nil then lsrc.main=ButtonStateStyle._STYLE_DEFAULTS end
+	lsrc.widget = ButtonStateStyle._STYLE_DEFAULTS
 	--==--
-	local force=params.force
-	local srcs = { ButtonStateStyle._STYLE_DEFAULTS }
-	if src then tinsert( srcs, 1, src ) end
 
-	dest = BaseStyle.addMissingDestProperties( dest, src, params )
+	dest = BaseStyle.addMissingDestProperties( dest, lsrc )
 
-	for i=1,#srcs do
-		local src = srcs[i]
+	for _, key in ipairs( { 'main', 'parent', 'widget' } ) do
+		local src = lsrc[key] or {}
 
-		if dest.align==nil or force then dest.align=src.align end
-		if dest.isHitActive==nil or force then dest.isHitActive=src.isHitActive end
-		if dest.marginX==nil or force then dest.marginX=src.marginX end
-		if dest.marginY==nil or force then dest.marginY=src.marginY end
-		if dest.offsetX==nil or force then dest.offsetX=src.offsetX end
-		if dest.offsetY==nil or force then dest.offsetY=src.offsetY end
+		if dest.align==nil then dest.align=src.align end
+		if dest.isHitActive==nil then dest.isHitActive=src.isHitActive end
+		if dest.marginX==nil then dest.marginX=src.marginX end
+		if dest.marginY==nil then dest.marginY=src.marginY end
+		if dest.offsetX==nil then dest.offsetX=src.offsetX end
+		if dest.offsetY==nil then dest.offsetY=src.offsetY end
+
+		--== Additional properties to be handed down to children
+
+		if dest.font==nil then dest.font=src.font end
+		if dest.fontSize==nil then dest.fontSize=src.fontSize end
 
 	end
 
-	dest = ButtonStateStyle._addMissingChildProperties( dest, src, params )
+	dest = ButtonStateStyle._addMissingChildProperties( dest, lsrc )
 
 	return dest
 end
 
 
-
---
+-- _addMissingChildProperties()
 -- copy properties to sub-styles
 --
-function ButtonStateStyle._addMissingChildProperties( dest, src, params )
-	-- print( "ButtonStateStyle._addMissingChildProperties", dest, src )
+function ButtonStateStyle._addMissingChildProperties( dest, srcs )
+	-- print( "ButtonStateStyle._addMissingChildProperties", dest, srcs )
+	assert( dest )
+	srcs = srcs or {}
+	local lsrc = { parent = dest }
+	--==--
 	local eStr = "ERROR: Style missing property '%s'"
 	local StyleClass, child
 
 	child = dest.label
 	assert( child, sformat( eStr, 'label' ) )
 	StyleClass = Widgets.Style.Text
-	StyleClass.addMissingDestProperties( child, src, params )
+	lsrc.main = srcs.main and srcs.main.label
+	dest.label = StyleClass.addMissingDestProperties( child, lsrc )
 
 	child = dest.background
 	assert( child, sformat( eStr, 'background' ) )
 	StyleClass = Widgets.Style.Background
-	StyleClass.addMissingDestProperties( child, src, params )
+	lsrc.main = srcs.main and srcs.main.background
+	dest.background = StyleClass.addMissingDestProperties( child, lsrc )
 
 	return dest
 end
