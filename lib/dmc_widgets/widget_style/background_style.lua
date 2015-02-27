@@ -419,10 +419,10 @@ end
 --
 function BackgroundStyle:_updateViewStyle( params )
 	-- print( "BackgroundStyle:_updateViewStyle", params )
+	assert( self.type, "Background missing property 'type'" )
 	params = params or {}
 	if params.reset==nil then params.reset = false end
 	--==--
-	if not self.type then error("no type here") ; return end
 	local inheritanceInactive = (self._type==nil)
 	local haveInheritedStyle = (self._inherit~=nil)
 	local viewStyle = self._view
