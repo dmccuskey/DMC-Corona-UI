@@ -497,7 +497,6 @@ function BackgroundStyle.__setters:type( value )
 	-- print( "BackgroundStyle.__setters:type", value, self )
 	assert( (value==nil and self._inherit) or type(value)=='string' )
 	--==--
-	if value == self._type then return end
 	self._type = value
 	if self._isInitialized then
 		self:_updateViewStyle()
