@@ -494,6 +494,8 @@ function ButtonBase.__setters:isEnabled( value )
 	--==--
 	if self.curr_style.isHitActive == value then return end
 
+	self.curr_style.isHitActive = value
+
 	if value == true then
 		self:gotoState( ButtonBase.STATE_INACTIVE, { isEnabled=value } )
 	else
