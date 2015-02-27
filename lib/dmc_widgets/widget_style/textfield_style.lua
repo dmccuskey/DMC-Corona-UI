@@ -759,7 +759,7 @@ function TextFieldStyle:_prepareData( data )
 	if data.isa and data:isa( TextFieldStyle ) then
 		--== Instance
 		local o = data
-		data = createStruct( o.background.view.type )
+		data = createStruct( o.background.type )
 
 	else
 		--== Lua structure
