@@ -660,14 +660,15 @@ function ButtonBase:_createText()
 
 	--== Reset properties
 
-	self._wgtTextStyle_dirty=true
+	self._widgetStyle_dirty=true
 	self._isEditActive_dirty=true
+	self._labelText_dirty=true
 end
 
 
 
 function ButtonBase:__commitProperties__()
-	-- print( 'ButtonBase:__commitProperties__' )
+	print( 'ButtonBase:__commitProperties__' )
 
 	--== Update Widget Components ==--
 
