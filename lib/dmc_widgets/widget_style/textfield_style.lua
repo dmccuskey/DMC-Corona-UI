@@ -266,7 +266,6 @@ function TextFieldStyle.createStyleStructure( data )
 end
 
 
--- src is "master" source
 function TextFieldStyle.addMissingDestProperties( dest, src, params )
 	-- print( "TextFieldStyle.addMissingDestProperties", dest, src )
 	assert( dest )
@@ -341,8 +340,6 @@ function TextFieldStyle._addMissingChildProperties( dest, srcs )
 end
 
 
-
--- src is "master" source
 function TextFieldStyle.copyExistingSrcProperties( dest, src, params)
 	-- print( "TextFieldStyle.copyMissingProperties", dest, src )
 	assert( dest )
@@ -381,8 +378,6 @@ function TextFieldStyle.copyExistingSrcProperties( dest, src, params)
 
 	return dest
 end
-
-
 
 
 function TextFieldStyle._verifyProperties( src, exclude )
@@ -508,7 +503,6 @@ function TextFieldStyle.__setters:display( data )
 		data=data
 	}
 end
-
 
 
 --======================================================--
@@ -721,16 +715,7 @@ end
 
 
 --======================================================--
--- Proxy Methods
-
-
-
-
-
---======================================================--
 -- Misc
-
---== inherit
 
 function TextFieldStyle:_doChildrenInherit( value )
 	-- print( "TextFieldStyle:_doChildrenInherit", value )
@@ -741,7 +726,7 @@ end
 
 
 function TextFieldStyle:_clearChildrenProperties( style )
-	print( "TextFieldStyle:_clearChildrenProperties", style, self )
+	-- print( "TextFieldStyle:_clearChildrenProperties", style, self )
 	assert( style==nil or type(style)=='table' )
 	if style and type(style.isa)=='function' then
 		assert( style:isa(TextFieldStyle) )

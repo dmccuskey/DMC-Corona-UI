@@ -1,5 +1,5 @@
 --====================================================================--
--- dmc_widgets/theme_manager/background_style.lua
+-- dmc_widgets/widget_style/button_style.lua
 --
 -- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
@@ -309,7 +309,6 @@ function ButtonStyle.createStyleStructure( data )
 end
 
 
-
 function ButtonStyle.addMissingDestProperties( dest, srcs )
 	-- print( "ButtonStyle.addMissingDestProperties", dest, srcs )
 	assert( dest )
@@ -377,7 +376,6 @@ function ButtonStyle._addMissingChildProperties( dest, srcs )
 end
 
 
-
 function ButtonStyle.copyExistingSrcProperties( dest, src, params )
 	-- print( "ButtonStyle.copyExistingSrcProperties", dest, src )
 	assert( dest )
@@ -410,7 +408,6 @@ function ButtonStyle.copyExistingSrcProperties( dest, src, params )
 
 	return dest
 end
-
 
 
 function ButtonStyle._verifyStyleProperties( src )
@@ -470,7 +467,7 @@ end
 --======================================================--
 -- Access to sub-styles
 
---== Inactive
+--== .inactive
 
 function ButtonStyle.__getters:inactive()
 	-- print( "ButtonStyle.__getters:inactive", self._inactive )
@@ -491,7 +488,7 @@ function ButtonStyle.__setters:inactive( data )
 	}
 end
 
---== Active
+--== .active
 
 function ButtonStyle.__getters:active()
 	-- print( "ButtonStyle.__getters:active", self._active )
@@ -512,7 +509,7 @@ function ButtonStyle.__setters:active( data )
 	}
 end
 
---== Disabled
+--== .disabled
 
 function ButtonStyle.__getters:disabled()
 	-- print( "ButtonStyle.__getters:disabled", self._disabled )
@@ -537,7 +534,7 @@ end
 --======================================================--
 -- Access to style properties
 
---== hitMarginX
+--== .hitMarginX
 
 function ButtonStyle.__getters:hitMarginX()
 	-- print( "ButtonStyle.__getters:hitMarginX", self._inherit )
@@ -556,7 +553,7 @@ function ButtonStyle.__setters:hitMarginX( value )
 	self:_dispatchChangeEvent( 'hitMarginX', value )
 end
 
---== hitMarginY
+--== .hitMarginY
 
 function ButtonStyle.__getters:hitMarginY()
 	-- print( "ButtonStyle.__getters:hitMarginY" )
@@ -575,7 +572,7 @@ function ButtonStyle.__setters:hitMarginY( value )
 	self:_dispatchChangeEvent( 'hitMarginY', value )
 end
 
---== isHitActive
+--== .isHitActive
 
 function ButtonStyle.__getters:isHitActive()
 	-- print( "ButtonStyle.__getters:isHitActive" )
@@ -595,11 +592,8 @@ function ButtonStyle.__setters:isHitActive( value )
 end
 
 
-
 --======================================================--
 -- Misc
-
---== inherit
 
 function ButtonStyle:_doChildrenInherit( value )
 	-- print( "ButtonStyle:_doChildrenInherit", value, self )
@@ -610,7 +604,7 @@ end
 
 
 function ButtonStyle:_clearChildrenProperties( style )
-	print( "ButtonStyle:_clearChildrenProperties", style, self )
+	-- print( "ButtonStyle:_clearChildrenProperties", style, self )
 	assert( style==nil or type(style)=='table' )
 	if style and type(style.isa)=='function' then
 		assert( style:isa(ButtonStyle) )

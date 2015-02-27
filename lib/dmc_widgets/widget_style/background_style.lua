@@ -1,5 +1,5 @@
 --====================================================================--
--- dmc_widgets/theme_manager/background_style.lua
+-- dmc_widgets/widget_style/background_style.lua
 --
 -- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
@@ -100,10 +100,6 @@ local BackgroundStyle = newClass( BaseStyle, {name="Background Style"} )
 BackgroundStyle.TYPE = 'background'
 
 BackgroundStyle.__base_style__ = nil
-
--- child styles
-BackgroundStyle.VIEW_KEY = 'view'
-BackgroundStyle.VIEW_NAME = 'background-view'
 
 BackgroundStyle._DEFAULT_VIEWTYPE = nil -- set later
 
@@ -239,8 +235,7 @@ end
 
 -- _addMissingChildProperties()
 -- copy properties to sub-styles
--- dest, Style instance
--- srcs, array of data elements
+--
 function BackgroundStyle._addMissingChildProperties( dest, srcs )
 	-- print( "BackgroundStyle._addMissingChildProperties", dest, srcs )
 	assert( dest )
@@ -367,7 +362,6 @@ if same type, then clear properties
 --======================================================--
 -- Misc
 
---== inherit
 
 function BackgroundStyle:_doChildrenInherit( value )
 	-- print( "BackgroundStyle_doChildrenInherit", value, self )
@@ -421,7 +415,7 @@ function BackgroundStyle:createStyleFromType( params )
 end
 
 
--- checks to maek sure things are equal
+-- checks to make sure parent/view type are equal, etc
 --
 function BackgroundStyle:_updateViewStyle( params )
 	-- print( "BackgroundStyle:_updateViewStyle", params )
@@ -467,7 +461,7 @@ function BackgroundStyle:_updateViewStyle( params )
 	self:_dispatchResetEvent()
 end
 
---== updateStyle
+--== updateStyle()
 
 -- force is used when making exact copy of data
 --
@@ -476,12 +470,14 @@ function BackgroundStyle:updateStyle( src, params )
 	BackgroundStyle.copyExistingSrcProperties( self, src, params )
 end
 
+--== verifyProperties()
 
 function BackgroundStyle:verifyProperties()
 	-- print( "BackgroundStyle:verifyProperties", self )
 	return BackgroundStyle._verifyStyleProperties( self )
 end
 
+--== .inheritIsActive
 
 function BackgroundStyle.__getters:inheritIsActive()
 	return (self._inherit~=nil and self._type==nil)
@@ -553,7 +549,6 @@ function BackgroundStyle:copyProperties( src, params )
 	if not src then src=StyleClass:getBaseStyle( self.type ) end
 	StyleClass.copyExistingSrcProperties( self, src, params )
 end
-
 
 
 --[[
