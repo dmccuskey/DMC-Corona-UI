@@ -29,7 +29,7 @@ local W, H = display.contentWidth, display.contentHeight
 local H_CENTER, V_CENTER = W*0.5, H*0.5
 
 
-local verifyBackgroundStyle = Utils.verifyBackgroundStyle
+local verifyBackgroundStyle = TestUtils.verifyBackgroundStyle
 
 local hasProperty = TestUtils.hasProperty
 local hasPropertyValue = TestUtils.hasPropertyValue
@@ -203,6 +203,48 @@ function test_addMissingProperties_Rectangle()
 	hasPropertyValue( view, 'strokeColor', vDefaults.strokeColor )
 	hasPropertyValue( view, 'strokeWidth', vDefaults.strokeWidth )
 
+
+	local c1, c2 = {1,1,1}, {0,0,0}
+
+	src = {
+		debugOn=200,
+		width=202,
+		fillColor={0,1,1,1,1,},
+
+		background = {
+			type='rectangle',
+			height=300,
+			anchorY=302,
+			view={
+				fillColor=c1,
+				debugOn=400,
+				anchorX=402,
+				height=404
+			}
+		}
+	}
+	child = src.background
+
+	Background.addMissingDestProperties( child, {parent=src} )
+
+	hasPropertyValue( child, 'debugOn', defaults.debugOn )
+	hasPropertyValue( child, 'width', defaults.width )
+	hasPropertyValue( child, 'height', child.height )
+	hasPropertyValue( child, 'anchorX', defaults.anchorX )
+	hasPropertyValue( child, 'anchorY', child.anchorY )
+	hasPropertyValue( child, 'type', child.type )
+
+	view = child.view
+
+	hasPropertyValue( view, 'debugOn', view.debugOn )
+	hasPropertyValue( view, 'width', vDefaults.width )
+	hasPropertyValue( view, 'height', view.height )
+	hasPropertyValue( view, 'anchorX', view.anchorX )
+	hasPropertyValue( view, 'anchorY', vDefaults.anchorY )
+	hasPropertyValue( view, 'fillColor', c1 )
+	hasPropertyValue( view, 'strokeColor', vDefaults.strokeColor )
+	hasPropertyValue( view, 'strokeWidth', vDefaults.strokeWidth )
+
 end
 
 
@@ -251,10 +293,9 @@ function test_backgroundStyleClassBasics()
 	--== rounded
 
 	BaseStyle = Background:getBaseStyle( 'rounded' )
-	TestUtils.verifyBackgroundStyle( BaseStyle )
+	verifyBackgroundStyle( BaseStyle )
 
 	styleInheritsFrom( BaseStyle, nil )
-	styleHasPropertyValue( BaseStyle, 'master', BaseStyle )
 
 	-- check properties initialized to the default values
 
@@ -279,10 +320,9 @@ function test_backgroundStyleClassBasics()
 	--== rectangle
 
 	BaseStyle = Background:getBaseStyle( 'rectangle' )
-	TestUtils.verifyBackgroundStyle( BaseStyle )
+	verifyBackgroundStyle( BaseStyle )
 
 	styleInheritsFrom( BaseStyle, nil )
-	styleHasPropertyValue( BaseStyle, 'master', BaseStyle )
 
 	-- check properties initialized to the default values
 
@@ -309,27 +349,101 @@ function test_backgroundStyleClassBasics()
 
 	style = Widgets.newBackgroundStyle()
 
-	TestUtils.verifyBackgroundStyle( style )
+	verifyBackgroundStyle( style )
 	styleInheritsFrom( BaseStyle, nil )
-	styleHasPropertyValue( style, 'master', style )
-	styleHasPropertyValue( style.view, 'master', style )
 
 	style = Widgets.newRoundedBackgroundStyle()
 
-	TestUtils.verifyBackgroundStyle( style )
+	verifyBackgroundStyle( style )
 	styleInheritsFrom( BaseStyle, nil )
-	styleHasPropertyValue( style, 'master', style )
-	styleHasPropertyValue( style.view, 'master', style )
 
 	style = Widgets.newRectangleBackgroundStyle()
 
-	TestUtils.verifyBackgroundStyle( style )
+	verifyBackgroundStyle( style )
 	styleInheritsFrom( BaseStyle, nil )
-	styleHasPropertyValue( style, 'master', style )
-	styleHasPropertyValue( style.view, 'master', style )
 
 end
 
+
+
+--[[
+--]]
+function test_clearProperties()
+	-- print( "test_clearProperties" )
+	local Background = Widgets.Style.Background
+	local BaseStyle, defaults, vDefaults
+	local style, view
+
+	local StyleBase, StyleClass
+	local s1, sView
+	local inherit, iView
+	local parentReset, parentCallback
+	local childReset, childCallback
+
+
+	parentReset = 0
+	parentCallback = function(e)
+		if e.type==s1.STYLE_RESET then parentReset=parentReset+1 end
+	end
+
+	childReset = 0
+	childCallback = function(e)
+		if e.type==s1.STYLE_RESET then childReset=childReset+1 end
+	end
+
+
+	-- by default, style from nil
+
+	s1 = Widgets.newRoundedBackgroundStyle{
+		view={
+			strokeWidth=42
+		}
+	}
+	sView = s1.view
+
+	StyleBase = Background:getBaseStyle( s1.type )
+
+	s1:addEventListener( s1.EVENT, parentCallback )
+	sView:addEventListener( sView.EVENT, childCallback )
+
+	styleInheritsFrom( s1, nil )
+
+	-- local properties
+
+	styleHasPropertyValue( sView, 'fillColor', StyleBase.view.fillColor )
+	styleHasPropertyValue( sView, 'strokeColor', StyleBase.view.strokeColor )
+	styleHasPropertyValue( sView, 'strokeWidth', 42 )
+
+
+	--TODO:
+	-- clear properties with inherit
+	-- clear breaking inherit, then clear
+
+	--== Clear Properties, with no inherit
+
+	parentReset = 0
+	childReset = 0
+	s1:clearProperties()
+
+	assert_gt( 0, parentReset, "incorrect count for parentReset" )
+	assert_gt( 0, childReset, "incorrect count for childReset" )
+
+	styleHasPropertyValue( sView, 'fillColor', StyleBase.view.fillColor )
+	styleHasPropertyValue( sView, 'strokeColor', StyleBase.view.strokeColor )
+	styleHasPropertyValue( sView, 'strokeWidth', StyleBase.view.strokeWidth )
+
+	-- set local properties
+
+	s1.strokeWidth = 98
+
+	--== Break inheritance
+
+	s1.inherit = nil
+
+	verifyBackgroundStyle( s1 )
+	styleInheritsFrom( s1, nil )
+
+end
 
 
 --[[
@@ -765,9 +879,9 @@ function test_inheritanceChangesUsingInheritancePropertyMismatch()
 	local Rounded = StyleFactory.Rounded
 	local StyleDefault
 
-	local s1, sView
-	local inherit, iView
-	local sDefaults, prevView
+	local s1, sView, sDefaults
+	local inherit, iView, iDefaults
+	local prevView
 	local receivedResetEvent, callback
 	local c1, c2 = {1,1,1}, {0,0,0}
 
@@ -780,9 +894,25 @@ function test_inheritanceChangesUsingInheritancePropertyMismatch()
 	inherit = Widgets.newRectangleBackgroundStyle{
 		view={
 			fillColor=c2,
-			strokeWidth=65
+			strokeWidth=66
 		}
 	}
+
+	iView = inherit.view
+
+	iDefaults = Rectangle:getBaseStyle()
+
+	TestUtils.verifyBackgroundStyle( inherit )
+	styleInheritsFrom( inherit, nil )
+	styleInheritsFrom( iView, nil )
+	styleHasPropertyValue( inherit, 'type', 'rectangle' )
+	hasPropertyValue( iView, 'type', 'rectangle' )
+
+	styleHasPropertyValue( iView, 'fillColor', c2 )
+	styleHasPropertyValue( iView, 'strokeColor', iDefaults.strokeColor )
+	styleHasPropertyValue( iView, 'strokeWidth', 66 )
+
+
 
 	s1 = Widgets.newRoundedBackgroundStyle{
 		view={
@@ -792,8 +922,7 @@ function test_inheritanceChangesUsingInheritancePropertyMismatch()
 		}
 	}
 
-	sView, iView = s1.view, inherit.view
-
+	sView = s1.view
 
 	sDefaults = Rounded:getBaseStyle()
 
@@ -807,19 +936,6 @@ function test_inheritanceChangesUsingInheritancePropertyMismatch()
 	styleHasPropertyValue( sView, 'fillColor', c1 )
 	styleHasPropertyValue( sView, 'strokeColor', sDefaults.strokeColor )
 	styleHasPropertyValue( sView, 'strokeWidth', 99 )
-
-
-	sDefaults = Rectangle:getBaseStyle()
-
-	TestUtils.verifyBackgroundStyle( inherit )
-	styleInheritsFrom( inherit, nil )
-	styleInheritsFrom( iView, nil )
-	styleHasPropertyValue( inherit, 'type', 'rectangle' )
-	hasPropertyValue( iView, 'type', 'rectangle' )
-
-	styleHasPropertyValue( iView, 'fillColor', c2 )
-	styleHasPropertyValue( iView, 'strokeColor', sDefaults.strokeColor )
-	styleHasPropertyValue( iView, 'strokeWidth', 65 )
 
 
 	--== update inheritance, rectangle
@@ -844,8 +960,8 @@ function test_inheritanceChangesUsingInheritancePropertyMismatch()
 
 	styleRawPropertyValueIs( sView, 'cornerRadius', nil ) -- erased
 	styleInheritsPropertyValue( sView, 'fillColor', c2 )
-	styleInheritsPropertyValue( sView, 'strokeColor', sDefaults.strokeColor )
-	styleInheritsPropertyValue( sView, 'strokeWidth', 65 )
+	styleInheritsPropertyValue( sView, 'strokeColor', iDefaults.strokeColor )
+	styleInheritsPropertyValue( sView, 'strokeWidth', 66 )
 
 
 	--======================================================--
@@ -878,7 +994,7 @@ function test_inheritanceChangesUsingInheritancePropertyMismatch()
 
 	styleRawPropertyValueIs( sView, 'cornerRadius', nil ) -- erased
 	styleInheritsPropertyValue( sView, 'fillColor', c2 )
-	styleInheritsPropertyValue( sView, 'strokeColor', sDefaults.strokeColor )
+	styleInheritsPropertyValue( sView, 'strokeColor', iDefaults.strokeColor )
 	styleInheritsPropertyValue( sView, 'strokeWidth', 65 )
 
 end

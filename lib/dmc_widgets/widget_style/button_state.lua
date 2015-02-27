@@ -66,6 +66,7 @@ local widget_find = dmc_widget_func.find
 
 local Objects = require 'dmc_objects'
 local Utils = require 'dmc_utils'
+local WidgetUtils = require(widget_find( 'widget_utils' ))
 
 local BaseStyle = require( widget_find( 'widget_style.base_style' ) )
 
@@ -161,9 +162,6 @@ ButtonStateStyle._STYLE_DEFAULTS = {
 --== Event Constants
 
 ButtonStateStyle.EVENT = 'button-state-style-event'
-
--- from super
--- Class.STYLE_UPDATED
 
 
 --======================================================--
@@ -563,6 +561,23 @@ function ButtonStateStyle:_doChildrenInherit( value )
 	self._background.inherit = value and value.background or nil
 	self._label.inherit = value and value.label or nil
 
+end
+
+
+function ButtonStateStyle:_clearChildrenProperties( style )
+	-- print( "ButtonStateStyle:_clearChildrenProperties", style, self )
+	assert( style==nil or type(style)=='table' )
+	if style and type(style.isa)=='function' then
+		assert( style:isa(ButtonStateStyle) )
+	end
+	--==--
+	local substyle
+
+	substyle = style and style.background
+	self._background:_clearProperties( substyle )
+
+	substyle = style and style.label
+	self._label:_clearProperties( substyle )
 end
 
 

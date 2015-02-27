@@ -195,9 +195,6 @@ TextFieldStyle._STYLE_DEFAULTS = {
 
 TextFieldStyle.EVENT = 'textfield-style-event'
 
--- from super
--- Class.STYLE_UPDATED
-
 
 --======================================================--
 -- Start: Setup DMC Objects
@@ -310,27 +307,35 @@ function TextFieldStyle.addMissingDestProperties( dest, src, params )
 end
 
 
-
-
-function TextFieldStyle._addMissingChildProperties( dest, src, params )
-	-- print("TextFieldStyle._addMissingChildProperties", dest, src )
-	local eStr = "ERROR: Style missing property '%s'"
+-- _addMissingChildProperties()
+-- copy properties to sub-styles
+--
+function TextFieldStyle._addMissingChildProperties( dest, srcs )
+	-- print("TextFieldStyle._addMissingChildProperties", dest, srcs )
+	assert( dest )
+	srcs = srcs or {}
+	local lsrc = { parent = dest }
+	--==--
+	local eStr = "ERROR: Style (BackgroundStyle) missing property '%s'"
 	local StyleClass, child
 
 	child = dest.background
-	assert( child, sformat( eStr, 'background' ) )
+	-- assert( child, sformat( eStr, 'background' ) )
 	StyleClass = Widgets.Style.Background
-	dest.background = StyleClass.addMissingDestProperties( child, src, params )
+	lsrc.main = srcs.main and srcs.main.background
+	dest.background = StyleClass.addMissingDestProperties( child, lsrc )
 
 	child = dest.hint
-	assert( child, sformat( eStr, 'hint' ) )
+	-- assert( child, sformat( eStr, 'hint' ) )
 	StyleClass = Widgets.Style.Text
-	dest.hint = StyleClass.addMissingDestProperties( child, src, params )
+	lsrc.main = srcs.main and srcs.main.hint
+	dest.hint = StyleClass.addMissingDestProperties( child, lsrc )
 
 	child = dest.display
-	assert( child, sformat( eStr, 'display' ) )
+	-- assert( child, sformat( eStr, 'display' ) )
 	StyleClass = Widgets.Style.Text
-	dest.display = StyleClass.addMissingDestProperties( child, src, params )
+	lsrc.main = srcs.main and srcs.main.display
+	dest.display = StyleClass.addMissingDestProperties( child, lsrc )
 
 	return dest
 end
@@ -729,9 +734,29 @@ end
 
 function TextFieldStyle:_doChildrenInherit( value )
 	-- print( "TextFieldStyle:_doChildrenInherit", value )
-	self._background.inherit = value and value.background or nil
-	self._hint.inherit = value and value.hint or nil
-	self._display.inherit = value and value.display or nil
+	self._background.inherit = value and value.background
+	self._hint.inherit = value and value.hint
+	self._display.inherit = value and value.display
+end
+
+
+function TextFieldStyle:_clearChildrenProperties( style )
+	print( "TextFieldStyle:_clearChildrenProperties", style, self )
+	assert( style==nil or type(style)=='table' )
+	if style and type(style.isa)=='function' then
+		assert( style:isa(TextFieldStyle) )
+	end
+	--==--
+	local substyle
+
+	substyle = style and style.background
+	self._background:_clearProperties( substyle )
+
+	substyle = style and style.hint
+	self._hint:_clearProperties( substyle )
+
+	substyle = style and style.display
+	self._display:_clearProperties( substyle )
 end
 
 

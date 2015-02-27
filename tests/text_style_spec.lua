@@ -392,15 +392,12 @@ function test_styleClassBasics()
 	styleHasPropertyValue( BaseStyle, 'marginY', defaultStyles.marginY )
 	styleHasPropertyValue( BaseStyle, 'textColor', defaultStyles.textColor )
 
-	styleHasPropertyValue( BaseStyle, 'master', BaseStyle )
-
 	--== Verify verify a new text style
 
 	style = Widgets.newTextStyle()
 
 	TestUtils.verifyTextStyle( style )
 	styleInheritsFrom( style, nil )
-	styleHasPropertyValue( style, 'master', style )
 
 end
 
@@ -426,7 +423,6 @@ function test_clearPropertiesWithoutInherit()
 
 	assert_equal( StyleClass, Text )
 	styleInheritsFrom( s1, nil )
-	styleHasPropertyValue( s1, 'master', s1 )
 
 	-- test inherited properties
 
@@ -462,7 +458,7 @@ function test_clearPropertiesWithoutInherit()
 
 	receivedClearedEvent = false
 	callback = function(e)
-		if e.type==s1.STYLE_CLEARED then receivedClearedEvent=true end
+		if e.type==s1.STYLE_RESET then receivedClearedEvent=true end
 	end
 	s1:addEventListener( s1.EVENT, callback )
 
@@ -514,7 +510,7 @@ function test_clearPropertiesWithoutInherit()
 
 	receivedClearedEvent = false
 	callback = function(e)
-		if e.type==s1.STYLE_CLEARED then receivedClearedEvent=true end
+		if e.type==s1.STYLE_RESET then receivedClearedEvent=true end
 	end
 	s1:addEventListener( s1.EVENT, callback )
 
@@ -594,7 +590,7 @@ function test_clearPropertiesWithInherit()
 
 	receivedClearedEvent = false
 	callback = function(e)
-		if e.type==s1.STYLE_CLEARED then receivedClearedEvent=true end
+		if e.type==s1.STYLE_RESET then receivedClearedEvent=true end
 	end
 	s1:addEventListener( s1.EVENT, callback )
 
@@ -646,7 +642,7 @@ function test_clearPropertiesWithInherit()
 
 	receivedClearedEvent = false
 	callback = function(e)
-		if e.type==s1.STYLE_CLEARED then receivedClearedEvent=true end
+		if e.type==s1.STYLE_RESET then receivedClearedEvent=true end
 	end
 	s1:addEventListener( s1.EVENT, callback )
 
@@ -735,7 +731,7 @@ function test_initializeStyleWithLuaStructure()
 
 	receivedClearedEvent = false
 	callback = function(e)
-		if e.type==s1.STYLE_CLEARED then receivedClearedEvent=true end
+		if e.type==s1.STYLE_RESET then receivedClearedEvent=true end
 	end
 	s1:addEventListener( s1.EVENT, callback )
 
@@ -796,7 +792,7 @@ function test_initializeStyleWithLuaStructure()
 
 	receivedClearedEvent = false
 	callback = function(e)
-		if e.type==s1.STYLE_CLEARED then receivedClearedEvent=true end
+		if e.type==s1.STYLE_RESET then receivedClearedEvent=true end
 	end
 	s1:addEventListener( s1.EVENT, callback )
 

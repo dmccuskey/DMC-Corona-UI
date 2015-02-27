@@ -129,9 +129,6 @@ RectangleStyle._STYLE_DEFAULTS = {
 
 RectangleStyle.EVENT = 'rectangle-background-style-event'
 
--- from super
--- Class.STYLE_UPDATED
-
 
 --======================================================--
 -- Start: Setup DMC Objects

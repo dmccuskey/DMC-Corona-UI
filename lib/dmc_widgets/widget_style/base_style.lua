@@ -123,12 +123,6 @@ Style.NO_INHERIT = '--none--'
 
 Style.EVENT = 'style-event'
 
--- CLEARED
--- this is used when the local Style properties have been cleared
--- This is only propagated to Child Styles, they should clear also
--- affected Widgets should do a full refresh
-Style.STYLE_CLEARED = 'style-cleared-event'
-
 -- RESET
 -- this is used to let a Widget know about drastic
 -- changes to a Style, eg, inheritance has changed
@@ -137,13 +131,13 @@ Style.STYLE_CLEARED = 'style-cleared-event'
 -- affected Widgets should do a full refresh
 Style.STYLE_RESET = 'style-reset-event'
 
--- UPDATED
+-- PROPERTY_CHANGED
 -- this is used when a property on a Style has changed
 -- this change could be local or in inheritance chain
 -- Child Styles propagate these AS LONG AS their local
 -- value of the property is not set (ie, equal to nil )
 -- affectd Widgets should update accordingly
-Style.STYLE_UPDATED = 'style-updated-event'
+Style.PROPERTY_CHANGED = 'style-property-changed-event'
 
 
 --======================================================--
@@ -158,16 +152,20 @@ function Style:__init__( params )
 
 	self:superCall( '__init__', params )
 	--==--
-	self._is_initialized = false
+	self._isInitialized = false
+	self._isClearing = false
 
-	-- Style inheritance tree
+	-- inheritance style
 	self._inherit = params.inherit
 	self._inherit_f = nil
 
+	-- parent style
+	self._parent = params.parent
+	self._parent_f = nil
+
 	-- widget delegate
 	self._widget = params.widget
-	-- style parent (optional)
-	self._parent = params.parent
+
 	self._onPropertyChange_f = params.onPropertyChange
 
 	self._tmp_data = params.data -- temporary save of data
@@ -196,7 +194,7 @@ function Style:__initComplete__()
 
 	assert( self:verifyProperties(), sformat( "Missing properties for Style '%s'", tostring(self.class) ) )
 
-	self._is_initialized = true
+	self._isInitialized = true
 end
 
 -- End: Setup DMC Objects
@@ -445,28 +443,49 @@ end
 
 
 -- _clearProperties()
+-- TODO, make sure type matches
 --
-function Style:_clearProperties( src )
-	-- print( "Style:_clearProperties", src )
+function Style:_clearProperties( src, params )
+	print( "Style:_clearProperties", self, src, params )
+	params = params or {}
+	if params.clearChildren==nil then params.clearChildren=true end
+	--==--
+	local StyleClass = self.class
 	local p = {force=true}
 	if src then
+		-- have source, 'gentle' copy
 		p.force=false
 	elseif self._inherit then
-		-- if inherit, then use empty to clear all properties
+		-- have inherit, then use empty to clear all properties
 		src = {}
+	else
+		-- no source
+		src = StyleClass:getBaseStyle()
+		p.force=true
 	end
 	self:copyProperties( src, p )
+	if params.clearChildren then
+		self:_clearChildrenProperties( src )
+	end
 end
 
+
+-- separate method to custom clear children
+--
+function Style:_clearChildrenProperties( src, params )
+	-- print( "Style:_clearChildrenProperties", src, params )
+end
 
 -- clearProperties()
 -- clear any local modifications on Style
 -- can pass in src to "clear props to source"
 --
-function Style:clearProperties( src )
-	-- print( "Style:clearProperties", src )
-	self:_clearProperties( src )
-	self:_dispatchClearEvent()
+function Style:clearProperties( src, params )
+	print( "Style:clearProperties", src, params, self )
+	self._isClearing = true
+	self:_clearProperties( src, params )
+	self._isClearing = false
+	self:_dispatchResetEvent()
 end
 
 
@@ -557,7 +576,7 @@ function Style.__setters:inherit( value )
 
 	--== Process children
 
-	if self._is_initialized then
+	if self._isInitialized then
 		-- skip this if we're being created
 		-- because children have already been init'd
 		self:_doChildrenInherit( value )
@@ -566,13 +585,17 @@ function Style.__setters:inherit( value )
 	--== Reset
 
 	if self._inherit then
-		reset = nil -- clear all properties
-	elseif self._is_initialized then
-		reset = tmp -- reset with previous inherit
+		-- we have inherit, so clear all properties
+	elseif self._isInitialized then
+		-- no inherit, so reset with previous inherit
+		reset = tmp
 	else
 		reset = StyleBase -- reset with class base
 	end
-	self:clearProperties( reset )
+
+	local p = {clearChildren=true}
+	if not self._isInitialized then p.clearChildren=false end
+	self:clearProperties( reset, p )
 
 end
 
@@ -1036,34 +1059,9 @@ function Style:_dispatchChangeEvent( prop, value )
 	local widget = self._widget
 	local callback = self._onPropertyChange_f
 
-	if not self._is_initialized then return end
+	if not self._isInitialized or self._isClearing then return end
 
-	local e = self:createEvent( self.STYLE_UPDATED, {property=prop,value=value}, {merge=true} )
-
-	-- dispatch event to different listeners
-	if widget and widget.stylePropertyChangeHandler then
-		widget:stylePropertyChangeHandler( e )
-	end
-	--
-	if callback then callback( e ) end
-
-	-- styles which inherit from this one
-	self:dispatchRawEvent( e )
-end
-
-
--- _dispatchClearEvent()
--- send out event to clear properties
--- and to any inherits
---
-function Style:_dispatchClearEvent()
-	-- print( 'Style:_dispatchClearEvent', self )
-	local widget = self._widget
-	local callback = self._onPropertyChange_f
-
-	if not self._is_initialized then return end
-
-	local e = self:createEvent( self.STYLE_CLEARED )
+	local e = self:createEvent( self.PROPERTY_CHANGED, {property=prop,value=value}, {merge=true} )
 
 	-- dispatch event to different listeners
 	if widget and widget.stylePropertyChangeHandler then
@@ -1086,7 +1084,7 @@ function Style:_dispatchResetEvent()
 	local widget = self._widget
 	local callback = self._onPropertyChange_f
 
-	if not self._is_initialized then return end
+	if not self._isInitialized then return end
 
 	local e = {
 		name=self.EVENT,
@@ -1109,21 +1107,39 @@ end
 --== Event Handlers
 
 
+-- _inheritedStyleEvent_handler()
+-- handle inherited style-events
+--
+function Style:_inheritedStyleEvent_handler( event )
+	print( "Style:_inheritedStyleEvent_handler", event, event.type, self )
+	local style = event.target
+	local etype = event.type
+
+	if etype==style.STYLE_RESET then
+		self:_dispatchResetEvent()
+
+	elseif etype==style.PROPERTY_CHANGED then
+		-- only re-dispatch property changes if our property is empty
+		if self:_getRawProperty( event.property ) == nil then
+			self:_dispatchChangeEvent( event.property, event.value )
+		end
+	end
+
+end
+
+
 -- _parentStyleEvent_handler()
 -- handle parent property changes
 
 function Style:_parentStyleEvent_handler( event )
-	-- print( "Style:_parentStyleEvent_handler", event.type, self )
+	print( "Style:_parentStyleEvent_handler", event.type, self )
 	local style = event.target
 	local etype = event.type
 
-	if etype==style.STYLE_CLEARED then
-		self:clearProperties()
-
-	elseif etype==style.STYLE_RESET then
+	if etype==style.STYLE_RESET then
 		self:_dispatchResetEvent()
 
-	elseif etype==style.STYLE_UPDATED then
+	elseif etype==style.PROPERTY_CHANGED then
 		local property, value = event.property, event.value
 		-- we accept changes to parent as our own
 		-- however, check to see if property is valid
@@ -1139,31 +1155,6 @@ function Style:_parentStyleEvent_handler( event )
 	end
 
 end
-
-
--- _inheritedStyleEvent_handler()
--- handle inherited style-events
---
-function Style:_inheritedStyleEvent_handler( event )
-	-- print( "Style:_inheritedStyleEvent_handler", event, event.type, self )
-	local style = event.target
-	local etype = event.type
-
-	if etype==style.STYLE_CLEARED then
-		-- pass
-
-	elseif etype==style.STYLE_RESET then
-		self:_dispatchResetEvent()
-
-	elseif etype==style.STYLE_UPDATED then
-		-- only re-dispatch property changes if our property is empty
-		if self:_getRawProperty( event.property ) == nil then
-			self:_dispatchChangeEvent( event.property, event.value )
-		end
-	end
-
-end
-
 
 
 return Style

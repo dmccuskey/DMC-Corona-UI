@@ -66,6 +66,7 @@ local widget_find = dmc_widget_func.find
 
 local Objects = require 'dmc_objects'
 local Utils = require 'dmc_utils'
+local WidgetUtils = require(widget_find( 'widget_utils' ))
 
 local BaseStyle = require( widget_find( 'widget_style.base_style' ) )
 
@@ -233,14 +234,9 @@ ButtonStyle._STYLE_DEFAULTS = {
 
 }
 
-
-
 --== Event Constants
 
 ButtonStyle.EVENT = 'background-style-event'
-
--- from super
--- Class.STYLE_UPDATED
 
 
 --======================================================--
@@ -356,28 +352,26 @@ function ButtonStyle._addMissingChildProperties( dest, srcs )
 	srcs = srcs or {}
 	local lsrc = { parent = dest }
 	--==--
-	local eStr = "ERROR: Style missing property '%s'"
+	local eStr = "ERROR: Style (ButtonStyle) missing property '%s'"
 	local StyleClass, child
 
 	child = dest.inactive
-	assert( child, sformat( eStr, 'inactive' ) )
+	-- assert( child, sformat( eStr, 'inactive' ) )
 	StyleClass = Widgets.Style.ButtonState
 	lsrc.main = srcs.main and srcs.main.inactive
 	dest.inactive = StyleClass.addMissingDestProperties( child, lsrc )
 
-	-- child = dest.active
+	child = dest.active
 	-- assert( child, sformat( eStr, 'active' ) )
-	-- StyleClass = Widgets.Style.ButtonState
-	-- sources = filter( gen('active'), srcs )
-	-- tinsert( sources, #sources+1, dest )
-	-- dest.active = StyleClass.addMissingDestProperties( child, sources )
+	StyleClass = Widgets.Style.ButtonState
+	lsrc.main = srcs.main and srcs.main.active
+	dest.active = StyleClass.addMissingDestProperties( child, sources )
 
-	-- child = dest.disabled
+	child = dest.disabled
 	-- assert( child, sformat( eStr, 'disabled' ) )
-	-- StyleClass = Widgets.Style.ButtonState
-	-- sources = filter( gen('disabled'), srcs )
-	-- tinsert( sources, #sources+1, dest )
-	-- dest.disabled = StyleClass.addMissingDestProperties( child, sources )
+	StyleClass = Widgets.Style.ButtonState
+	lsrc.main = srcs.main and srcs.main.disabled
+	dest.disabled = StyleClass.addMissingDestProperties( child, sources )
 
 	return dest
 end
@@ -609,9 +603,29 @@ end
 
 function ButtonStyle:_doChildrenInherit( value )
 	-- print( "ButtonStyle:_doChildrenInherit", value, self )
-	self._inactive.inherit = value and value.inactive or nil
-	self._active.inherit = value and value.active or nil
-	self._disabled.inherit = value and value.disabled or nil
+	self._inactive.inherit = value and value.inactive
+	self._active.inherit = value and value.active
+	self._disabled.inherit = value and value.disabled
+end
+
+
+function ButtonStyle:_clearChildrenProperties( style )
+	print( "ButtonStyle:_clearChildrenProperties", style, self )
+	assert( style==nil or type(style)=='table' )
+	if style and type(style.isa)=='function' then
+		assert( style:isa(ButtonStyle) )
+	end
+	--==--
+	local substyle
+
+	substyle = style and style.active
+	self._inactive:_clearProperties( substyle )
+
+	substyle = style and style.inactive
+	self._active:_clearProperties( substyle )
+
+	substyle = style and style.disabled
+	self._disabled:_clearProperties( substyle )
 end
 
 

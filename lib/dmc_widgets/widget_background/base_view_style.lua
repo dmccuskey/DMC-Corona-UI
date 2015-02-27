@@ -95,9 +95,6 @@ ViewStyle.TYPE = nil
 
 ViewStyle.EVENT = 'view-style-event'
 
--- from super
--- Class.STYLE_UPDATED
-
 
 --======================================================--
 -- Start: Setup DMC Objects

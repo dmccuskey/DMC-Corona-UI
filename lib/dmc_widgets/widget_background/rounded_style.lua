@@ -131,9 +131,6 @@ RoundedStyle._STYLE_DEFAULTS = {
 
 RoundedStyle.EVENT = 'rounded-background-style-event'
 
--- from super
--- Class.STYLE_UPDATED
-
 
 --======================================================--
 -- Start: Setup DMC Objects

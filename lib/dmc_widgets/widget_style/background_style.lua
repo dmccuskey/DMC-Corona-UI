@@ -65,8 +65,8 @@ local widget_find = dmc_widget_func.find
 
 
 local Objects = require 'dmc_objects'
-local WidgetUtils = require(widget_find( 'widget_utils' ))
 local Utils = require 'dmc_utils'
+local WidgetUtils = require(widget_find( 'widget_utils' ))
 
 local BaseStyle = require( widget_find( 'widget_style.base_style' ) )
 
@@ -146,9 +146,6 @@ BackgroundStyle._STYLE_DEFAULTS = {
 --== Event Constants
 
 BackgroundStyle.EVENT = 'background-style-event'
-
--- from super
--- Class.STYLE_UPDATED
 
 
 --======================================================--
@@ -375,7 +372,21 @@ if same type, then clear properties
 function BackgroundStyle:_doChildrenInherit( value )
 	-- print( "BackgroundStyle_doChildrenInherit", value, self )
 	self:_updateViewStyle()
-	self._view.inherit = value and value._view or nil
+	self._view.inherit = value and value._view
+end
+
+
+function BackgroundStyle:_clearChildrenProperties( style )
+	print( "BackgroundStyle:_clearChildrenProperties", style, self )
+	assert( style==nil or type(style)=='table' )
+	if style and type(style.isa)=='function' then
+		assert( style:isa(BackgroundStyle) )
+	end
+	--==--
+	local substyle
+
+	substyle = style and style.view
+	self._view:_clearProperties( substyle )
 end
 
 
@@ -492,7 +503,7 @@ function BackgroundStyle.__setters:type( value )
 	--==--
 	if value == self._type then return end
 	self._type = value
-	if self._is_initialized then
+	if self._isInitialized then
 		self:_updateViewStyle()
 	end
 end

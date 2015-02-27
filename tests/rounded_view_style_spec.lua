@@ -366,18 +366,25 @@ function test_clearProperties()
 
 	local StyleBase, StyleClass
 	local s1, inherit
-	local receivedClearedEvent, callback
+	local resetEvent, callback
+
+
+	resetEvent = 0
+	callback = function(e)
+		if e.type==s1.STYLE_RESET then resetEvent=resetEvent+1 end
+	end
 
 
 	-- by default, style inherits properties from StyleBase
 
 	s1 = StyleFactory.create( 'rounded' )
+	s1:addEventListener( s1.EVENT, callback )
+
 
 	StyleClass = s1.class
 	StyleBase = StyleClass:getBaseStyle()
 	assert_equal( StyleClass, RoundedStyle )
 	styleInheritsFrom( s1, nil )
-	styleHasPropertyValue( s1, 'master', s1 )
 
 	-- test inherited properties
 
@@ -400,16 +407,11 @@ function test_clearProperties()
 
 	--== Clear Properties, with inherit
 
-	receivedClearedEvent = false
-	callback = function(e)
-		if e.type==s1.STYLE_CLEARED then receivedClearedEvent=true end
-	end
-	s1:addEventListener( s1.EVENT, callback )
-
+	resetEvent = 0
 	s1:clearProperties()
 
 	styleInheritsFrom( s1, nil )
-	assert_true( receivedClearedEvent, "missing clear event" )
+	assert_equal( 1, resetEvent, "incorrect count for reset" )
 
 	styleHasPropertyValue( s1, 'cornerRadius', StyleBase.cornerRadius )
 	styleHasPropertyValue( s1, 'fillColor', StyleBase.fillColor )
@@ -438,16 +440,11 @@ function test_clearProperties()
 
 	--== Clear Properties, without Inherit
 
-	receivedClearedEvent = false
-	callback = function(e)
-		if e.type==s1.STYLE_CLEARED then receivedClearedEvent=true end
-	end
-	s1:addEventListener( s1.EVENT, callback )
-
+	resetEvent = 0
 	s1:clearProperties()
 
 	styleInheritsFrom( s1, nil )
-	assert_true( receivedClearedEvent, "missing clear event" )
+	assert_equal( 1, resetEvent, "incorrect count for reset" )
 
 	styleHasPropertyValue( s1, 'cornerRadius', StyleBase.cornerRadius )
 	styleHasPropertyValue( s1, 'fillColor', StyleBase.fillColor )
