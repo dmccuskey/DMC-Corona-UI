@@ -1018,8 +1018,8 @@ function Style:_parseData( data )
 	for prop, value in pairs( data ) do
 		-- print( prop, value )
 		if DEF[ prop ]==nil and not EXCL[ prop ] then
-			print( "[WARNING] Skipping invalid style property "..tostring(prop) )
-			print( "[WARNING] Found in the style definition for " .. tostring(self.NAME) )
+			print( sformat("[WARNING] Skipping invalid style property '%s'", tostring(prop) ))
+			print( sformat("[WARNING] located in style definition for '%s'", tostring(self.NAME) ))
 		end
 		if not self:isChild( prop ) then
 			self[ prop ]=value
