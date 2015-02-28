@@ -277,7 +277,7 @@ function RoundedStyle.__getters:cornerRadius()
 end
 function RoundedStyle.__setters:cornerRadius( value )
 	-- print( "RoundedStyle.__setters:cornerRadius", value )
-	assert( (type(value)=='number' and value>=0) or (value==nil and self._inherit) )
+	assert( (type(value)=='number' and value>=0) or (value==nil and (self._inherit or self._isClearing) ) )
 	--==--
 	if value == self._cornerRadius then return end
 	self._cornerRadius = value

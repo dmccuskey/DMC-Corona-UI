@@ -155,27 +155,33 @@ end
 
 
 
-
 --====================================================================--
 --== Private Methods
 
 
-function ViewStyle:_clearProperties( src )
-	-- print( "ViewStyle:_clearProperties", src, self )
+function ViewStyle:clearProperties( src, params )
+	-- print( "ViewStyle:clearProperties", src, params, self )
+	params = params or {}
+	if params.clearChildren==nil then params.clearChildren=true end
+	if params.force==nil then params.force=true end
+	--==--
 	local StyleClass = self.class
 	local inherit = self._inherit
-	local p = {force=true}
 
-	if src and type(src.isa=='function') and src:isa(StyleClass) then
-		p.force=false
+	if src and type(src.isa)=='function' and src:isa(StyleClass) then
+		params.force=false
 	elseif inherit and inherit:isa(StyleClass) then
 		-- if inherit, then use empty to clear all properties
 		src = {}
-		p.force=true
+		params.force=true
 	else
-		src=nil
+		assert( self.type )
+		src = StyleClass:getBaseStyle( self.type )
+		params.force=true
 	end
-	self:copyProperties( src, p )
+
+	self:_clearProperties( src, params )
+	self:_dispatchResetEvent()
 end
 
 
