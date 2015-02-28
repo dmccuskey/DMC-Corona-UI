@@ -248,33 +248,33 @@ function test_addMissingProperties_Rectangle()
 end
 
 
---[[
-function test_copyExistingSrcProperties()
-	-- print( "test_copyExistingSrcProperties" )
-	local BackgroundFactory = Widgets.Style.BackgroundFactory
-	local RoundedStyle = BackgroundFactory.Rounded
+-- --[[
+-- function test_copyExistingSrcProperties()
+-- 	-- print( "test_copyExistingSrcProperties" )
+-- 	local BackgroundFactory = Widgets.Style.BackgroundFactory
+-- 	local RoundedStyle = BackgroundFactory.Rounded
 
-	local src
+-- 	local src
 
-end
---]]
-
-
---[[
-function test_verifyStyleProperties()
-	-- print( "test_verifyStyleProperties" )
-	local BackgroundFactory = Widgets.Style.BackgroundFactory
-	local RoundedStyle = BackgroundFactory.Rounded
-
-	local src
-
-end
---]]
+-- end
+-- --]]
 
 
+-- --[[
+-- function test_verifyStyleProperties()
+-- 	-- print( "test_verifyStyleProperties" )
+-- 	local BackgroundFactory = Widgets.Style.BackgroundFactory
+-- 	local RoundedStyle = BackgroundFactory.Rounded
 
---====================================================================--
---== Test Class Methods
+-- 	local src
+
+-- end
+-- --]]
+
+
+
+-- --====================================================================--
+-- --== Test Class Methods
 
 
 --[[
@@ -366,88 +366,1260 @@ end
 
 
 
+
+--[[
+CHANGE Type
+with:
+unset Inherit
+same Type
+--]]
+function test_updateView_deltaTYPE_unsetI_sameT()
+	-- print( "test_updateView_deltaTYPE_unsetI_sameT" )
+	local Background = Widgets.Style.Background
+	local BaseStyle, defaults, vDefaults
+
+	local StyleBase, sbView
+	local StyleClass
+
+	local style, sReset, sResetCB
+	local sView, sViewReset, sViewCB
+	local inherit, iReset, iResetCB
+	local iView, iViewReset, iViewCB
+
+
+	sReset = 0
+	sResetCB = function(e)
+		if e.type==style.STYLE_RESET then sReset=sReset+1 end
+	end
+
+	sViewReset = 0
+	sViewCB = function(e)
+		if e.type==style.STYLE_RESET then sViewReset=sViewReset+1 end
+	end
+
+	--== Setup Rounded
+
+	style = Widgets.newRoundedBackgroundStyle()
+	sView = style.view
+
+	StyleBase = Background:getBaseStyle( style.type )
+	sbView = StyleBase.view
+
+	styleInheritsFrom( style, nil )
+	styleHasPropertyValue( style, 'type', 'rounded' )
+
+	styleInheritsFrom( sView, nil )
+	styleHasPropertyValue( sView, 'cornerRadius', sbView.cornerRadius )
+	styleHasPropertyValue( sView, 'fillColor', sbView.fillColor )
+	styleHasPropertyValue( sView, 'strokeColor', sbView.strokeColor )
+	styleHasPropertyValue( sView, 'strokeWidth', sbView.strokeWidth )
+
+	--== Change Type - same
+
+	sReset = 0
+	sViewReset = 0
+	style.type = style.type
+
+	assert_equal( 0, sReset, "incorrect count for sReset" )
+	assert_equal( 0, sViewReset, "incorrect count for sViewReset" )
+
+	styleInheritsFrom( style, nil )
+	styleHasPropertyValue( style, 'type', 'rounded' )
+
+	styleInheritsFrom( sView, nil )
+	styleHasPropertyValue( sView, 'cornerRadius', sbView.cornerRadius )
+	styleHasPropertyValue( sView, 'fillColor', sbView.fillColor )
+	styleHasPropertyValue( sView, 'strokeColor', sbView.strokeColor )
+	styleHasPropertyValue( sView, 'strokeWidth', sbView.strokeWidth )
+
+end
+
+
+--[[
+CHANGE Type
+with:
+unset Inherit
+different Type
+--]]
+function test_updateView_deltaTYPE_unsetI_diffT()
+	-- print( "test_updateView_deltaTYPE_unsetI_diffT" )
+	local Background = Widgets.Style.Background
+	local BaseStyle, defaults, vDefaults
+
+	local StyleBase, sbView
+	local StyleClass
+
+	local style, sReset, sResetCB
+	local sView, sViewReset, sViewCB
+	local inherit, iReset, iResetCB
+	local iView, iViewReset, iViewCB
+
+
+	sReset = 0
+	sResetCB = function(e)
+		if e.type==style.STYLE_RESET then sReset=sReset+1 end
+	end
+
+	sViewReset = 0
+	sViewCB = function(e)
+		if e.type==style.STYLE_RESET then sViewReset=sViewReset+1 end
+	end
+
+	--== Setup Rounded
+
+	style = Widgets.newRoundedBackgroundStyle()
+
+	StyleBase = Background:getBaseStyle( style.type )
+	sbView = StyleBase.view
+	styleHasPropertyValue( StyleBase, 'type', 'rounded' )
+	hasPropertyValue( sbView, 'type', 'rounded' )
+
+	sView = style.view
+	style:addEventListener( style.EVENT, sResetCB )
+	sView:addEventListener( sView.EVENT, sViewCB )
+
+
+	styleInheritsFrom( style, nil )
+	styleHasPropertyValue( style, 'type', 'rounded' )
+
+	styleInheritsFrom( sView, nil )
+	hasPropertyValue( sView, 'type', 'rounded' )
+
+	styleHasPropertyValue( sView, 'cornerRadius', sbView.cornerRadius )
+	styleHasPropertyValue( sView, 'fillColor', sbView.fillColor )
+	styleHasPropertyValue( sView, 'strokeColor', sbView.strokeColor )
+	styleHasPropertyValue( sView, 'strokeWidth', sbView.strokeWidth )
+
+	--== Change Type - different
+
+	sReset = 0
+	sViewReset = 0
+	style.type = 'rectangle'
+
+	StyleBase = Background:getBaseStyle( style.type )
+	sbView = StyleBase.view
+	styleHasPropertyValue( StyleBase, 'type', 'rectangle' )
+	hasPropertyValue( sbView, 'type', 'rectangle' )
+
+	sView = style.view
+
+	assert_gt( 0, sReset, "incorrect count for sReset" )
+	assert_gt( 0, sViewReset, "incorrect count for sViewReset" )
+
+	styleInheritsFrom( style, nil )
+	styleHasPropertyValue( style, 'type', 'rectangle' )
+
+	styleInheritsFrom( sView, nil )
+	hasPropertyValue( style, 'type', 'rectangle' )
+
+	styleRawPropertyValueIs( sView, 'cornerRadius', nil )
+	styleHasPropertyValue( sView, 'fillColor', sbView.fillColor )
+	styleHasPropertyValue( sView, 'strokeColor', sbView.strokeColor )
+	styleHasPropertyValue( sView, 'strokeWidth', sbView.strokeWidth )
+
+end
+
+
+--[[
+CHANGE Inherit
+with:
+unset Inherit
+same Type
+--]]
+function test_updateView_deltaINHERIT_unsetI_sameT()
+	-- print( "test_updateView_deltaINHERIT_unsetI_sameT" )
+	local Background = Widgets.Style.Background
+	local BaseStyle, defaults, vDefaults
+
+	local StyleBase, sbView
+	local StyleClass
+
+	local style, sReset, sResetCB
+	local sView, sViewReset, sViewCB
+	local inherit, iReset, iResetCB
+	local iView, iViewReset, iViewCB
+
+
+	sReset = 0
+	sResetCB = function(e)
+		if e.type==style.STYLE_RESET then sReset=sReset+1 end
+	end
+
+	sViewReset = 0
+	sViewCB = function(e)
+		if e.type==style.STYLE_RESET then sViewReset=sViewReset+1 end
+	end
+
+	--== Setup Rounded
+
+	style = Widgets.newRoundedBackgroundStyle()
+
+	StyleBase = Background:getBaseStyle( style.type )
+	sbView = StyleBase.view
+	styleHasPropertyValue( StyleBase, 'type', 'rounded' )
+	hasPropertyValue( sbView, 'type', 'rounded' )
+
+	sView = style.view
+	style:addEventListener( style.EVENT, sResetCB )
+	sView:addEventListener( sView.EVENT, sViewCB )
+
+	-- Check properties
+
+	styleInheritsFrom( style, nil )
+	styleHasPropertyValue( style, 'type', 'rounded' )
+
+	styleInheritsFrom( sView, nil )
+	hasPropertyValue( sView, 'type', 'rounded' )
+
+	styleHasPropertyValue( sView, 'cornerRadius', sbView.cornerRadius )
+	styleHasPropertyValue( sView, 'fillColor', sbView.fillColor )
+	styleHasPropertyValue( sView, 'strokeColor', sbView.strokeColor )
+	styleHasPropertyValue( sView, 'strokeWidth', sbView.strokeWidth )
+
+	--== Setup Inherit Style
+
+
+	inherit = Widgets.newRoundedBackgroundStyle()
+
+	iView = inherit.view
+
+	-- inherit:addEventListener( inherit.EVENT, iResetCB )
+	-- iView:addEventListener( iView.EVENT, iViewResetCB )
+
+	-- Check properties
+
+	styleInheritsFrom( inherit, nil )
+	styleHasPropertyValue( inherit, 'type', 'rounded' )
+
+	styleInheritsFrom( iView, nil )
+
+	styleHasPropertyValue( iView, 'cornerRadius', sbView.cornerRadius )
+	styleHasPropertyValue( iView, 'fillColor', sbView.fillColor )
+	styleHasPropertyValue( iView, 'strokeColor', sbView.strokeColor )
+	styleHasPropertyValue( iView, 'strokeWidth', sbView.strokeWidth )
+
+	--== Change Inheritance - same type
+
+	sReset = 0
+	sViewReset = 0
+	style.inherit = inherit
+
+	sView = style.view
+
+	assert_gt( 0, sReset, "incorrect count for sReset" )
+	assert_gt( 0, sViewReset, "incorrect count for sViewReset" )
+
+	styleInheritsFrom( style, inherit )
+	styleInheritsProperty( style, 'type', 'rounded' )
+
+	styleInheritsFrom( sView, iView )
+	hasPropertyValue( sView, 'type', 'rounded' )
+
+	styleInheritsProperty( sView, 'cornerRadius', iView.cornerRadius )
+	styleInheritsProperty( sView, 'fillColor', iView.fillColor )
+	styleInheritsProperty( sView, 'strokeColor', iView.strokeColor )
+	styleInheritsProperty( sView, 'strokeWidth', iView.strokeWidth )
+
+
+	-- check changes
+
+	iView.strokeWidth=99
+	styleHasProperty( iView, 'strokeWidth', 99 )
+
+	styleInheritsProperty( sView, 'strokeWidth', 99 )
+
+end
+
+
+--[[
+CHANGE Inherit
+with:
+unset Inherit
+different Type
+--]]
+function test_updateView_deltaINHERIT_unsetI_diffT()
+	-- print( "test_updateView_deltaINHERIT_unsetI_diffT" )
+	local Background = Widgets.Style.Background
+	local BaseStyle, defaults, vDefaults
+
+	local StyleBase, sbView
+	local StyleClass
+
+	local style, sReset, sResetCB
+	local sView, sViewReset, sViewCB
+	local inherit, iReset, iResetCB
+	local iView, iViewReset, iViewCB
+
+
+	sReset = 0
+	sResetCB = function(e)
+		if e.type==style.STYLE_RESET then sReset=sReset+1 end
+	end
+
+	sViewReset = 0
+	sViewCB = function(e)
+		if e.type==style.STYLE_RESET then sViewReset=sViewReset+1 end
+	end
+
+	--== Setup Rounded
+
+	style = Widgets.newRoundedBackgroundStyle()
+
+	StyleBase = Background:getBaseStyle( style.type )
+	sbView = StyleBase.view
+	styleHasPropertyValue( StyleBase, 'type', 'rounded' )
+	hasPropertyValue( sbView, 'type', 'rounded' )
+
+	sView = style.view
+	style:addEventListener( style.EVENT, sResetCB )
+	sView:addEventListener( sView.EVENT, sViewCB )
+
+	-- Check properties
+
+	styleInheritsFrom( style, nil )
+	styleHasPropertyValue( style, 'type', 'rounded' )
+
+	styleInheritsFrom( sView, nil )
+	hasPropertyValue( sView, 'type', 'rounded' )
+
+	styleHasPropertyValue( sView, 'cornerRadius', sbView.cornerRadius )
+	styleHasPropertyValue( sView, 'fillColor', sbView.fillColor )
+	styleHasPropertyValue( sView, 'strokeColor', sbView.strokeColor )
+	styleHasPropertyValue( sView, 'strokeWidth', sbView.strokeWidth )
+
+	--== Setup Inherit Style
+
+
+	inherit = Widgets.newRectangleBackgroundStyle()
+
+	StyleBase = Background:getBaseStyle( inherit.type )
+	sbView = StyleBase.view
+
+	iView = inherit.view
+
+	-- inherit:addEventListener( inherit.EVENT, iResetCB )
+	-- iView:addEventListener( iView.EVENT, iViewResetCB )
+
+	-- Check properties
+
+	styleInheritsFrom( inherit, nil )
+	styleHasPropertyValue( inherit, 'type', 'rectangle' )
+
+	styleInheritsFrom( iView, nil )
+	styleRawPropertyValueIs( iView, 'cornerRadius', nil )
+	styleHasPropertyValue( iView, 'fillColor', sbView.fillColor )
+	styleHasPropertyValue( iView, 'strokeColor', sbView.strokeColor )
+	styleHasPropertyValue( iView, 'strokeWidth', sbView.strokeWidth )
+
+	--== Change Inheritance - same type
+
+	sReset = 0
+	sViewReset = 0
+	style.inherit = inherit
+
+	sView = style.view
+
+	assert_gt( 0, sReset, "incorrect count for sReset" )
+	assert_gt( 0, sViewReset, "incorrect count for sViewReset" )
+
+	styleInheritsFrom( style, inherit )
+	styleInheritsPropertyValue( style, 'type', 'rectangle' )
+
+	styleInheritsFrom( sView, iView )
+	hasPropertyValue( sView, 'type', 'rectangle' )
+	styleRawPropertyValueIs( sView, 'cornerRadius', nil )
+	styleInheritsProperty( sView, 'fillColor', iView.fillColor )
+	styleInheritsProperty( sView, 'strokeColor', iView.strokeColor )
+	styleInheritsProperty( sView, 'strokeWidth', iView.strokeWidth )
+
+	-- check changes
+
+	iView.strokeWidth=99
+	styleHasProperty( iView, 'strokeWidth', 99 )
+
+	styleInheritsProperty( sView, 'strokeWidth', 99 )
+
+end
+
+
+
+
+
+
+--[[
+CHANGE Type
+with:
+set Inherit
+same Type
+--]]
+function test_updateView_deltaTYPE_setI_sameT()
+	-- print( "test_updateView_deltaTYPE_setI_sameT" )
+	local Background = Widgets.Style.Background
+	local BaseStyle, defaults, vDefaults
+
+	local StyleBase, sbView
+	local StyleClass
+
+	local style, sReset, sResetCB
+	local sView, sViewReset, sViewCB
+	local inherit, iReset, iResetCB
+	local iView, iViewReset, iViewCB
+
+
+	sReset = 0
+	sResetCB = function(e)
+		if e.type==style.STYLE_RESET then sReset=sReset+1 end
+	end
+
+	sViewReset = 0
+	sViewCB = function(e)
+		if e.type==style.STYLE_RESET then sViewReset=sViewReset+1 end
+	end
+
+	--== Setup Inheritance
+
+	inherit = Widgets.newRoundedBackgroundStyle()
+	iView = inherit.view
+
+	style = Widgets.newRoundedBackgroundStyle()
+	style.inherit = inherit
+
+	sView = style.view
+
+	style:addEventListener( style.EVENT, sResetCB )
+
+	-- Quick Property Check
+
+	styleInheritsFrom( style, inherit )
+	styleInheritsPropertyValue( style, 'type', 'rounded' )
+
+	styleInheritsFrom( sView, iView )
+	hasPropertyValue( sView, 'type', 'rounded' )
+	styleInheritsProperty( sView, 'cornerRadius', iView.cornerRadius )
+	styleInheritsProperty( sView, 'fillColor', iView.fillColor )
+	styleInheritsProperty( sView, 'strokeColor', iView.strokeColor )
+	styleInheritsProperty( sView, 'strokeWidth', iView.strokeWidth )
+
+	iView.strokeWidth=99
+	styleHasProperty( iView, 'strokeWidth', 99 )
+
+	styleInheritsProperty( sView, 'strokeWidth', 99 )
+
+	--== Change Type, same
+
+	sReset = 0
+	sViewReset = 0
+	style.type = 'rounded'
+
+	sView = style.view -- attach to new view
+
+	assert_gt( 0, sReset, "incorrect count for sReset" )
+	-- assert_gt( 0, sViewReset, "incorrect count for sViewReset" )
+
+	StyleBase = Background:getBaseStyle( style.type )
+	sbView = StyleBase.view
+	styleHasPropertyValue( StyleBase, 'type', 'rounded' )
+	hasPropertyValue( sbView, 'type', 'rounded' )
+
+
+	-- Check properties
+
+	styleInheritsFrom( style, inherit )
+	styleHasPropertyValue( style, 'type', 'rounded' )
+
+	styleInheritsFrom( sView, nil )
+	hasPropertyValue( sView, 'type', 'rounded' )
+
+	styleHasPropertyValue( sView, 'cornerRadius', iView.cornerRadius )
+	styleHasPropertyValue( sView, 'fillColor', iView.fillColor )
+	styleHasPropertyValue( sView, 'strokeColor', iView.strokeColor )
+	styleHasPropertyValue( sView, 'strokeWidth', iView.strokeWidth )
+
+	local sw = iView.strokeWidth
+
+	--== Setup Inherit Style
+
+	-- check changes
+
+	iView.strokeWidth=99
+	styleHasProperty( iView, 'strokeWidth', 99 )
+
+	-- value should stay same, inheritance is stopped for view
+
+	styleHasPropertyValue( sView, 'strokeWidth', sw )
+
+end
+
+
+--[[
+CHANGE Type
+with:
+set Inherit
+different Type
+--]]
+function test_updateView_deltaTYPE_setI_diffT()
+	-- print( "test_updateView_deltaTYPE_setI_diffT" )
+	local Background = Widgets.Style.Background
+	local BaseStyle, defaults, vDefaults
+
+	local StyleBase, sbView
+	local StyleClass
+
+	local style, sReset, sResetCB
+	local sView, sViewReset, sViewCB
+	local inherit, iReset, iResetCB
+	local iView, iViewReset, iViewCB
+
+
+	sReset = 0
+	sResetCB = function(e)
+		if e.type==style.STYLE_RESET then sReset=sReset+1 end
+	end
+
+	sViewReset = 0
+	sViewCB = function(e)
+		if e.type==style.STYLE_RESET then sViewReset=sViewReset+1 end
+	end
+
+	--== Setup Inheritance
+
+	inherit = Widgets.newRoundedBackgroundStyle()
+	iView = inherit.view
+
+	style = Widgets.newRoundedBackgroundStyle()
+	style.inherit = inherit
+
+	sView = style.view
+
+	style:addEventListener( style.EVENT, sResetCB )
+
+	-- Quick Property Check
+
+	styleInheritsFrom( style, inherit )
+	styleInheritsPropertyValue( style, 'type', 'rounded' )
+
+	styleInheritsFrom( sView, iView )
+	hasPropertyValue( sView, 'type', 'rounded' )
+	styleInheritsProperty( sView, 'cornerRadius', iView.cornerRadius )
+	styleInheritsProperty( sView, 'fillColor', iView.fillColor )
+	styleInheritsProperty( sView, 'strokeColor', iView.strokeColor )
+	styleInheritsProperty( sView, 'strokeWidth', iView.strokeWidth )
+
+	iView.strokeWidth=99
+	styleHasProperty( iView, 'strokeWidth', 99 )
+
+	styleInheritsProperty( sView, 'strokeWidth', 99 )
+
+	--== Change Type, same
+
+	sReset = 0
+	sViewReset = 0
+	style.type = 'rectangle'
+
+	sView = style.view -- attach to new view
+
+	assert_gt( 0, sReset, "incorrect count for sReset" )
+	-- assert_gt( 0, sViewReset, "incorrect count for sViewReset" )
+
+	StyleBase = Background:getBaseStyle( style.type )
+	sbView = StyleBase.view
+	styleHasPropertyValue( StyleBase, 'type', 'rectangle' )
+	hasPropertyValue( sbView, 'type', 'rectangle' )
+
+
+	-- Check properties
+
+	styleInheritsFrom( style, inherit )
+	styleHasPropertyValue( style, 'type', 'rectangle' )
+
+	styleInheritsFrom( sView, nil )
+	hasPropertyValue( sView, 'type', 'rectangle' )
+
+	styleRawPropertyValueIs( sView, 'cornerRadius', nil )
+	styleHasPropertyValue( sView, 'fillColor', sbView.fillColor )
+	styleHasPropertyValue( sView, 'strokeColor', sbView.strokeColor )
+	styleHasPropertyValue( sView, 'strokeWidth', sbView.strokeWidth )
+
+	--== Setup Inherit Style
+
+	-- check changes
+
+	iView.strokeWidth=99
+	styleHasProperty( iView, 'strokeWidth', 99 )
+
+	-- value should stay same, inheritance is stopped for view
+
+	styleHasPropertyValue( sView, 'strokeWidth', sbView.strokeWidth )
+
+end
+
+
+
+--[[
+CHANGE Inherit
+with:
+set Inherit
+unset Type
+--]]
+function test_updateView_deltaINHERIT_setI_unsetT()
+	-- print( "test_updateView_deltaINHERIT_setI_unsetT" )
+	local Background = Widgets.Style.Background
+	local BaseStyle, defaults, vDefaults
+
+	local StyleBase, sbView
+	local StyleClass
+
+	local style, sReset, sResetCB
+	local sView, sViewReset, sViewCB
+	local inherit, iReset, iResetCB
+	local iView, iViewReset, iViewCB
+
+
+	sReset = 0
+	sResetCB = function(e)
+		if e.type==style.STYLE_RESET then sReset=sReset+1 end
+	end
+
+	sViewReset = 0
+	sViewCB = function(e)
+		if e.type==style.STYLE_RESET then sViewReset=sViewReset+1 end
+	end
+
+	--== Setup Test (unset inheritance)
+
+	inherit = Widgets.newRoundedBackgroundStyle()
+	iView = inherit.view
+
+	style = Widgets.newRoundedBackgroundStyle()
+	style.inherit = inherit
+
+	sView = style.view
+
+	style:addEventListener( style.EVENT, sResetCB )
+
+	-- Quick Property Check
+
+	styleInheritsFrom( style, inherit )
+	styleInheritsPropertyValue( style, 'type', 'rounded' )
+
+	styleInheritsFrom( sView, iView )
+	hasPropertyValue( sView, 'type', 'rounded' )
+	styleInheritsProperty( sView, 'cornerRadius', iView.cornerRadius )
+	styleInheritsProperty( sView, 'fillColor', iView.fillColor )
+	styleInheritsProperty( sView, 'strokeColor', iView.strokeColor )
+	styleInheritsProperty( sView, 'strokeWidth', iView.strokeWidth )
+
+	local c1 = {8,1,3}
+	iView.fillColor=c1
+	iView.strokeWidth=99
+	styleHasPropertyValue( iView, 'fillColor', c1 )
+	styleHasPropertyValue( iView, 'strokeWidth', 99 )
+
+	styleInheritsProperty( sView, 'fillColor', c1 )
+	styleInheritsProperty( sView, 'strokeWidth', 99 )
+
+	--== Unset (break) Inheritance
+
+	sReset = 0
+	sViewReset = 0
+	style.inherit = nil
+
+	sView = style.view -- attach to new view
+
+	assert_equal( 1, sReset, "incorrect count for sReset" )
+
+	StyleBase = Background:getBaseStyle( style.type )
+	sbView = StyleBase.view
+	styleHasPropertyValue( StyleBase, 'type', 'rounded' )
+	hasPropertyValue( sbView, 'type', 'rounded' )
+
+
+	-- Check properties
+
+	styleInheritsFrom( style, nil )
+	styleHasPropertyValue( style, 'type', 'rounded' )
+
+	styleInheritsFrom( sView, nil )
+	hasPropertyValue( sView, 'type', 'rounded' )
+
+	styleHasPropertyValue( sView, 'cornerRadius', iView.cornerRadius )
+	styleHasPropertyValue( sView, 'fillColor', c1 )
+	styleHasPropertyValue( sView, 'strokeColor', iView.strokeColor )
+	styleHasPropertyValue( sView, 'strokeWidth', 99 )
+
+	--== Setup Inherit Style
+
+	-- check changes
+
+	iView.strokeWidth=99
+	styleHasProperty( iView, 'strokeWidth', 99 )
+
+	-- value should stay same, inheritance is stopped for view
+
+	styleHasPropertyValue( sView, 'strokeWidth', 99 )
+
+end
+
+
+
+
+--[[
+CHANGE Inherit
+with:
+set Inherit
+set Type (to same)
+--]]
+function test_updateView_deltaINHERIT_setI_setSameT()
+	-- print( "test_updateView_deltaINHERIT_setI_setSameT" )
+	local Background = Widgets.Style.Background
+	local BaseStyle, defaults, vDefaults
+
+	local StyleBase, sbView
+	local StyleClass
+
+	local style, sReset, sResetCB
+	local sView, sViewReset, sViewCB
+	local inherit, iReset, iResetCB
+	local iView, iViewReset, iViewCB
+
+
+	sReset = 0
+	sResetCB = function(e)
+		if e.type==style.STYLE_RESET then sReset=sReset+1 end
+	end
+
+	sViewReset = 0
+	sViewCB = function(e)
+		if e.type==style.STYLE_RESET then sViewReset=sViewReset+1 end
+	end
+
+	--== Setup Test
+
+	inherit = Widgets.newRoundedBackgroundStyle()
+	iView = inherit.view
+
+	style = Widgets.newRoundedBackgroundStyle()
+	style.inherit = inherit
+
+	style.type = 'rounded' -- set same type
+
+	StyleBase = Background:getBaseStyle( style.type )
+	sbView = StyleBase.view
+
+	sView = style.view
+
+	style:addEventListener( style.EVENT, sResetCB )
+
+	-- Quick Property Check
+
+	styleInheritsFrom( style, inherit )
+	styleHasPropertyValue( style, 'type', 'rounded' )
+
+	styleInheritsFrom( sView, nil )
+	hasPropertyValue( sView, 'type', 'rounded' )
+	styleHasPropertyValue( sView, 'cornerRadius', iView.cornerRadius )
+	styleHasPropertyValue( sView, 'fillColor', iView.fillColor )
+	styleHasPropertyValue( sView, 'strokeColor', iView.strokeColor )
+	styleHasPropertyValue( sView, 'strokeWidth', iView.strokeWidth )
+
+	local c1 = {8,1,3}
+	iView.fillColor=c1
+	iView.strokeWidth=99
+	styleHasPropertyValue( iView, 'fillColor', c1 )
+	styleHasPropertyValue( iView, 'strokeWidth', 99 )
+
+	styleHasPropertyValue( sView, 'fillColor', sbView.fillColor )
+	styleHasPropertyValue( sView, 'strokeWidth', sbView.strokeWidth )
+
+	--== Unset (break) Inheritance
+
+	sReset = 0
+	sViewReset = 0
+	style.inherit = nil
+
+	sView = style.view -- attach to new view
+
+	assert_equal( 1, sReset, "incorrect count for sReset" )
+
+	StyleBase = Background:getBaseStyle( style.type )
+	sbView = StyleBase.view
+	styleHasPropertyValue( StyleBase, 'type', 'rounded' )
+	hasPropertyValue( sbView, 'type', 'rounded' )
+
+	-- Check properties
+
+	styleInheritsFrom( style, nil )
+	styleHasPropertyValue( style, 'type', 'rounded' )
+
+	styleInheritsFrom( sView, nil )
+	hasPropertyValue( sView, 'type', 'rounded' )
+
+	styleHasPropertyValue( sView, 'cornerRadius', sbView.cornerRadius )
+	styleHasPropertyValue( sView, 'fillColor', sbView.fillColor )
+	styleHasPropertyValue( sView, 'strokeColor', sbView.strokeColor )
+	styleHasPropertyValue( sView, 'strokeWidth', sbView.strokeWidth )
+
+	--== Setup Inherit Style
+
+	-- check changes
+
+	iView.strokeWidth=99
+	styleHasProperty( iView, 'strokeWidth', 99 )
+
+	-- value should stay same, inheritance is stopped for view
+
+	styleHasPropertyValue( sView, 'strokeWidth', sbView.strokeWidth )
+
+end
+
+
+
+
+--[[
+CHANGE Inherit
+with:
+set Inherit
+set Type (to different)
+--]]
+function test_updateView_deltaINHERIT_setI_setDiffT()
+	-- print( "test_updateView_deltaINHERIT_setI_setDiffT" )
+	local Background = Widgets.Style.Background
+	local BaseStyle, defaults, vDefaults
+
+	local StyleBase, sbView
+	local StyleClass
+
+	local style, sReset, sResetCB
+	local sView, sViewReset, sViewCB
+	local inherit, iReset, iResetCB
+	local iView, iViewReset, iViewCB
+
+
+	sReset = 0
+	sResetCB = function(e)
+		if e.type==style.STYLE_RESET then sReset=sReset+1 end
+	end
+
+	sViewReset = 0
+	sViewCB = function(e)
+		if e.type==style.STYLE_RESET then sViewReset=sViewReset+1 end
+	end
+
+	--== Setup Test
+
+	inherit = Widgets.newRoundedBackgroundStyle()
+	iView = inherit.view
+
+	local c1 = {8,1,3}
+	iView.fillColor=c1
+	iView.strokeWidth=99
+
+	styleHasPropertyValue( iView, 'fillColor', c1 )
+	styleHasPropertyValue( iView, 'strokeWidth', 99 )
+
+
+	style = Widgets.newRoundedBackgroundStyle()
+	style.inherit = inherit
+
+	style.type = 'rectangle' -- set same type
+
+	StyleBase = Background:getBaseStyle( style.type )
+	sbView = StyleBase.view
+
+	sView = style.view
+
+	style:addEventListener( style.EVENT, sResetCB )
+
+	-- Quick Property Check
+
+	styleInheritsFrom( style, inherit )
+	styleHasPropertyValue( style, 'type', 'rectangle' )
+
+	styleInheritsFrom( sView, nil )
+	hasPropertyValue( sView, 'type', 'rectangle' )
+	styleRawPropertyValueIs( sView, 'cornerRadius', nil )
+	styleHasPropertyValue( sView, 'fillColor', sbView.fillColor )
+	styleHasPropertyValue( sView, 'strokeColor', sbView.strokeColor )
+	styleHasPropertyValue( sView, 'strokeWidth', sbView.strokeWidth )
+
+	sView.strokeWidth = 101
+
+	styleHasPropertyValue( sView, 'strokeWidth', 101 )
+
+	--== Unset (break) Inheritance
+
+	sReset = 0
+	sViewReset = 0
+	style.inherit = nil
+
+	sView = style.view -- attach to new view
+
+	styleHasPropertyValue( sView, 'strokeWidth', 101 )
+
+	assert_equal( 1, sReset, "incorrect count for sReset" )
+
+	StyleBase = Background:getBaseStyle( style.type )
+	sbView = StyleBase.view
+	styleHasPropertyValue( StyleBase, 'type', 'rectangle' )
+	hasPropertyValue( sbView, 'type', 'rectangle' )
+
+	-- Check properties
+
+	styleInheritsFrom( style, nil )
+	styleHasPropertyValue( style, 'type', 'rectangle' )
+
+	styleInheritsFrom( sView, nil )
+	hasPropertyValue( sView, 'type', 'rectangle' )
+
+	styleRawPropertyValueIs( sView, 'cornerRadius', nil )
+	styleHasPropertyValue( sView, 'fillColor', sbView.fillColor )
+	styleHasPropertyValue( sView, 'strokeColor', sbView.strokeColor )
+	styleHasPropertyValue( sView, 'strokeWidth', 101 )
+
+	--== Setup Inherit Style
+
+	-- check changes
+
+	iView.strokeWidth=99
+	styleHasProperty( iView, 'strokeWidth', 99 )
+
+	-- value should stay same, inheritance is stopped for view
+
+	styleHasPropertyValue( sView, 'strokeWidth', 101 )
+
+end
+
+
+
+
+--[[
+CHANGE Inherit
+with:
+unset Inherit
+set Type
+--]]
+function test_updateView_deltaINHERIT_unsetI_setT()
+	-- print( "test_updateView_deltaINHERIT_unsetI_setT" )
+	local Background = Widgets.Style.Background
+	local BaseStyle, defaults, vDefaults
+
+	local StyleBase, sbView
+	local StyleClass
+
+	local style, sReset, sResetCB
+	local sView, sViewReset, sViewCB
+	local inherit, iReset, iResetCB
+	local iView, iViewReset, iViewCB
+
+
+	sReset = 0
+	sResetCB = function(e)
+		if e.type==style.STYLE_RESET then sReset=sReset+1 end
+	end
+
+	sViewReset = 0
+	sViewCB = function(e)
+		if e.type==style.STYLE_RESET then sViewReset=sViewReset+1 end
+	end
+
+	--== Setup Test
+
+	style = Widgets.newRoundedBackgroundStyle()
+
+	StyleBase = Background:getBaseStyle( style.type )
+	sbView = StyleBase.view
+
+	sView = style.view
+
+	style:addEventListener( style.EVENT, sResetCB )
+
+	-- Quick Property Check
+
+	styleInheritsFrom( style, inherit )
+	styleHasPropertyValue( style, 'type', 'rounded' )
+
+	styleInheritsFrom( sView, nil )
+	hasPropertyValue( sView, 'type', 'rounded' )
+	styleRawPropertyValueIs( sView, 'cornerRadius', sbView.cornerRadius )
+	styleHasPropertyValue( sView, 'fillColor', sbView.fillColor )
+	styleHasPropertyValue( sView, 'strokeColor', sbView.strokeColor )
+	styleHasPropertyValue( sView, 'strokeWidth', sbView.strokeWidth )
+
+
+	--== Unset (break) Inheritance
+
+	sReset = 0
+	sViewReset = 0
+	style.inherit = nil
+
+	sView = style.view -- attach to new view
+
+	styleHasPropertyValue( sView, 'strokeWidth', sbView.strokeWidth )
+
+	assert_equal( 0, sReset, "incorrect count for sReset" )
+
+	StyleBase = Background:getBaseStyle( style.type )
+	sbView = StyleBase.view
+	styleHasPropertyValue( StyleBase, 'type', 'rounded' )
+	hasPropertyValue( sbView, 'type', 'rounded' )
+
+	-- Check properties
+
+	styleInheritsFrom( style, nil )
+	styleHasPropertyValue( style, 'type', 'rounded' )
+
+	styleInheritsFrom( sView, nil )
+	hasPropertyValue( sView, 'type', 'rounded' )
+
+	styleRawPropertyValueIs( sView, 'cornerRadius', sbView.cornerRadius )
+	styleHasPropertyValue( sView, 'fillColor', sbView.fillColor )
+	styleHasPropertyValue( sView, 'strokeColor', sbView.strokeColor )
+	styleHasPropertyValue( sView, 'strokeWidth', sbView.strokeWidth )
+
+	--== Setup Inherit Style
+
+
+end
+
+
+
+
+
 --[[
 --]]
 function test_clearProperties()
 	-- print( "test_clearProperties" )
 	local Background = Widgets.Style.Background
 	local BaseStyle, defaults, vDefaults
-	local style, view
 
-	local StyleBase, StyleClass
-	local s1, sView
-	local inherit, iView
-	local parentReset, parentCallback
-	local childReset, childCallback
+	local StyleBase, sbView
+	local StyleClass
+
+	local style, sReset, sResetCB
+	local sView, sViewReset, sViewCB
+	local inherit, iReset, iResetCB
+	local iView, iViewReset, iViewCB
 
 
-	parentReset = 0
-	parentCallback = function(e)
-		if e.type==s1.STYLE_RESET then parentReset=parentReset+1 end
+	sReset = 0
+	sResetCB = function(e)
+		if e.type==style.STYLE_RESET then sReset=sReset+1 end
 	end
 
-	childReset = 0
-	childCallback = function(e)
-		if e.type==s1.STYLE_RESET then childReset=childReset+1 end
+	sViewReset = 0
+	sViewCB = function(e)
+		if e.type==style.STYLE_RESET then sViewReset=sViewReset+1 end
 	end
 
+	--== clear properties on non-inherited
 
 	-- by default, style from nil
 
-	s1 = Widgets.newRoundedBackgroundStyle{
+	style = Widgets.newRoundedBackgroundStyle{
 		view={
-			strokeWidth=42
+			cornerRadius=101,
+			strokeWidth=42,
 		}
 	}
-	sView = s1.view
+	sView = style.view
 
-	StyleBase = Background:getBaseStyle( s1.type )
+	style:addEventListener( style.EVENT, sResetCB )
+	sView:addEventListener( sView.EVENT, sViewCB )
 
-	s1:addEventListener( s1.EVENT, parentCallback )
-	sView:addEventListener( sView.EVENT, childCallback )
+	StyleBase = Background:getBaseStyle( style.type )
+	sbView = StyleBase.view
 
-	styleInheritsFrom( s1, nil )
+	styleInheritsFrom( style, nil )
+	styleInheritsFrom( sView, nil )
 
-	-- local properties
+	-- check local properties
 
-	styleHasPropertyValue( sView, 'fillColor', StyleBase.view.fillColor )
-	styleHasPropertyValue( sView, 'strokeColor', StyleBase.view.strokeColor )
+	styleHasPropertyValue( style, 'type', 'rounded' )
+
+	styleHasPropertyValue( sView, 'cornerRadius', 101 )
+	styleHasPropertyValue( sView, 'fillColor', sbView.fillColor )
+	styleHasPropertyValue( sView, 'strokeColor', sbView.strokeColor )
 	styleHasPropertyValue( sView, 'strokeWidth', 42 )
-
-
-	--TODO:
-	-- clear properties with inherit
-	-- clear breaking inherit, then clear
 
 	--== Clear Properties, with no inherit
 
-	parentReset = 0
-	childReset = 0
-	s1:clearProperties()
+	sReset = 0
+	sViewReset = 0
+	style:clearProperties()
 
-	assert_gt( 0, parentReset, "incorrect count for parentReset" )
-	assert_gt( 0, childReset, "incorrect count for childReset" )
+	assert_gt( 0, sReset, "incorrect count for sReset" )
+	assert_gt( 0, sViewReset, "incorrect count for sViewReset" )
 
-	styleHasPropertyValue( sView, 'fillColor', StyleBase.view.fillColor )
-	styleHasPropertyValue( sView, 'strokeColor', StyleBase.view.strokeColor )
-	styleHasPropertyValue( sView, 'strokeWidth', StyleBase.view.strokeWidth )
+	styleHasPropertyValue( sView, 'cornerRadius', sbView.cornerRadius )
+	styleHasPropertyValue( sView, 'fillColor', sbView.fillColor )
+	styleHasPropertyValue( sView, 'strokeColor', sbView.strokeColor )
+	styleHasPropertyValue( sView, 'strokeWidth', sbView.strokeWidth )
 
-	-- set local properties
 
-	s1.strokeWidth = 98
+	--== Create inherit
+
+	iReset = 0
+	iResetCB = function(e)
+		if e.type==style.STYLE_RESET then iReset=iReset+1 end
+	end
+
+	iViewReset = 0
+	iViewResetCB = function(e)
+		if e.type==style.STYLE_RESET then iViewReset=iViewReset+1 end
+	end
+
+	inherit = Widgets.newRoundedBackgroundStyle{
+		view={
+			strokeColor={0.15, 0.15, 0,15},
+			strokeWidth=99
+		}
+	}
+	iView = inherit.view
+	styleInheritsFrom( inherit, nil )
+	styleInheritsFrom( iView, nil )
+
+	inherit:addEventListener( inherit.EVENT, iResetCB )
+	iView:addEventListener( iView.EVENT, iViewResetCB )
+
+	-- check properties
+
+	styleHasPropertyValue( inherit, 'type', 'rounded' )
+
+	styleHasPropertyValue( iView, 'fillColor', sbView.fillColor )
+	styleHasPropertyValue( iView, 'strokeColor', iView.strokeColor )
+	styleHasPropertyValue( iView, 'strokeWidth', iView.strokeWidth )
+
+
+	--== Setup inherit
+
+	sReset = 0
+	sViewReset = 0
+	style.inherit = inherit  -- << set style
+
+	assert_gt( 0, sReset, "incorrect count for sReset" )
+	assert_gt( 0, sViewReset, "incorrect count for sViewReset" )
+
+	styleInheritsFrom( inherit, nil )
+	styleInheritsFrom( iView, nil )
+	styleInheritsFrom( style, inherit )
+	styleInheritsFrom( sView, iView )
+
+
+	styleHasPropertyValue( inherit, 'type', 'rounded' )
+	styleHasPropertyValue( iView, 'cornerRadius', sbView.cornerRadius )
+	styleHasPropertyValue( iView, 'fillColor', sbView.fillColor )
+	styleHasPropertyValue( iView, 'strokeColor', iView.strokeColor )
+	styleHasPropertyValue( iView, 'strokeWidth', iView.strokeWidth )
+
+	styleInheritsPropertyValue( style, 'type', iView.type )
+	styleInheritsPropertyValue( sView, 'cornerRadius', iView.cornerRadius )
+	styleInheritsPropertyValue( sView, 'fillColor', iView.fillColor )
+	styleInheritsPropertyValue( sView, 'strokeColor', iView.strokeColor )
+	styleInheritsPropertyValue( sView, 'strokeWidth', iView.strokeWidth )
+
+
+	--== add properties
+
+	iView.cornerRadius = 89
+	iView.strokeWidth = 121
+
+	styleHasPropertyValue( iView, 'cornerRadius', 89 )
+	styleHasPropertyValue( iView, 'fillColor', sbView.fillColor )
+	styleHasPropertyValue( iView, 'strokeColor', iView.strokeColor )
+	styleHasPropertyValue( iView, 'strokeWidth', 121 )
+
+	-- at this point style is clear
+
+	styleInheritsPropertyValue( sView, 'cornerRadius', iView.cornerRadius )
+	styleInheritsPropertyValue( sView, 'fillColor', iView.fillColor )
+	styleInheritsPropertyValue( sView, 'strokeColor', iView.strokeColor )
+	styleInheritsPropertyValue( sView, 'strokeWidth', iView.strokeWidth )
+
+
+	iView.cornerRadius = 131
+	sView.strokeWidth = 23
+
+	styleInheritsPropertyValue( sView, 'cornerRadius', iView.cornerRadius )
+	styleHasPropertyValue( sView, 'strokeWidth', 23 )
+
+
+	--== Clear sub property
+
+	sReset = 0
+	sViewReset = 0
+	style:clearProperties()
+
+	assert_gt( 0, sReset, "incorrect count for sReset" )
+	assert_gt( 0, sViewReset, "incorrect count for sViewReset" )
+
+	styleInheritsPropertyValue( sView, 'cornerRadius', iView.cornerRadius )
+	styleInheritsPropertyValue( sView, 'fillColor', iView.fillColor )
+	styleInheritsPropertyValue( sView, 'strokeColor', iView.strokeColor )
+	styleInheritsPropertyValue( sView, 'strokeWidth', iView.strokeWidth )
+
+
+	iView.cornerRadius = 89
+	sView.cornerRadius = 191
+	sView.fillColor = {0,0.1,1,0.1}
+
+	styleHasPropertyValue( sView, 'cornerRadius', sView.cornerRadius )
+	styleHasPropertyValue( sView, 'fillColor', sView.fillColor )
+	styleInheritsPropertyValue( sView, 'strokeColor', iView.strokeColor )
+	styleInheritsPropertyValue( sView, 'strokeWidth', iView.strokeWidth )
+
+
+	--== Clear inheritance
+
+	sReset = 0
+	sViewReset = 0
+	inherit:clearProperties()
+
+	sView = style.view
+
+	assert_gt( 0, sReset, "incorrect count for sReset" )
+	assert_gt( 0, sViewReset, "incorrect count for sViewReset" )
+
+	styleHasPropertyValue( iView, 'cornerRadius', sbView.cornerRadius )
+	styleHasPropertyValue( iView, 'fillColor', sbView.fillColor )
+	styleHasPropertyValue( iView, 'strokeColor', sbView.strokeColor )
+	styleHasPropertyValue( iView, 'strokeWidth', sbView.strokeWidth )
+
+	styleHasPropertyValue( sView, 'cornerRadius', sView.cornerRadius )
+	styleHasPropertyValue( sView, 'fillColor', sView.fillColor )
+	styleInheritsPropertyValue( sView, 'strokeColor', iView.strokeColor )
+	styleInheritsPropertyValue( sView, 'strokeWidth', iView.strokeWidth )
 
 	--== Break inheritance
 
-	s1.inherit = nil
 
-	verifyBackgroundStyle( s1 )
-	styleInheritsFrom( s1, nil )
+	local cR, fC = sView.cornerRadius, sView.fillColor
+	local sC, sW = sView.strokeColor, sView.strokeWidth
+
+	sReset = 0
+	sViewReset = 0
+	style.inherit = nil
+
+	sView = style.view
+
+	assert_gt( 0, sReset, "incorrect count for sReset" )
+	assert_gt( 0, sViewReset, "incorrect count for sViewReset" )
+
+	styleInheritsFrom( style, nil  )
+	styleInheritsFrom( sView, nil )
+
+	styleHasPropertyValue( style, 'type', inherit.type )
+	hasPropertyValue( sView, 'type', style.type )
+
+	styleHasPropertyValue( sView, 'cornerRadius', cR )
+	styleHasPropertyValue( sView, 'fillColor', fC )
+	styleHasPropertyValue( sView, 'strokeColor', sC )
+	styleHasPropertyValue( sView, 'strokeWidth', sW )
 
 end
 
 
---[[
---]]
+-- --[[
+-- --]]
 function test_defaultInheritance()
 	-- print( "test_defaultInheritance" )
 	local Background = Widgets.Style.Background
@@ -543,8 +1715,8 @@ function test_similarInheritance()
 
 	--== start
 
-	s1 = Widgets.newBackgroundStyle()
-	inherit = Widgets.newBackgroundStyle()
+	s1 = Widgets.newRoundedBackgroundStyle()
+	inherit = Widgets.newRoundedBackgroundStyle()
 
 	sView = s1.view
 	iView = inherit.view
@@ -573,7 +1745,6 @@ function test_similarInheritance()
 	inherit.view.strokeWidth=6
 	styleInheritsPropertyValue( sView, 'strokeWidth', 6 )
 
-
 	--== block inheritance, set type
 
 	receivedResetEvent = false
@@ -591,6 +1762,9 @@ function test_similarInheritance()
 	styleInheritsFrom( s1, inherit )
 	styleInheritsFrom( sView, nil )
 	styleRawPropertyValueIs( s1, 'type', 'rounded' )
+
+	StyleBase = Background:getBaseStyle( s1.type )
+	sbView = StyleBase.view
 
 	-- style view inherit inactive, all properties local
 
@@ -623,6 +1797,9 @@ function test_similarInheritance()
 	styleInheritsFrom( sView, iView )
 	styleRawPropertyValueIs( s1, 'type', nil )
 	styleInheritsPropertyValue( s1, 'type', inherit.type )
+
+	StyleBase = Background:getBaseStyle( s1.type )
+	sbView = StyleBase.view
 
 	assert_true( receivedResetEvent, "missing reset event" )
 
@@ -661,11 +1838,12 @@ function test_inheritanceChangesUsingTypeProperty()
 	local receivedResetEvent, callback
 
 	s1 = Widgets.newRoundedBackgroundStyle()
-	inherit = Widgets.newBackgroundStyle()
+	inherit = Widgets.newRoundedBackgroundStyle()
 
 	sView, iView = s1.view, inherit.view
 
 	styleHasPropertyValue( s1, 'type', 'rounded' )
+
 
 	--== start
 
@@ -699,6 +1877,7 @@ function test_inheritanceChangesUsingTypeProperty()
 	s1.type = 'rectangle'
 
 	sView, iView = s1.view, inherit.view
+
 
 	assert_true( sView~=prevView, "incorrect views" )
 	assert_true( receivedResetEvent, "missing reset event" )
@@ -743,17 +1922,21 @@ function test_inheritanceChangesUsingTypeProperty()
 	styleInheritsFrom( sView, nil )
 	styleRawPropertyValueIs( s1, 'type', 'rounded' )
 
+	StyleBase = Background:getBaseStyle( s1.type )
+	sbView = StyleBase.view
+
+
 	-- style view inherit inactive, all properties local
 
-	styleHasPropertyValue( sView, 'debugOn', sDefaults.debugOn )
-	styleHasPropertyValue( sView, 'width', sDefaults.width )
-	styleHasPropertyValue( sView, 'height', sDefaults.height )
-	styleHasPropertyValue( sView, 'anchorX', sDefaults.anchorX )
-	styleHasPropertyValue( sView, 'anchorY', sDefaults.anchorY )
-	styleHasPropertyValue( sView, 'cornerRadius', sDefaults.cornerRadius )
-	styleHasPropertyValue( sView, 'fillColor', sDefaults.fillColor )
-	styleHasPropertyValue( sView, 'strokeColor', sDefaults.strokeColor )
-	styleHasPropertyValue( sView, 'strokeWidth', sDefaults.strokeWidth )
+	styleHasPropertyValue( sView, 'debugOn', sbView.debugOn )
+	styleHasPropertyValue( sView, 'width', sbView.width )
+	styleHasPropertyValue( sView, 'height', sbView.height )
+	styleHasPropertyValue( sView, 'anchorX', sbView.anchorX )
+	styleHasPropertyValue( sView, 'anchorY', sbView.anchorY )
+	styleHasPropertyValue( sView, 'cornerRadius', sbView.cornerRadius )
+	styleHasPropertyValue( sView, 'fillColor', sbView.fillColor )
+	styleHasPropertyValue( sView, 'strokeColor', sbView.strokeColor )
+	styleHasPropertyValue( sView, 'strokeWidth', sbView.strokeWidth )
 
 
 	--== unblock inheritance, unset type
@@ -764,12 +1947,11 @@ function test_inheritanceChangesUsingTypeProperty()
 	end
 	s1:addEventListener( s1.EVENT, callback )
 
-	prevView = sView
+	s1.type = nil
 	s1.type = nil
 
 	sView, iView = s1.view, inherit.view
 
-	assert_true( sView==prevView, "incorrect views" )
 	assert_true( receivedResetEvent, "missing reset event" )
 
 	styleInheritsFrom( s1, inherit )
