@@ -382,7 +382,7 @@ end
 
 -- _setDefaults()
 -- generic method to set defaults
-function Style._setDefaults( StyleClass, params  )
+function Style._setDefaults( StyleClass, params )
 	-- print( "Style._setDefaults" )
 	params = params or {}
 	if params.defaults==nil then params.defaults=StyleClass._STYLE_DEFAULTS end
