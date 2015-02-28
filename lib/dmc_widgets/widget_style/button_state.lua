@@ -139,25 +139,59 @@ ButtonStateStyle._STYLE_DEFAULTS = {
 	align='center',
 	isHitActive=true,
 	marginX=0,
-	marginY=5,
+	marginY=0,
 	offsetX=0,
 	offsetY=0,
 
 	label={
-		textColor={1,0,0},
+		textColor={0,0,0,1},
 		font=native.systemFontBold,
 		fontSize=10
 	},
 	background={
-		type='rectangle',
+		type='rounded',
 		view={
-			fillColor={1,1,0.5, 0.5},
-			strokeWidth=6,
-			strokeColor={1,0,0,0.5},
+			fillColor={1,1,1,1},
+			strokeWidth=1,
+			strokeColor={0,0,0,1},
 		}
 	}
 
 }
+
+ButtonStateStyle._TEST_DEFAULTS = {
+	name='button-state-test-style',
+	debugOn=false,
+	width=201,
+	height=202,
+	anchorX=204,
+	anchorY=206,
+
+	align='center-state',
+	isHitActive=true,
+	marginX=210,
+	marginY=210,
+	offsetX=212,
+	offsetY=212,
+
+	label={
+		textColor={220,220,220,221},
+		font=native.systemFontBold,
+		fontSize=228
+	},
+	background={
+		type='rounded',
+		view={
+			fillColor={230,230,230,231},
+			strokeWidth=238,
+			strokeColor={232,232,232,231},
+		}
+	}
+
+}
+
+ButtonStateStyle.MODE = BaseStyle.RUN_MODE
+ButtonStateStyle._DEFAULTS = ButtonStateStyle._STYLE_DEFAULTS
 
 --== Event Constants
 
@@ -212,11 +246,20 @@ end
 --== Static Methods
 
 
-function ButtonStateStyle.initialize( manager )
+function ButtonStateStyle.initialize( manager, params )
 	-- print( "ButtonStateStyle.initialize", manager )
+	params = params or {}
+	if params.mode==nil then params.mode=BaseStyle.RUN_MODE end
+	--==--
 	Widgets = manager
 
-	ButtonStateStyle._setDefaults( ButtonStateStyle )
+	if params.mode==BaseStyle.TEST_MODE then
+		ButtonStateStyle.MODE = BaseStyle.TEST_MODE
+		ButtonStateStyle._DEFAULTS = ButtonStateStyle._TEST_DEFAULTS
+	end
+	local defaults = ButtonStateStyle._DEFAULTS
+
+	ButtonStateStyle._setDefaults( ButtonStateStyle, {defaults=defaults} )
 end
 
 
@@ -238,8 +281,8 @@ function ButtonStateStyle.addMissingDestProperties( dest, srcs )
 	srcs = srcs or {}
 	local lsrc = Utils.extend( srcs, {} )
 	if lsrc.parent==nil then lsrc.parent=dest end
-	if lsrc.main==nil then lsrc.main=ButtonStateStyle._STYLE_DEFAULTS end
-	lsrc.widget = ButtonStateStyle._STYLE_DEFAULTS
+	if lsrc.main==nil then lsrc.main=ButtonStateStyle._DEFAULTS end
+	lsrc.widget = ButtonStateStyle._DEFAULTS
 	--==--
 
 	dest = BaseStyle.addMissingDestProperties( dest, lsrc )

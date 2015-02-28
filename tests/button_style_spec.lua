@@ -65,7 +65,7 @@ local marker = TestUtils.outputMarker
 
 function suite_setup()
 
-	Widgets._loadButtonSupport()
+	Widgets._loadButtonSupport( {mode='test'} )
 
 end
 
@@ -165,6 +165,7 @@ Test to ensure that the correct property values are
 copied during initialization
 --]]
 --[[
+--]]
 function test_addMissingProperties_Rounded()
 	-- print( "test_addMissingProperties_Rounded" )
 	local BackgroundFactory = Widgets.Style.BackgroundFactory
@@ -176,6 +177,7 @@ function test_addMissingProperties_Rounded()
 	local defaults, bDefaults, tDefaults, vDefaults
 	local src, base
 	local child, label, background, view
+	local vDef = nil
 
 	--== Rectangle ==--
 
@@ -219,74 +221,70 @@ function test_addMissingProperties_Rounded()
 	}
 	child = src.button
 
-	marker()
-
 	Button.addMissingDestProperties( child, {parent=src} )
 
-	Utils.print( child )
+	local vDef = defaults
 
-	hasPropertyValue( child, 'debugOn', defaults.debugOn )
-	hasPropertyValue( child, 'width', defaults.width )
-	hasPropertyValue( child, 'height', defaults.height )
-	hasPropertyValue( child, 'anchorX', defaults.anchorX )
-	hasPropertyValue( child, 'anchorY', defaults.anchorY )
-	hasPropertyValue( child, 'hitMarginX', defaults.hitMarginX )
-	hasPropertyValue( child, 'hitMarginY', defaults.hitMarginY )
-	hasPropertyValue( child, 'isHitActive', defaults.isHitActive )
-	hasPropertyValue( child, 'marginX', defaults.marginX )
-	hasPropertyValue( child, 'marginY', defaults.marginY )
+	hasPropertyValue( child, 'debugOn', vDef.debugOn )
+	hasPropertyValue( child, 'width', vDef.width )
+	hasPropertyValue( child, 'height', vDef.height )
+	hasPropertyValue( child, 'anchorX', vDef.anchorX )
+	hasPropertyValue( child, 'anchorY', vDef.anchorY )
+	hasPropertyValue( child, 'hitMarginX', vDef.hitMarginX )
+	hasPropertyValue( child, 'hitMarginY', vDef.hitMarginY )
+	hasPropertyValue( child, 'isHitActive', vDef.isHitActive )
+	hasPropertyValue( child, 'marginX', vDef.marginX )
+	hasPropertyValue( child, 'marginY', vDef.marginY )
 
-
+	local vDefState = vDef.inactive
 	state = child.inactive
 
-	Utils.print( state )
+	hasPropertyValue( state, 'debugOn', vDefState.debugOn )
+	hasPropertyValue( state, 'width', vDefState.width )
+	hasPropertyValue( state, 'height', vDefState.height )
+	hasPropertyValue( state, 'anchorX', vDefState.anchorX )
+	hasPropertyValue( state, 'anchorY', vDefState.anchorY )
+	hasPropertyValue( state, 'align', vDefState.align )
+	hasPropertyValue( state, 'isHitActive', vDefState.isHitActive )
+	hasPropertyValue( state, 'marginX', vDefState.marginX )
+	hasPropertyValue( state, 'marginY', vDefState.marginY )
 
-	hasPropertyValue( state, 'debugOn', defaults.debugOn )
-	hasPropertyValue( state, 'width', defaults.width )
-	hasPropertyValue( state, 'height', defaults.height )
-	hasPropertyValue( state, 'anchorX', defaults.anchorX )
-	hasPropertyValue( state, 'anchorY', defaults.anchorY )
-	hasPropertyValue( state, 'align', defaults.inactive.align )
-	hasPropertyValue( state, 'isHitActive', defaults.isHitActive )
-	hasPropertyValue( state, 'marginX', defaults.marginX )
-	hasPropertyValue( state, 'marginY', defaults.marginY )
-
+	local vDefLabel = vDefState.label
 	label = state.label
 
-	Utils.print( label )
+	hasPropertyValue( label, 'debugOn', vDefLabel.debugOn )
+	hasPropertyValue( label, 'width', vDefLabel.width )
+	hasPropertyValue( label, 'height', vDefLabel.height )
+	hasPropertyValue( label, 'anchorX', vDefLabel.anchorX )
+	hasPropertyValue( label, 'anchorY', vDefLabel.anchorY )
+	hasPropertyValue( label, 'align', vDefLabel.align )
+	hasPropertyValue( label, 'font', vDefLabel.font )
+	hasPropertyValue( label, 'fontSize', vDefLabel.fontSize )
+	hasPropertyValue( label, 'textColor', vDefLabel.textColor )
 
-	hasPropertyValue( label, 'debugOn', defaults.debugOn )
-	hasPropertyValue( label, 'width', defaults.width )
-	hasPropertyValue( label, 'height', defaults.height )
-	hasPropertyValue( label, 'anchorX', defaults.anchorX )
-	hasPropertyValue( label, 'anchorY', defaults.anchorY )
-	hasPropertyValue( label, 'align', defaults.inactive.align )
-	hasPropertyValue( label, 'font', defaults.font )
-	hasPropertyValue( label, 'fontSize', defaults.fontSize )
-	hasPropertyValue( label, 'textColor', defaults.inactive.label.textColor )
-
+	local vDefBackground = vDefState.background
 	background = state.background
 
 	hasPropertyValue( background, 'type', 'rounded' )
-	hasPropertyValue( background, 'debugOn', defaults.debugOn )
-	hasPropertyValue( background, 'width', defaults.width )
-	hasPropertyValue( background, 'height', defaults.height )
-	hasPropertyValue( background, 'anchorX', defaults.anchorX )
-	hasPropertyValue( background, 'anchorY', defaults.anchorY )
+	hasPropertyValue( background, 'debugOn', vDefBackground.debugOn )
+	hasPropertyValue( background, 'width', vDefBackground.width )
+	hasPropertyValue( background, 'height', vDefBackground.height )
+	hasPropertyValue( background, 'anchorX', vDefBackground.anchorX )
+	hasPropertyValue( background, 'anchorY', vDefBackground.anchorY )
 
+	local vDefView = vDefBackground.view
 	view = background.view
 
-	hasPropertyValue( view, 'debugOn', base.debugOn )
-	hasPropertyValue( view, 'width', defaults.width )
-	hasPropertyValue( view, 'height', defaults.height )
-	hasPropertyValue( view, 'anchorX', base.anchorX )
-	hasPropertyValue( view, 'anchorY', defaults.anchorY )
-	hasPropertyValue( view, 'fillColor', vDefaults.fillColor )
-	hasPropertyValue( view, 'strokeColor', vDefaults.strokeColor )
-	hasPropertyValue( view, 'strokeWidth', vDefaults.strokeWidth )
+	hasPropertyValue( view, 'debugOn', vDefView.debugOn )
+	hasPropertyValue( view, 'width', vDefView.width )
+	hasPropertyValue( view, 'height', vDefView.height )
+	hasPropertyValue( view, 'anchorX', vDefView.anchorX )
+	hasPropertyValue( view, 'anchorY', vDefView.anchorY )
+	hasPropertyValue( view, 'fillColor', vDefView.fillColor )
+	hasPropertyValue( view, 'strokeColor', vDefView.strokeColor )
+	hasPropertyValue( view, 'strokeWidth', vDefView.strokeWidth )
 
 end
---]]
 
 
 
@@ -365,7 +363,7 @@ end
 
 
 function test_defaultInheritance()
-	print( "test_defaultInheritance" )
+	-- print( "test_defaultInheritance" )
 	local Button = Widgets.Style.Button
 	local StyleDefault = Button:getBaseStyle()
 

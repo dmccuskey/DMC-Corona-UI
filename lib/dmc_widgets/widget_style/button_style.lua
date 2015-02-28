@@ -135,23 +135,15 @@ ButtonStyle._STYLE_DEFAULTS = {
 	anchorX=0.5,
 	anchorY=0.5,
 
-	align='center',
+	align='left',
 	hitMarginX=0,
 	hitMarginY=0,
 	isHitActive=true,
 	marginX=0,
-	marginY=5,
+	marginY=0,
 
-	--[[
-	When defining a style in code, 'label' and 'background'
-	can be placed in your button style and used to
-	to copy defaults to sub-styles
-
-	label={
-	}
-	background={
-	}
-	--]]
+	font=native.systemFontBold,
+	fontSize=16,
 
 	inactive={ -- << this is a Button Style State
 		--[[
@@ -160,21 +152,29 @@ ButtonStyle._STYLE_DEFAULTS = {
 		* width
 		* height
 		* anchorX/anchorY
-		* label
-		* background
+		* align
+		* isHitActive
+		* marginX/marginY
 		--]]
 		label={
-			align='right',
-			font=native.systemFont,
-			fontSize=12,
-			textColor={0,1,0,0.5}
+			--[[
+			Can be copied from Button State
+			* align
+			* font*
+			* fontSize
+			* marginX/marginY
+			* offsetX/offsetY
+			* textColor
+			--]]
+			textColor={1,0,0},
 		},
 		background={
-			type='rectangle',
+			type='rounded',
 			view={
-				fillColor={0,1,1,1},
-				strokeWidth=2.5,
-				strokeColor={1,0,0,1},
+				cornerRadius=3,
+				fillColor={0.8,0.8,0.8,1},
+				strokeWidth=1,
+				strokeColor={0,0,0,1},
 			}
 		}
 	},
@@ -186,19 +186,20 @@ ButtonStyle._STYLE_DEFAULTS = {
 		* width
 		* height
 		* anchorX/anchorY
-		* label
-		* background
+		* align
+		* isHitActive
+		* marginX/marginY
+		* offsetX/offsetY
 		--]]
 		label={
 			textColor={1,0,0},
-			font=native.systemFontBold,
-			fontSize=10
 		},
 		background={
-			type='rectangle',
+			type='rounded',
 			view={
-				fillColor={0,1,0,1},
-				strokeWidth=3.5,
+				cornerRadius=3,
+				fillColor={0.3,0.3,0.3,1},
+				strokeWidth=1,
 				strokeColor={0,0,0,1},
 			},
 		}
@@ -210,29 +211,139 @@ ButtonStyle._STYLE_DEFAULTS = {
 		* debugOn
 		* width
 		* height
-		* type
+		* anchorX/anchorY
 		* align
-		* anchorX
-		* anchorY
-		* label
+		* isHitActive
+		* marginX/marginY
+		* offsetX/offsetY
 		--]]
 		label={
-			textColor={1,0,0},
-			font=native.systemFontBold,
-			fontSize=10
+			textColor={0.3,0.3,0.3,1},
 		},
 		background={
 			type='rounded',
 			view={
-				cornerRadius=10,
-				fillColor={0,0,1,1},
-				strokeWidth=4.5,
-				strokeColor={0,1,0,1},
+				cornerRadius=3,
+				fillColor={0.8,0.7,0.7,1},
+				strokeWidth=1,
+				strokeColor={0.4,0.4,0.4,1},
 			},
 		}
 	},
 
 }
+
+ButtonStyle._TEST_DEFAULTS = {
+	name='button-test-style',
+	debugOn=false,
+	width=401,
+	height=402,
+	anchorX=403,
+	anchorY=404,
+
+	align='button-left',
+	hitMarginX=401,
+	hitMarginY=402,
+	isHitActive=true,
+	marginX=400,
+	marginY=402,
+
+	font=native.systemFontBold,
+	fontSize=401,
+
+	inactive={ -- << this is a Button Style State
+		align='state-left',
+		--[[
+		Can be copied from Button
+		* debugOn
+		* width
+		* height
+		* anchorX/anchorY
+		* align
+		* isHitActive
+		* marginX/marginY
+		--]]
+		label={
+			--[[
+			Can be copied from Button State
+			* align
+			* font*
+			* fontSize
+			* marginX/marginY
+			* offsetX/offsetY
+			* textColor
+			--]]
+			textColor={410,410,410,410}
+		},
+		background={
+			type='rounded',
+			view={
+				fillColor={420,420,420,420},
+				strokeWidth=420,
+				strokeColor={421,421,421,421},
+			}
+		}
+	},
+
+	active={
+		--[[
+		Can be copied from Button
+		* debugOn
+		* width
+		* height
+		* anchorX/anchorY
+		* align
+		* isHitActive
+		* marginX/marginY
+		* offsetX/offsetY
+		--]]
+		label={
+			textColor={412,412,412,412},
+			font=native.systemFontBold,
+			fontSize=412
+		},
+		background={
+			type='rectangle',
+			view={
+				fillColor={424,424,424,424},
+				strokeWidth=430,
+				strokeColor={426,426,426,426},
+			},
+		}
+	},
+
+	disabled={
+		--[[
+		Can be copied from Button
+		* debugOn
+		* width
+		* height
+		* anchorX/anchorY
+		* align
+		* isHitActive
+		* marginX/marginY
+		* offsetX/offsetY
+		--]]
+		label={
+			textColor={411,431,441,451},
+			font=native.systemFontBold,
+			fontSize=430
+		},
+		background={
+			type='rounded',
+			view={
+				cornerRadius=431,
+				fillColor={434,434,434,434},
+				strokeWidth=434,
+				strokeColor={434,434,434,434},
+			},
+		}
+	},
+
+}
+
+ButtonStyle.MODE = BaseStyle.RUN_MODE
+ButtonStyle._DEFAULTS = ButtonStyle._STYLE_DEFAULTS
 
 --== Event Constants
 
@@ -288,11 +399,20 @@ end
 --== Static Methods
 
 
-function ButtonStyle.initialize( manager )
+function ButtonStyle.initialize( manager, params )
 	-- print( "ButtonStyle.initialize", manager )
+	params = params or {}
+	if params.mode==nil then params.mode=BaseStyle.RUN_MODE end
+	--==--
 	Widgets = manager
 
-	ButtonStyle._setDefaults( ButtonStyle )
+	if params.mode==BaseStyle.TEST_MODE then
+		ButtonStyle.MODE = BaseStyle.TEST_MODE
+		ButtonStyle._DEFAULTS = ButtonStyle._TEST_DEFAULTS
+	end
+	local defaults = ButtonStyle._DEFAULTS
+
+	ButtonStyle._setDefaults( ButtonStyle, {defaults=defaults} )
 end
 
 
@@ -315,8 +435,8 @@ function ButtonStyle.addMissingDestProperties( dest, srcs )
 	srcs = srcs or {}
 	local lsrc = Utils.extend( srcs, {} )
 	if lsrc.parent==nil then lsrc.parent=dest end
-	if lsrc.main==nil then lsrc.main=ButtonStyle._STYLE_DEFAULTS end
-	lsrc.widget = ButtonStyle._STYLE_DEFAULTS
+	if lsrc.main==nil then lsrc.main=ButtonStyle._DEFAULTS end
+	lsrc.widget = ButtonStyle._DEFAULTS
 	--==--
 
 	dest = BaseStyle.addMissingDestProperties( dest, lsrc )
