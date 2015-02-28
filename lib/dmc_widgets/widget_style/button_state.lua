@@ -375,8 +375,6 @@ function ButtonStateStyle.copyExistingSrcProperties( dest, src, params )
 end
 
 
-
-
 function ButtonStateStyle._verifyStyleProperties( src, exclude )
 	-- print( "ButtonStateStyle._verifyStyleProperties", src, exclude )
 	assert( src )
@@ -592,21 +590,12 @@ end
 
 
 --======================================================--
--- Proxy Methods
-
-
-
-
---======================================================--
 -- Misc
-
---== inherit
 
 function ButtonStateStyle:_doChildrenInherit( value )
 	-- print( "ButtonStateStyle", value, self )
-	self._background.inherit = value and value.background or nil
-	self._label.inherit = value and value.label or nil
-
+	self._background.inherit = value and value.background
+	self._label.inherit = value and value.label
 end
 
 
@@ -625,6 +614,7 @@ function ButtonStateStyle:_clearChildrenProperties( style )
 	substyle = style and style.label
 	self._label:_clearProperties( substyle )
 end
+
 
 
 --====================================================================--
