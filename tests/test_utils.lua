@@ -95,6 +95,8 @@ local function formatColor( value )
 	local str = ""
 	if value==nil then
 		str = sformat( "(nil, nil, nil, nil)" )
+	elseif #value==3 then
+		str = sformat( "(%s, %s, %s, nil)", unpack( value ) )
 	else
 		str = sformat( "(%s, %s, %s, %s)", unpack( value ) )
 	end
