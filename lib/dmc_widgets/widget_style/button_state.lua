@@ -123,7 +123,10 @@ ButtonStateStyle._VALID_PROPERTIES = {
 	marginX=true,
 	marginY=true,
 	offsetX=true,
-	offsetY=true
+	offsetY=true,
+
+	-- Copyable properties
+	font=native.systemFont
 }
 
 ButtonStateStyle._EXCLUDE_PROPERTY_CHECK = nil
