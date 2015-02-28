@@ -125,6 +125,22 @@ RectangleStyle._STYLE_DEFAULTS = {
 	strokeWidth=0
 }
 
+RectangleStyle._TEST_DEFAULTS = {
+	name='rectangle-background-test-style',
+	debugOn=false,
+	width=201,
+	height=202,
+	anchorX=203,
+	anchorY=204,
+
+	fillColor={201,202,203,204},
+	strokeColor={211,212,213,214},
+	strokeWidth=211
+}
+
+RectangleStyle.MODE = ViewStyle.RUN_MODE
+RectangleStyle._DEFAULTS = RectangleStyle._STYLE_DEFAULTS
+
 --== Event Constants
 
 RectangleStyle.EVENT = 'rectangle-background-style-event'
@@ -170,9 +186,18 @@ end
 
 function RectangleStyle.initialize( manager )
 	-- print( "RectangleStyle.initialize", manager )
+	params = params or {}
+	if params.mode==nil then params.mode=ViewStyle.RUN_MODE end
+	--==--
 	Widgets = manager
 
-	RectangleStyle._setDefaults( RectangleStyle )
+	if params.mode==ViewStyle.TEST_MODE then
+		RectangleStyle.MODE = ViewStyle.TEST_MODE
+		RectangleStyle._DEFAULTS = RectangleStyle._TEST_DEFAULTS
+	end
+	local defaults = RectangleStyle._DEFAULTS
+
+	RectangleStyle._setDefaults( RectangleStyle, {defaults=defaults} )
 end
 
 
@@ -182,8 +207,8 @@ function RectangleStyle.addMissingDestProperties( dest, srcs )
 	srcs = srcs or {}
 	local lsrc = Utils.extend( srcs, {} )
 	if lsrc.parent==nil then lsrc.parent=dest end
-	if lsrc.main==nil then lsrc.main=RectangleStyle._STYLE_DEFAULTS end
-	lsrc.widget = RectangleStyle._STYLE_DEFAULTS
+	if lsrc.main==nil then lsrc.main=RectangleStyle._DEFAULTS end
+	lsrc.widget = RectangleStyle._DEFAULTS
 	--==--
 
 	dest = ViewStyle.addMissingDestProperties( dest, lsrc )

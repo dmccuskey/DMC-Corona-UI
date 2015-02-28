@@ -68,7 +68,7 @@ local styleInheritsPropertyValueFrom = TestUtils.styleInheritsPropertyValueFrom
 
 function suite_setup()
 
-	Widgets._loadBackgroundSupport()
+	Widgets._loadBackgroundSupport( {mode='test'} )
 
 end
 
@@ -112,12 +112,12 @@ function test_addMissingProperties()
 	--== test partial source, empty destination
 
 	src = {
-		hitMarginX=130,
+		hitMarginX=100,
 		type='four',
 
-		debugOn=100,
-		anchorX=400,
-		width=402,
+		debugOn=102,
+		anchorX=104,
+		width=106,
 		view = {}
 	}
 	child = src.view
@@ -141,13 +141,13 @@ function test_addMissingProperties()
 	--== test partial source, partial destination
 
 	src = {
-		width=200,
-		debugOn=202,
-		anchorX=210,
-		fontSize=220,
+		width=100,
+		debugOn=102,
+		anchorX=104,
+		fontSize=106,
 		view = {
-			debugOn=300,
-			width=306,
+			debugOn=112,
+			width=114,
 		}
 	}
 	child = src.view
@@ -185,11 +185,11 @@ function test_copyExistingSrcProperties()
 
 	src = {
 		debugOn=false,
-		hitMarginX=4,
+		hitMarginX=101,
 		type='rectangle',
-		width=4,
-		cornerRadius=4,
-		strokeWidth=6,
+		width=102,
+		cornerRadius=104,
+		strokeWidth=106,
 		view={}
 	}
 
@@ -212,16 +212,16 @@ function test_copyExistingSrcProperties()
 
 	src = {
 		debugOn=false,
-		hitMarginX=4,
+		hitMarginX=102,
 		type='rectangle',
-		width=4,
-		cornerRadius=4,
-		strokeWidth=2,
+		width=104,
+		cornerRadius=106,
+		strokeWidth=108,
 		view={
 			debugOn=true,
-			cornerRadius=1,
-			fillColor=4,
-			strokeWidth=6,
+			cornerRadius=112,
+			fillColor={101,102,103,104},
+			strokeWidth=116,
 		}
 	}
 
@@ -232,10 +232,10 @@ function test_copyExistingSrcProperties()
 	hasPropertyValue( src.view, 'height', nil )
 	hasPropertyValue( src.view, 'anchorX', nil )
 	hasPropertyValue( src.view, 'anchorY', nil )
-	hasPropertyValue( src.view, 'cornerRadius', 1 )
-	hasPropertyValue( src.view, 'fillColor', 4 )
+	hasPropertyValue( src.view, 'cornerRadius', 112 )
+	hasPropertyValue( src.view, 'fillColor', {101,102,103,104} )
 	hasPropertyValue( src.view, 'strokeColor', nil )
-	hasPropertyValue( src.view, 'strokeWidth', 6 )
+	hasPropertyValue( src.view, 'strokeWidth', 116 )
 
 	hasPropertyValue( src.view, 'hitMarginX', nil )
 
@@ -245,15 +245,15 @@ function test_copyExistingSrcProperties()
 	src = {
 		debugOn=false,
 		type='rectangle',
-		hitMarginX=4,
-		width=4,
-		cornerRadius=4,
-		strokeWidth=2,
+		hitMarginX=102,
+		width=104,
+		cornerRadius=106,
+		strokeWidth=18,
 		view={
-			width=12,
-			cornerRadius=1,
-			fillColor=4,
-			strokeWidth=6,
+			width=112,
+			cornerRadius=114,
+			fillColor={101,102,103,104},
+			strokeWidth=118,
 		}
 	}
 
@@ -283,40 +283,40 @@ function test_verifyStyleProperties()
 
 	src = {
 		debugOn=true,
-		width=4,
-		height=10,
-		anchorX=1,
-		anchorY=5,
-		cornerRadius=5,
-		fillColor={},
-		strokeColor=1,
-		strokeWidth=4
+		width=102,
+		height=104,
+		anchorX=106,
+		anchorY=108,
+		cornerRadius=112,
+		fillColor={101,102,103,104},
+		strokeColor=114,
+		strokeWidth=116
 	}
 	hasValidStyleProperties( RoundedStyle, src )
 
 	src = {
 		debugOn=nil, -- <<
-		width=4,
-		height=10,
-		anchorX=1,
-		anchorY=5,
-		cornerRadius=5,
-		fillColor={},
-		strokeColor=1,
-		strokeWidth=4
+		width=102,
+		height=103,
+		anchorX=104,
+		anchorY=105,
+		cornerRadius=106,
+		fillColor={101,102,103,104},
+		strokeColor=18,
+		strokeWidth=110
 	}
 	hasInvalidStyleProperties( RoundedStyle, src )
 
 	src = {
 		debugOn=true,
-		width=4,
-		height=10,
-		anchorX=1,
-		anchorY=5,
-		cornerRadius=nil,
+		width=102,
+		height=104,
+		anchorX=106,
+		anchorY=108,
+		cornerRadius=nil, -- <<
 		fillColor=nil,
-		strokeColor=1,
-		strokeWidth=4
+		strokeColor=110,
+		strokeWidth=112
 	}
 	hasInvalidStyleProperties( RoundedStyle, src )
 

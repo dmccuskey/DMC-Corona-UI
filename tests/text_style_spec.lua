@@ -89,7 +89,7 @@ copied during initialization
 function test_addMissingProperties()
 	-- print( "test_addMissingProperties" )
 	local TextStyle = Widgets.Style.Text
-	local defaults = TextStyle:getDefaultStyleValues({mode='test'})
+	local defaults = TextStyle:getDefaultStyleValues()
 	local srcs, src, base, dest, label
 
 

@@ -127,6 +127,24 @@ RoundedStyle._STYLE_DEFAULTS = {
 	strokeWidth=0
 }
 
+RoundedStyle._TEST_DEFAULTS = {
+	name='rounded-background-test-style',
+	debugOn=false,
+	width=301,
+	height=302,
+	anchorX=303,
+	anchorY=304,
+
+	cornerRadius=305,
+	fillColor={301,302,303,304},
+	strokeColor={311,312,313,314},
+	strokeWidth=311
+}
+
+RoundedStyle.MODE = ViewStyle.RUN_MODE
+RoundedStyle._DEFAULTS = RoundedStyle._STYLE_DEFAULTS
+
+
 --== Event Constants
 
 RoundedStyle.EVENT = 'rounded-background-style-event'
@@ -173,9 +191,18 @@ end
 
 function RoundedStyle.initialize( manager )
 	-- print( "RoundedStyle.initialize", manager )
+	params = params or {}
+	if params.mode==nil then params.mode=ViewStyle.RUN_MODE end
+	--==--
 	Widgets = manager
 
-	RoundedStyle._setDefaults( RoundedStyle )
+	if params.mode==ViewStyle.TEST_MODE then
+		RoundedStyle.MODE = ViewStyle.TEST_MODE
+		RoundedStyle._DEFAULTS = RoundedStyle._TEST_DEFAULTS
+	end
+	local defaults = RoundedStyle._DEFAULTS
+
+	RoundedStyle._setDefaults( RoundedStyle, {defaults=defaults} )
 end
 
 

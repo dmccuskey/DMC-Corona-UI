@@ -415,10 +415,10 @@ function Style:getDefaultStyleValues( params )
 	--==--
 	local defStyle = self._STYLE_DEFAULTS
 	if params.mode==Style.TEST_MODE then
-		defStyle = self._TEST_DEFAULTS
+		defStyle = self._DEFAULTS
 	end
 	-- TODO: make a copy
-	return defStyle
+	return self._DEFAULTS
 end
 
 
