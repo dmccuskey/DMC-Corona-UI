@@ -133,14 +133,14 @@ TextStyle._STYLE_DEFAULTS = {
 	anchorY=0.5,
 
 	align='center',
-	fillColor={0.2,1.1,1.5,0},
+	fillColor={0,0,0,0},
 	font=native.systemFont,
-	fontSize=19,
+	fontSize=16,
 	marginX=0,
 	marginY=0,
-	textColor={0.5,0.2,0.1,1},
+	textColor={0,0,0,1},
 
-	strokeColor={0,0,0,1},
+	strokeColor={0,0,0,0},
 	strokeWidth=0,
 }
 
