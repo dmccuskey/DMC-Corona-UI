@@ -72,7 +72,7 @@ local marker = TestUtils.outputMarker
 
 function suite_setup()
 
-	Widgets._loadTextSupport()
+	Widgets._loadTextSupport( {mode='test'} )
 
 end
 
@@ -89,7 +89,7 @@ copied during initialization
 function test_addMissingProperties()
 	-- print( "test_addMissingProperties" )
 	local TextStyle = Widgets.Style.Text
-	local defaults = TextStyle:getDefaultStyleValues()
+	local defaults = TextStyle:getDefaultStyleValues({mode='test'})
 	local srcs, src, base, dest, label
 
 
@@ -131,7 +131,7 @@ function test_addMissingProperties()
 			debugOn=300,
 			anchorY=302,
 			marginX=306,
-			textColor=304,
+			textColor={304,304,305,306},
 		}
 	}
 	label = src.label
@@ -139,7 +139,7 @@ function test_addMissingProperties()
 	TextStyle.addMissingDestProperties( label, {parent=src} )
 
 	hasPropertyValue( label, 'debugOn', label.debugOn )
-	hasPropertyValue( label, 'width', src.width )
+	hasPropertyValue( label, 'width', defaults.width )
 	hasPropertyValue( label, 'height', nil )
 	hasPropertyValue( label, 'anchorX', defaults.anchorX )
 	hasPropertyValue( label, 'anchorY', label.anchorY )
@@ -333,7 +333,7 @@ function test_verifyStyleProperties()
 		anchorX=1,
 		anchorY=5,
 		cornerRadius=5,
-		fillColor={},
+		fillColor={4,5,6},
 		strokeColor=1,
 		strokeWidth=4
 	}
@@ -369,8 +369,7 @@ function test_styleClassBasics()
 	local Text = Widgets.Style.Text
 	local BaseStyle, defaultStyles
 	local style
-
-	defaultStyles = Text:getDefaultStyleValues()
+	defaultStyles = Text:getDefaultStyleValues({mode='test'})
 	BaseStyle = Text:getBaseStyle()
 
 	TestUtils.verifyTextStyle( BaseStyle )

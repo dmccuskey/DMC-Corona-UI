@@ -144,6 +144,29 @@ TextStyle._STYLE_DEFAULTS = {
 	strokeWidth=0,
 }
 
+TextStyle._TEST_DEFAULTS = {
+	name='text-test-style',
+	debugOn=false,
+	width=117,
+	height=nil,
+	anchorX=101,
+	anchorY=102,
+
+	align='test-center',
+	fillColor={101,102,103,104},
+	font=native.systemFont,
+	fontSize=101,
+	marginX=102,
+	marginY=103,
+	textColor={111,112,113,114},
+
+	strokeColor={121,122,123,124},
+	strokeWidth=111,
+}
+
+TextStyle.MODE = BaseStyle.RUN_MODE
+TextStyle._DEFAULTS = TextStyle._STYLE_DEFAULTS
+
 --== Event Constants
 
 TextStyle.EVENT = 'text-style-event'
@@ -192,11 +215,17 @@ end
 --== Static Methods
 
 
-function TextStyle.initialize( manager )
+function TextStyle.initialize( manager, params )
 	-- print( "TextStyle.initialize", manager )
 	Widgets = manager
 
-	TextStyle._setDefaults( TextStyle )
+	if params.mode==BaseStyle.TEST_MODE then
+		TextStyle.MODE = BaseStyle.TEST_MODE
+		TextStyle._DEFAULTS = TextStyle._TEST_DEFAULTS
+	end
+	local defaults = TextStyle._DEFAULTS
+
+	TextStyle._setDefaults( TextStyle, {defaults=defaults} )
 end
 
 
@@ -206,8 +235,8 @@ function TextStyle.addMissingDestProperties( dest, srcs )
 	srcs = srcs or {}
 	local lsrc = Utils.extend( srcs, {} )
 	if lsrc.parent==nil then lsrc.parent=dest end
-	if lsrc.main==nil then lsrc.main=TextStyle._STYLE_DEFAULTS end
-	lsrc.widget = TextStyle._STYLE_DEFAULTS
+	if lsrc.main==nil then lsrc.main=TextStyle._DEFAULTS end
+	lsrc.widget = TextStyle._DEFAULTS
 	--==--
 
 	dest = BaseStyle.addMissingDestProperties( dest, lsrc )

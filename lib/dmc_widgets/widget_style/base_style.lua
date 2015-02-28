@@ -117,7 +117,11 @@ Style._STYLE_DEFAULTS = {
 	anchorY=0.5,
 }
 
-Style.NO_INHERIT = '--none--'
+Style.RUN_MODE = 'run'
+Style.TEST_MODE = 'test'
+Style.MODE = Style.RUN_MODE
+
+Style._DEFAULTS = Style._STYLE_DEFAULTS
 
 --== Event Constants
 
@@ -378,14 +382,17 @@ end
 
 -- _setDefaults()
 -- generic method to set defaults
-function Style._setDefaults( StyleClass )
+function Style._setDefaults( StyleClass, params  )
 	-- print( "Style._setDefaults" )
-	local defaults = StyleClass._STYLE_DEFAULTS
+	params = params or {}
+	if params.defaults==nil then params.defaults=StyleClass._STYLE_DEFAULTS end
+	--==--
+	local def = params.defaults
 
-	defaults = StyleClass.addMissingDestProperties( defaults, {main=defaults} )
+	def = StyleClass.addMissingDestProperties( def, {main=def} )
 
 	local style = StyleClass:new{
-		data=defaults
+		data=def
 	}
 	StyleClass.__base_style__ = style
 end
@@ -402,9 +409,16 @@ function Style:getBaseStyle()
 end
 
 
-function Style:getDefaultStyleValues()
+function Style:getDefaultStyleValues( params )
+	params = params or {}
+	if params.mode==nil then params.mode=Style.RUN_MODE end
+	--==--
+	local defStyle = self._STYLE_DEFAULTS
+	if params.mode==Style.TEST_MODE then
+		defStyle = self._TEST_DEFAULTS
+	end
 	-- TODO: make a copy
-	return self._STYLE_DEFAULTS
+	return defStyle
 end
 
 

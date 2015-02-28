@@ -309,7 +309,7 @@ end
 --======================================================--
 -- newText Support
 
-function Widget._loadBackgroundSupport()
+function Widget._loadBackgroundSupport( params )
 	-- print( "Widget._loadBackgroundSupport" )
 
 	--== Background Components
@@ -327,10 +327,10 @@ function Widget._loadBackgroundSupport()
 	Widget.Style.BackgroundFactory=BackgroundStyleFactory
 
 	--== Reverse order
-	BackgroundViewFactory.initialize( Widget )
-	BackgroundStyleFactory.initialize( Widget )
-	BackgroundStyle.initialize( Widget )
-	Background.initialize( Widget )
+	BackgroundViewFactory.initialize( Widget, params )
+	BackgroundStyleFactory.initialize( Widget, params )
+	BackgroundStyle.initialize( Widget, params )
+	Background.initialize( Widget, params )
 end
 
 
@@ -386,13 +386,13 @@ end
 --======================================================--
 -- newButton Support
 
-function Widget._loadButtonSupport()
+function Widget._loadButtonSupport( params )
 	-- print( "Widget._loadButtonSupport" )
 
 	--== Dependencies
 
-	Widget._loadBackgroundSupport()
-	Widget._loadTextSupport()
+	Widget._loadBackgroundSupport( params )
+	Widget._loadTextSupport( params )
 
 	--== Button Components
 
@@ -405,9 +405,9 @@ function Widget._loadButtonSupport()
 	Widget.Style.ButtonState=ButtonStateStyle
 
 	--== Reverse order
-	ButtonStateStyle.initialize( Widget )
-	ButtonStyle.initialize( Widget )
-	Button.initialize( Widget )
+	ButtonStateStyle.initialize( Widget, params )
+	ButtonStyle.initialize( Widget, params )
+	Button.initialize( Widget, params )
 end
 
 function Widget.newButton( options )
@@ -474,12 +474,12 @@ end
 --======================================================--
 -- newNavBar Support
 
-function Widget._loadNavBarSupport()
+function Widget._loadNavBarSupport( params )
 	-- print( "Widget._loadNavBarSupport" )
 
 	--== Dependencies
 
-	Widget._loadButtonSupport()
+	Widget._loadButtonSupport( params )
 
 	--== Nav Bar Components
 
@@ -490,8 +490,8 @@ function Widget._loadNavBarSupport()
 	Widget.NavItem=NavItem
 
 	--== Reverse order
-	NavItem.initialize( Widget )
-	NavBar.initialize( Widget )
+	NavItem.initialize( Widget, params )
+	NavBar.initialize( Widget, params )
 end
 
 function Widget.newNavBar( options )
@@ -548,7 +548,7 @@ end
 --======================================================--
 -- newText Support
 
-function Widget._loadTextSupport()
+function Widget._loadTextSupport( params )
 	-- print( "Widget._loadTextSupport" )
 
 	--== Text Components
@@ -560,8 +560,8 @@ function Widget._loadTextSupport()
 	Widget.Style.Text=TextStyle
 
 	--== Reverse order
-	TextStyle.initialize( Widget )
-	Text.initialize( Widget )
+	TextStyle.initialize( Widget, params )
+	Text.initialize( Widget, params )
 end
 
 function Widget.newText( options )
@@ -584,13 +584,13 @@ end
 --======================================================--
 -- TextField Support
 
-function Widget._loadTextFieldSupport()
+function Widget._loadTextFieldSupport( params )
 	-- print( "Widget._loadTextFieldSupport" )
 
 	--== Dependencies
 
-	Widget._loadBackgroundSupport()
-	Widget._loadTextSupport()
+	Widget._loadBackgroundSupport( params )
+	Widget._loadTextSupport( params )
 
 	--== TextField Components
 
@@ -601,8 +601,8 @@ function Widget._loadTextFieldSupport()
 	Widget.Style.TextField=TextFieldStyle
 
 	--== Reverse order
-	TextFieldStyle.initialize( Widget )
-	TextField.initialize( Widget )
+	TextFieldStyle.initialize( Widget, params )
+	TextField.initialize( Widget, params )
 end
 
 function Widget.newTextField( options )
