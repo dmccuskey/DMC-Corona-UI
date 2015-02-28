@@ -184,7 +184,7 @@ end
 --== Static Methods
 
 
-function RectangleStyle.initialize( manager )
+function RectangleStyle.initialize( manager, params )
 	-- print( "RectangleStyle.initialize", manager )
 	params = params or {}
 	if params.mode==nil then params.mode=ViewStyle.RUN_MODE end
