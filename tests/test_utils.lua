@@ -6,33 +6,33 @@
 --[[
 copy the following into test file
 
-local verifyButtonStyle = TestUtils.verifyButtonStyle
-local verifyButtonStateStyle = TestUtils.verifyButtonStateStyle
-local verifyBackgroundStyle = TestUtils.verifyBackgroundStyle
-local verifyBackgroundViewStyle = TestUtils.verifyBackgroundViewStyle
-local verifyTextStyle = TestUtils.verifyTextStyle
+local verifyButtonStyle = TestTestUtils.verifyButtonStyle
+local verifyButtonStateStyle = TestTestUtils.verifyButtonStateStyle
+local verifyBackgroundStyle = TestTestUtils.verifyBackgroundStyle
+local verifyBackgroundViewStyle = TestTestUtils.verifyBackgroundViewStyle
+local verifyTextStyle = TestTestUtils.verifyTextStyle
 
-local hasProperty = TestUtils.hasProperty
-local hasPropertyValue = TestUtils.hasPropertyValue
+local hasProperty = TestTestUtils.hasProperty
+local hasPropertyValue = TestTestUtils.hasPropertyValue
 
-local hasValidStyleProperties = TestUtils.hasValidStyleProperties
-local hasInvalidStyleProperties = TestUtils.hasInvalidStyleProperties
-
-
-local styleInheritsFrom = TestUtils.styleInheritsFrom
-local styleIsa = TestUtils.styleIsa
-
-local styleRawPropertyValueIs = TestUtils.styleRawPropertyValueIs
-local stylePropertyValueIs = TestUtils.stylePropertyValueIs
-
-local styleHasProperty = TestUtils.styleHasProperty
-local styleInheritsProperty = TestUtils.styleInheritsProperty
+local hasValidStyleProperties = TestTestUtils.hasValidStyleProperties
+local hasInvalidStyleProperties = TestTestUtils.hasInvalidStyleProperties
 
 
-local styleHasPropertyValue = TestUtils.styleHasPropertyValue
-local styleInheritsPropertyValue = TestUtils.styleInheritsPropertyValue
+local styleInheritsFrom = TestTestUtils.styleInheritsFrom
+local styleIsa = TestTestUtils.styleIsa
 
-local styleInheritsPropertyValueFrom = TestUtils.styleInheritsPropertyValueFrom
+local styleRawPropertyValueIs = TestTestUtils.styleRawPropertyValueIs
+local stylePropertyValueIs = TestTestUtils.stylePropertyValueIs
+
+local styleHasProperty = TestTestUtils.styleHasProperty
+local styleInheritsProperty = TestTestUtils.styleInheritsProperty
+
+
+local styleHasPropertyValue = TestTestUtils.styleHasPropertyValue
+local styleInheritsPropertyValue = TestTestUtils.styleInheritsPropertyValue
+
+local styleInheritsPropertyValueFrom = TestTestUtils.styleInheritsPropertyValueFrom
 
 --]]
 
@@ -49,19 +49,81 @@ local Widgets = require 'lib.dmc_widgets'
 --== Setup, Constants
 
 
+local Utils = {}
+
 local sformat = string.format
 
 
 
 --====================================================================--
---== DMC Widgets Test Utils
+--== Support Functions
+
+
+function Utils.propertyIn( list, property )
+	for i = 1, #list do
+		if list[i] == property then return true end
+	end
+	return false
+end
+
+
+local function propertyIsColor( property )
+	if Utils.propertyIn( {'fillColor', 'textColor', 'strokeColor'}, property ) then
+		return true
+	end
+	return false
+end
+
+
+local function colorsAreEqual( c1, c2 )
+	local result = true
+	if c1==nil and c2==nil then
+		result=true
+	elseif c1==nil or c2==nil then
+		result=false
+	else
+		if c1[1]~=c2[1] then result=false end
+		if c1[2]~=c2[2] then result=false end
+		if c1[3]~=c2[3] then result=false end
+		if c1[4]~=c2[4] then result=false end
+	end
+	return result
+end
+
+
+local function formatColor( value )
+	local str = ""
+	if value==nil then
+		str = sformat( "(nil, nil, nil, nil)" )
+	else
+		str = sformat( "(%s, %s, %s, %s)", unpack( value ) )
+	end
+	return str
+end
+
+
+local function format( property, value )
+	-- print( "format", property, value )
+	local str = ""
+	if propertyIsColor( property ) then
+		str = sformat( "'%s' %s", tostring(property), formatColor( value ) )
+	else
+		str = sformat( "'%s'", tostring(property) )
+	end
+	return str
+end
+
+
+
+--====================================================================--
+--== DMC Widgets Test TestUtils
 --====================================================================--
 
 
-local Utils = {}
+local TestUtils = {}
 
 
-function Utils.outputMarker()
+function TestUtils.outputMarker()
 	print( "\n\n\n MARKER \n\n\n" )
 end
 
@@ -69,66 +131,66 @@ end
 --======================================================--
 -- Base Style Verification
 
-function Utils.verifyTextStyle( style )
-	assert( style, "Utils.verifyTextStyle missing arg 'style'" )
+function TestUtils.verifyTextStyle( style )
+	assert( style, "TestUtils.verifyTextStyle missing arg 'style'" )
 	local Text = Widgets.Style.Text
 
-	Utils.styleIsa( style, Text )
+	TestUtils.styleIsa( style, Text )
 
-	Utils.hasProperty( style, 'debugOn' )
+	TestUtils.hasProperty( style, 'debugOn' )
 	--[[
 	width & height can be optional
-	-- Utils.hasProperty( style, 'width' )
-	-- Utils.hasProperty( style, 'height' )
+	-- TestUtils.hasProperty( style, 'width' )
+	-- TestUtils.hasProperty( style, 'height' )
 	--]]
-	Utils.hasProperty( style, 'anchorX' )
-	Utils.hasProperty( style, 'anchorY' )
+	TestUtils.hasProperty( style, 'anchorX' )
+	TestUtils.hasProperty( style, 'anchorY' )
 
-	Utils.hasProperty( style, 'align' )
-	Utils.hasProperty( style, 'fillColor' )
-	Utils.hasProperty( style, 'font' )
-	Utils.hasProperty( style, 'fontSize' )
-	Utils.hasProperty( style, 'marginX' )
-	Utils.hasProperty( style, 'marginY' )
-	Utils.hasProperty( style, 'strokeColor' )
-	Utils.hasProperty( style, 'strokeWidth' )
-	Utils.hasProperty( style, 'textColor' )
+	TestUtils.hasProperty( style, 'align' )
+	TestUtils.hasProperty( style, 'fillColor' )
+	TestUtils.hasProperty( style, 'font' )
+	TestUtils.hasProperty( style, 'fontSize' )
+	TestUtils.hasProperty( style, 'marginX' )
+	TestUtils.hasProperty( style, 'marginY' )
+	TestUtils.hasProperty( style, 'strokeColor' )
+	TestUtils.hasProperty( style, 'strokeWidth' )
+	TestUtils.hasProperty( style, 'textColor' )
 
 end
 
 
-function Utils.verifyBackgroundViewStyle( style )
-	assert( style, "Utils.verifyBackgroundViewStyle missing arg 'style'" )
+function TestUtils.verifyBackgroundViewStyle( style )
+	assert( style, "TestUtils.verifyBackgroundViewStyle missing arg 'style'" )
 	local StyleFactory = Widgets.Style.BackgroundFactory
 	local BaseViewStyle = StyleFactory.Style.Base
 	local Rectangle = StyleFactory.Style.Rectangle
 	local Rounded = StyleFactory.Style.Rounded
 
-	Utils.styleIsa( style, BaseViewStyle )
+	TestUtils.styleIsa( style, BaseViewStyle )
 
-	Utils.hasProperty( style, 'debugOn' )
-	Utils.hasProperty( style, 'width' )
-	Utils.hasProperty( style, 'height' )
-	Utils.hasProperty( style, 'anchorX' )
-	Utils.hasProperty( style, 'anchorY' )
-	Utils.hasProperty( style, 'type' )
+	TestUtils.hasProperty( style, 'debugOn' )
+	TestUtils.hasProperty( style, 'width' )
+	TestUtils.hasProperty( style, 'height' )
+	TestUtils.hasProperty( style, 'anchorX' )
+	TestUtils.hasProperty( style, 'anchorY' )
+	TestUtils.hasProperty( style, 'type' )
 
 	local type = style.type
 
 	if style.type==Rectangle.type then
-		Utils.styleIsa( style, Rectangle )
+		TestUtils.styleIsa( style, Rectangle )
 		assert_equal( style.NAME, Rectangle.NAME, "background view name is incorrect" )
-		Utils.hasProperty( style, 'fillColor' )
-		Utils.hasProperty( style, 'strokeColor' )
-		Utils.hasProperty( style, 'strokeWidth' )
+		TestUtils.hasProperty( style, 'fillColor' )
+		TestUtils.hasProperty( style, 'strokeColor' )
+		TestUtils.hasProperty( style, 'strokeWidth' )
 
 	elseif style.type==Rounded.type then
-		Utils.styleIsa( style, Rounded )
+		TestUtils.styleIsa( style, Rounded )
 		assert_equal( style.NAME, Rounded.NAME, "background view name is incorrect" )
-		Utils.hasProperty( style, 'cornerRadius' )
-		Utils.hasProperty( style, 'fillColor' )
-		Utils.hasProperty( style, 'strokeColor' )
-		Utils.hasProperty( style, 'strokeWidth' )
+		TestUtils.hasProperty( style, 'cornerRadius' )
+		TestUtils.hasProperty( style, 'fillColor' )
+		TestUtils.hasProperty( style, 'strokeColor' )
+		TestUtils.hasProperty( style, 'strokeWidth' )
 	else
 		error( sformat( "Background view type not implemented '%s'", tostring( style.type ) ))
 	end
@@ -136,54 +198,54 @@ function Utils.verifyBackgroundViewStyle( style )
 
 end
 
-function Utils.verifyBackgroundStyle( style )
-	assert( style, "Utils.verifyBackgroundStyle missing arg 'style'" )
+function TestUtils.verifyBackgroundStyle( style )
+	assert( style, "TestUtils.verifyBackgroundStyle missing arg 'style'" )
 	local Background = Widgets.Style.Background
 	local child, emsg
 
-	Utils.styleIsa( style, Background )
+	TestUtils.styleIsa( style, Background )
 
 	if style.inherit then
-		Utils.styleIsa( style.inherit, Background )
+		TestUtils.styleIsa( style.inherit, Background )
 	else
-		Utils.styleInheritsFrom( style, nil )
+		TestUtils.styleInheritsFrom( style, nil )
 	end
 
 	assert_equal( style.NAME, Background.NAME, "background name is incorrect" )
 
-	Utils.hasProperty( style, 'debugOn' )
-	Utils.hasProperty( style, 'width' )
-	Utils.hasProperty( style, 'height' )
-	Utils.hasProperty( style, 'anchorX' )
-	Utils.hasProperty( style, 'anchorY' )
-	Utils.hasProperty( style, 'type' )
-	Utils.hasProperty( style, 'view' )
+	TestUtils.hasProperty( style, 'debugOn' )
+	TestUtils.hasProperty( style, 'width' )
+	TestUtils.hasProperty( style, 'height' )
+	TestUtils.hasProperty( style, 'anchorX' )
+	TestUtils.hasProperty( style, 'anchorY' )
+	TestUtils.hasProperty( style, 'type' )
+	TestUtils.hasProperty( style, 'view' )
 
 	child = style.view
 	assert_true( child, "Background style is missing child property 'view'" )
 	assert_equal( style.type, child.type, "type mismatch in background type, child view" )
 
-	Utils.verifyBackgroundViewStyle( child )
+	TestUtils.verifyBackgroundViewStyle( child )
 end
 
 
-function Utils.verifyButtonStateStyle( style )
-	assert( style, "Utils.verifyButtonStateStyle missing arg 'style'" )
+function TestUtils.verifyButtonStateStyle( style )
+	assert( style, "TestUtils.verifyButtonStateStyle missing arg 'style'" )
 
 	local child
 
 	child = style.label
 	assert_true( child )
-	Utils.verifyTextStyle( child )
+	TestUtils.verifyTextStyle( child )
 
 	child = style.background
 	assert_true( child )
-	Utils.verifyBackgroundStyle( child )
+	TestUtils.verifyBackgroundStyle( child )
 
 end
 
-function Utils.verifyButtonStyle( style )
-	assert( style, "Utils.verifyButtonStyle missing arg 'style'" )
+function TestUtils.verifyButtonStyle( style )
+	assert( style, "TestUtils.verifyButtonStyle missing arg 'style'" )
 
 	local child
 
@@ -191,15 +253,15 @@ function Utils.verifyButtonStyle( style )
 
 	child = style.active
 	assert_true( child )
-	Utils.verifyButtonStateStyle( child )
+	TestUtils.verifyButtonStateStyle( child )
 
 	child = style.inactive
 	assert_true( child )
-	Utils.verifyButtonStateStyle( child )
+	TestUtils.verifyButtonStateStyle( child )
 
 	child = style.disabled
 	assert_true( child )
-	Utils.verifyButtonStateStyle( child )
+	TestUtils.verifyButtonStateStyle( child )
 
 end
 
@@ -212,9 +274,9 @@ end
 -- checks whether style has a non-nil property
 -- via inheritance or local
 --
-function Utils.hasProperty( source, property )
-	assert( source, "Utils.hasProperty missing arg 'source'" )
-	assert( property, "Utils.hasProperty missing arg 'property'" )
+function TestUtils.hasProperty( source, property )
+	assert( source, "TestUtils.hasProperty missing arg 'source'" )
+	assert( property, "TestUtils.hasProperty missing arg 'property'" )
 	local emsg = sformat( "missing property '%s'", tostring( property ) )
 	assert_true( source[property]~=nil, emsg )
 end
@@ -223,27 +285,33 @@ end
 -- checks whether style has a value for property
 -- via inheritance or local
 --
-function Utils.hasPropertyValue( source, property, value )
-	assert( source, "Utils.hasPropertyValue missing arg 'source'" )
-	assert( property, "Utils.hasPropertyValue missing arg 'property'" )
+function TestUtils.hasPropertyValue( source, property, value )
+	assert( source, "TestUtils.hasPropertyValue missing arg 'source'" )
+	assert( property, "TestUtils.hasPropertyValue missing arg 'property'" )
 	local emsg = sformat( "incorrect value for property '%s'", tostring( property ) )
-	assert_equal( source[property], value, emsg )
+	if propertyIsColor( property ) then
+		emsg = sformat( "color mismatch %s<>%s", formatColor( source[property] ), formatColor( value ) )
+		assert_true( colorsAreEqual( source[property], value ), emsg )
+	else
+		assert_equal( source[property], value, emsg )
+	end
 end
 
 
-function Utils.hasValidStyleProperties( class, source )
-	assert( class, "Utils.hasValidStyleProperties missing 'class'" )
-	assert( source, "Utils.hasValidStyleProperties missing 'source'" )
+function TestUtils.hasValidStyleProperties( class, source )
+	assert( class, "TestUtils.hasValidStyleProperties missing 'class'" )
+	assert( source, "TestUtils.hasValidStyleProperties missing 'source'" )
 	local emsg = sformat( "invalid class properties for '%s'", tostring( class ) )
 	assert_true( class._verifyStyleProperties( source ), emsg )
 end
 
-function Utils.hasInvalidStyleProperties( class, source )
-	assert( class, "Utils.hasInvalidStyleProperties missing arg 'class'" )
-	assert( source, "Utils.hasInvalidStyleProperties missing arg 'source'" )
+function TestUtils.hasInvalidStyleProperties( class, source )
+	assert( class, "TestUtils.hasInvalidStyleProperties missing arg 'class'" )
+	assert( source, "TestUtils.hasInvalidStyleProperties missing arg 'source'" )
 	local emsg = sformat( "invalid class properties for '%s'", tostring( class.NAME ) )
 	assert_false( class._verifyStyleProperties( source ), emsg )
 end
+
 
 
 --======================================================--
@@ -253,16 +321,16 @@ end
 -- tests to see if Style inheritance matches
 -- tests for Inherit match
 --
-function Utils.styleInheritsFrom( style, class )
-	assert( style, "Utils.styleInheritsFrom missing arg 'style'" )
+function TestUtils.styleInheritsFrom( style, class )
+	assert( style, "TestUtils.styleInheritsFrom missing arg 'style'" )
 	local emsg = sformat( "incorrect class inheritance for '%s'", tostring( style ) )
 	assert_equal( style._inherit, class, emsg )
 end
 
 
-function Utils.styleIsa( style, class )
-	assert( style, "Utils.styleIsa missing arg 'style'" )
-	assert( class, "Utils.styleIsa missing arg 'class'" )
+function TestUtils.styleIsa( style, class )
+	assert( style, "TestUtils.styleIsa missing arg 'style'" )
+	assert( class, "TestUtils.styleIsa missing arg 'class'" )
 	local emsg = sformat( "incorrect base class for '%s', expected '%s'", tostring(style), tostring(class) )
 	assert_true( style:isa( class ), emsg )
 end
@@ -272,10 +340,10 @@ end
 -- tests to see whether the property value matches test value
 -- test only local property value
 --
-function Utils.styleRawPropertyValueIs( style, property, value )
-	assert( style, "Utils.styleRawPropertyValueIs missing arg 'style'" )
-	assert( property, "Utils.styleRawPropertyValueIs missing arg 'property'" )
-	local emsg = sformat( "incorrect local property value for '%s'", tostring( property ) )
+function TestUtils.styleRawPropertyValueIs( style, property, value )
+	assert( style, "TestUtils.styleRawPropertyValueIs missing arg 'style'" )
+	assert( property, "TestUtils.styleRawPropertyValueIs missing arg 'property'" )
+	local emsg = sformat( "incorrect local property value for '%s'", format( property, value ) )
 
 	-- local value
 	assert_equal( style:_getRawProperty( property), value, emsg )
@@ -285,10 +353,10 @@ end
 -- tests to see whether the property value matches test value
 -- tests either local or inherited values
 --
-function Utils.stylePropertyValueIs( style, property, value )
-	assert( style, "Utils.stylePropertyValueIs missing arg 'style'" )
-	assert( property, "Utils.stylePropertyValueIs missing arg 'property'" )
-	local emsg = sformat( "incorrect value for property '%s'", tostring( property ) )
+function TestUtils.stylePropertyValueIs( style, property, value )
+	assert( style, "TestUtils.stylePropertyValueIs missing arg 'style'" )
+	assert( property, "TestUtils.stylePropertyValueIs missing arg 'property'" )
+	local emsg = sformat( "incorrect value for property '%s'", format( property, value ) )
 	-- using getters (inheritance)
 	assert_equal( style[property], value, emsg )
 end
@@ -298,9 +366,9 @@ end
 -- tests to see whether the property value is local to Style
 -- test whether local property is NOT nil
 --
-function Utils.styleHasProperty( style, property )
-	assert( style, "Utils.styleHasProperty missing arg 'style'" )
-	assert( property, "Utils.styleHasProperty missing arg 'property'" )
+function TestUtils.styleHasProperty( style, property )
+	assert( style, "TestUtils.styleHasProperty missing arg 'style'" )
+	assert( property, "TestUtils.styleHasProperty missing arg 'property'" )
 	local emsg = sformat( "style inherits property '%s'", tostring( property ) )
 	assert_true( style:_getRawProperty(property)~=nil, emsg )
 end
@@ -309,9 +377,9 @@ end
 -- tests to see whether the style inherits its property
 -- test whether local property is nil
 --
-function Utils.styleInheritsProperty( style, property )
-	assert( style, "Utils.styleInheritsProperty missing arg style'" )
-	assert( property, "Utils.styleInheritsProperty missing arg 'property'" )
+function TestUtils.styleInheritsProperty( style, property )
+	assert( style, "TestUtils.styleInheritsProperty missing arg style'" )
+	assert( property, "TestUtils.styleInheritsProperty missing arg 'property'" )
 	local emsg = sformat( "style has local property '%s'", tostring( property ) )
 	assert_true( style:_getRawProperty(property)==nil, emsg )
 end
@@ -324,10 +392,10 @@ end
 -- combo test to see whether the property value is local to Style
 -- checks all possibilities
 --
-function Utils.styleHasPropertyValue( style, property, value )
-	Utils.stylePropertyValueIs( style, property, value )
-	Utils.styleHasProperty( style, property )
-	Utils.styleRawPropertyValueIs( style, property, value )
+function TestUtils.styleHasPropertyValue( style, property, value )
+	TestUtils.stylePropertyValueIs( style, property, value )
+	TestUtils.styleHasProperty( style, property )
+	TestUtils.styleRawPropertyValueIs( style, property, value )
 end
 
 
@@ -335,10 +403,10 @@ end
 -- combo test to see whether the property value is local to Style
 -- checks all possibilities
 --
-function Utils.styleInheritsPropertyValue( style, property, value )
-	Utils.stylePropertyValueIs( style, property, value )
-	Utils.styleInheritsProperty( style, property )
-	Utils.styleRawPropertyValueIs( style, property, nil )
+function TestUtils.styleInheritsPropertyValue( style, property, value )
+	TestUtils.stylePropertyValueIs( style, property, value )
+	TestUtils.styleInheritsProperty( style, property )
+	TestUtils.styleRawPropertyValueIs( style, property, nil )
 end
 
 
@@ -346,13 +414,13 @@ end
 -- combo test to see whether the property value is inherited
 -- checks all possibilities
 --
-function Utils.styleInheritsPropertyValueFrom( style, property, value, inherit )
-	Utils.stylePropertyValueIs( style, property, value )
-	Utils.styleInheritsProperty( style, property )
-	Utils.styleInheritsFrom( style, inherit )
+function TestUtils.styleInheritsPropertyValueFrom( style, property, value, inherit )
+	TestUtils.stylePropertyValueIs( style, property, value )
+	TestUtils.styleInheritsProperty( style, property )
+	TestUtils.styleInheritsFrom( style, inherit )
 end
 
 
 
 
-return Utils
+return TestUtils
