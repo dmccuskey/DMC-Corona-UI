@@ -139,6 +139,22 @@ BackgroundStyle._STYLE_DEFAULTS = {
 	view=nil
 }
 
+BackgroundStyle._TEST_DEFAULTS = {
+	name='background-test-style',
+	debugOn=true,
+	width=301,
+	height=302,
+	anchorX=303,
+	anchorY=304,
+
+	-- these values can change
+	type=nil,
+	view=nil
+}
+
+BackgroundStyle.MODE = BaseStyle.RUN_MODE
+BackgroundStyle._DEFAULTS = BackgroundStyle._STYLE_DEFAULTS
+
 --== Event Constants
 
 BackgroundStyle.EVENT = 'background-style-event'
@@ -185,15 +201,24 @@ end
 --== Static Methods
 
 
-function BackgroundStyle.initialize( manager )
+function BackgroundStyle.initialize( manager, params )
 	-- print( "BackgroundStyle.initialize", manager )
+	params = params or {}
+	if params.mode==nil then params.mode=BaseStyle.RUN_MODE end
+	--==--
 	Widgets = manager
 	StyleFactory = Widgets.Style.BackgroundFactory
+
+	if params.mode==BaseStyle.TEST_MODE then
+		BackgroundStyle.MODE = BaseStyle.TEST_MODE
+		BackgroundStyle._DEFAULTS = BackgroundStyle._TEST_DEFAULTS
+	end
+	local defaults = BackgroundStyle._DEFAULTS
 
 	-- set LOCAL defaults before creating classes next
 	BackgroundStyle._DEFAULT_VIEWTYPE = StyleFactory.Rounded.TYPE
 
-	BackgroundStyle._setDefaults( BackgroundStyle )
+	BackgroundStyle._setDefaults( BackgroundStyle, {defaults=defaults} )
 end
 
 
@@ -214,8 +239,8 @@ function BackgroundStyle.addMissingDestProperties( dest, srcs )
 	srcs = srcs or {}
 	local lsrc = Utils.extend( srcs, {} )
 	if lsrc.parent==nil then lsrc.parent=dest end
-	if lsrc.main==nil then lsrc.main=BackgroundStyle._STYLE_DEFAULTS end
-	lsrc.widget = BackgroundStyle._STYLE_DEFAULTS
+	if lsrc.main==nil then lsrc.main=BackgroundStyle._DEFAULTS end
+	lsrc.widget = BackgroundStyle._DEFAULTS
 	--==--
 
 	dest = BaseStyle.addMissingDestProperties( dest, lsrc )
@@ -301,17 +326,20 @@ end
 -- _setDefaults()
 -- create one of each style
 --
-function BackgroundStyle._setDefaults( StyleClass )
+function BackgroundStyle._setDefaults( StyleClass, params )
 	-- print( "BackgroundStyle._setDefaults", StyleClass )
+	params = params or {}
+	if params.defaults==nil then params.defaults=StyleClass._STYLE_DEFAULTS end
+	--==--
 	local BASE_STYLES = StyleClass._BASE_STYLES
-	local defaults = StyleClass._STYLE_DEFAULTS
+	local def = params.defaults
 
 	local classes = StyleFactory.getStyleClasses()
 
 	for _, Cls in ipairs( classes ) do
 		local cls_type = Cls.TYPE
 		local struct = BackgroundStyle.createStyleStructure( cls_type )
-		local def = Utils.extend( defaults, struct )
+		local def = Utils.extend( def, struct )
 		StyleClass._addMissingChildProperties( def, {def} )
 		local style = StyleClass:new{ data=def }
 		BASE_STYLES[ cls_type ] = style

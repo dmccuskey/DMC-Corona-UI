@@ -65,7 +65,7 @@ local marker = TestUtils.outputMarker
 
 function suite_setup()
 
-	Widgets._loadBackgroundSupport()
+	Widgets._loadBackgroundSupport( {mode='test'} )
 
 end
 
@@ -166,18 +166,18 @@ function test_addMissingProperties_Rectangle()
 	--== test partial base, partial source, partial destination, partial view
 
 	src = {
-		debugOn=200,
-		width=202,
-		fillColor={0,1,1,1,1,},
+		debugOn=100,
+		width=102,
+		fillColor={101,102,103,104,},
 
 		background = {
 			type='rectangle',
-			height=300,
-			anchorY=302,
+			height=110,
+			anchorY=112,
 			view={
-				debugOn=400,
-				anchorX=402,
-				height=404
+				debugOn=120,
+				anchorX=122,
+				height=124
 			}
 		}
 	}
@@ -203,23 +203,20 @@ function test_addMissingProperties_Rectangle()
 	hasPropertyValue( view, 'strokeColor', vDefaults.strokeColor )
 	hasPropertyValue( view, 'strokeWidth', vDefaults.strokeWidth )
 
-
-	local c1, c2 = {1,1,1}, {0,0,0}
-
 	src = {
-		debugOn=200,
-		width=202,
-		fillColor={0,1,1,1,1,},
+		debugOn=100,
+		width=102,
+		fillColor={10,12,14,16,},
 
 		background = {
 			type='rectangle',
-			height=300,
-			anchorY=302,
+			height=112,
+			anchorY=114,
 			view={
-				fillColor=c1,
-				debugOn=400,
-				anchorX=402,
-				height=404
+				fillColor={11,12,13,14},
+				debugOn=122,
+				anchorX=124,
+				height=126
 			}
 		}
 	}
@@ -241,7 +238,7 @@ function test_addMissingProperties_Rectangle()
 	hasPropertyValue( view, 'height', view.height )
 	hasPropertyValue( view, 'anchorX', view.anchorX )
 	hasPropertyValue( view, 'anchorY', vDefaults.anchorY )
-	hasPropertyValue( view, 'fillColor', c1 )
+	hasPropertyValue( view, 'fillColor', {11,12,13,14} )
 	hasPropertyValue( view, 'strokeColor', vDefaults.strokeColor )
 	hasPropertyValue( view, 'strokeWidth', vDefaults.strokeWidth )
 
@@ -1009,13 +1006,12 @@ function test_updateView_deltaINHERIT_setI_unsetT()
 	styleInheritsProperty( sView, 'strokeColor', iView.strokeColor )
 	styleInheritsProperty( sView, 'strokeWidth', iView.strokeWidth )
 
-	local c1 = {8,1,3}
-	iView.fillColor=c1
+	iView.fillColor={8,1,3}
 	iView.strokeWidth=99
-	styleHasPropertyValue( iView, 'fillColor', c1 )
+	styleHasPropertyValue( iView, 'fillColor', {8,1,3} )
 	styleHasPropertyValue( iView, 'strokeWidth', 99 )
 
-	styleInheritsProperty( sView, 'fillColor', c1 )
+	styleInheritsProperty( sView, 'fillColor', {8,1,3} )
 	styleInheritsProperty( sView, 'strokeWidth', 99 )
 
 	--== Unset (break) Inheritance
@@ -1043,7 +1039,7 @@ function test_updateView_deltaINHERIT_setI_unsetT()
 	hasPropertyValue( sView, 'type', 'rounded' )
 
 	styleHasPropertyValue( sView, 'cornerRadius', iView.cornerRadius )
-	styleHasPropertyValue( sView, 'fillColor', c1 )
+	styleHasPropertyValue( sView, 'fillColor', {8,1,3} )
 	styleHasPropertyValue( sView, 'strokeColor', iView.strokeColor )
 	styleHasPropertyValue( sView, 'strokeWidth', 99 )
 
@@ -1122,10 +1118,9 @@ function test_updateView_deltaINHERIT_setI_setSameT()
 	styleHasPropertyValue( sView, 'strokeColor', iView.strokeColor )
 	styleHasPropertyValue( sView, 'strokeWidth', iView.strokeWidth )
 
-	local c1 = {8,1,3}
-	iView.fillColor=c1
+	iView.fillColor={8,1,3}
 	iView.strokeWidth=99
-	styleHasPropertyValue( iView, 'fillColor', c1 )
+	styleHasPropertyValue( iView, 'fillColor', {8,1,3} )
 	styleHasPropertyValue( iView, 'strokeWidth', 99 )
 
 	styleHasPropertyValue( sView, 'fillColor', sbView.fillColor )
@@ -1210,11 +1205,10 @@ function test_updateView_deltaINHERIT_setI_setDiffT()
 	inherit = Widgets.newRoundedBackgroundStyle()
 	iView = inherit.view
 
-	local c1 = {8,1,3}
-	iView.fillColor=c1
+	iView.fillColor={8,1,3}
 	iView.strokeWidth=99
 
-	styleHasPropertyValue( iView, 'fillColor', c1 )
+	styleHasPropertyValue( iView, 'fillColor', {8,1,3} )
 	styleHasPropertyValue( iView, 'strokeWidth', 99 )
 
 
@@ -2065,7 +2059,6 @@ function test_inheritanceChangesUsingInheritancePropertyMismatch()
 	local inherit, iView, iDefaults
 	local prevView
 	local receivedResetEvent, callback
-	local c1, c2 = {1,1,1}, {0,0,0}
 
 
 	--======================================================--
@@ -2075,7 +2068,7 @@ function test_inheritanceChangesUsingInheritancePropertyMismatch()
 
 	inherit = Widgets.newRectangleBackgroundStyle{
 		view={
-			fillColor=c2,
+			fillColor={101,102,103,104},
 			strokeWidth=66
 		}
 	}
@@ -2090,7 +2083,7 @@ function test_inheritanceChangesUsingInheritancePropertyMismatch()
 	styleHasPropertyValue( inherit, 'type', 'rectangle' )
 	hasPropertyValue( iView, 'type', 'rectangle' )
 
-	styleHasPropertyValue( iView, 'fillColor', c2 )
+	styleHasPropertyValue( iView, 'fillColor', {101,102,103,104} )
 	styleHasPropertyValue( iView, 'strokeColor', iDefaults.strokeColor )
 	styleHasPropertyValue( iView, 'strokeWidth', 66 )
 
@@ -2099,7 +2092,7 @@ function test_inheritanceChangesUsingInheritancePropertyMismatch()
 	s1 = Widgets.newRoundedBackgroundStyle{
 		view={
 			cornerRadius=100,
-			fillColor=c1,
+			fillColor={111,112,113,114},
 			strokeWidth=99
 		}
 	}
@@ -2115,7 +2108,7 @@ function test_inheritanceChangesUsingInheritancePropertyMismatch()
 	hasPropertyValue( sView, 'type', 'rounded' )
 
 	styleHasPropertyValue( sView, 'cornerRadius', 100 )
-	styleHasPropertyValue( sView, 'fillColor', c1 )
+	styleHasPropertyValue( sView, 'fillColor', {111,112,113,114} )
 	styleHasPropertyValue( sView, 'strokeColor', sDefaults.strokeColor )
 	styleHasPropertyValue( sView, 'strokeWidth', 99 )
 
@@ -2138,10 +2131,11 @@ function test_inheritanceChangesUsingInheritancePropertyMismatch()
 
 	styleInheritsFrom( s1, inherit )
 	styleInheritsPropertyValue( s1, 'type', inherit.type )
+	styleInheritsFrom( sView, iView )
 	stylePropertyValueIs( sView , 'type', iView.type )
 
 	styleRawPropertyValueIs( sView, 'cornerRadius', nil ) -- erased
-	styleInheritsPropertyValue( sView, 'fillColor', c2 )
+	styleInheritsPropertyValue( sView, 'fillColor', {101,102,103,104} )
 	styleInheritsPropertyValue( sView, 'strokeColor', iDefaults.strokeColor )
 	styleInheritsPropertyValue( sView, 'strokeWidth', 66 )
 
@@ -2153,7 +2147,7 @@ function test_inheritanceChangesUsingInheritancePropertyMismatch()
 
 	inherit = Widgets.newRectangleBackgroundStyle{
 		view={
-			fillColor=c2,
+			fillColor={111,112,113,114},
 			strokeWidth=65
 		}
 	}
@@ -2161,7 +2155,7 @@ function test_inheritanceChangesUsingInheritancePropertyMismatch()
 	s1 = Widgets.newRoundedBackgroundStyle({
 		view={
 			cornerRadius=100,
-			fillColor=c1,
+			fillColor={101,102,103,104},
 			strokeWidth=99
 		}
 	},
@@ -2175,7 +2169,7 @@ function test_inheritanceChangesUsingInheritancePropertyMismatch()
 	stylePropertyValueIs( sView , 'type', iView.type )
 
 	styleRawPropertyValueIs( sView, 'cornerRadius', nil ) -- erased
-	styleInheritsPropertyValue( sView, 'fillColor', c2 )
+	styleInheritsPropertyValue( sView, 'fillColor', {111,112,113,114} )
 	styleInheritsPropertyValue( sView, 'strokeColor', iDefaults.strokeColor )
 	styleInheritsPropertyValue( sView, 'strokeWidth', 65 )
 
