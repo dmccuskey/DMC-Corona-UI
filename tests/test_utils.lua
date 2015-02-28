@@ -291,9 +291,9 @@ function TestUtils.hasPropertyValue( source, property, value )
 	local emsg = sformat( "incorrect value for property '%s'", tostring( property ) )
 	if propertyIsColor( property ) then
 		emsg = sformat( "color mismatch %s<>%s", formatColor( source[property] ), formatColor( value ) )
-		assert_true( colorsAreEqual( source[property], value ), emsg )
+		assert_true( colorsAreEqual( value, source[property] ), emsg )
 	else
-		assert_equal( source[property], value, emsg )
+		assert_equal( value, source[property], emsg )
 	end
 end
 
