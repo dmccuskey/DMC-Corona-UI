@@ -217,6 +217,9 @@ end
 
 function TextStyle.initialize( manager, params )
 	-- print( "TextStyle.initialize", manager )
+	params = params or {}
+	if params.mode==nil then params.mode=BaseStyle.RUN_MODE end
+	--==--
 	Widgets = manager
 
 	if params.mode==BaseStyle.TEST_MODE then
