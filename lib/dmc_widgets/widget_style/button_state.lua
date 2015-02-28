@@ -488,7 +488,7 @@ function ButtonStateStyle.__getters:align()
 end
 function ButtonStateStyle.__setters:align( value )
 	-- print( "ButtonStateStyle.__setters:align", value )
-	assert( (value==nil and self._inherit) or type(value)=='string' )
+	assert( type(value)=='string' or (value==nil and (self._inherit or self._isClearing)))
 	--==--
 	if value == self._align then return end
 	self._align = value
@@ -506,7 +506,7 @@ function ButtonStateStyle.__getters:isHitActive()
 end
 function ButtonStateStyle.__setters:isHitActive( value )
 	-- print( "ButtonStateStyle.__setters:isHitActive", value )
-	assert( type(value)=='boolean' or (value==nil and self._inherit) )
+	assert( type(value)=='boolean' or (value==nil and (self._inherit or self._isClearing)) )
 	--==--
 	if value == self._isHitActive then return end
 	self._isHitActive = value
@@ -525,7 +525,7 @@ function ButtonStateStyle.__getters:marginX()
 end
 function ButtonStateStyle.__setters:marginX( value )
 	-- print( "ButtonStateStyle.__setters:marginX", value )
-	assert( (type(value)=='number' and value>=0) or (value==nil and self._inherit) )
+	assert( (type(value)=='number' and value>=0) or (value==nil and (self._inherit or self._isClearing)) )
 	--==--
 	if value == self._marginX then return end
 	self._marginX = value
@@ -544,7 +544,7 @@ function ButtonStateStyle.__getters:marginY()
 end
 function ButtonStateStyle.__setters:marginY( value )
 	-- print( "ButtonStateStyle.__setters:marginY", value )
-	assert( (type(value)=='number' and value>=0) or (value==nil and self._inherit) )
+	assert( (type(value)=='number' and value>=0) or (value==nil and (self._inherit or self._isClearing)) )
 	--==--
 	if value == self._marginY then return end
 	self._marginY = value
@@ -564,7 +564,7 @@ function ButtonStateStyle.__getters:offsetX()
 end
 function ButtonStateStyle.__setters:offsetX( value )
 	-- print( "ButtonStateStyle.__setters:offsetX", value )
-	assert( (type(value)=='number' and value>=0) or (value==nil and self._inherit) )
+	assert( (type(value)=='number' and value>=0) or (value==nil and (self._inherit or self._isClearing)) )
 	--==--
 	if value == self._offsetX then return end
 	self._offsetX = value
@@ -583,7 +583,7 @@ function ButtonStateStyle.__getters:offsetY()
 end
 function ButtonStateStyle.__setters:offsetY( value )
 	-- print( "ButtonStateStyle.__setters:offsetY", value, self )
-	assert( (type(value)=='number' and value>=0) or (value==nil and self._inherit) )
+	assert( (type(value)=='number' and value>=0) or (value==nil and (self._inherit or self._isClearing)) )
 	--==--
 	if value==self._offsetY then return end
 	self._offsetY = value
