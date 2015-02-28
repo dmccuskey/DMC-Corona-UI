@@ -347,8 +347,14 @@ function TestUtils.styleRawPropertyValueIs( style, property, value )
 	assert( property, "TestUtils.styleRawPropertyValueIs missing arg 'property'" )
 	local emsg = sformat( "incorrect local property value for '%s'", format( property, value ) )
 
-	-- local value
-	assert_equal( style:_getRawProperty( property), value, emsg )
+	if propertyIsColor( property ) then
+		local color = style:_getRawProperty( property )
+		emsg = sformat( "color mismatch for property '%s' %s<>%s", property, formatColor( color ), formatColor( value ) )
+		assert_true( colorsAreEqual( value, color ), emsg )
+	else
+		-- local value
+		assert_equal( style:_getRawProperty( property ), value, emsg )
+	end
 end
 
 -- stylePropValueIs()
@@ -360,7 +366,12 @@ function TestUtils.stylePropertyValueIs( style, property, value )
 	assert( property, "TestUtils.stylePropertyValueIs missing arg 'property'" )
 	local emsg = sformat( "incorrect value for property '%s'", format( property, value ) )
 	-- using getters (inheritance)
-	assert_equal( style[property], value, emsg )
+	if propertyIsColor( property ) then
+		emsg = sformat( "color mismatch for '%s' %s<>%s", property, formatColor( style[property] ), formatColor( value ) )
+		assert_true( colorsAreEqual( value, style[property] ), emsg )
+	else
+		assert_equal( style[property], value, emsg )
+	end
 end
 
 
@@ -408,6 +419,7 @@ end
 function TestUtils.styleInheritsPropertyValue( style, property, value )
 	TestUtils.stylePropertyValueIs( style, property, value )
 	TestUtils.styleInheritsProperty( style, property )
+	-- last item is supposed to be nil
 	TestUtils.styleRawPropertyValueIs( style, property, nil )
 end
 
