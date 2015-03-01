@@ -788,6 +788,8 @@ end
 
 function TextFieldStyle:_doChildrenInherit( value )
 	-- print( "TextFieldStyle:_doChildrenInherit", value )
+	if not self._isInitialized then return end
+
 	self._background.inherit = value and value.background
 	self._hint.inherit = value and value.hint
 	self._display.inherit = value and value.display
