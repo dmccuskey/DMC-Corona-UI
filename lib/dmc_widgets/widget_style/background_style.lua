@@ -721,21 +721,6 @@ function BackgroundStyle:_updateViewStyle( params )
 	self.__isUpdatingView = nil
 end
 
---== updateStyle()
-
--- force is used when making exact copy of data
---
-function BackgroundStyle:updateStyle( src, params )
-	-- print( "BackgroundStyle:updateStyle", src )
-	BackgroundStyle.copyExistingSrcProperties( self, src, params )
-end
-
---== verifyProperties()
-
-function BackgroundStyle:verifyProperties()
-	-- print( "BackgroundStyle:verifyProperties", self )
-	return BackgroundStyle._verifyStyleProperties( self )
-end
 
 --== .inheritIsActive
 

@@ -430,7 +430,7 @@ function Style:cloneStyle()
 	local o = self.class:new{
 		inherit=self._inherit
 	}
-	o:updateStyle( self, {force=true} ) -- clone data, force
+	o:copyProperties( self, {force=true} ) -- clone data, force
 	return o
 end
 
