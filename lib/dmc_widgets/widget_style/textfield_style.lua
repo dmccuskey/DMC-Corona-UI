@@ -700,7 +700,7 @@ function TextFieldStyle.__getters:backgroundStyle()
 end
 function TextFieldStyle.__setters:backgroundStyle( value )
 	-- print( "TextFieldStyle.__setters:backgroundStyle", value )
-	assert( (value==nil and self._inherit) or type(value)=='string' )
+	assert( type(value)=='string' or (value==nil and (self._inherit or self._isClearing))  )
 	--==--
 	if value == self._bgStyle then return end
 	self._bgStyle = value
@@ -719,7 +719,7 @@ function TextFieldStyle.__getters:inputType()
 end
 function TextFieldStyle.__setters:inputType( value )
 	-- print( "TextFieldStyle.__setters:inputType", value )
-	assert( (value==nil and self._inherit) or type(value)=='string' )
+	assert( type(value)=='string' or (value==nil and (self._inherit or self._isClearing))  )
 	--==--
 	if value == self._inputType then return end
 	self._inputType = value
@@ -738,7 +738,7 @@ function TextFieldStyle.__getters:isHitActive()
 end
 function TextFieldStyle.__setters:isHitActive( value )
 	-- print( "TextFieldStyle.__setters:isHitActive", value )
-	assert( type(value)=='boolean' or (value==nil and self._inherit) )
+	assert( type(value)=='boolean' or (value==nil and (self._inherit or self._isClearing)) )
 	--==--
 	if value == self._isHitActive then return end
 	self._isHitActive = value
@@ -757,7 +757,7 @@ function TextFieldStyle.__getters:isSecure()
 end
 function TextFieldStyle.__setters:isSecure( value )
 	-- print( "TextFieldStyle.__setters:isSecure", value )
-	assert( type(value)=='boolean' or (value==nil and self._inherit) )
+	assert( type(value)=='boolean' or (value==nil and (self._inherit or self._isClearing)) )
 	--==--
 	if value==self._isSecure then return end
 	self._isSecure = value
@@ -776,7 +776,7 @@ function TextFieldStyle.__getters:returnKey()
 end
 function TextFieldStyle.__setters:returnKey( value )
 	-- print( "TextFieldStyle.__setters:returnKey", value )
-	assert( (value==nil and self._inherit) or type(value)=='string' )
+	assert( (value==nil and (self._inherit or self._isClearing)) or type(value)=='string' )
 	--==--
 	if value == self._inputType then return end
 	self._returnKey = value
