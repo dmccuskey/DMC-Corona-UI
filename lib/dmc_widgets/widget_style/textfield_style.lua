@@ -155,8 +155,8 @@ TextFieldStyle._STYLE_DEFAULTS = {
 		--]]
 		type='rectangle',
 		view={
-			fillColor={0.5,0.5,0.2,1},
-			strokeWidth=2,
+			fillColor={0.7,0.7,0.7,1},
+			strokeWidth=1,
 			strokeColor={0,0,0,1},
 		}
 	},
@@ -171,7 +171,7 @@ TextFieldStyle._STYLE_DEFAULTS = {
 		--]]
 		fillColor={0,0,0,0},
 		font=native.systemFont,
-		fontSize=24,
+		fontSize=18,
 		textColor={0.3,0.3,0.3,1},
 	},
 	display={
@@ -184,8 +184,8 @@ TextFieldStyle._STYLE_DEFAULTS = {
 		* marginX/Y
 		--]]
 		fillColor={0,0,0,0},
-		font=native.systemFontBold,
-		fontSize=24,
+		font=native.systemFont,
+		fontSize=18,
 		textColor={0.1,0.1,0.1,1},
 	},
 
