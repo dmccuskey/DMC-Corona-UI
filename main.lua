@@ -26,14 +26,19 @@ require 'tests.lunatest'
 
 -- Styles with no children
 
-lunatest.suite( 'tests.text_style_spec' ) -- ok
-lunatest.suite( 'tests.rectangle_view_style_spec' ) -- ok
-lunatest.suite( 'tests.rounded_view_style_spec' ) -- ok
+lunatest.suite( 'tests.text_style_spec' )
+lunatest.suite( 'tests.rectangle_view_style_spec' )
+lunatest.suite( 'tests.rounded_view_style_spec' )
 
 -- Styles with children
 
-lunatest.suite( 'tests.background_style_spec' ) -- ok
-lunatest.suite( 'tests.button_style_spec' ) -- ok
+lunatest.suite( 'tests.background_style_spec' )
+lunatest.suite( 'tests.button_style_spec' )
 lunatest.suite( 'tests.textfield_style_spec' )
 
-lunatest.run()
+
+lunatest.run({
+	-- verbose=true,
+	-- suite='background_style_spec',
+	-- test='test_backgroundStyleClassBasics'
+})
