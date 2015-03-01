@@ -29,8 +29,6 @@ local W, H = display.contentWidth, display.contentHeight
 local H_CENTER, V_CENTER = W*0.5, H*0.5
 
 
-local verifyBackgroundViewStyle = TestUtils.verifyBackgroundViewStyle
-
 local hasProperty = TestUtils.hasProperty
 local hasPropertyValue = TestUtils.hasPropertyValue
 
@@ -54,6 +52,10 @@ local styleInheritsPropertyValue = TestUtils.styleInheritsPropertyValue
 local styleInheritsPropertyValueFrom = TestUtils.styleInheritsPropertyValueFrom
 
 
+local verifyTextFieldStyle = TestUtils.verifyTextFieldStyle
+local marker = TestUtils.outputMarker
+
+
 
 --====================================================================--
 --== Support Functions
@@ -67,7 +69,7 @@ local styleInheritsPropertyValueFrom = TestUtils.styleInheritsPropertyValueFrom
 
 function suite_setup()
 
-	Widgets._loadBackgroundSupport()
+	Widgets._loadBackgroundSupport( {mode='test'} )
 
 end
 

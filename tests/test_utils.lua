@@ -251,8 +251,6 @@ function TestUtils.verifyButtonStyle( style )
 
 	local child
 
-	-- has children
-
 	child = style.active
 	assert_true( child )
 	TestUtils.verifyButtonStateStyle( child )
@@ -266,6 +264,27 @@ function TestUtils.verifyButtonStyle( style )
 	TestUtils.verifyButtonStateStyle( child )
 
 end
+
+
+function TestUtils.verifyTextFieldStyle( style )
+	assert( style, "TestUtils.verifyTextFieldStyle missing arg 'style'" )
+
+	local child
+
+	child = style.background
+	assert_true( child )
+	TestUtils.verifyBackgroundStyle( child )
+
+	child = style.hint
+	assert_true( child )
+	TestUtils.verifyTextStyle( child )
+
+	child = style.display
+	assert_true( child )
+	TestUtils.verifyTextStyle( child )
+
+end
+
 
 
 --======================================================--
