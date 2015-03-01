@@ -66,7 +66,7 @@ local widget_find = dmc_widget_func.find
 
 local Objects = require 'dmc_objects'
 local Utils = require 'dmc_utils'
-local WidgetUtils = require(widget_find( 'widget_utils' ))
+-- local WidgetUtils = require(widget_find( 'widget_utils' ))
 
 local BaseStyle = require( widget_find( 'widget_style.base_style' ) )
 
