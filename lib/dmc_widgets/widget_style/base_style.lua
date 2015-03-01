@@ -1176,7 +1176,7 @@ end
 function Style:_dispatchDestroyEvent( prop, value )
 	-- print( "Style:_dispatchDestroyEvent", prop, value, self )
 
-	local e = self:createEvent( self.PROPERTY_CHANGED, {property=prop,value=value}, {merge=true} )
+	local e = self:createEvent( self.STYLE_DESTROYED )
 
 	-- dispatch event to different listeners
 	if widget and widget.stylePropertyChangeHandler then
