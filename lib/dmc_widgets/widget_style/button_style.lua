@@ -484,13 +484,13 @@ function ButtonStyle._addMissingChildProperties( dest, srcs )
 	-- assert( child, sformat( eStr, 'active' ) )
 	StyleClass = Widgets.Style.ButtonState
 	lsrc.main = srcs.main and srcs.main.active
-	dest.active = StyleClass.addMissingDestProperties( child, sources )
+	dest.active = StyleClass.addMissingDestProperties( child, lsrc )
 
 	child = dest.disabled
 	-- assert( child, sformat( eStr, 'disabled' ) )
 	StyleClass = Widgets.Style.ButtonState
 	lsrc.main = srcs.main and srcs.main.disabled
-	dest.disabled = StyleClass.addMissingDestProperties( child, sources )
+	dest.disabled = StyleClass.addMissingDestProperties( child, lsrc )
 
 	return dest
 end
@@ -530,11 +530,11 @@ function ButtonStyle.copyExistingSrcProperties( dest, src, params )
 end
 
 
-function ButtonStyle._verifyStyleProperties( src )
+function ButtonStyle._verifyStyleProperties( src, exclude )
 	-- print( "ButtonStyle._verifyStyleProperties", src )
 	local emsg = "Style (ButtonStyle) requires property '%s'"
 
-	local is_valid = BaseStyle._verifyStyleProperties( src )
+	local is_valid = BaseStyle._verifyStyleProperties( src, exclude )
 
 	if not src.align then
 		print(sformat(emsg,'align')) ; is_valid=false
