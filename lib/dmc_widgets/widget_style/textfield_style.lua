@@ -191,6 +191,73 @@ TextFieldStyle._STYLE_DEFAULTS = {
 
 }
 
+
+TextFieldStyle._TEST_DEFAULTS = {
+	name='textfield-test-style',
+	debugOn=false,
+	width=501,
+	height=502,
+	anchorX=503,
+	anchorY=504,
+
+	align='textf-center',
+	backgroundStyle='textf-none',
+	inputType='textf-default',
+	isHitActive=true,
+	isHitTestable=true,
+	isSecure=false,
+	marginX=510,
+	marginY=511,
+	returnKey='done',
+
+	background={
+		--[[
+		Copied from TextField
+		* width
+		* height
+		* anchorX/Y
+		--]]
+		type='rectangle',
+		view={
+			fillColor={501,502,503,504},
+			strokeWidth=505,
+			strokeColor={511,512,513,514},
+		}
+	},
+	hint={
+		--[[
+		Copied from TextField
+		* width
+		* height
+		* align
+		* anchorX/Y
+		* marginX/Y
+		--]]
+		fillColor={521,522,523,524},
+		font=native.systemFont,
+		fontSize=524,
+		textColor={523,524,525,526},
+	},
+	display={
+		--[[
+		Copied from TextField
+		* width
+		* height
+		* align
+		* anchorX/Y
+		* marginX/Y
+		--]]
+		fillColor={531,532,533,534},
+		font=native.systemFontBold,
+		fontSize=534,
+		textColor={533,534,535,536},
+	},
+
+}
+
+TextFieldStyle.MODE = BaseStyle.RUN_MODE
+TextFieldStyle._DEFAULTS = TextFieldStyle._STYLE_DEFAULTS
+
 --== Event Constants
 
 TextFieldStyle.EVENT = 'textfield-style-event'
@@ -247,9 +314,18 @@ end
 --== Static Methods
 
 
-function TextFieldStyle.initialize( manager )
+function TextFieldStyle.initialize( manager, params )
 	-- print( "TextFieldStyle.initialize", manager )
+	params = params or {}
+	if params.mode==nil then params.mode=BaseStyle.RUN_MODE end
+	--==--
 	Widgets = manager
+
+	if params.mode==BaseStyle.TEST_MODE then
+		TextFieldStyle.MODE = BaseStyle.TEST_MODE
+		TextFieldStyle._DEFAULTS = TextFieldStyle._TEST_DEFAULTS
+	end
+	local defaults = TextFieldStyle._DEFAULTS
 
 	TextFieldStyle._setDefaults( TextFieldStyle )
 end
