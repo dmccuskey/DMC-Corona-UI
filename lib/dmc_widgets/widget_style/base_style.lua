@@ -204,7 +204,7 @@ function Style:__initComplete__()
 
 	self.inherit = self._inherit -- use setter
 	self.parent = self._parent -- use setter
-	-- self.widget = self._widget -- use setter
+	self.widget = self._widget -- use setter
 
 	assert( self:verifyProperties(), sfmt( "Missing properties for Style '%s'", tostring(self.class) ) )
 
@@ -219,9 +219,9 @@ function Style:__undoInitComplete__()
 
 	self:_dispatchDestroyEvent()
 
-	self.inherit = nil
-	self.parent = nil
 	self.widget = nil
+	self.parent = nil
+	self.inherit = nil
 
 	self:_destroyChildren()
 
