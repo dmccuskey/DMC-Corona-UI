@@ -717,6 +717,8 @@ end
 
 function ButtonStyle:_doChildrenInherit( value )
 	-- print( "ButtonStyle:_doChildrenInherit", value, self )
+	if not self._isInitialized then return end
+
 	self._inactive.inherit = value and value.inactive
 	self._active.inherit = value and value.active
 	self._disabled.inherit = value and value.disabled
