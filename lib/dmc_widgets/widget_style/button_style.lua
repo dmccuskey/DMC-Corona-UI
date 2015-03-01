@@ -666,7 +666,7 @@ function ButtonStyle.__getters:hitMarginX()
 end
 function ButtonStyle.__setters:hitMarginX( value )
 	-- print( "ButtonStyle.__setters:hitMarginX", value, self._inherit )
-	assert( (type(value)=='number' and value>=0) or (value==nil and self._inherit) )
+	assert( (type(value)=='number' and value>=0) or (value==nil and (self._inherit or self._isClearing)) )
 	--==--
 	if value == self._hitMarginX then return end
 	self._hitMarginX = value
@@ -685,7 +685,7 @@ function ButtonStyle.__getters:hitMarginY()
 end
 function ButtonStyle.__setters:hitMarginY( value )
 	-- print( "ButtonStyle.__setters:hitMarginY", value, self )
-	assert( (type(value)=='number' and value>=0) or (value==nil and self._inherit) )
+	assert( (type(value)=='number' and value>=0) or (value==nil and (self._inherit or self._isClearing)) )
 	--==--
 	if value==self._hitMarginY then return end
 	self._hitMarginY = value
@@ -704,7 +704,7 @@ function ButtonStyle.__getters:isHitActive()
 end
 function ButtonStyle.__setters:isHitActive( value )
 	-- print( "ButtonStyle.__setters:isHitActive", value )
-	assert( type(value)=='boolean' or (value==nil and self._inherit) )
+	assert( type(value)=='boolean' or (value==nil and (self._inherit or self._isClearing)) )
 	--==--
 	if value == self._isHitActive then return end
 	self._isHitActive = value
