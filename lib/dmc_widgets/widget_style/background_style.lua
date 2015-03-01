@@ -427,8 +427,9 @@ function BackgroundStyle:_doChildrenInherit( value, params )
 	assert( params )
 	--==--
 	if not self._isInitialized then return end
-
-	self:_updateViewStyle( { delta='inherit', cInherit=params.curr, nInherit=params.next, clearProperties=false } )
+	local cType = params.curr and params.curr.type
+	local cActiveInherit = (self._type==nil)
+	self:_updateViewStyle( { delta='inherit', cInherit=params.curr, nInherit=params.next, cType=cType, cActiveInherit=cActiveInherit, clearProperties=false } )
 end
 
 
@@ -501,25 +502,22 @@ function BackgroundStyle:_updateViewStyle( params )
 	params.nInherit = params.nInherit
 	params.clearProperties = params.clearProperties
 	--==--
-	local inheritIsActive = (self._type==nil)
-	local haveInheritedStyle = (self._inherit~=nil)
-	local styleType = self._type
-	local styleInherit = self._inherit
+	local actionInherit = (delta=='inherit')
+	local actionType = (delta=='type')
 	local viewStyle = self._view
 	local viewType = viewStyle.type
 	local viewInherit = viewStyle._inherit
 	local StyleClass, StyleBase
-	local doClear = params.clearProperties
-	local doReset = false
 	local delta = params.delta
-	local doInherit = (delta=='inherit')
-	local doType = (delta=='type')
+	local cActiveInherit = params.cActiveInherit
 	local cInherit, nInherit = params.cInherit, params.nInherit
 	local cType, nType = params.cType, params.nType
 	local bgType, bgInherit, bgData
 	local bgType_dirty, bgInherit_dirty, bgData_dirty = false, false, false
 	local vType, vInherit, vData
 	local vType_dirty, vInherit_dirty, vData_dirty = false, false, false
+	local doClear = params.clearProperties
+	local doReset = false
 
 	--== Sanity Check ==--
 
@@ -530,15 +528,8 @@ function BackgroundStyle:_updateViewStyle( params )
 	end
 	self.__isUpdatingView = true
 
-	-- coming in with one delta means the values for the
-	-- other 'delta' aren't set
-	if doType then
-		cInherit=styleInherit
-	else
-		cType=styleType
-	end
-
-	-- print( "UPDATE ", delta, nInherit, nType, inheritIsActive )
+	-- print( "UPDATE ", delta, cInherit, nInherit )
+	-- print( "UPDATE ", cType, nType, cActiveInherit )
 
 	--== Process Matrix
 
@@ -548,7 +539,7 @@ function BackgroundStyle:_updateViewStyle( params )
 			bgType_dirty=true ; bgType = nil
 			bgInherit_dirty=true ; bgInherit = nInherit
 			bgData_dirty=true ; bgData = {src={}, force=true, clearChildren=false}
-			vType_dirty=false ; vType = viewType -- no change
+			-- vType_dirty=false ; vType = viewType -- no change
 			vInherit_dirty=true ; vInherit = nInherit.view
 			vData_dirty=true ; vData = {src={}, force=true, clearChildren=false}
 
@@ -566,23 +557,23 @@ function BackgroundStyle:_updateViewStyle( params )
 		if not cInherit then
 			print( sformat( "[NOTICE] Inherit is already set to '%s'", tostring(nInherit) ))
 
-		elseif inheritIsActive then
+		elseif cActiveInherit then
 			-- have full-inheritance, ie, inherited and no local type
-			bgType_dirty=true ; bgType = self.type
-			bgInherit_dirty=true ; bgInherit = nil
+			bgType_dirty=true ; bgType = cType
+			-- bgInherit_dirty=false ; bgInherit = nil -- already done
 			bgData_dirty=true ; bgData = {src=cInherit, force=false, clearChildren=false}
-			vType_dirty=false ; vType = viewType -- no change
+			-- vType_dirty=false ; vType = viewType -- no change
 			vInherit_dirty=true ; vInherit = nil
-			vData_dirty=false ; vData = {src=viewInherit, force=false, clearChildren=false}
+			vData_dirty=true ; vData = {src=cInherit.view, force=false, clearChildren=false}
 
 		else
 			-- have inheritance, but not full. ie, have local type
-			bgType_dirty=false ; bgType = nil -- no change
+			-- bgType_dirty=false ; bgType = cType -- no change
 			bgInherit_dirty=true ; bgInherit = nil
 			bgData_dirty=true ; bgData = {src=cInherit, force=false, clearChildren=false}
-			vType_dirty=false ; vType = viewType -- no change
-			vInherit_dirty=false ; vInherit = nil -- no change
-			vData_dirty=true ; vData = {src=viewInherit, force=false, clearChildren=false}
+			-- vType_dirty=false ; vType = viewType -- no change
+			-- vInherit_dirty=false ; vInherit = nil -- no change
+			-- vData_dirty=false ; vData = nil -- no change
 		end
 
 	elseif delta=='type' and cInherit==nil then
@@ -599,10 +590,10 @@ function BackgroundStyle:_updateViewStyle( params )
 			StyleBase = self:getBaseStyle( nType )
 
 			bgType_dirty=true ; bgType = nType
-			bgInherit_dirty=false ; bgInherit = nil -- no change
-			bgData_dirty=false ; bgData = {src=StyleBase, force=false, clearChildren=false}
+			-- bgInherit_dirty=false ; bgInherit = nil -- no change
+			-- bgData_dirty=false ; bgData = {src=StyleBase, force=false, clearChildren=false}
 			vType_dirty=true ; vType = nType
-			vInherit_dirty=false ; vInherit = nil -- no change
+			-- vInherit_dirty=false ; vInherit = nil -- no change
 			vData_dirty=true ; vData = {src=StyleBase.view, force=true, clearChildren=false}
 		end
 
@@ -614,16 +605,16 @@ function BackgroundStyle:_updateViewStyle( params )
 		elseif nType==nil and cInherit.type==viewType then
 			-- unset type, view is correct
 			bgType_dirty=true ; bgType = nType
-			bgInherit_dirty=false ; bgInherit = nil -- no change
+			-- bgInherit_dirty=false ; bgInherit = nil -- no change
 			bgData_dirty=true ; bgData = {src={}, force=true, clearChildren=false}
-			vType_dirty=false ; vType = viewType -- no change
+			-- vType_dirty=false ; vType = viewType -- no change
 			vInherit_dirty=true ; vInherit = cInherit.view
 			vData_dirty=true ; vData = {src={}, force=true, clearChildren=false}
 
 		elseif nType==nil and cInherit.type~=viewType then
 			-- unset type, view is incorrect
 			bgType_dirty=true ; bgType = nType
-			bgInherit_dirty=false ; bgInherit = nil -- no change
+			-- bgInherit_dirty=false ; bgInherit = nil -- no change
 			bgData_dirty=true ; bgData = {src={}, force=true, clearChildren=false}
 			vType_dirty=true ; vType = cInherit.type
 			vInherit_dirty=true ; vInherit = cInherit.view
@@ -632,9 +623,9 @@ function BackgroundStyle:_updateViewStyle( params )
 		elseif cType==nil and nType==viewType then
 			-- new Type is SAME as inheritance
 			bgType_dirty=true ; bgType = nType
-			bgInherit_dirty=false ; bgInherit = nil -- no change
+			-- bgInherit_dirty=false ; bgInherit = nil -- no change
 			bgData_dirty=true ; bgData = {src=cInherit, force=false, clearChildren=false}
-			vType_dirty=false ; vType = nType -- no change
+			-- vType_dirty=false ; vType = nType -- no change
 			vInherit_dirty=true ; vInherit = nil -- stop inheritance
 			vData_dirty=true ; vData = {src=cInherit.view, force=true, clearChildren=false}
 
@@ -643,7 +634,7 @@ function BackgroundStyle:_updateViewStyle( params )
 			StyleBase = self:getBaseStyle( nType )
 
 			bgType_dirty=true ; bgType = nType
-			bgInherit_dirty=false ; bgInherit = nil -- no change
+			-- bgInherit_dirty=false ; bgInherit = nil -- no change
 			bgData_dirty=true ; bgData = {src=StyleBase, force=false, clearChildren=false}
 			vType_dirty=true ; vType = nType
 			vInherit_dirty=true ; vInherit = nil -- stop inheritance
@@ -655,8 +646,8 @@ function BackgroundStyle:_updateViewStyle( params )
 			StyleBase = self:getBaseStyle( nType )
 
 			bgType_dirty=true ; bgType = nType
-			bgInherit_dirty=false ; bgInherit = nil -- no change
-			bgData_dirty=false ; bgData = {src=StyleBase, force=false, clearChildren=false}
+			-- bgInherit_dirty=false ; bgInherit = nil -- no change
+			-- bgData_dirty=false ; bgData = {src=StyleBase, force=false, clearChildren=false}
 			vType_dirty=true ; vType = nType
 			vInherit_dirty=false ; vInherit = nil -- no change
 			vData_dirty=true ; vData = {src=StyleBase.view, force=true, clearChildren=false}
@@ -669,25 +660,6 @@ function BackgroundStyle:_updateViewStyle( params )
 
 	--== Do Work
 
-	if bgType_dirty then
-		-- print(">1 Set Type")
-		self._type = bgType
-		bgType_dirty=false
-	end
-	if bgInherit_dirty and not doInherit then
-		-- print(">1 Change Inherit")
-		self.inherit( bgData.src, bgData )
-		bgInherit_dirty=false
-
-		doReset=true
-	end
-	if bgData_dirty then
-		-- print(">1 Clear background")
-		self:_clearProperties( bgData.src, bgData )
-		bgData_dirty=false
-
-		doReset=true
-	end
 
 	if vType_dirty then
 		-- print(">2 Create View")
@@ -717,7 +689,29 @@ function BackgroundStyle:_updateViewStyle( params )
 		doReset=true
 	end
 
+	if bgInherit_dirty and not actionInherit then
+		-- print(">1 Change Inherit")
+		self.inherit = bgInherit
+		bgInherit_dirty=false
+
+		doReset=true
+	end
+	if bgData_dirty then
+		-- print(">1 Clear background")
+		self:_clearProperties( bgData.src, bgData )
+		bgData_dirty=false
+
+		doReset=true
+	end
+	if bgType_dirty then
+		-- print(">1 Set Type", bgType )
+		self._type = bgType -- XXX could change to setter, since i have block
+		bgType_dirty=false
+		-- SEND OUT EVENT, type changed
+	end
+
 	if doReset then
+		-- print(">3 Sending Reset")
 		self:_dispatchResetEvent()
 	end
 
@@ -746,11 +740,12 @@ function BackgroundStyle.__setters:type( value )
 	assert( (value==nil and self._inherit) or type(value)=='string' )
 	--==--
 	local cType, nType = self._type, value
+	local cActiveInherit = (self._type==nil)
 	self._type = value
 	if not self._isInitialized then return end
 
-	self:_updateViewStyle( { delta='type', cType=cType, nType=nType, clearProperties=true } )
-	self:_dispatchResetEvent()
+	self:_updateViewStyle( { delta='type', cType=cType, nType=nType, cInherit=self._inherit, cActiveInherit=cActiveInherit, clearProperties=true } )
+	-- self:_dispatchResetEvent() -- XXX remove this
 end
 
 
