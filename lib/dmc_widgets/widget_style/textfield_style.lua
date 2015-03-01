@@ -828,8 +828,10 @@ function TextFieldStyle:_destroyChildren()
 end
 
 
+
+-- TODO: more work when inheriting, etc (Background Style)
 function TextFieldStyle:_prepareData( data )
-	-- print("TextFieldStyle:_prepareData", data )
+	-- print("TextFieldStyle:_prepareData", data, self )
 	if not data then return end
 	--==--
 	local createStruct = TextFieldStyle.createStyleStructure
@@ -844,16 +846,31 @@ function TextFieldStyle:_prepareData( data )
 		local StyleClass
 		local src, dest = data, nil
 
-		dest = src.background
 		StyleClass = Widgets.Style.Background
+		createStruct = StyleClass.createStyleStructure
+		dest = src.background
+		if dest==nil then
+			dest = createStruct()
+			src.background = dest
+		end
 		StyleClass.copyExistingSrcProperties( dest, src )
 
+		StyleClass = Widgets.Style.Text
+		createStruct = StyleClass.createStyleStructure
 		dest = src.hint
-		StyleClass = Widgets.Style.Text
+		if dest==nil then
+			dest = createStruct()
+			src.hint = dest
+		end
 		StyleClass.copyExistingSrcProperties( dest, src )
 
-		dest = src.display
 		StyleClass = Widgets.Style.Text
+		createStruct = StyleClass.createStyleStructure
+		dest = src.display
+		if dest==nil then
+			dest = createStruct()
+			src.display = dest
+		end
 		StyleClass.copyExistingSrcProperties( dest, src )
 
 	end

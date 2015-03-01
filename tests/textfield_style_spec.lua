@@ -69,7 +69,7 @@ local marker = TestUtils.outputMarker
 
 function suite_setup()
 
-	Widgets._loadBackgroundSupport( {mode='test'} )
+	Widgets._loadTextFieldSupport( {mode='test'} )
 
 end
 
@@ -81,4 +81,26 @@ copied during initialization
 function test_addMissingProperties()
 end
 
+
+function test_styleClassBasics()
+	-- print( "test_styleClassBasics" )
+	local TextField = Widgets.Style.TextField
+	local BaseStyle, defaultStyles
+	local style
+
+	defaultStyles = TextField:getDefaultStyleValues()
+	BaseStyle = TextField:getBaseStyle()
+
+	--== Verify a new button style
+
+	style = Widgets.newTextFieldStyle()
+
+	TestUtils.verifyTextFieldStyle( style )
+	styleInheritsFrom( style, nil )
+
+	--== Destroy style
+
+	style:removeSelf()
+
+end
 
