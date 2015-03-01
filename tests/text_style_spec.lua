@@ -369,7 +369,8 @@ function test_styleClassBasics()
 	local Text = Widgets.Style.Text
 	local BaseStyle, defaultStyles
 	local style
-	defaultStyles = Text:getDefaultStyleValues({mode='test'})
+
+	defaultStyles = Text:getDefaultStyleValues()
 	BaseStyle = Text:getBaseStyle()
 
 	TestUtils.verifyTextStyle( BaseStyle )
@@ -391,7 +392,7 @@ function test_styleClassBasics()
 	styleHasPropertyValue( BaseStyle, 'marginY', defaultStyles.marginY )
 	styleHasPropertyValue( BaseStyle, 'textColor', defaultStyles.textColor )
 
-	--== Verify verify a new text style
+	--== Verify a new text style
 
 	style = Widgets.newTextStyle()
 

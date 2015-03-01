@@ -1219,7 +1219,6 @@ end
 
 
 
-
 --====================================================================--
 --== Event Handlers
 
@@ -1272,6 +1271,8 @@ function Style:_parentStyleEvent_handler( event )
 	end
 
 end
+
+
 
 
 return Style

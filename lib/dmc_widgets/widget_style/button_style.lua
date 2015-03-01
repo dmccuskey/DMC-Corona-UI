@@ -766,6 +766,7 @@ end
 
 -- we could have nil, Lua structure, or Instance
 --
+-- TODO: more work when inheriting, etc (Background Style)
 function ButtonStyle:_prepareData( data )
 	-- print("ButtonStyle:_prepareData", data, self )
 	if not data then return end
