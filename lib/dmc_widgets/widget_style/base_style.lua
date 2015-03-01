@@ -649,13 +649,11 @@ function Style.__setters:inherit( value )
 
 	self._inherit, self._inherit_f = self:_unlinkInherit( cInherit, cInherit_f )
 
+	if self._isDestroying then return end
 
 	--== Add new inherit link
 
 	self._inherit, self._inherit_f = self:_linkInherit( nInherit )
-
-
-	if self._isDestroying then return end
 
 	--== Choose Reset method
 
