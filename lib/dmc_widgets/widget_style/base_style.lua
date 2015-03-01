@@ -76,7 +76,7 @@ local Utils = require 'dmc_utils'
 local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
 
-local sformat = string.format
+local sfmt = string.format
 local tinsert = table.insert
 
 
@@ -206,7 +206,7 @@ function Style:__initComplete__()
 	self.parent = self._parent -- use setter
 	-- self.widget = self._widget -- use setter
 
-	assert( self:verifyProperties(), sformat( "Missing properties for Style '%s'", tostring(self.class) ) )
+	assert( self:verifyProperties(), sfmt( "Missing properties for Style '%s'", tostring(self.class) ) )
 
 	self._isInitialized = true
 end
@@ -374,19 +374,19 @@ function Style._verifyStyleProperties( src, exclude )
 	local is_valid = true
 
 	if type(src.debugOn)~='boolean' then
-		print(sformat(emsg,'debugOn')) ; is_valid=false
+		print( sfmt(emsg,'debugOn') ) ; is_valid=false
 	end
 	if not src.width and not exclude.width then
-		print(sformat(emsg,'width')) ; is_valid=false
+		print( sfmt(emsg,'width') ) ; is_valid=false
 	end
 	if not src.height and not exclude.height then
-		print(sformat(emsg,'height')) ; is_valid=false
+		print( sfmt(emsg,'height') ) ; is_valid=false
 	end
 	if not src.anchorX then
-		print(sformat(emsg,'anchorX')) ; is_valid=false
+		print( sfmt(emsg,'anchorX') ) ; is_valid=false
 	end
 	if not src.anchorY then
-		print(sformat(emsg,'anchorY')) ; is_valid=false
+		print( sfmt(emsg,'anchorY') ) ; is_valid=false
 	end
 
 	return is_valid
@@ -1110,8 +1110,8 @@ function Style:_parseData( data )
 	for prop, value in pairs( data ) do
 		-- print( prop, value )
 		if DEF[ prop ]==nil and not EXCL[ prop ] then
-			print( sformat("[WARNING] Skipping invalid style property '%s'", tostring(prop) ))
-			print( sformat("[WARNING] located in style definition for '%s'", tostring(self.NAME) ))
+			print( sfmt("[WARNING] Skipping invalid style property '%s'", tostring(prop) ))
+			print( sfmt("[WARNING] located in style definition for '%s'", tostring(self.NAME) ))
 		end
 		if not self:isChild( prop ) then
 			self[ prop ]=value
@@ -1266,7 +1266,7 @@ function Style:_parentStyleEvent_handler( event )
 			if func then
 				func( self, value, true )
 			else
-				error("[WARNING] Unknown property ".. property .. tostring(self) )
+				print( sfmt( "[WARNING] Unknown property '%s' on '%s'", tostring(property), tostring(self) ))
 			end
 		end
 	end
