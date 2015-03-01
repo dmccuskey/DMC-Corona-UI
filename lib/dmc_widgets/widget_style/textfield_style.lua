@@ -342,29 +342,22 @@ function TextFieldStyle.createStyleStructure( data )
 end
 
 
-function TextFieldStyle.addMissingDestProperties( dest, src, params )
-	-- print( "TextFieldStyle.addMissingDestProperties", dest, src )
+function TextFieldStyle.addMissingDestProperties( dest, srcs )
+	-- print( "TextFieldStyle.addMissingDestProperties", dest, srcs )
 	assert( dest )
-	params = params or {}
-	if params.force==nil then params.force=false end
+	srcs = srcs or {}
+	local lsrc = Utils.extend( srcs, {} )
+	if lsrc.parent==nil then lsrc.parent=dest end
+	if lsrc.main==nil then lsrc.main=TextFieldStyle._DEFAULTS end
+	lsrc.widget = TextFieldStyle._DEFAULTS
 	--==--
-	local force=params.force
-	local srcs = { TextFieldStyle._STYLE_DEFAULTS }
-	if src then tinsert( srcs, 1, src ) end
 
-	dest = BaseStyle.addMissingDestProperties( dest, src, params )
+	dest = BaseStyle.addMissingDestProperties( dest, lsrc )
 
-	for i=1,#srcs do
-		local src = srcs[i]
-
-		if dest.debugOn==nil or force then dest.debugOn=src.debugOn end
-
-		if dest.width==nil or force then dest.width=src.width end
-		if dest.height==nil or force then dest.height=src.height end
+	for _, key in ipairs( { 'main', 'parent', 'widget' } ) do
+		local src = lsrc[key] or {}
 
 		if dest.align==nil or force then dest.align=src.align end
-		if dest.anchorX==nil or force then dest.anchorX=src.anchorX end
-		if dest.anchorY==nil or force then dest.anchorY=src.anchorY end
 		if dest.backgroundStyle==nil or force then dest.backgroundStyle=src.backgroundStyle end
 		if dest.inputType==nil or force then dest.inputType=src.inputType end
 		if dest.isHitActive==nil or force then dest.isHitActive=src.isHitActive end
@@ -376,7 +369,7 @@ function TextFieldStyle.addMissingDestProperties( dest, src, params )
 
 	end
 
-	dest = TextFieldStyle._addMissingChildProperties( dest, params )
+	dest = TextFieldStyle._addMissingChildProperties( dest, lsrc )
 
 	return dest
 end
