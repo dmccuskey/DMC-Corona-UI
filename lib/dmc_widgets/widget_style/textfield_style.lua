@@ -803,7 +803,7 @@ function TextFieldStyle:_doChildrenInherit( value )
 end
 
 
-function TextFieldStyle:_clearChildrenProperties( style )
+function TextFieldStyle:_clearChildrenProperties( style, params )
 	-- print( "TextFieldStyle:_clearChildrenProperties", style, self )
 	assert( style==nil or type(style)=='table' )
 	if style and type(style.isa)=='function' then
@@ -813,13 +813,13 @@ function TextFieldStyle:_clearChildrenProperties( style )
 	local substyle
 
 	substyle = style and style.background
-	self._background:_clearProperties( substyle )
+	self._background:_clearProperties( substyle, params )
 
 	substyle = style and style.hint
-	self._hint:_clearProperties( substyle )
+	self._hint:_clearProperties( substyle, params )
 
 	substyle = style and style.display
-	self._display:_clearProperties( substyle )
+	self._display:_clearProperties( substyle, params )
 end
 
 

@@ -599,7 +599,7 @@ function ButtonStateStyle:_doChildrenInherit( value )
 end
 
 
-function ButtonStateStyle:_clearChildrenProperties( style )
+function ButtonStateStyle:_clearChildrenProperties( style, params )
 	-- print( "ButtonStateStyle:_clearChildrenProperties", style, self )
 	assert( style==nil or type(style)=='table' )
 	if style and type(style.isa)=='function' then
@@ -609,10 +609,10 @@ function ButtonStateStyle:_clearChildrenProperties( style )
 	local substyle
 
 	substyle = style and style.background
-	self._background:_clearProperties( substyle )
+	self._background:_clearProperties( substyle, params )
 
 	substyle = style and style.label
-	self._label:_clearProperties( substyle )
+	self._label:_clearProperties( substyle, params )
 end
 
 
