@@ -647,22 +647,6 @@ local function run_test(name, test, suite, hooks, setup, teardown)
 end
 
 
-local function cmd_line_switches(arg)
-   arg = arg or {}
-   local opts = {}
-   for i=1,#arg do
-      local v = arg[i]
-      if v == "-v" or v == "--verbose" then opts.verbose=true
-      elseif v == "-s" or v == "--suite" then
-         opts.suite_pat = arg[i+1]
-      elseif v == "-t" or v == "--test" then
-         opts.test_pat = arg[i+1]
-      end
-   end
-   return opts
-end
-
-
 local function failures_or_errors(r)
    if next(r.err) then return true end
    for k,f in pairs(r.fail) do
@@ -718,9 +702,13 @@ end
 --    matching this pattern.
 -- @usage If no hooks are provided and arg[1] == "-v", the
 -- verbose_hooks will be used.
-function run(hooks, suite_filter)
-   -- also check the namespace it's run in
-   local opts = cmd_line_switches(lt_arg)
+function run(opts)
+  opts = opts or {}
+  if opts.verbose==nil then opts.verbose=false end
+  if opts.close==nil then opts.close=false end
+  opts.suite_pat=opts.suite
+  opts.test_pat=opts.test
+  --==--
 
    -- Make stdout line-buffered for better interactivity when the output is
    -- not going to the terminal, e.g. is piped to another program.
@@ -756,7 +744,7 @@ function run(hooks, suite_filter)
    if failures_or_errors(results) or #failed_suites > 0 then
     -- [jwarden 6.27.2012] WARNING: verify this actually works; not sure
     -- how the commandlines arguments come in; as booleans or strings.
-    if opts.close == true or opts.c == true then
+    if opts.close == true then
       os.exit(1)
     end
    end
