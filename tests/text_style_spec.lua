@@ -398,6 +398,10 @@ function test_styleClassBasics()
 	TestUtils.verifyTextStyle( style )
 	styleInheritsFrom( style, nil )
 
+	--== Destroy style
+
+	style:removeSelf()
+
 end
 
 

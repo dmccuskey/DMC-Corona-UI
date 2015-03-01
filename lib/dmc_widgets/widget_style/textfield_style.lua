@@ -816,9 +816,16 @@ function TextFieldStyle:_clearChildrenProperties( style )
 end
 
 
+function TextFieldStyle:_destroyChildren()
+	self._background:removeSelf()
+	self._background=nil
 
---====================================================================--
---== Private Methods
+	self._hint:removeSelf()
+	self._hint=nil
+
+	self._display:removeSelf()
+	self._display=nil
+end
 
 
 function TextFieldStyle:_prepareData( data )

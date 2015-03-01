@@ -750,6 +750,20 @@ end
 --== Private Methods
 
 
+function ButtonStyle:_destroyChildren()
+	print( 'ButtonStyle:_destroyChildren', self )
+
+	self._inactive:removeSelf()
+	self._inactive=nil
+
+	self._active:removeSelf()
+	self._active=nil
+
+	self._disabled:removeSelf()
+	self._disabled=nil
+end
+
+
 -- we could have nil, Lua structure, or Instance
 --
 function ButtonStyle:_prepareData( data )

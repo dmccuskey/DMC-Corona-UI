@@ -349,15 +349,21 @@ function test_backgroundStyleClassBasics()
 	verifyBackgroundStyle( style )
 	styleInheritsFrom( BaseStyle, nil )
 
+	style:removeSelf()
+
 	style = Widgets.newRoundedBackgroundStyle()
 
 	verifyBackgroundStyle( style )
 	styleInheritsFrom( BaseStyle, nil )
 
+	style:removeSelf()
+
 	style = Widgets.newRectangleBackgroundStyle()
 
 	verifyBackgroundStyle( style )
 	styleInheritsFrom( BaseStyle, nil )
+
+	style:removeSelf()
 
 end
 

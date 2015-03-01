@@ -159,6 +159,9 @@ BackgroundStyle._DEFAULTS = BackgroundStyle._STYLE_DEFAULTS
 
 BackgroundStyle.EVENT = 'background-style-event'
 
+BackgroundStyle.ADDED_VIEW = 'background-added-view-event'
+BackgroundStyle.REMOVING_VIEW = 'background-removing-style-event'
+
 
 --======================================================--
 -- Start: Setup DMC Objects
@@ -757,19 +760,22 @@ end
 function BackgroundStyle:_createView( params )
 	-- print( 'BackgroundStyle:_createView', self._view )
 	self:_destroyView()
-	return self:createStyleFromType( params )
+	self._view = self:createStyleFromType( params )
+	self:_dispatchAddedView()
+	return self._view
 end
 
 function BackgroundStyle:_destroyView()
 	-- print( 'BackgroundStyle:_destroyView', self._view )
 	if not self._view then return end
+	self:_dispatchRemoveView()
 	self._view:removeSelf()
 	self._view = nil
 end
 
 function BackgroundStyle:_destroyChildren()
-	print( 'BackgroundStyle:_destroyChildren', self )
-	error("TODO")
+	-- print( 'BackgroundStyle:_destroyChildren', self )
+	self:_destroyView()
 end
 
 
@@ -837,6 +843,58 @@ function BackgroundStyle:_prepareData( data )
 	end
 
 	return data
+end
+
+
+-- _dispatchAddedView()
+-- send out Reset event to listeners
+--
+function BackgroundStyle:_dispatchAddedView()
+	-- print( "BackgroundStyle:_dispatchAddedView", self )
+	--==--
+	local widget = self._widget
+	local callback = self._onPropertyChange_f
+
+	if not self._isInitialized then return end
+
+	local e = {
+		name=self.EVENT,
+		target=self,
+		type=self.ADDED_VIEW
+	}
+	if widget and widget.stylePropertyChangeHandler then
+		widget:stylePropertyChangeHandler( e )
+	end
+	if callback then callback( e ) end
+	-- styles which inherit from this one
+
+	self:dispatchRawEvent( e )
+end
+
+
+-- _dispatchRemoveView()
+-- send out Reset event to listeners
+--
+function BackgroundStyle:_dispatchRemoveView()
+	-- print( "BackgroundStyle:_dispatchRemoveView", self )
+	--==--
+	local widget = self._widget
+	local callback = self._onPropertyChange_f
+
+	if not self._isInitialized then return end
+
+	local e = {
+		name=self.EVENT,
+		target=self,
+		type=self.REMOVING_VIEW
+	}
+	if widget and widget.stylePropertyChangeHandler then
+		widget:stylePropertyChangeHandler( e )
+	end
+	if callback then callback( e ) end
+	-- styles which inherit from this one
+
+	self:dispatchRawEvent( e )
 end
 
 

@@ -342,6 +342,29 @@ end
 --== Test Class Methods
 
 
+function test_styleClassBasics()
+	-- print( "test_styleClassBasics" )
+	local Button = Widgets.Style.Button
+	local BaseStyle, defaultStyles
+	local style
+
+	defaultStyles = Button:getDefaultStyleValues()
+	BaseStyle = Button:getBaseStyle()
+
+	--== Verify a new button style
+
+	style = Widgets.newButtonStyle()
+
+	TestUtils.verifyButtonStyle( style )
+	styleInheritsFrom( style, nil )
+
+	--== Destroy style
+
+	style:removeSelf()
+
+end
+
+
 --[[
 Test to ensure that the correct property values are
 copied during initialization

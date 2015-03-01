@@ -354,6 +354,15 @@ function test_styleClassBasics()
 	styleHasPropertyValue( BaseStyle, 'strokeColor', Default.strokeColor )
 	styleHasPropertyValue( BaseStyle, 'strokeWidth', Default.strokeWidth )
 
+
+	style = StyleFactory.create( 'rounded' )
+
+	verifyBackgroundViewStyle( style )
+	styleInheritsFrom( style, nil )
+
+	style:removeSelf()
+
+
 end
 
 

@@ -316,6 +316,27 @@ end
 --== Test Class Methods
 
 
+function test_styleClassBasics()
+	-- print( "test_styleClassBasics" )
+	local StyleFactory = Widgets.Style.BackgroundFactory
+	local RectangleStyle = StyleFactory.Rectangle
+
+	local BaseStyle, defaultStyles
+	local style
+
+	defaultStyles = RectangleStyle:getDefaultStyleValues()
+	BaseStyle = RectangleStyle:getBaseStyle()
+
+	style = StyleFactory.create( 'rectangle' )
+
+	verifyBackgroundViewStyle( style )
+	styleInheritsFrom( style, nil )
+
+	style:removeSelf()
+
+end
+
+
 --[[
 --]]
 function test_clearProperties()

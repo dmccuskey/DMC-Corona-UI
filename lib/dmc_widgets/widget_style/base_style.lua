@@ -127,6 +127,13 @@ Style._DEFAULTS = Style._STYLE_DEFAULTS
 
 Style.EVENT = 'style-event'
 
+-- DESTROYED
+-- this is used to let a Widget know when a Style
+-- is about to be removed
+-- This is NOT propagated through inheritance chain
+-- affected Widgets should release the Style
+Style.STYLE_DESTROYED = 'style-destroy-event'
+
 -- RESET
 -- this is used to let a Widget know about drastic
 -- changes to a Style, eg, inheritance has changed
@@ -187,6 +194,8 @@ function Style:__initComplete__()
 	-- print( "Style:__initComplete__", self )
 	self:superCall( '__initComplete__' )
 	--==--
+	self._isDestroying = false
+
 	local data = self:_prepareData( self._tmp_data )
 	self._tmp_data = nil
 	self:_parseData( data )
@@ -206,12 +215,16 @@ function Style:__undoInitComplete__()
 	-- print( "Style:__undoInitComplete__", self )
 	--==--
 
-	self:_destroyChildren()
+	self._isDestroying = true
+
+	self:_dispatchDestroyEvent()
+
 	self.inherit = nil
 	self.parent = nil
 	self.widget = nil
 
-	self._isDestroying = true
+	self:_destroyChildren()
+
 	--==--
 	self:superCall( '__undoInitComplete__' )
 end
@@ -636,12 +649,13 @@ function Style.__setters:inherit( value )
 
 	self._inherit, self._inherit_f = self:_unlinkInherit( cInherit, cInherit_f )
 
-	-- done if being removed
-	if self._isDestroying then return end
 
 	--== Add new inherit link
 
 	self._inherit, self._inherit_f = self:_linkInherit( nInherit )
+
+
+	if self._isDestroying then return end
 
 	--== Choose Reset method
 
@@ -1143,6 +1157,26 @@ function Style:_dispatchChangeEvent( prop, value )
 	local callback = self._onPropertyChange_f
 
 	if not self._isInitialized or self._isClearing then return end
+
+	local e = self:createEvent( self.PROPERTY_CHANGED, {property=prop,value=value}, {merge=true} )
+
+	-- dispatch event to different listeners
+	if widget and widget.stylePropertyChangeHandler then
+		widget:stylePropertyChangeHandler( e )
+	end
+	--
+	if callback then callback( e ) end
+
+	-- styles which inherit from this one
+	self:dispatchRawEvent( e )
+end
+
+
+-- _dispatchDestroyEvent()
+-- send out destroy event to listeners
+--
+function Style:_dispatchDestroyEvent( prop, value )
+	-- print( "Style:_dispatchDestroyEvent", prop, value, self )
 
 	local e = self:createEvent( self.PROPERTY_CHANGED, {property=prop,value=value}, {merge=true} )
 
