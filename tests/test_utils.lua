@@ -389,7 +389,7 @@ function TestUtils.stylePropertyValueIs( style, property, value )
 		emsg = sformat( "color mismatch for '%s' %s<>%s", property, formatColor( style[property] ), formatColor( value ) )
 		assert_true( colorsAreEqual( value, style[property] ), emsg )
 	else
-		assert_equal( style[property], value, emsg )
+		assert_equal( value, style[property], emsg )
 	end
 end
 
