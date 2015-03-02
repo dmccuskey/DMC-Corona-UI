@@ -437,6 +437,8 @@ function Background:stylePropertyChangeHandler( event )
 			self._anchorX_dirty=true
 		elseif property=='anchorY' then
 			self._anchorY_dirty=true
+		elseif property=='type' then
+			self._wgtView_dirty=true
 		end
 
 	end
