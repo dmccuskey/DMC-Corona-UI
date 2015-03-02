@@ -422,28 +422,28 @@ function TextFieldStyle.copyExistingSrcProperties( dest, src, params)
 	dest = BaseStyle.copyExistingSrcProperties( dest, src, params )
 
 	if (src.align~=nil and dest.align==nil) or force then
-		src.align=src.align
+		dest.align=src.align
 	end
 	if (src.backgroundStyle~=nil and dest.backgroundStyle==nil) or force then
-		src.backgroundStyle=src.backgroundStyle
+		dest.backgroundStyle=src.backgroundStyle
 	end
 	if (src.inputType~=nil and dest.inputType==nil) or force then
-		src.inputType=src.inputType
+		dest.inputType=src.inputType
 	end
 	if (src.isHitActive~=nil and dest.isHitActive==nil) or force then
-		src.isHitActive=src.isHitActive
+		dest.isHitActive=src.isHitActive
 	end
 	if (src.isSecure~=nil and dest.isSecure==nil) or force then
-		src.isSecure=src.isSecure
+		dest.isSecure=src.isSecure
 	end
 	if (src.marginX~=nil and dest.marginX==nil) or force then
-		src.marginX=src.marginX
+		dest.marginX=src.marginX
 	end
 	if (src.marginY~=nil and dest.marginY==nil) or force then
-		src.marginY=src.marginY
+		dest.marginY=src.marginY
 	end
 	if (src.returnKey~=nil and dest.returnKey==nil) or force then
-		src.returnKey=src.returnKey
+		dest.returnKey=src.returnKey
 	end
 
 	return dest
