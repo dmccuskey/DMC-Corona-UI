@@ -424,6 +424,9 @@ function Background:stylePropertyChangeHandler( event )
 		self._anchorX_dirty=true
 		self._anchorY_dirty=true
 
+		self._wgtView_dirty=true
+		self._wgtViewStyle_dirty=true
+
 		property = etype
 
 	else
