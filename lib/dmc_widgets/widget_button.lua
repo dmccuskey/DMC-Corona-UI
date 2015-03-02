@@ -633,7 +633,7 @@ function ButtonBase:_createBackground()
 
 	--== Reset properties
 
-	self._wgtBgStyle_dirty=true
+	self._widgetViewState_dirty=true
 end
 
 
