@@ -427,9 +427,10 @@ function BackgroundStyle:_doChildrenInherit( value, params )
 	assert( params )
 	--==--
 	if not self._isInitialized then return end
-	local cType = params.curr and params.curr.type
+	local cType = self._type
+	local iType = nil
 	local cActiveInherit = (self._type==nil)
-	self:_updateViewStyle( { delta='inherit', cInherit=params.curr, nInherit=params.next, cType=cType, cActiveInherit=cActiveInherit, clearProperties=false } )
+	self:_updateViewStyle( { delta='inherit', cInherit=params.curr, nInherit=params.next, cType=cType, iType=iType, cActiveInherit=cActiveInherit, clearProperties=false } )
 end
 
 
@@ -493,7 +494,7 @@ end
 -- 'inherit' setter
 --
 function BackgroundStyle:_updateViewStyle( params )
-	-- print( "BackgroundStyle:_updateViewStyle", params )
+	-- print( "BackgroundStyle:_updateViewStyle", params, self )
 	params = params or {}
 	params.delta = params.delta
 	params.cType = params.cType
@@ -511,13 +512,16 @@ function BackgroundStyle:_updateViewStyle( params )
 	local delta = params.delta
 	local cActiveInherit = params.cActiveInherit
 	local cInherit, nInherit = params.cInherit, params.nInherit
+	local iType, iInherit = params.iType, params.iInherit
 	local cType, nType = params.cType, params.nType
 	local bgType, bgInherit, bgData
 	local bgType_dirty, bgInherit_dirty, bgData_dirty = false, false, false
 	local vType, vInherit, vData
 	local vType_dirty, vInherit_dirty, vData_dirty = false, false, false
+	local sView_dirty = false
 	local doClear = params.clearProperties
 	local doReset = false
+	local cView, nView = nil, nil
 
 	--== Sanity Check ==--
 
@@ -529,14 +533,14 @@ function BackgroundStyle:_updateViewStyle( params )
 	self.__isUpdatingView = true
 
 	-- print( "UPDATE ", delta, cInherit, nInherit )
-	-- print( "UPDATE ", cType, nType, cActiveInherit )
+	-- print( "UPDATE ", cType, iType, nType, cActiveInherit )
 
 	--== Process Matrix
 
 	if delta=='inherit' and nInherit~=nil then
 		if nInherit.type==viewType then
 			-- new Inherit is of SAME type as current View
-			bgType_dirty=true ; bgType = nil
+			-- bgType_dirty=false ; bgType = nil -- no change
 			bgInherit_dirty=true ; bgInherit = nInherit
 			bgData_dirty=true ; bgData = {src={}, force=true, clearChildren=false}
 			-- vType_dirty=false ; vType = viewType -- no change
@@ -559,7 +563,7 @@ function BackgroundStyle:_updateViewStyle( params )
 
 		elseif cActiveInherit then
 			-- have full-inheritance, ie, inherited and no local type
-			bgType_dirty=true ; bgType = cType
+			bgType_dirty=true ; bgType = cInherit.type
 			-- bgInherit_dirty=false ; bgInherit = nil -- already done
 			bgData_dirty=true ; bgData = {src=cInherit, force=false, clearChildren=false}
 			-- vType_dirty=false ; vType = viewType -- no change
@@ -577,12 +581,17 @@ function BackgroundStyle:_updateViewStyle( params )
 		end
 
 	elseif delta=='type' and cInherit==nil then
-		if nType==nil then
-			-- not a valid state
+		if iType then
+			-- nothing to do, inheritance is not active
+			-- not sure how you got here
+
+		elseif nType==nil then
 			print( sformat( "[WARNING] Setting uninherited Style type to 'nil' is not permitted" ) )
+			-- not a valid state
 
 		elseif cType==nType then
 			print( sformat( "[NOTICE] Type is already set to '%s'", tostring(nType) ))
+			-- nothing to do
 
 		else
 			-- new Type is DIFFERENT than current Background
@@ -598,9 +607,25 @@ function BackgroundStyle:_updateViewStyle( params )
 		end
 
 	elseif delta=='type' and cInherit~=nil then
-		if cType==nType then
-			-- new Type is SAME as current Background
+		if iType and not cActiveInherit then
+			-- this is coming from an inherited type change
+			-- but inactive inherit action so nothing to do
+
+		elseif iType and viewType~=iType then
+			-- this is coming from an inherited type change
+			-- local type is already unset, view is incorrect
+			--
+			-- bgType_dirty=false ; bgType = nil -- no change
+			-- bgInherit_dirty=false ; bgInherit = nil -- no change
+			-- bgData_dirty=true ; bgData = nil -- no change
+			vType_dirty=true ; vType = iType
+			vInherit_dirty=true ; vInherit = iInherit
+			vData_dirty=true ; vData = {src={}, force=true, clearChildren=false}
+
+		elseif cType==nType then
 			print( sformat( "[NOTICE] Type is already set to '%s'", tostring(nType) ))
+			-- new Type is SAME as current Background
+			-- nothing to do
 
 		elseif nType==nil and cInherit.type==viewType then
 			-- unset type, view is correct
@@ -649,7 +674,7 @@ function BackgroundStyle:_updateViewStyle( params )
 			-- bgInherit_dirty=false ; bgInherit = nil -- no change
 			-- bgData_dirty=false ; bgData = {src=StyleBase, force=false, clearChildren=false}
 			vType_dirty=true ; vType = nType
-			vInherit_dirty=false ; vInherit = nil -- no change
+			-- vInherit_dirty=false ; vInherit = nil -- no change
 			vData_dirty=true ; vData = {src=StyleBase.view, force=true, clearChildren=false}
 		end
 
@@ -660,18 +685,22 @@ function BackgroundStyle:_updateViewStyle( params )
 
 	--== Do Work
 
-
 	if vType_dirty then
 		-- print(">2 Create View")
-		self._view = self:_createView{
+		-- save current view, delete later
+		-- create new one
+		cView = self._view
+		nView = self:_createView{
 			name=nil,
 			inherit=nil,
 			parent=self,
 			data=vType
 		}
-		viewStyle = self._view
+		self._view = nView
+		viewStyle = nView
 		vType_dirty=false
 
+		sView_dirty=true
 		doReset=true
 	end
 	if vInherit_dirty then
@@ -705,10 +734,16 @@ function BackgroundStyle:_updateViewStyle( params )
 	end
 	if bgType_dirty then
 		-- print(">1 Set Type", bgType )
-		self._type = bgType -- XXX could change to setter, since i have block
+		self._type = bgType
 		bgType_dirty=false
-		-- SEND OUT EVENT, type changed
 	end
+	if sView_dirty then
+		local data = {curr=cView, next=nView}
+		self:_dispatchChangeEvent( 'type', viewStyle.type, data )
+		self:_destroyView( cView )
+		sView_dirty=false
+	end
+	-- print("\n\n\n finishing up \n\n\n")
 
 	if doReset then
 		-- print(">3 Sending Reset")
@@ -740,32 +775,47 @@ function BackgroundStyle.__setters:type( value )
 	assert( (value==nil and self._inherit) or type(value)=='string' )
 	--==--
 	local cType, nType = self._type, value
-	local cActiveInherit = (self._type==nil)
+	local cActiveInherit, nActiveInherit = (self._type==nil), (value==nil)
+	local iType = nil
+
 	self._type = value
 	if not self._isInitialized then return end
 
-	self:_updateViewStyle( { delta='type', cType=cType, nType=nType, cInherit=self._inherit, cActiveInherit=cActiveInherit, clearProperties=true } )
-	-- self:_dispatchResetEvent() -- XXX remove this
+	self:_updateViewStyle( { delta='type', cType=cType, iType=iType, nType=nType, cInherit=self._inherit, cActiveInherit=cActiveInherit, nActiveInherit=nActiveInherit, clearProperties=true } )
 end
+
+
+
+function BackgroundStyle:_handleTypeChangeEvent( event )
+	-- print( "BackgroundStyle:_handleTypeChangeEvent", self )
+	local value = event.value
+	local data = event.data
+
+	local cType, nType = self._type, nil
+	local cActiveInherit, nActiveInherit = (self._type==nil), (value==nil)
+
+	local iType = value
+	local iInherit = data.next
+
+	self:_updateViewStyle( { delta='type', cType=cType, iType=iType, iInherit=iInherit, nType=nType, cInherit=self._inherit, cActiveInherit=cActiveInherit, nActiveInherit=nActiveInherit, clearProperties=true } )
+end
+
+
 
 
 --====================================================================--
 --== Private Methods
 
 function BackgroundStyle:_createView( params )
-	-- print( 'BackgroundStyle:_createView', self._view )
-	self:_destroyView()
-	self._view = self:createStyleFromType( params )
-	self:_dispatchAddedView()
-	return self._view
+	-- print( 'BackgroundStyle:_createView' )
+	return self:createStyleFromType( params )
 end
 
-function BackgroundStyle:_destroyView()
-	-- print( 'BackgroundStyle:_destroyView', self._view )
-	if not self._view then return end
-	self:_dispatchRemoveView()
-	self._view:removeSelf()
-	self._view = nil
+function BackgroundStyle:_destroyView( view )
+	-- print( 'BackgroundStyle:_destroyView', view )
+	if not view then return end
+	view:removeSelf()
+	return nil
 end
 
 function BackgroundStyle:_destroyChildren()
@@ -841,64 +891,27 @@ function BackgroundStyle:_prepareData( data )
 end
 
 
--- _dispatchAddedView()
--- send out Reset event to listeners
---
-function BackgroundStyle:_dispatchAddedView()
-	-- print( "BackgroundStyle:_dispatchAddedView", self )
-	--==--
-	local widget = self._widget
-	local callback = self._onPropertyChange_f
-
-	if not self._isInitialized then return end
-
-	local e = {
-		name=self.EVENT,
-		target=self,
-		type=self.ADDED_VIEW
-	}
-	if widget and widget.stylePropertyChangeHandler then
-		widget:stylePropertyChangeHandler( e )
-	end
-	if callback then callback( e ) end
-	-- styles which inherit from this one
-
-	self:dispatchRawEvent( e )
-end
-
-
--- _dispatchRemoveView()
--- send out Reset event to listeners
---
-function BackgroundStyle:_dispatchRemoveView()
-	-- print( "BackgroundStyle:_dispatchRemoveView", self )
-	--==--
-	local widget = self._widget
-	local callback = self._onPropertyChange_f
-
-	if not self._isInitialized then return end
-
-	local e = {
-		name=self.EVENT,
-		target=self,
-		type=self.REMOVING_VIEW
-	}
-	if widget and widget.stylePropertyChangeHandler then
-		widget:stylePropertyChangeHandler( e )
-	end
-	if callback then callback( e ) end
-	-- styles which inherit from this one
-
-	self:dispatchRawEvent( e )
-end
-
-
 
 --====================================================================--
 --== Event Handlers
 
 
--- none
+-- _inheritedStyleEvent_handler()
+-- handle inherited style-events
+--
+function BackgroundStyle:_inheritedStyleEvent_handler( event )
+	-- print( "BackgroundStyle:_inheritedStyleEvent_handler", event, event.type, self )
+	local style = event.target
+	local etype = event.type
+	local eprop = event.property
+
+	if etype==style.PROPERTY_CHANGED and eprop=='type' then
+		self:_handleTypeChangeEvent( event )
+	else
+		BaseStyle._inheritedStyleEvent_handler( self, event )
+	end
+
+end
 
 
 

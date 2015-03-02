@@ -1149,14 +1149,14 @@ end
 -- send out property-changed event to listeners
 -- and to any inherits
 --
-function Style:_dispatchChangeEvent( prop, value )
+function Style:_dispatchChangeEvent( prop, value, data )
 	-- print( "Style:_dispatchChangeEvent", prop, value, self )
 	local widget = self._widget
 	local callback = self._onPropertyChange_f
 
 	if not self._isInitialized or self._isClearing then return end
 
-	local e = self:createEvent( self.PROPERTY_CHANGED, {property=prop,value=value}, {merge=true} )
+	local e = self:createEvent( self.PROPERTY_CHANGED, {property=prop,value=value,data=data}, {merge=true} )
 
 	-- dispatch event to different listeners
 	if widget and widget.stylePropertyChangeHandler then
