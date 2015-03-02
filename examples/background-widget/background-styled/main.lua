@@ -56,34 +56,6 @@ local function setupBackground()
 end
 
 
-local function widgetOnPropertyEvent_handler( event )
-	print( 'Main: widgetOnPropertyEvent_handler', event.id, event.phase )
-	local etype= event.type
-	local property= event.property
-	local value = event.value
-
-	print( "Widget Property Changed", etype, property, value )
-
-end
-
--- handles button-type taps
---
-local function widgetEvent_handler( event )
-	print( 'Main: widgetEvent_handler', event.type )
-	local etype= event.type
-	local target=event.target
-
-	if etype==target.PRESSED then
-		print( "Background: touch started" )
-	elseif etype==target.MOVED then
-		print( "Background: moved ", event.isWithinBounds )
-	elseif etype==target.RELEASED then
-		print( "Background: touch ended" )
-	end
-
-end
-
-
 
 --===================================================================--
 -- Main
@@ -96,12 +68,12 @@ setupBackground()
 --======================================================--
 --== create background, default style
 
-function run_example1()
+function run_example1a()
 
 	local bw1
 
 	bw1 = Widgets.newBackground{}
-	bw1.x, bw1.y = H_CENTER, V_CENTER-100
+	bw1.x, bw1.y = H_CENTER, V_CENTER-50
 
 	bw1:setViewFillColor( 1, 1, 0 )
 	bw1:setViewStrokeColor( 1, 0, 0 )
@@ -113,7 +85,37 @@ function run_example1()
 
 end
 
--- run_example1()
+run_example1a()
+
+
+--======================================================--
+--== create background, default style
+
+function run_example1b()
+
+	local bw1
+
+	bw1 = Widgets.newRoundedBackground{}
+	bw1.x, bw1.y = H_CENTER, V_CENTER-100
+
+end
+
+run_example1b()
+
+
+--======================================================--
+--== create background, default style
+
+function run_example1c()
+
+	local bw1
+
+	bw1 = Widgets.newRectangleBackground{}
+	bw1.x, bw1.y = H_CENTER, V_CENTER+100
+
+end
+
+run_example1c()
 
 
 --======================================================--
@@ -131,11 +133,9 @@ function run_example2()
 
 		anchorX=0.5,
 		anchorY=0.5,
-		hitMarginX=0,
-		hitMarginY=20,
 
+		type='rectangle',
 		view={
-			type='rectangle',
 			fillColor={ 0,1,0.5,0.5},
 			strokeWidth=4,
 			strokeColor={ 0,0,0,1 },
@@ -176,7 +176,7 @@ function run_example2()
 
 end
 
--- run_example2()
+run_example2()
 
 
 --======================================================--
@@ -192,14 +192,11 @@ function run_example3()
 		width = 125,
 		height = 50,
 
-		hitMarginX=0,
-		hitMarginY=20,
-
 		anchorX=1,
 		anchorY=1,
 
+		type='rectangle',
 		view={
-			type='rectangle',
 			fillColor={ 0,1,0.5,0.5},
 			strokeWidth=4,
 			strokeColor={ 0,0,0,1 },
@@ -215,8 +212,8 @@ function run_example3()
 		anchorX=1,
 		anchorY=1,
 
+		type='rounded',
 		view = {
-			type='rounded',
 			cornerRadius=4,
 			fillColor={ 0,1,0.5,0.5},
 			strokeWidth=4,
@@ -229,12 +226,12 @@ function run_example3()
 		style=st3
 	}
 	-- bw3.x, bw3.y = H_CENTER-100, V_CENTER+100
-	bw3.x, bw3.y = H_CENTER, V_CENTER
+	bw3.x, bw3.y = H_CENTER, V_CENTER+100
 
 	-- bw3:setAnchor( {1,1})
 	-- bw3.width=124
 
-	transition.to( bw3, {time=5000, x=10})
+	transition.to( bw3, {time=5000, y=50})
 
 	timer.performWithDelay( 1000, function()
 		bw3:setAnchor( {0,0})
@@ -266,4 +263,80 @@ function run_example3()
 end
 
 run_example3()
+
+
+--======================================================--
+--== create background, 3 inheritance, block type in middle
+
+function run_example4()
+
+	local st1, st2, st3, bw3
+
+	st1 = Widgets.newBackgroundStyle{
+		debugOn=true,
+
+		width = 130,
+		height = 20,
+
+		anchorX=1,
+		anchorY=1,
+
+		type='rounded',
+		view={
+			fillColor={ 0,1,0.5,0.5},
+			strokeWidth=4,
+			strokeColor={ 0,0,0,1 },
+		}
+	}
+
+	st2 = Widgets.newBackgroundStyle()
+	st2.inherit = st1
+
+	st3 = Widgets.newBackgroundStyle()
+	st3.inherit = st2
+
+	bw3 = Widgets.newBackground{
+		style=st3
+	}
+	-- bw3.x, bw3.y = H_CENTER-100, V_CENTER+100
+	bw3.x, bw3.y = H_CENTER, V_CENTER-100
+
+	-- bw3:setAnchor( {1,1})
+	-- bw3.width=124
+
+
+	timer.performWithDelay( 1000, function()
+		-- bw3:setAnchor( {0,0})
+		-- bw3:setAnchor( {0.5,0.5})
+		-- bw3:setAnchor( {1,1})
+		-- bw3.viewStrokeWidth = 1
+		-- bw3:setViewFillColor( 1,0,0,1)
+		-- bw3:setViewStrokeColor( 0,1,0,1)
+		-- bw3.cornerRadius = 20
+		st2.type='rectangle'
+
+	end)
+
+	timer.performWithDelay( 2500, function()
+		-- bw3:setAnchor( {0,0})
+		-- bw3:setAnchor( {0.5,0.5})
+		-- bw3:setAnchor( {1,1})
+		-- bw3.viewStrokeWidth = 1
+		-- bw3:setViewFillColor( 1,0,0,1)
+		-- bw3:setViewStrokeColor( 0,1,0,1)
+		-- bw3.cornerRadius = 20
+
+		st2.type=nil
+
+		bw3.width=110
+		bw3.height=40
+
+
+	end)
+
+
+
+end
+
+-- run_example4()
 

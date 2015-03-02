@@ -1,5 +1,5 @@
 --====================================================================--
--- dmc_widgets/widget_theme_mix.lua
+-- dmc_widgets/widget_style_mix.lua
 --
 -- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
@@ -58,6 +58,7 @@ local Utils = require 'dmc_utils'
 
 
 local LOCAL_DEBUG = false
+local sformat = string.format
 
 
 
@@ -73,7 +74,7 @@ function _patch( obj )
 	Theme.__init__( obj )
 
 	-- add methods
-	obj.resetTheme = Theme.resetTheme
+	obj.resetStyle = Theme.resetStyle
 	obj.setTheme = Theme.setTheme
 	obj.setDebug = Theme.setDebug
 
@@ -101,20 +102,37 @@ function Theme.__init__( self, params )
 	-- print( 'Theme.__init__x', params )
 	params = params or {}
 	--==--
-	Theme.resetTheme( self, params )
+
+	--== Sanity Check ==--
+
+	if self.is_class then return end
+
+	--== Setup
+
 	if LOCAL_DEBUG then
 		print( "\n\n\n DOING THEME INIT: widget", self)
 	end
-	Theme._createDefaultStyle( self )
+	self:resetStyle( params )
 	if LOCAL_DEBUG then
 		print( "\n\n\n DONE WITH THEME INIT")
 	end
 end
 
+
 function Theme.__undoInit__( self )
 	-- print( "Theme.__undoInit__" )
-	Theme._destroyDefaultStyle( self )
-	Theme.resetTheme( self )
+	self:resetStyle()
+end
+
+function Theme.__initComplete__( self )
+	-- print( 'Theme.__initComplete__' )
+	self:_createDefaultStyle()
+	self:setActiveStyle( nil )
+end
+
+function Theme.__undoInitComplete__( self )
+	-- print( 'Theme.__undoInitComplete__' )
+	self:_destroyDefaultStyle()
 end
 
 -- END: Mixin Setup for DMC Objects
@@ -126,7 +144,7 @@ end
 --== Public Methods
 
 
-function Theme.resetTheme( self, params )
+function Theme.resetStyle( self, params )
 	params = params or {}
 	if params.debug_on==nil then params.debug_on=false end
 	--==--
@@ -140,8 +158,6 @@ function Theme.resetTheme( self, params )
 	self.__curr_style_f = nil
 	self.__styles = {}
 	self.__debug_on = params.debug_on
-
-	self:setActiveStyle( nil )
 end
 
 
@@ -182,8 +198,16 @@ function Theme.__setters:style( value )
 end
 
 
+function Theme.afterAddStyle( self )
+	-- print( "OVERRIDE Theme.afterAddStyle", self )
+end
+function Theme.beforeRemoveStyle( self )
+	-- print( "OVERRIDE Theme.beforeRemoveStyle", self )
+end
+
+
 function Theme.setActiveStyle( self, data, params )
-	-- print( "Theme.setActiveStyle", data, self.STYLE_CLASS )
+	-- print( "\n\n\n>>>>>>>Theme.setActiveStyle", self, data, self.STYLE_CLASS )
 	params = params or {}
 	if params.widget==nil then params.widget=self end
 	if params.copy==nil then params.copy=true end
@@ -196,7 +220,9 @@ function Theme.setActiveStyle( self, data, params )
 	local o = self.__curr_style
 
 	if style then
+		self:beforeRemoveStyle()
 		style.widget = nil
+
 		self:_destroyStyle( style )
 		self.__curr_style = nil
 		self.curr_style = nil
@@ -207,7 +233,7 @@ function Theme.setActiveStyle( self, data, params )
 		style=self.__default_style
 	elseif not params.copy then
 		-- use style handed to us
-		assert( data.isa and data:isa(StyleClass) )
+		assert( data.isa and data:isa(StyleClass), sformat( "Style not Class '%s'", tostring(StyleClass) ))
 		style = data
 	else
 		-- Utils.print( data )
@@ -221,6 +247,7 @@ function Theme.setActiveStyle( self, data, params )
 
 	if style then
 		style.widget = params.widget
+		self:afterAddStyle()
 		style:resetProperties()
 	end
 end
@@ -260,6 +287,7 @@ end
 --== height
 
 function Theme.__getters:height()
+	-- print( 'Theme.__getters:height' )
 	return self.curr_style.height
 end
 function Theme.__setters:height( value )
@@ -283,7 +311,7 @@ function Theme.__getters:anchorX()
 	return self.curr_style.anchorX
 end
 function Theme.__setters:anchorX( value )
-	-- print( 'Theme.__setters:anchorX', value )
+	-- print( 'Theme.__setters:anchorX', value, self )
 	self.curr_style.anchorX = value
 end
 
@@ -416,16 +444,28 @@ function Theme._destroyStyle( self, style )
 	return nil
 end
 
+-- _createDefaultStyleParams()
+-- params used to create the default style for
+-- Widget instance, allows instance to customize the Style
+--
+function Theme._createDefaultStyleParams( self )
+	local name = string.format( "default-style-%s", tostring( self ) )
+	return {
+		name=name,
+		data=nil,
+	}
+end
 
+-- _createDefaultStyle()
+-- create the default Style instance for this Widget
+--
 function Theme._createDefaultStyle( self )
 	-- print( "Theme._createDefaultStyle", self.STYLE_CLASS )
 	local StyleClass = self.STYLE_CLASS
 	assert( StyleClass, "[ERROR] Widget is missing property 'STYLE_CLASS'" )
-	local name = string.format( "default-style-%s", tostring( self ) )
-	local o = StyleClass:createStyleFrom{
-		name=name,
-		data=nil,
-	}
+	-- local name = string.format( "default-style-%s", tostring( self ) )
+	local params = self:_createDefaultStyleParams()
+	local o = StyleClass:createStyleFrom( params )
 	assert( o, "[ERROR] Creating default style class" )
 	self.__default_style = o
 end
@@ -446,7 +486,7 @@ end
 
 
 return {
-	ThemeMix=Theme,
+	StyleMix=Theme,
 	patch=_patch,
 }
 

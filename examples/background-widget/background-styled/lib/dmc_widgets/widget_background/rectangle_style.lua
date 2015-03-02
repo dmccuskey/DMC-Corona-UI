@@ -1,5 +1,5 @@
 --====================================================================--
--- dmc_widgets/widget_style/rectangle_style.lua
+-- dmc_widgets/widget_background/rectangle_style.lua
 --
 -- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
@@ -67,7 +67,7 @@ local widget_find = dmc_widget_func.find
 local Objects = require 'dmc_objects'
 local Utils = require 'dmc_utils'
 
-local BaseStyle = require( widget_find( 'widget_style.base_style' ) )
+local ViewStyle = require( widget_find( 'widget_background.base_view_style' ) )
 
 
 
@@ -76,11 +76,12 @@ local BaseStyle = require( widget_find( 'widget_style.base_style' ) )
 
 
 local newClass = Objects.newClass
-local ObjectBase = Objects.ObjectBase
 
 local sformat = string.format
+local tinsert = table.insert
 
-local Widgets = nil -- set later
+--== To be set in initialize()
+local Widgets = nil
 
 
 
@@ -89,36 +90,65 @@ local Widgets = nil -- set later
 --====================================================================--
 
 
-local RectangleStyle = newClass( BaseStyle, {name="Rectangle Background Style"} )
+local RectangleStyle = newClass( ViewStyle, {name="Rectangle Background Style"} )
 
 --== Class Constants
 
 RectangleStyle.TYPE = 'rectangle'
 
-RectangleStyle.__base_style__ = nil
+RectangleStyle.__base_style__ = nil -- set in initialize()
+
+RectangleStyle._VALID_PROPERTIES = {
+	debugOn=true,
+	width=true,
+	height=true,
+	anchorX=true,
+	anchorY=true,
+
+	fillColor=true,
+	strokeColor=true,
+	strokeWidth=true,
+}
+
+RectangleStyle._EXCLUDE_PROPERTY_CHECK = nil
 
 RectangleStyle._STYLE_DEFAULTS = {
 	name='rectangle-background-default-style',
 	debugOn=false,
-
-	width=75,
+	width=76,
 	height=30,
-
-	type=RectangleStyle.TYPE,
-
 	anchorX=0.5,
 	anchorY=0.5,
-	fillColor={1,1,1,1},
-	strokeColor={0,0,0,1},
-	strokeWidth=0,
+
+	fillColor={
+		type='gradient',
+		color1={ 1, 1, 1 },
+		color2={ 0.6, 0.6, 0.6 },
+		direction='down'
+	},
+	strokeColor={0.1,0.1,0.1,1},
+	strokeWidth=2
 }
+
+RectangleStyle._TEST_DEFAULTS = {
+	name='rectangle-background-test-style',
+	debugOn=false,
+	width=201,
+	height=202,
+	anchorX=203,
+	anchorY=204,
+
+	fillColor={201,202,203,204},
+	strokeColor={211,212,213,214},
+	strokeWidth=211
+}
+
+RectangleStyle.MODE = ViewStyle.RUN_MODE
+RectangleStyle._DEFAULTS = RectangleStyle._STYLE_DEFAULTS
 
 --== Event Constants
 
 RectangleStyle.EVENT = 'rectangle-background-style-event'
-
--- from super
--- Class.STYLE_UPDATED
 
 
 --======================================================--
@@ -140,16 +170,11 @@ function RectangleStyle:__init__( params )
 
 	-- self._name
 	-- self._debugOn
+	-- self._width
+	-- self._height
+	-- self._anchorX
+	-- self._anchorY
 
-	--== Local style properties
-
-	self._width = nil
-	self._height = nil
-
-	self._type = nil
-
-	self._anchorX = nil
-	self._anchorY = nil
 	self._fillColor = nil
 	self._strokeColor = nil
 	self._strokeWidth = nil
@@ -164,42 +189,90 @@ end
 --== Static Methods
 
 
-function RectangleStyle.initialize( manager )
+function RectangleStyle.initialize( manager, params )
 	-- print( "RectangleStyle.initialize", manager )
+	params = params or {}
+	if params.mode==nil then params.mode=ViewStyle.RUN_MODE end
+	--==--
 	Widgets = manager
 
-	RectangleStyle._setDefaults()
+	if params.mode==ViewStyle.TEST_MODE then
+		RectangleStyle.MODE = ViewStyle.TEST_MODE
+		RectangleStyle._DEFAULTS = RectangleStyle._TEST_DEFAULTS
+	end
+	local defaults = RectangleStyle._DEFAULTS
+
+	RectangleStyle._setDefaults( RectangleStyle, {defaults=defaults} )
 end
 
 
-function RectangleStyle._setDefaults()
-	-- print( "RectangleStyle._setDefaults" )
-	local defaults = RectangleStyle._STYLE_DEFAULTS
-	local style = RectangleStyle:new{
-		data=defaults
-	}
-	RectangleStyle.__base_style__ = style
+function RectangleStyle.addMissingDestProperties( dest, srcs )
+	-- print( "RectangleStyle.addMissingDestProperties", dest, srcs )
+	assert( dest )
+	srcs = srcs or {}
+	local lsrc = Utils.extend( srcs, {} )
+	if lsrc.parent==nil then lsrc.parent=dest end
+	if lsrc.main==nil then lsrc.main=RectangleStyle._DEFAULTS end
+	lsrc.widget = RectangleStyle._DEFAULTS
+	--==--
+
+	dest = ViewStyle.addMissingDestProperties( dest, lsrc )
+
+	for _, key in ipairs( { 'main', 'parent', 'widget' } ) do
+		local src = lsrc[key] or {}
+
+		if dest.fillColor==nil then dest.fillColor=src.fillColor end
+		if dest.strokeColor==nil then dest.strokeColor=src.strokeColor end
+		if dest.strokeWidth==nil then dest.strokeWidth=src.strokeWidth end
+
+	end
+
+	return dest
 end
 
 
+function RectangleStyle.copyExistingSrcProperties( dest, src, params )
+	-- print( "RectangleStyle.copyExistingSrcProperties", dest, src )
+	assert( dest )
+	if not src then return end
+	params = params or {}
+	if params.force==nil then params.force=false end
+	--==--
+	local force=params.force
 
--- copyMissingProperties()
--- copies properties from src structure to dest structure
--- if property isn't already in dest
--- Note: usually used by OTHER classes
---
-function RectangleStyle.copyMissingProperties( dest, src )
-	-- print( "RectangleStyle.copyMissingProperties", dest, src )
-	if dest.debugOn==nil then dest.debugOn=src.debugOn end
+	ViewStyle.copyExistingSrcProperties( dest, src, params )
 
-	if dest.width==nil then dest.width=src.width end
-	if dest.height==nil then dest.height=src.height end
+	if (src.fillColor~=nil and dest.fillColor==nil) or force then
+		dest.fillColor=src.fillColor
+	end
+	if (src.strokeColor~=nil and dest.strokeColor==nil) or force then
+		dest.strokeColor=src.strokeColor
+	end
+	if (src.strokeWidth~=nil and dest.strokeWidth==nil) or force then
+		dest.strokeWidth=src.strokeWidth
+	end
 
-	if dest.anchorX==nil then dest.anchorX=src.anchorX end
-	if dest.anchorY==nil then dest.anchorY=src.anchorY end
-	if dest.fillColor==nil then dest.fillColor=src.fillColor end
-	if dest.strokeColor==nil then dest.strokeColor=src.strokeColor end
-	if dest.strokeWidth==nil then dest.strokeWidth=src.strokeWidth end
+	return dest
+end
+
+
+function RectangleStyle._verifyStyleProperties( src )
+	-- print( "RectangleStyle._verifyStyleProperties", src )
+	local emsg = "Style requires property '%s'"
+
+	local is_valid = ViewStyle._verifyStyleProperties( src )
+
+	if not src.fillColor then
+		print(sformat(emsg,'fillColor')) ; is_valid=false
+	end
+	if not src.strokeColor then
+		print(sformat(emsg,'strokeColor')) ; is_valid=false
+	end
+	if not src.strokeWidth then
+		print(sformat(emsg,'strokeWidth')) ; is_valid=false
+	end
+
+	return is_valid
 end
 
 
@@ -208,55 +281,7 @@ end
 --== Public Methods
 
 
---======================================================--
--- Access to style properties
-
---== type
-
-function RectangleStyle.__getters:type()
-	-- print( "RectangleStyle.__getters:type" )
-	local value = self._type
-	-- TODO, check inheritance
-	if value==nil and self._inherit then
-		value = self._inherit.type
-	end
-	return value
-end
-function RectangleStyle.__setters:type( value )
-	-- print( "RectangleStyle.__setters:type", value )
-	assert( type(value)=='string' or (value==nil and self._inherit) )
-	--==--
-	if value==self._type then return end
-	self._type = value
-	self:_dispatchChangeEvent( 'type', value )
-end
-
-
---======================================================--
--- Misc
-
---== updateStyle
-
--- force is used when making exact copy of data
---
-function RectangleStyle:updateStyle( src, params )
-	-- print( "RectangleStyle:updateStyle", src )
-	params = params or {}
-	if params.force==nil then params.force=true end
-	--==--
-	local force=params.force
-
-	if src.debugOn~=nil or force then self.debugOn=src.debugOn end
-
-	if src.width~=nil or force then self.width=src.width end
-	if src.height~=nil or force then self.height=src.height end
-
-	if src.anchorX~=nil or force then self.anchorX=src.anchorX end
-	if src.anchorY~=nil or force then self.anchorY=src.anchorY end
-	if src.fillColor~=nil or force then self.fillColor=src.fillColor end
-	if src.strokeColor~=nil or force then self.strokeColor=src.strokeColor end
-	if src.strokeWidth~=nil or force then self.strokeWidth=src.strokeWidth end
-end
+-- none
 
 
 
@@ -264,33 +289,7 @@ end
 --== Private Methods
 
 
-function RectangleStyle:_checkProperties()
-	-- print( "RectangleStyle._checkProperties" )
-	local emsg = "Style: requires property '%s'"
-
-	--== Check Inheritance
-	-- if not proper types, then make sure we have data
-	local inherit_type = self._inherit and self._inherit.type or nil
-	if self.type ~= inherit_type then
-		print( sformat("[NOTICE] Style inheritance mismatch '%s'<>'%s'", tostring(self.type), tostring(inherit_type) ))
-		RectangleStyle.copyMissingProperties( self, RectangleStyle._STYLE_DEFAULTS )
-	end
-
-	local is_valid = BaseStyle._checkProperties( self )
-
-	if not self.width then print(sformat(emsg,'width')) ; is_valid=false end
-	if not self.height then print(sformat(emsg,'height')) ; is_valid=false end
-
-	if not self.type then print(sformat(emsg,'type')) ; is_valid=false end
-
-	if not self.anchorX then print(sformat(emsg,'anchorX')) ; is_valid=false end
-	if not self.anchorY then print(sformat(emsg,'anchorY')) ; is_valid=false end
-	if not self.fillColor then print(sformat(emsg,'fillColor')) ; is_valid=false end
-	if not self.strokeColor then print(sformat(emsg,'strokeColor')) ; is_valid=false end
-	if not self.strokeWidth then print(sformat(emsg,'strokeWidth')) ; is_valid=false end
-
-	return is_valid
-end
+-- none
 
 
 

@@ -66,9 +66,9 @@ local widget_find = dmc_widget_func.find
 
 local Objects = require 'dmc_objects'
 local LifecycleMixModule = require 'dmc_lifecycle_mix'
-local ThemeMixModule = require( dmc_widget_func.find( 'widget_theme_mix' ) )
+local StyleMixModule = require( dmc_widget_func.find( 'widget_style_mix' ) )
 
--- these are set later
+--== To be set in initialize()
 local StyleFactory = nil
 local ThemeMgr = nil
 local ViewFactory = nil
@@ -84,7 +84,7 @@ local newClass = Objects.newClass
 local ComponentBase = Objects.ComponentBase
 
 local LifecycleMix = LifecycleMixModule.LifecycleMix
-local ThemeMix = ThemeMixModule.ThemeMix
+local StyleMix = StyleMixModule.StyleMix
 
 
 
@@ -93,7 +93,10 @@ local ThemeMix = ThemeMixModule.ThemeMix
 --====================================================================--
 
 
-local RoundedView = newClass( {ThemeMix,ComponentBase,LifecycleMix}, {name="Rounded Background View"}  )
+local RoundedView = newClass(
+	{ StyleMix, ComponentBase, LifecycleMix },
+	{name="Rounded Background View"}
+)
 
 --== Class Constants
 
@@ -133,25 +136,25 @@ function RoundedView:__init__( params )
 
 	self:superCall( LifecycleMix, '__init__', params )
 	self:superCall( ComponentBase, '__init__', params )
-	self:superCall( ThemeMix, '__init__', params )
+	self:superCall( StyleMix, '__init__', params )
 	--==--
 
 	--== Create Properties ==--
 
-	-- properties in this class
+	-- properties stored in Class
 
 	self._x = params.x
 	self._x_dirty = true
 	self._y = params.y
 	self._y_dirty = true
 
-	-- properties from style
+	-- properties stored in Style
 
 	self._width_dirty=true
 	self._height_dirty=true
-
 	self._anchorX_dirty=true
 	self._anchorY_dirty=true
+
 	self._cornerRadius_dirty = true
 	self._fillColor_dirty = true
 	self._strokeColor_dirty=true
@@ -160,16 +163,15 @@ function RoundedView:__init__( params )
 	--== Object References ==--
 
 	self._tmp_style = params.style -- save
-	-- self.curr_style -- from inherit
 
-	self._bg = nil -- our rounded rect object
+	self._rndBg = nil -- our rounded rect object
 
 end
 
 function RoundedView:__undoInit__()
 	-- print( "RoundedView:__undoInit__" )
 	--==--
-	self:superCall( ThemeMix, '__undoInit__' )
+	self:superCall( StyleMix, '__undoInit__' )
 	self:superCall( ComponentBase, '__undoInit__' )
 	self:superCall( LifecycleMix, '__undoInit__' )
 end
@@ -182,13 +184,13 @@ function RoundedView:__createView__()
 	--==--
 	local o = display.newRoundedRect( 0,0,0,0,1 )
 	self:insert( o )
-	self._bg = o
+	self._rndBg = o
 end
 
 function RoundedView:__undoCreateView__()
 	-- print( "RoundedView:__undoCreateView__" )
-	self._bg:removeSelf()
-	self._bg=nil
+	self._rndBg:removeSelf()
+	self._rndBg=nil
 	--==--
 	self:superCall( ComponentBase, '__undoCreateView__' )
 end
@@ -277,21 +279,26 @@ function RoundedView:__commitProperties__()
 	-- print( 'RoundedView:__commitProperties__' )
 	local style = self.curr_style
 	local view = self.view
-	local bg = self._bg
+	local bg = self._rndBg
 
-	--== position sensitive
+	-- x/y
+
+	if self._x_dirty then
+		view.x = self._x
+		self._x_dirty = false
+	end
+	if self._y_dirty then
+		view.y = self._y
+		self._y_dirty = false
+	end
 
 	if self._width_dirty then
 		bg.path.width=style.width
 		self._width_dirty=false
-
-		self._anchorX_dirty=true
 	end
 	if self._height_dirty then
 		bg.path.height=style.height
 		self._height_dirty=false
-
-		self._anchorY_dirty=true
 	end
 
 	-- anchorX/anchorY
@@ -305,26 +312,23 @@ function RoundedView:__commitProperties__()
 		self._anchorY_dirty=false
 	end
 
-	-- x/y
-
-	if self._x_dirty then
-		view.x = self._x
-		self._x_dirty = false
-	end
-	if self._y_dirty then
-		view.y = self._y
-		self._y_dirty = false
-	end
-
-
-	--== non-position sensitive
+	-- fills/colors
 
 	if self._cornerRadius_dirty then
 		bg.path.radius = style.cornerRadius
 		self._cornerRadius_dirty=false
 	end
 	if self._fillColor_dirty then
-		bg:setFillColor( unpack( style.fillColor ))
+		if style.debugOn==true then
+			bg:setFillColor( 1,0,0,0.5 )
+		else
+			local color = style.fillColor
+			if color and color.type then
+				bg:setFillColor( color )
+			else
+				bg:setFillColor( unpack( color ) )
+			end
+		end
 		self._fillColor_dirty=false
 	end
 	if self._strokeColor_dirty then
@@ -340,13 +344,12 @@ end
 
 
 
-
 --====================================================================--
 --== Event Handlers
 
 
 function RoundedView:stylePropertyChangeHandler( event )
-	-- print( "\n\nRoundedView:stylePropertyChangeHandler", event )
+	-- print( "RoundedView:stylePropertyChangeHandler", event )
 	local style = event.target
 	local etype= event.type
 	local property= event.property
@@ -354,12 +357,13 @@ function RoundedView:stylePropertyChangeHandler( event )
 
 	-- print( "Style Changed", etype, property, value )
 
-	if etype == style.STYLE_RESET then
+	if etype==style.STYLE_RESET then
+		self._debugOn_dirty = true
 		self._width_dirty=true
 		self._height_dirty=true
-
 		self._anchorX_dirty=true
 		self._anchorY_dirty=true
+
 		self._cornerRadius_dirty = true
 		self._fillColor_dirty = true
 		self._strokeColor_dirty=true
@@ -368,15 +372,17 @@ function RoundedView:stylePropertyChangeHandler( event )
 		property = etype
 
 	else
-		if property=='width' then
+		if property=='debugActive' then
+			self._debugOn_dirty=true
+		elseif property=='width' then
 			self._width_dirty=true
 		elseif property=='height' then
 			self._height_dirty=true
-
 		elseif property=='anchorX' then
 			self._anchorX_dirty=true
 		elseif property=='anchorY' then
 			self._anchorY_dirty=true
+
 		elseif property=='cornerRadius' then
 			self._cornerRadius_dirty=true
 		elseif property=='fillColor' then

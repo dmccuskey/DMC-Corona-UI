@@ -66,9 +66,9 @@ local widget_find = dmc_widget_func.find
 
 local Objects = require 'dmc_objects'
 local LifecycleMixModule = require 'dmc_lifecycle_mix'
-local ThemeMixModule = require( dmc_widget_func.find( 'widget_theme_mix' ) )
+local StyleMixModule = require( dmc_widget_func.find( 'widget_style_mix' ) )
 
--- these are set later
+--== To be set in initialize()
 local StyleFactory = nil
 local ThemeMgr = nil
 local ViewFactory = nil
@@ -84,7 +84,7 @@ local newClass = Objects.newClass
 local ComponentBase = Objects.ComponentBase
 
 local LifecycleMix = LifecycleMixModule.LifecycleMix
-local ThemeMix = ThemeMixModule.ThemeMix
+local StyleMix = StyleMixModule.StyleMix
 
 
 
@@ -93,7 +93,10 @@ local ThemeMix = ThemeMixModule.ThemeMix
 --====================================================================--
 
 
-local RectangleView = newClass( {ThemeMix,ComponentBase,LifecycleMix}, {name="Rectangle Background View"}  )
+local RectangleView = newClass(
+	{ StyleMix, ComponentBase, LifecycleMix },
+	{ name="Rectangle Background View" }
+)
 
 --== Class Constants
 
@@ -133,25 +136,25 @@ function RectangleView:__init__( params )
 
 	self:superCall( LifecycleMix, '__init__', params )
 	self:superCall( ComponentBase, '__init__', params )
-	self:superCall( ThemeMix, '__init__', params )
+	self:superCall( StyleMix, '__init__', params )
 	--==--
 
 	--== Create Properties ==--
 
-	-- properties in this class
+	-- properties stored in Class
 
 	self._x = params.x
 	self._x_dirty = true
 	self._y = params.y
 	self._y_dirty = true
 
-	-- properties from style
+	-- properties stored in Style
 
 	self._width_dirty=true
 	self._height_dirty=true
-
 	self._anchorX_dirty=true
 	self._anchorY_dirty=true
+
 	self._fillColor_dirty = true
 	self._strokeColor_dirty=true
 	self._strokeWidth_dirty=true
@@ -159,16 +162,15 @@ function RectangleView:__init__( params )
 	--== Object References ==--
 
 	self._tmp_style = params.style -- save
-	-- self.curr_style -- from inherit
 
-	self._bg = nil -- our rectangle object
+	self._rectBg = nil -- our rectangle object
 
 end
 
 function RectangleView:__undoInit__()
 	-- print( "RectangleView:__undoInit__" )
 	--==--
-	self:superCall( ThemeMix, '__undoInit__' )
+	self:superCall( StyleMix, '__undoInit__' )
 	self:superCall( ComponentBase, '__undoInit__' )
 	self:superCall( LifecycleMix, '__undoInit__' )
 end
@@ -180,14 +182,15 @@ function RectangleView:__createView__()
 	self:superCall( ComponentBase, '__createView__' )
 	--==--
 	local o = display.newRect( 0,0,0,0 )
+	o.anchorX, o.anchorY = 0.5, 0.5
 	self:insert( o )
-	self._bg = o
+	self._rectBg = o
 end
 
 function RectangleView:__undoCreateView__()
 	-- print( "RectangleView:__undoCreateView__" )
-	self._bg:removeSelf()
-	self._bg=nil
+	self._rectBg:removeSelf()
+	self._rectBg=nil
 	--==--
 	self:superCall( ComponentBase, '__undoCreateView__' )
 end
@@ -276,21 +279,28 @@ function RectangleView:__commitProperties__()
 	-- print( 'RectangleView:__commitProperties__' )
 	local style = self.curr_style
 	local view = self.view
-	local bg = self._bg
+	local bg = self._rectBg
 
-	--== position sensitive
+	-- x/y
+
+	if self._x_dirty then
+		view.x = self._x
+		self._x_dirty = false
+	end
+	if self._y_dirty then
+		view.y = self._y
+		self._y_dirty = false
+	end
+
+	-- width/height
 
 	if self._width_dirty then
 		bg.width=style.width
 		self._width_dirty=false
-
-		self._anchorX_dirty=true
 	end
 	if self._height_dirty then
 		bg.height=style.height
 		self._height_dirty=false
-
-		self._anchorY_dirty=true
 	end
 
 	-- anchorX/anchorY
@@ -304,22 +314,21 @@ function RectangleView:__commitProperties__()
 		self._anchorY_dirty=false
 	end
 
-	-- x/y
+	-- fills/colors
 
-	if self._x_dirty then
-		view.x = self._x
-		self._x_dirty = false
-	end
-	if self._y_dirty then
-		view.y = self._y
-		self._y_dirty = false
-	end
-
-	--== non-position sensitive
-
-	if self._fillColor_dirty then
-		bg:setFillColor( unpack( style.fillColor ))
+	if self._fillColor_dirty or self._debugOn_dirty then
+		if style.debugOn==true then
+			bg:setFillColor( 1,0,0,0.5 )
+		else
+			local color = style.fillColor
+			if color and color.type then
+				bg:setFillColor( color )
+			else
+				bg:setFillColor( unpack( color ) )
+			end
+		end
 		self._fillColor_dirty=false
+		self._debugOn_dirty=false
 	end
 	if self._strokeColor_dirty then
 		bg:setStrokeColor( unpack( style.strokeColor ))
@@ -334,26 +343,26 @@ end
 
 
 
-
 --====================================================================--
 --== Event Handlers
 
 
 function RectangleView:stylePropertyChangeHandler( event )
-	-- print( "RectangleView:stylePropertyChangeHandler", event )
+	-- print( "RectangleView:stylePropertyChangeHandler", event.type, event.property )
 	local style = event.target
-	local etype= event.type
-	local property= event.property
+	local etype = event.type
+	local property = event.property
 	local value = event.value
 
 	-- print( "Style Changed", etype, property, value )
 
-	if etype == style.STYLE_RESET then
+	if etype==style.STYLE_RESET then
+		self._debugOn_dirty = true
 		self._width_dirty=true
 		self._height_dirty=true
-
 		self._anchorX_dirty=true
 		self._anchorY_dirty=true
+
 		self._fillColor_dirty = true
 		self._strokeColor_dirty=true
 		self._strokeWidth_dirty=true
@@ -361,15 +370,17 @@ function RectangleView:stylePropertyChangeHandler( event )
 		property = etype
 
 	else
-		if property=='width' then
+		if property=='debugActive' then
+			self._debugOn_dirty=true
+		elseif property=='width' then
 			self._width_dirty=true
 		elseif property=='height' then
 			self._height_dirty=true
-
 		elseif property=='anchorX' then
 			self._anchorX_dirty=true
 		elseif property=='anchorY' then
 			self._anchorY_dirty=true
+
 		elseif property=='fillColor' then
 			self._fillColor_dirty=true
 		elseif property=='strokeColor' then
