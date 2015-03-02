@@ -320,7 +320,12 @@ function RectangleView:__commitProperties__()
 		if style.debugOn==true then
 			bg:setFillColor( 1,0,0,0.5 )
 		else
-			bg:setFillColor( unpack( style.fillColor ))
+			local color = style.fillColor
+			if color and color.type then
+				bg:setFillColor( color )
+			else
+				bg:setFillColor( unpack( color ) )
+			end
 		end
 		self._fillColor_dirty=false
 		self._debugOn_dirty=false

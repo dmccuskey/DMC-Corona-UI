@@ -116,15 +116,20 @@ RoundedStyle._EXCLUDE_PROPERTY_CHECK = nil
 RoundedStyle._STYLE_DEFAULTS = {
 	name='rounded-background-default-style',
 	debugOn=false,
-	width=75,
+	width=76,
 	height=30,
 	anchorX=0.5,
 	anchorY=0.5,
 
 	cornerRadius=6,
-	fillColor={1,1,1,1},
-	strokeColor={0,0,0,1},
-	strokeWidth=0
+	fillColor={
+		type='gradient',
+		color1={ 1, 1, 1 },
+		color2={ 0.6, 0.6, 0.6 },
+		direction='down'
+	},
+	strokeColor={0.1,0.1,0.1,1},
+	strokeWidth=2
 }
 
 RoundedStyle._TEST_DEFAULTS = {
