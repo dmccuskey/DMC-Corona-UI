@@ -889,7 +889,10 @@ function BackgroundStyle:_prepareData( data, dataSrc, params )
 
 	-- see which view type we have
 	if inherit then
-		if src.type == inherit.type then
+		if not src.type then
+			vInherit=true
+			stype = inherit.type
+		elseif src.type == inherit.type then
 			vInherit=true
 			stype = inherit.type
 		else
