@@ -117,6 +117,14 @@ Style._STYLE_DEFAULTS = {
 	anchorY=0.5,
 }
 
+Style._TEST_DEFAULTS = {
+	debugOn=false,
+	-- width=nil,
+	-- height=nil,
+	anchorX=4,
+	anchorY=4,
+}
+
 Style.RUN_MODE = 'run'
 Style.TEST_MODE = 'test'
 Style.MODE = Style.RUN_MODE
@@ -252,7 +260,7 @@ function Style:nilProperty( name )
 end
 
 
-function Style.initialize( manager )
+function Style.initialize( manager, params )
 	error( "OVERRIDE Style.addMissingDestProperties" )
 end
 
@@ -279,8 +287,8 @@ function Style.addMissingDestProperties( dest, srcs )
 	srcs = srcs or {}
 	local lsrc = Utils.extend( srcs, {} )
 	if lsrc.parent==nil then lsrc.parent=dest end
-	if lsrc.main==nil then lsrc.main=Style._STYLE_DEFAULTS end
-	lsrc.widget = Style._STYLE_DEFAULTS
+	if lsrc.main==nil then lsrc.main=Style._DEFAULTS end
+	lsrc.widget = Style._DEFAULTS
 	--==--
 
 	for _, key in ipairs( { 'main', 'parent', 'widget' } ) do
@@ -398,7 +406,7 @@ end
 function Style._setDefaults( StyleClass, params )
 	-- print( "Style._setDefaults" )
 	params = params or {}
-	if params.defaults==nil then params.defaults=StyleClass._STYLE_DEFAULTS end
+	if params.defaults==nil then params.defaults=StyleClass._DEFAULTS end
 	--==--
 	local def = params.defaults
 
@@ -1100,7 +1108,7 @@ function Style:_parseData( data )
 	--==--
 
 	-- prep tables of things to exclude, etc
-	local DEF = self._STYLE_DEFAULTS
+	local DEF = self._DEFAULTS
 	local EXCL = self._EXCLUDE_PROPERTY_CHECK
 
 	--== process properties, skip children
