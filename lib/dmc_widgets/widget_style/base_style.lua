@@ -1087,7 +1087,6 @@ end
 function Style:_prepareData( data, dataSrc, params )
 	-- print( "Style:_prepareData", data, dataSrc, self )
 	params = params or {}
-	if dataSrc==nil then dataSrc=self:getBaseStyle() end
 	--==--
 	local StyleClass = self.class
 
@@ -1095,10 +1094,9 @@ function Style:_prepareData( data, dataSrc, params )
 		data = StyleClass.createStyleStructure()
 	end
 
-	if params.inherit then
-		-- override to process children
-	else
-		data = StyleClass.addMissingDestProperties( data, {parent=dataSrc} )
+	if not params.inherit then
+		if dataSrc==nil then dataSrc=self:getBaseStyle() end
+		data = StyleClass.addMissingDestProperties( data, {main=dataSrc} )
 	end
 
 	return data
