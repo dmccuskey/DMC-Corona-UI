@@ -444,17 +444,6 @@ function Theme._destroyStyle( self, style )
 	return nil
 end
 
--- _createDefaultStyleParams()
--- params used to create the default style for
--- Widget instance, allows instance to customize the Style
---
-function Theme._createDefaultStyleParams( self )
-	local name = string.format( "default-style-%s", tostring( self ) )
-	return {
-		name=name,
-		data=nil,
-	}
-end
 
 -- _createDefaultStyle()
 -- create the default Style instance for this Widget
@@ -463,9 +452,9 @@ function Theme._createDefaultStyle( self )
 	-- print( "Theme._createDefaultStyle", self.STYLE_CLASS )
 	local StyleClass = self.STYLE_CLASS
 	assert( StyleClass, "[ERROR] Widget is missing property 'STYLE_CLASS'" )
-	-- local name = string.format( "default-style-%s", tostring( self ) )
-	local params = self:_createDefaultStyleParams()
-	local o = StyleClass:createStyleFrom( params )
+	local BaseStyle = StyleClass:getBaseStyle()
+	assert( BaseStyle, "[ERROR] Widget is missing property 'BaseStyle'" )
+	local o = BaseStyle:copyStyle()
 	assert( o, "[ERROR] Creating default style class" )
 	self.__default_style = o
 end
