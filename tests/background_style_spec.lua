@@ -2520,14 +2520,17 @@ function test_inheritanceChangesUsingInheritancePropertyMismatch()
 
 	sView, iView = s1.view, inherit.view
 
+--[[
+	--]]
 	styleInheritsFrom( s1, inherit )
-	styleInheritsPropertyValue( s1, 'type', inherit.type )
-	stylePropertyValueIs( sView , 'type', iView.type )
+	styleHasPropertyValue( s1, 'type', 'rounded' )
+	styleInheritsFrom( sView, nil )
+	stylePropertyValueIs( sView , 'type', 'rounded' )
 
-	styleRawPropertyValueIs( sView, 'cornerRadius', nil ) -- erased
-	styleInheritsPropertyValue( sView, 'fillColor', {111,112,113,114} )
-	styleInheritsPropertyValue( sView, 'strokeColor', iDefaults.strokeColor )
-	styleInheritsPropertyValue( sView, 'strokeWidth', 65 )
+	styleHasPropertyValue( sView, 'cornerRadius', 100 ) -- erased
+	styleHasPropertyValue( sView, 'fillColor', {101,102,103,104} )
+	styleHasPropertyValue( sView, 'strokeColor', sDefaults.strokeColor )
+	styleHasPropertyValue( sView, 'strokeWidth', 99 )
 
 end
 

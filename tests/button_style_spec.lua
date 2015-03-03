@@ -342,6 +342,79 @@ end
 --== Test Class Methods
 
 
+function test_copyStyle()
+
+	local Button = Widgets.Style.Button
+	local BaseStyle = Button:getBaseStyle()
+	local style, copy
+	local child, label, background, view
+
+	style = BaseStyle
+	copy = style:copyStyle()
+
+	styleInheritsPropertyValue( copy, 'debugOn', BaseStyle.debugOn )
+	styleInheritsPropertyValue( copy, 'width', BaseStyle.width )
+	styleInheritsPropertyValue( copy, 'height', BaseStyle.height )
+	styleInheritsPropertyValue( copy, 'anchorX', BaseStyle.anchorX )
+	styleInheritsPropertyValue( copy, 'anchorY', BaseStyle.anchorY )
+	styleInheritsPropertyValue( copy, 'hitMarginX', BaseStyle.hitMarginX )
+	styleInheritsPropertyValue( copy, 'hitMarginY', BaseStyle.hitMarginY )
+	styleInheritsPropertyValue( copy, 'isHitActive', BaseStyle.isHitActive )
+	styleInheritsPropertyValue( copy, 'marginX', BaseStyle.marginX )
+	styleInheritsPropertyValue( copy, 'marginY', BaseStyle.marginY )
+
+	local vDefState = BaseStyle.inactive
+	state = copy.inactive
+
+	styleInheritsPropertyValue( state, 'debugOn', vDefState.debugOn )
+	styleInheritsPropertyValue( state, 'width', vDefState.width )
+	styleInheritsPropertyValue( state, 'height', vDefState.height )
+	styleInheritsPropertyValue( state, 'anchorX', vDefState.anchorX )
+	styleInheritsPropertyValue( state, 'anchorY', vDefState.anchorY )
+	styleInheritsPropertyValue( state, 'align', vDefState.align )
+	styleInheritsPropertyValue( state, 'isHitActive', vDefState.isHitActive )
+	styleInheritsPropertyValue( state, 'marginX', vDefState.marginX )
+	styleInheritsPropertyValue( state, 'marginY', vDefState.marginY )
+
+	local vDefLabel = vDefState.label
+	label = state.label
+
+	styleInheritsPropertyValue( label, 'debugOn', vDefLabel.debugOn )
+	styleInheritsPropertyValue( label, 'width', vDefLabel.width )
+	styleInheritsPropertyValue( label, 'height', vDefLabel.height )
+	styleInheritsPropertyValue( label, 'anchorX', vDefLabel.anchorX )
+	styleInheritsPropertyValue( label, 'anchorY', vDefLabel.anchorY )
+	styleInheritsPropertyValue( label, 'align', vDefLabel.align )
+	styleInheritsPropertyValue( label, 'font', vDefLabel.font )
+	styleInheritsPropertyValue( label, 'fontSize', vDefLabel.fontSize )
+	styleInheritsPropertyValue( label, 'textColor', vDefLabel.textColor )
+
+	local vDefBackground = vDefState.background
+	background = state.background
+
+	styleInheritsPropertyValue( background, 'type', 'rounded' )
+	styleInheritsPropertyValue( background, 'debugOn', vDefBackground.debugOn )
+	styleInheritsPropertyValue( background, 'width', vDefBackground.width )
+	styleInheritsPropertyValue( background, 'height', vDefBackground.height )
+	styleInheritsPropertyValue( background, 'anchorX', vDefBackground.anchorX )
+	styleInheritsPropertyValue( background, 'anchorY', vDefBackground.anchorY )
+
+	local vDefView = vDefBackground.view
+	view = background.view
+
+	styleInheritsPropertyValue( view, 'debugOn', vDefView.debugOn )
+	styleInheritsPropertyValue( view, 'width', vDefView.width )
+	styleInheritsPropertyValue( view, 'height', vDefView.height )
+	styleInheritsPropertyValue( view, 'anchorX', vDefView.anchorX )
+	styleInheritsPropertyValue( view, 'anchorY', vDefView.anchorY )
+	styleInheritsPropertyValue( view, 'fillColor', vDefView.fillColor )
+	styleInheritsPropertyValue( view, 'strokeColor', vDefView.strokeColor )
+	styleInheritsPropertyValue( view, 'strokeWidth', vDefView.strokeWidth )
+
+end
+
+
+
 function test_styleClassBasics()
 	-- print( "test_styleClassBasics" )
 	local Button = Widgets.Style.Button

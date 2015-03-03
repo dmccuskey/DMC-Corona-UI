@@ -19,7 +19,7 @@ local VERSION = "0.1.0"
 local Widgets = require 'lib.dmc_widgets'
 
 local TestUtils = require 'tests.test_utils'
-local Utils = require 'tests.test_utils'
+local Utils = require 'dmc_utils'
 
 
 
@@ -358,6 +358,142 @@ end
 
 --====================================================================--
 --== Test Class Methods
+
+
+function test_copyStyle()
+
+	local Text = Widgets.Style.Text
+	local BaseStyle = Text:getBaseStyle()
+	local style, copy
+
+	style = BaseStyle
+	copy = style:copyStyle()
+
+	styleInheritsPropertyValue( copy, 'width', BaseStyle.width )
+	styleInheritsPropertyValue( copy, 'height', BaseStyle.height )
+	styleInheritsPropertyValue( copy, 'anchorX', BaseStyle.anchorX )
+	styleInheritsPropertyValue( copy, 'anchorY', BaseStyle.anchorY )
+	styleInheritsPropertyValue( copy, 'align', BaseStyle.align )
+	styleInheritsPropertyValue( copy, 'fillColor', BaseStyle.fillColor )
+	styleInheritsPropertyValue( copy, 'font', BaseStyle.font )
+	styleInheritsPropertyValue( copy, 'fontSize', BaseStyle.fontSize )
+	styleInheritsPropertyValue( copy, 'marginX', BaseStyle.marginX )
+	styleInheritsPropertyValue( copy, 'marginY', BaseStyle.marginY )
+	styleInheritsPropertyValue( copy, 'textColor', BaseStyle.textColor )
+
+
+	style = Widgets.newTextStyle{
+		width=10,
+		height=100,
+		fontSize=100,
+		marginX=20,
+	}
+
+	copy = style:copyStyle()
+
+	styleInheritsPropertyValue( copy, 'width', style.width )
+	styleInheritsPropertyValue( copy, 'height', style.height )
+	styleInheritsPropertyValue( copy, 'anchorX', BaseStyle.anchorX )
+	styleInheritsPropertyValue( copy, 'anchorY', BaseStyle.anchorY )
+	styleInheritsPropertyValue( copy, 'align', BaseStyle.align )
+	styleInheritsPropertyValue( copy, 'fillColor', BaseStyle.fillColor )
+	styleInheritsPropertyValue( copy, 'font', BaseStyle.font )
+	styleInheritsPropertyValue( copy, 'fontSize', style.fontSize )
+	styleInheritsPropertyValue( copy, 'marginX', style.marginX )
+	styleInheritsPropertyValue( copy, 'marginY', BaseStyle.marginY )
+	styleInheritsPropertyValue( copy, 'textColor', BaseStyle.textColor )
+
+end
+
+
+function test_prepareData_minimal()
+
+	local Text = Widgets.Style.Text
+	local BaseStyle = Text:getBaseStyle()
+
+	local dataSrc = {
+		width=101,
+		height=102,
+		anchorX=103,
+		anchorY=104,
+		align='center-left',
+		fillColor={101,102,103,106},
+		font=100,
+		fontSize=101,
+		marginX=102,
+		marginY=103,
+		textColor={101,102,103,106},
+	}
+	local inherit = {inherit={}}
+	local src
+
+	src = {
+		fontSize=54,
+		marginX=55,
+		height=56
+	}
+
+	-- minimal, inherit
+	src = Text:_prepareData( src, dataSrc, inherit )
+
+	hasPropertyValue( src, 'width', nil )
+	hasPropertyValue( src, 'height', 56 )
+	hasPropertyValue( src, 'anchorX', nil )
+	hasPropertyValue( src, 'anchorY', nil )
+	hasPropertyValue( src, 'align', nil )
+	hasPropertyValue( src, 'fillColor', nil )
+	hasPropertyValue( src, 'font', nil )
+	hasPropertyValue( src, 'fontSize', 54 )
+	hasPropertyValue( src, 'marginX', 55 )
+	hasPropertyValue( src, 'marginY', nil )
+	hasPropertyValue( src, 'textColor', nil )
+
+
+	src = {
+		fontSize=54,
+		marginX=55,
+		height=56
+	}
+
+	-- whole thing, using data source
+	src = Text:_prepareData( src, dataSrc, nil )
+
+	hasPropertyValue( src, 'width', dataSrc.width )
+	hasPropertyValue( src, 'height', 56 )
+	hasPropertyValue( src, 'anchorX', dataSrc.anchorX )
+	hasPropertyValue( src, 'anchorY', dataSrc.anchorY )
+	hasPropertyValue( src, 'align', dataSrc.align )
+	hasPropertyValue( src, 'fillColor', dataSrc.fillColor )
+	hasPropertyValue( src, 'font', dataSrc.font )
+	hasPropertyValue( src, 'fontSize', 54 )
+	hasPropertyValue( src, 'marginX', 55 )
+	hasPropertyValue( src, 'marginY', dataSrc.marginY )
+	hasPropertyValue( src, 'textColor', dataSrc.textColor )
+
+
+	src = {
+		fontSize=54,
+		marginX=55,
+		height=56
+	}
+
+	-- whole thing, using Base
+	src = Text:_prepareData( src, nil, nil )
+
+	hasPropertyValue( src, 'width', BaseStyle.width )
+	hasPropertyValue( src, 'height', 56 )
+	hasPropertyValue( src, 'anchorX', BaseStyle.anchorX )
+	hasPropertyValue( src, 'anchorY', BaseStyle.anchorY )
+	hasPropertyValue( src, 'align', BaseStyle.align )
+	hasPropertyValue( src, 'fillColor', BaseStyle.fillColor )
+	hasPropertyValue( src, 'font', BaseStyle.font )
+	hasPropertyValue( src, 'fontSize', 54 )
+	hasPropertyValue( src, 'marginX', 55 )
+	hasPropertyValue( src, 'marginY', BaseStyle.marginY )
+	hasPropertyValue( src, 'textColor', BaseStyle.textColor )
+
+end
+
 
 
 --[[
