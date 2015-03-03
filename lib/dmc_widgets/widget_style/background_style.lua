@@ -343,8 +343,11 @@ function BackgroundStyle._setDefaults( StyleClass, params )
 		local cls_type = Cls.TYPE
 		local struct = BackgroundStyle.createStyleStructure( cls_type )
 		local def = Utils.extend( def, struct )
-		StyleClass._addMissingChildProperties( def, {def} )
-		local style = StyleClass:new{ data=def }
+		StyleClass._addMissingChildProperties( def, {parent=def} )
+		local style = StyleClass:new{
+			data=def,
+			inherit=nil
+		}
 		BASE_STYLES[ cls_type ] = style
 	end
 
