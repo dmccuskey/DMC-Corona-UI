@@ -282,9 +282,9 @@ function ButtonStateStyle.addMissingDestProperties( dest, srcs )
 	-- print( "ButtonStateStyle.addMissingDestProperties", dest, srcs )
 	assert( dest )
 	srcs = srcs or {}
-	local lsrc = Utils.extend( srcs, {} )
-	if lsrc.parent==nil then lsrc.parent=dest end
+	local lsrc = { main=srcs.main, parent=srcs.parent, widget=srcs.widget }
 	if lsrc.main==nil then lsrc.main=ButtonStateStyle._DEFAULTS end
+	if lsrc.parent==nil then lsrc.parent=dest end
 	lsrc.widget = ButtonStateStyle._DEFAULTS
 	--==--
 

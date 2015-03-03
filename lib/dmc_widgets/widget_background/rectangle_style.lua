@@ -210,9 +210,9 @@ function RectangleStyle.addMissingDestProperties( dest, srcs )
 	-- print( "RectangleStyle.addMissingDestProperties", dest, srcs )
 	assert( dest )
 	srcs = srcs or {}
-	local lsrc = Utils.extend( srcs, {} )
-	if lsrc.parent==nil then lsrc.parent=dest end
+	local lsrc = { main=srcs.main, parent=srcs.parent, widget=srcs.widget }
 	if lsrc.main==nil then lsrc.main=RectangleStyle._DEFAULTS end
+	if lsrc.parent==nil then lsrc.parent=dest end
 	lsrc.widget = RectangleStyle._DEFAULTS
 	--==--
 

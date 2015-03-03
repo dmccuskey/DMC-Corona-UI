@@ -216,9 +216,9 @@ function RoundedStyle.addMissingDestProperties( dest, srcs )
 	-- print( "RoundedStyle.addMissingDestProperties", dest, srcs )
 	assert( dest )
 	srcs = srcs or {}
-	local lsrc = Utils.extend( srcs, {} )
-	if lsrc.parent==nil then lsrc.parent=dest end
+	local lsrc = { main=srcs.main, parent=srcs.parent, widget=srcs.widget }
 	if lsrc.main==nil then lsrc.main=RoundedStyle._DEFAULTS end
+	if lsrc.parent==nil then lsrc.parent=dest end
 	lsrc.widget = RoundedStyle._DEFAULTS
 	--==--
 

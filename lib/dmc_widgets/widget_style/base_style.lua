@@ -189,6 +189,7 @@ function Style:__init__( params )
 	self._onPropertyChange_f = params.onPropertyChange
 
 	self._tmp_data = params.data -- temporary save of data
+	self._tmp_dataSrc = params.dataSrc -- temporary save of data
 
 	self._name = params.name
 	self._debugOn = params.debugOn
@@ -204,8 +205,10 @@ function Style:__initComplete__()
 	--==--
 	self._isDestroying = false
 
-	local data = self:_prepareData( self._tmp_data )
+	local data = self:_prepareData( self._tmp_data,
+		self._tmp_dataSrc, {inherit=self._inherit} )
 	self._tmp_data = nil
+	self._tmp_dataSrc = nil
 	self:_parseData( data )
 
 	-- do this after style/children constructed --
@@ -285,9 +288,9 @@ function Style.addMissingDestProperties( dest, srcs )
 	-- print( "Style.addMissingDestProperties", dest, srcs )
 	assert( dest )
 	srcs = srcs or {}
-	local lsrc = Utils.extend( srcs, {} )
-	if lsrc.parent==nil then lsrc.parent=dest end
+	local lsrc = { main=srcs.main, parent=srcs.parent, widget=srcs.widget }
 	if lsrc.main==nil then lsrc.main=Style._DEFAULTS end
+	if lsrc.parent==nil then lsrc.parent=dest end
 	lsrc.widget = Style._DEFAULTS
 	--==--
 
@@ -1081,15 +1084,26 @@ end
 -- the goal is to have enough of a structure to be able
 -- to process with _parseData()
 --
-function Style:_prepareData( data )
-	-- print( "Style:_prepareData", self )
-	-- data could be nil, Lua structure, or class instance
-	if type(data)=='table' and data.isa then
-		-- if we have an Instance, dump it
-		data=nil
+function Style:_prepareData( data, dataSrc, params )
+	-- print( "Style:_prepareData", data, dataSrc, self )
+	params = params or {}
+	if dataSrc==nil then dataSrc=self:getBaseStyle() end
+	--==--
+	local StyleClass = self.class
+
+	if not data then
+		data = StyleClass.createStyleStructure()
 	end
+
+	if params.inherit then
+		-- override to process children
+	else
+		data = StyleClass.addMissingDestProperties( data, {parent=dataSrc} )
+	end
+
 	return data
 end
+
 
 -- _parseData()
 -- parse through the Lua data given, creating properties

@@ -347,9 +347,9 @@ function TextFieldStyle.addMissingDestProperties( dest, srcs )
 	-- print( "TextFieldStyle.addMissingDestProperties", dest, srcs )
 	assert( dest )
 	srcs = srcs or {}
-	local lsrc = Utils.extend( srcs, {} )
-	if lsrc.parent==nil then lsrc.parent=dest end
+	local lsrc = { main=srcs.main, parent=srcs.parent, widget=srcs.widget }
 	if lsrc.main==nil then lsrc.main=TextFieldStyle._DEFAULTS end
+	if lsrc.parent==nil then lsrc.parent=dest end
 	lsrc.widget = TextFieldStyle._DEFAULTS
 	--==--
 

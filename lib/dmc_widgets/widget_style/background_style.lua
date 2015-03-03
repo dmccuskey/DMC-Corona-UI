@@ -240,9 +240,9 @@ function BackgroundStyle.addMissingDestProperties( dest, srcs )
 	-- print( "BackgroundStyle.addMissingDestProperties", dest, srcs )
 	assert( dest )
 	srcs = srcs or {}
-	local lsrc = Utils.extend( srcs, {} )
-	if lsrc.parent==nil then lsrc.parent=dest end
+	local lsrc = { main=srcs.main, parent=srcs.parent, widget=srcs.widget }
 	if lsrc.main==nil then lsrc.main=BackgroundStyle._DEFAULTS end
+	if lsrc.parent==nil then lsrc.parent=dest end
 	lsrc.widget = BackgroundStyle._DEFAULTS
 	--==--
 
@@ -834,56 +834,50 @@ data, inherit - inherit.type (unset) or data.type (set) or default (set)
 --]]
 -- _prepareData()
 --
-function BackgroundStyle:_prepareData( data )
-	-- print( "BackgroundStyle:_prepareData", data, self )
-	local inherit = self._inherit
+function BackgroundStyle:_prepareData( data, dataSrc, params )
+	-- print( "BackgroundStyle:_prepareData", data, dataSrc, self )
+	params = params or {}
+	--==--
+	local inherit = params.inherit
+	local StyleClass
+	local src, dest, stype
 
 	if not data then
+		-- create basic structure if missing
 		data = BackgroundStyle.createStyleStructure()
-		if inherit then
-			data.type = nil -- unset for inheritance
-			data.view = inherit.type -- notify of type
-		end
+	end
 
-	elseif data.isa and data:isa( BackgroundStyle ) then
-		--== Instance
-		local o = data
-		data = BackgroundStyle.createStyleStructure( o.type )
-		if inherit then
-			data.type = nil -- unset for inheritance
-			data.view = inherit.type -- notify of type
-		end
+	src, dest = data, nil
+
+	-- see which view type we have
+	if inherit then
+		stype = inherit.type
+	elseif src.type then
+		stype = src.type
+	else
+		stype = self._DEFAULT_VIEWTYPE
+	end
+
+
+	StyleClass = StyleFactory.getClass( stype )
+	if not src.view then
+		-- before we copy our defaults, make sure
+		-- structure for 'view' exists
+		src.view = StyleClass.createStyleStructure()
+	end
+
+	--== process depending on inheritance
+
+	if not params.inherit then
+		-- if dataSrc==nil then dataSrc=self:getBaseStyle( stype ) end
+		src.type = stype
+
+		src = BackgroundStyle.addMissingDestProperties( src, {main=dataSrc} )
 
 	else
-		--== Lua structure
-		local StyleClass
-		local src, dest = data, nil
-		local stype
-
-		if inherit then
-			stype = inherit.type
-			src.type = nil -- unset for inheritance
-		elseif src.type then
-			stype = src.type
-		else
-			stype = self._DEFAULT_VIEWTYPE
-			src.type = stype
-		end
-
-		if stype then
-			--== set child properties
-
-			StyleClass = StyleFactory.getClass( stype )
-
-			-- before we copy our defaults, make sure
-			-- structure for 'view' exists
-			dest = src.view
-			if not dest then
-				dest = StyleClass.createStyleStructure()
-				src.view = dest
-			end
-			StyleClass.copyExistingSrcProperties( dest, src )
-		end
+		src.type = nil -- unset for inheritance
+		dest = src.view
+		dest = StyleClass.copyExistingSrcProperties( dest, src )
 
 	end
 
