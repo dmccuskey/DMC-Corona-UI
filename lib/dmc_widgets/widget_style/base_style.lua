@@ -430,14 +430,7 @@ function Style:getBaseStyle()
 end
 
 
-function Style:getDefaultStyleValues( params )
-	params = params or {}
-	if params.mode==nil then params.mode=Style.RUN_MODE end
-	--==--
-	local defStyle = self._STYLE_DEFAULTS
-	if params.mode==Style.TEST_MODE then
-		defStyle = self._DEFAULTS
-	end
+function Style:getDefaultStyleValues()
 	-- TODO: make a copy
 	return self._DEFAULTS
 end
