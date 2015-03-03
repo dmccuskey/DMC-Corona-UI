@@ -194,8 +194,8 @@ end
 --== Static Methods
 
 
-function RoundedStyle.initialize( manager )
-	-- print( "RoundedStyle.initialize", manager )
+function RoundedStyle.initialize( manager, params )
+	-- print( "RoundedStyle.initialize", manager, params )
 	params = params or {}
 	if params.mode==nil then params.mode=ViewStyle.RUN_MODE end
 	--==--

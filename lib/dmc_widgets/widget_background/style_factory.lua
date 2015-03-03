@@ -83,12 +83,12 @@ local sformat = string.format
 --== Support Functions
 
 
-local function initializeFactory( manager )
+local function initializeFactory( manager, params )
 	-- print( "StyleFactory.initializeFactory" )
 	Widgets = manager
 
-	Rectangle.initialize( manager )
-	Rounded.initialize( manager )
+	Rectangle.initialize( manager, params )
+	Rounded.initialize( manager, params )
 end
 
 
