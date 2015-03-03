@@ -621,29 +621,46 @@ end
 --== Private Methods
 
 
-function ButtonStateStyle:_prepareData( data )
+function ButtonStateStyle:_prepareData( data, dataSrc, params )
 	-- print( "ButtonStateStyle:_prepareData", data )
-	if not data then return end
+	params = params or {}
 	--==--
-	local createStruct = ButtonStateStyle.createStyleStructure
+	local inherit = params.inherit
+	local StyleClass
+	local src, dest, vtype
 
-	if data.isa and data:isa( ButtonStateStyle ) then
-		--== Instance
-		local o = data
-		data = createStruct( o.background.view.type )
+	if not data then
+		StyleClass = self.class
+		data = StyleClass.createStyleStructure()
+	end
+
+	src, dest = data, nil
+
+	--== make sure we have structure for children
+
+	StyleClass = Widgets.Style.Text
+	if not src.label then
+		src.label = StyleClass.createStyleStructure()
+	end
+
+	StyleClass = Widgets.Style.Background
+	if not src.background then
+		src.background = StyleClass.createStyleStructure()
+	end
+
+	--== process depending on inheritance
+
+	if not inherit then
+		src = ButtonStateStyle.addMissingDestProperties( src, {main=dataSrc} )
 
 	else
-		--== Lua structure
-		local StyleClass
-		local src, dest = data, nil
-
-		dest = src.label
 		StyleClass = Widgets.Style.Text
-		StyleClass.copyExistingSrcProperties( dest, src )
+		dest = src.label
+		src.label = StyleClass.copyExistingSrcProperties( dest, src )
 
-		dest = src.background
 		StyleClass = Widgets.Style.Background
-		StyleClass.copyExistingSrcProperties( dest, src )
+		dest = src.background
+		src.background = StyleClass.copyExistingSrcProperties( dest, src )
 
 	end
 

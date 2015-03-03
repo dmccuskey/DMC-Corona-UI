@@ -421,10 +421,11 @@ end
 --
 function ButtonStyle.createStyleStructure( data )
 	-- print( "ButtonStyle.createStyleStructure", data )
+	local StyleClass = Widgets.Style.ButtonState
 	return {
-		inactive=Widgets.Style.ButtonState.createStyleStructure( data ),
-		active=Widgets.Style.ButtonState.createStyleStructure( data ),
-		disabled=Widgets.Style.ButtonState.createStyleStructure( data )
+		inactive=StyleClass.createStyleStructure( data ),
+		active=StyleClass.createStyleStructure( data ),
+		disabled=StyleClass.createStyleStructure( data )
 	}
 end
 
@@ -751,7 +752,7 @@ end
 
 
 function ButtonStyle:_destroyChildren()
-	print( 'ButtonStyle:_destroyChildren', self )
+	-- print( 'ButtonStyle:_destroyChildren', self )
 
 	self._inactive:removeSelf()
 	self._inactive=nil
@@ -767,46 +768,48 @@ end
 -- we could have nil, Lua structure, or Instance
 --
 -- TODO: more work when inheriting, etc (Background Style)
-function ButtonStyle:_prepareData( data )
+function ButtonStyle:_prepareData( data, dataSrc, params )
 	-- print("ButtonStyle:_prepareData", data, self )
-	if not data then return end
+	params = params or {}
 	--==--
-	local StyleClass = Widgets.Style.ButtonState
-	local createStruct = StyleClass.createStyleStructure
+	local inherit = params.inherit
+	local StyleClass
+	local src, dest
 
-	if data.isa and data:isa( ButtonStyle ) then
-		--== Instance
-		local o = data
-		data = {
-			inactive=createStruct(o.inactive.background.view.type),
-			active=createStruct(o.active.background.view.type),
-			disabled=createStruct(o.disabled.background.view.type)
-		}
+	if not data then
+		StyleClass = self.class
+		data = StyleClass.createStyleStructure()
+	end
+
+	src, dest = data, nil
+
+	--== make sure we have structure for children
+
+	StyleClass = Widgets.Style.ButtonState
+	if not src.inactive then
+		src.inactive = StyleClass.createStyleStructure()
+	end
+	if not src.active then
+		src.active = StyleClass.createStyleStructure()
+	end
+	if not src.disabled then
+		src.disabled = StyleClass.createStyleStructure()
+	end
+
+	--== process depending on inheritance
+
+	if not inherit then
+		src = ButtonStyle.addMissingDestProperties( src, {main=dataSrc} )
 
 	else
-		--== Lua structure
-		local src, dest = data, nil
-
 		dest = src.inactive
-		if dest==nil then
-			dest = createStruct()
-			src.inactive = dest
-		end
-		StyleClass.copyExistingSrcProperties( dest, src )
+		src.inactive = StyleClass.copyExistingSrcProperties( dest, src )
 
 		dest = src.active
-		if dest==nil then
-			dest = createStruct()
-			src.active = dest
-		end
-		StyleClass.copyExistingSrcProperties( dest, src )
+		src.active = StyleClass.copyExistingSrcProperties( dest, src )
 
 		dest = src.disabled
-		if dest==nil then
-			dest = createStruct()
-			src.disabled = dest
-		end
-		StyleClass.copyExistingSrcProperties( dest, src )
+		src.disabled = StyleClass.copyExistingSrcProperties( dest, src )
 
 	end
 

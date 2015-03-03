@@ -837,48 +837,50 @@ end
 
 
 -- TODO: more work when inheriting, etc (Background Style)
-function TextFieldStyle:_prepareData( data )
+function TextFieldStyle:_prepareData( data, dataSrc, params )
 	-- print("TextFieldStyle:_prepareData", data, self )
-	if not data then return end
+	params = params or {}
 	--==--
-	local createStruct = TextFieldStyle.createStyleStructure
+	local inherit = params.inherit
+	local StyleClass
+	local src, dest
 
-	if data.isa and data:isa( TextFieldStyle ) then
-		--== Instance
-		local o = data
-		data = createStruct( o.background.type )
+	if not data then
+		StyleClass = self.class
+		data = StyleClass.createStyleStructure()
+	end
+
+	src, dest = data, nil
+
+	--== make sure we have structure for children
+
+	StyleClass = Widgets.Style.Background
+	if not src.background then
+		src.background = StyleClass.createStyleStructure()
+	end
+
+	StyleClass = Widgets.Style.Text
+	if not src.hint then
+		src.hint = StyleClass.createStyleStructure()
+	end
+	if not src.display then
+		src.display = StyleClass.createStyleStructure()
+	end
+
+	--== process depending on inheritance
+
+	if not inherit then
+		src = TextFieldStyle.addMissingDestProperties( src, {main=dataSrc} )
 
 	else
-		--== Lua structure
-		local StyleClass
-		local src, dest = data, nil
-
-		StyleClass = Widgets.Style.Background
-		createStruct = StyleClass.createStyleStructure
 		dest = src.background
-		if dest==nil then
-			dest = createStruct()
-			src.background = dest
-		end
-		StyleClass.copyExistingSrcProperties( dest, src )
+		src.background = StyleClass.copyExistingSrcProperties( dest, src )
 
-		StyleClass = Widgets.Style.Text
-		createStruct = StyleClass.createStyleStructure
 		dest = src.hint
-		if dest==nil then
-			dest = createStruct()
-			src.hint = dest
-		end
-		StyleClass.copyExistingSrcProperties( dest, src )
+		src.hint = StyleClass.copyExistingSrcProperties( dest, src )
 
-		StyleClass = Widgets.Style.Text
-		createStruct = StyleClass.createStyleStructure
 		dest = src.display
-		if dest==nil then
-			dest = createStruct()
-			src.display = dest
-		end
-		StyleClass.copyExistingSrcProperties( dest, src )
+		src.display = StyleClass.copyExistingSrcProperties( dest, src )
 
 	end
 
