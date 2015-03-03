@@ -448,7 +448,15 @@ function BackgroundStyle:_doChildrenInherit( value, params )
 	local cType = self._type
 	local iType = nil
 	local cActiveInherit = (self._type==nil)
-	self:_updateViewStyle( { delta='inherit', cInherit=params.curr, nInherit=params.next, cType=cType, iType=iType, cActiveInherit=cActiveInherit, clearProperties=false } )
+	self:_updateViewStyle{
+		delta='inherit',
+		cInherit=params.curr,
+		nInherit=params.next,
+		cType=cType,
+		iType=iType,
+		cActiveInherit=cActiveInherit,
+		clearProperties=false
+	}
 end
 
 
@@ -799,7 +807,16 @@ function BackgroundStyle.__setters:type( value )
 	self._type = value
 	if not self._isInitialized then return end
 
-	self:_updateViewStyle( { delta='type', cType=cType, iType=iType, nType=nType, cInherit=self._inherit, cActiveInherit=cActiveInherit, nActiveInherit=nActiveInherit, clearProperties=true } )
+	self:_updateViewStyle{
+		delta='type',
+		cType=cType,
+		iType=iType,
+		nType=nType,
+		cInherit=self._inherit,
+		cActiveInherit=cActiveInherit,
+		nActiveInherit=nActiveInherit,
+		clearProperties=true
+	}
 end
 
 
