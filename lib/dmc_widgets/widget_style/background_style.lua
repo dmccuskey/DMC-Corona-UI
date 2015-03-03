@@ -413,6 +413,21 @@ function BackgroundStyle.__setters:view( data )
 	--==--
 	local inherit = self._inherit and self._inherit._view
 
+	--== check to see if our view type is compatible with style type
+
+	if inherit then
+		local iType = inherit.type
+		local dType, dVal = type(data), nil
+		if dType=='string' then
+			dVal = data
+		elseif dType=='table' then
+			dVal = self.type
+		else
+			dVal=iType -- TODO: check this
+		end
+		if iType~=dVal then inherit=nil end
+	end
+
 	self._view = self:_createView{
 		name=BackgroundStyle.VIEW_NAME,
 		inherit=inherit,
@@ -844,6 +859,7 @@ function BackgroundStyle:_prepareData( data, dataSrc, params )
 	local inherit = params.inherit
 	local StyleClass
 	local src, dest, stype
+	local vInherit=false
 
 	if not data then
 		-- create basic structure if missing
@@ -852,15 +868,22 @@ function BackgroundStyle:_prepareData( data, dataSrc, params )
 
 	src, dest = data, nil
 
+	--== make sure we have structure for children
+
 	-- see which view type we have
 	if inherit then
-		stype = inherit.type
+		if src.type == inherit.type then
+			vInherit=true
+			stype = inherit.type
+		else
+			stype = src.type
+			vInherit=false
+		end
 	elseif src.type then
 		stype = src.type
 	else
 		stype = self._DEFAULT_VIEWTYPE
 	end
-
 
 	StyleClass = StyleFactory.getClass( stype )
 	if not src.view then
@@ -871,13 +894,11 @@ function BackgroundStyle:_prepareData( data, dataSrc, params )
 
 	--== process depending on inheritance
 
-	if not params.inherit then
-		-- if dataSrc==nil then dataSrc=self:getBaseStyle( stype ) end
+	if not inherit or vInherit==false then
 		src.type = stype
-
 		src = BackgroundStyle.addMissingDestProperties( src, {main=dataSrc} )
 
-	else
+	elseif vInherit==true then
 		src.type = nil -- unset for inheritance
 		dest = src.view
 		dest = StyleClass.copyExistingSrcProperties( dest, src )
