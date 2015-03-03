@@ -130,20 +130,23 @@ ButtonStyle._EXCLUDE_PROPERTY_CHECK = {
 ButtonStyle._STYLE_DEFAULTS = {
 	name='button-default-style',
 	debugOn=false,
-	width=75,
+	width=76,
 	height=30,
 	anchorX=0.5,
 	anchorY=0.5,
 
-	align='left',
+	align='center',
 	hitMarginX=0,
 	hitMarginY=0,
 	isHitActive=true,
 	marginX=0,
 	marginY=0,
 
+	--[[
+	TODO: update this
 	font=native.systemFontBold,
 	fontSize=16,
+	--]]
 
 	inactive={ -- << this is a Button Style State
 		--[[
