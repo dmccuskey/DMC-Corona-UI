@@ -661,6 +661,7 @@ function Style.__setters:inherit( value )
 
 	--== Choose Reset method
 
+	if not self._isInitialized then return end
 	--== Process children
 
 	self:_doChildrenInherit( value, {curr=cInherit, next=nInherit} )
