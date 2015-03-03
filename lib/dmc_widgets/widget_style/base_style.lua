@@ -661,18 +661,6 @@ function Style.__setters:inherit( value )
 
 	--== Choose Reset method
 
-	if nInherit then
-		-- we have inherit, so clear all properties
-		reset = nil
-	elseif self._isInitialized then
-		-- no inherit, so reset with previous inherit
-		-- note, could be nil
-		reset = cInherit
-	else
-		-- reset with class base
-		reset = StyleBase
-	end
-
 	--== Process children
 
 	self:_doChildrenInherit( value, {curr=cInherit, next=nInherit} )
