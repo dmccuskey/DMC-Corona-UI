@@ -275,6 +275,8 @@ function Style.createStyleStructure( data )
 end
 
 
+
+
 -- addMissingDestProperties()
 -- copies properties from src structure to dest structure
 -- if property isn't already in dest
@@ -328,26 +330,7 @@ end
 -- purpose is to allow property overrides and inheritance
 -- copied down from parent style
 -- force makes exact copy of source
---[[
-source = {
-	fillColor={}
-	strokeWidth=4,
-
-	view = {
-
-	}
-}
-src=source, dest=source.view <send view>
-source = {
-	fillColor={}
-	strokeWidth=4,
-
-	view = {
-		fillColor={},
-		strokeWidth=4
-	}
-}
---]]
+--
 function Style.copyExistingSrcProperties( dest, src, params )
 	-- print( "Style.copyExistingSrcProperties", dest, src, params )
 	assert( dest )
