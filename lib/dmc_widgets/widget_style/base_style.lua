@@ -456,6 +456,7 @@ end
 function Style:copyStyle( params )
 	-- print( "Style:copyStyle", self )
 	params = params or {}
+	if params.data==nil then params.data = {} end
 	params.inherit = self
 	--==--
 	return self.class:new( params )
