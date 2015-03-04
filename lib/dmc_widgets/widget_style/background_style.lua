@@ -427,7 +427,10 @@ function BackgroundStyle.__setters:view( data )
 		else
 			dVal=iType -- TODO: check this
 		end
-		if iType~=dVal then inherit=nil end
+		if iType~=dVal then
+			local tmp = self:getBaseStyle( dVal )
+			inherit=tmp and tmp.view
+		end
 	end
 
 	self._view = self:_createView{
@@ -675,11 +678,13 @@ function BackgroundStyle:_updateViewStyle( params )
 
 		elseif cType==nil and nType==viewType then
 			-- new Type is SAME as inheritance
+			StyleBase = self:getBaseStyle( nType )
+
 			bgType_dirty=true ; bgType = nType
 			-- bgInherit_dirty=false ; bgInherit = nil -- no change
 			bgData_dirty=true ; bgData = {src=cInherit, force=false, clearChildren=false}
 			-- vType_dirty=false ; vType = nType -- no change
-			vInherit_dirty=true ; vInherit = nil -- stop inheritance
+			vInherit_dirty=true ; vInherit = StyleBase.view -- stop direct inheritance
 			vData_dirty=true ; vData = {src=cInherit.view, force=true, clearChildren=false}
 
 		elseif cType==nil and nType~=viewType then
@@ -690,7 +695,7 @@ function BackgroundStyle:_updateViewStyle( params )
 			-- bgInherit_dirty=false ; bgInherit = nil -- no change
 			bgData_dirty=true ; bgData = {src=StyleBase, force=false, clearChildren=false}
 			vType_dirty=true ; vType = nType
-			vInherit_dirty=true ; vInherit = nil -- stop inheritance
+			vInherit_dirty=true ; vInherit = StyleBase.view -- stop direct inheritance
 			vData_dirty=true ; vData = {src=StyleBase.view, force=true, clearChildren=false}
 
 		else
@@ -702,7 +707,7 @@ function BackgroundStyle:_updateViewStyle( params )
 			-- bgInherit_dirty=false ; bgInherit = nil -- no change
 			-- bgData_dirty=false ; bgData = {src=StyleBase, force=false, clearChildren=false}
 			vType_dirty=true ; vType = nType
-			-- vInherit_dirty=false ; vInherit = nil -- no change
+			vInherit_dirty=true ; vInherit = StyleBase.view -- no change
 			vData_dirty=true ; vData = {src=StyleBase.view, force=true, clearChildren=false}
 		end
 
@@ -834,7 +839,17 @@ function BackgroundStyle:_handleTypeChangeEvent( event )
 	local iType = value
 	local iInherit = data.next
 
-	self:_updateViewStyle( { delta='type', cType=cType, iType=iType, iInherit=iInherit, nType=nType, cInherit=self._inherit, cActiveInherit=cActiveInherit, nActiveInherit=nActiveInherit, clearProperties=true } )
+	self:_updateViewStyle{
+		delta='type',
+		cType=cType,
+		iType=iType,
+		iInherit=iInherit,
+		nType=nType,
+		cInherit=self._inherit,
+		cActiveInherit=cActiveInherit,
+		nActiveInherit=nActiveInherit,
+		clearProperties=true
+	}
 end
 
 
@@ -877,7 +892,7 @@ function BackgroundStyle:_prepareData( data, dataSrc, params )
 	--==--
 	local inherit = params.inherit
 	local StyleClass
-	local src, dest, stype, tmp
+	local src, dest, sType, tmp
 	local vInherit=false
 
 	if not data then
@@ -893,41 +908,33 @@ function BackgroundStyle:_prepareData( data, dataSrc, params )
 	if inherit then
 		if not src.type then
 			vInherit=true
-			stype = inherit.type
+			sType = inherit.type
 		elseif src.type == inherit.type then
 			vInherit=true
-			stype = inherit.type
+			sType = inherit.type
 		else
-			stype = src.type
 			vInherit=false
+			sType = src.type
 		end
 	elseif src.type then
-		stype = src.type
+		sType = src.type
 	else
-		stype = self._DEFAULT_VIEWTYPE
+		sType = self._DEFAULT_VIEWTYPE
 	end
 
-
-	StyleClass = StyleFactory.getClass( stype )
+	StyleClass = StyleFactory.getClass( sType )
 	if not src.view then
-		-- before we copy our defaults, make sure
-		-- structure for 'view' exists
 		tmp = dataSrc and dataSrc.view
 		src.view = StyleClass.createStyleStructure( tmp )
 	end
 
-	--== process depending on inheritance
-
-	if not inherit or vInherit==false then
-		src.type = stype
-		src = BackgroundStyle.addMissingDestProperties( src, {main=dataSrc} )
-
+	if vInherit==false then
+		src.type = sType -- set to block
 	elseif vInherit==true then
 		src.type = nil -- unset for inheritance
-		dest = src.view
-		dest = StyleClass.copyExistingSrcProperties( dest, src )
-
 	end
+	dest = src.view
+	dest = StyleClass.copyExistingSrcProperties( dest, src )
 
 	return data
 end

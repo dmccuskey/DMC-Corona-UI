@@ -360,6 +360,157 @@ end
 --== Test Class Methods
 
 
+
+function test_prepareData_minimal()
+
+	local Text = Widgets.Style.Text
+	local BaseStyle = Text:getBaseStyle()
+
+	local dataSrc = {
+		width=101,
+		height=102,
+		anchorX=103,
+		anchorY=104,
+		align='center-left',
+		fillColor={101,102,103,106},
+		font=100,
+		fontSize=101,
+		marginX=102,
+		marginY=103,
+		textColor={101,102,103,106},
+	}
+	local src
+
+	src = {
+		fontSize=54,
+		marginX=55,
+		height=56
+	}
+
+	-- minimal
+	src = Text:_prepareData( src, dataSrc )
+
+	hasPropertyValue( src, 'width', nil )
+	hasPropertyValue( src, 'height', 56 )
+	hasPropertyValue( src, 'anchorX', nil )
+	hasPropertyValue( src, 'anchorY', nil )
+	hasPropertyValue( src, 'align', nil )
+	hasPropertyValue( src, 'fillColor', nil )
+	hasPropertyValue( src, 'font', nil )
+	hasPropertyValue( src, 'fontSize', 54 )
+	hasPropertyValue( src, 'marginX', 55 )
+	hasPropertyValue( src, 'marginY', nil )
+	hasPropertyValue( src, 'textColor', nil )
+
+
+	src = {
+		fontSize=54,
+		marginX=55,
+		height=56
+	}
+
+	-- whole thing, using Base
+	src = Text:_prepareData( src, nil )
+
+	hasPropertyValue( src, 'width', nil )
+	hasPropertyValue( src, 'height', 56 )
+	hasPropertyValue( src, 'anchorX', nil )
+	hasPropertyValue( src, 'anchorY', nil )
+	hasPropertyValue( src, 'align', nil )
+	hasPropertyValue( src, 'fillColor', nil )
+	hasPropertyValue( src, 'font', nil )
+	hasPropertyValue( src, 'fontSize', 54 )
+	hasPropertyValue( src, 'marginX', 55 )
+	hasPropertyValue( src, 'marginY', nil )
+	hasPropertyValue( src, 'textColor', nil )
+
+end
+
+
+
+--[[
+--]]
+function test_styleClassBasics()
+	-- print( "test_styleClassBasics" )
+	local Text = Widgets.Style.Text
+	local BaseStyle, defaultStyles
+	local style
+
+	defaultStyles = Text:getDefaultStyleValues()
+	BaseStyle = Text:getBaseStyle()
+
+	TestUtils.verifyTextStyle( BaseStyle )
+	styleInheritsFrom( BaseStyle, nil )
+
+	-- check properties initialized to the default values
+
+	styleHasPropertyValue( BaseStyle, 'debugOn', defaultStyles.debugOn )
+	-- width/height can be nil
+	hasPropertyValue( BaseStyle, 'width', defaultStyles.width )
+	hasPropertyValue( BaseStyle, 'height', defaultStyles.height )
+	styleHasPropertyValue( BaseStyle, 'anchorX', defaultStyles.anchorX )
+	styleHasPropertyValue( BaseStyle, 'anchorY', defaultStyles.anchorY )
+	styleHasPropertyValue( BaseStyle, 'align', defaultStyles.align )
+	styleHasPropertyValue( BaseStyle, 'fillColor', defaultStyles.fillColor )
+	styleHasPropertyValue( BaseStyle, 'font', defaultStyles.font )
+	styleHasPropertyValue( BaseStyle, 'fontSize', defaultStyles.fontSize )
+	styleHasPropertyValue( BaseStyle, 'marginX', defaultStyles.marginX )
+	styleHasPropertyValue( BaseStyle, 'marginY', defaultStyles.marginY )
+	styleHasPropertyValue( BaseStyle, 'textColor', defaultStyles.textColor )
+
+
+	--== Create a new text style
+
+	style = Widgets.newTextStyle()
+
+	TestUtils.verifyTextStyle( style )
+	styleInheritsFrom( style, BaseStyle )
+
+	styleInheritsPropertyValue( style, 'debugOn', defaultStyles.debugOn )
+	-- width/height can be nil
+	styleInheritsPropertyValue( style, 'width', defaultStyles.width )
+	styleInheritsPropertyValue( style, 'height', defaultStyles.height )
+	styleInheritsPropertyValue( style, 'anchorX', defaultStyles.anchorX )
+	styleInheritsPropertyValue( style, 'anchorY', defaultStyles.anchorY )
+	styleInheritsPropertyValue( style, 'align', defaultStyles.align )
+	styleInheritsPropertyValue( style, 'fillColor', defaultStyles.fillColor )
+	styleInheritsPropertyValue( style, 'font', defaultStyles.font )
+	styleInheritsPropertyValue( style, 'fontSize', defaultStyles.fontSize )
+	styleInheritsPropertyValue( style, 'marginX', defaultStyles.marginX )
+	styleInheritsPropertyValue( style, 'marginY', defaultStyles.marginY )
+	styleInheritsPropertyValue( style, 'textColor', defaultStyles.textColor )
+
+	style:removeSelf()
+
+	--== Create a new text style
+
+	style = Widgets.newTextStyle{
+		debugOn=true,
+		height=12,
+		fontSize=99
+	}
+
+	TestUtils.verifyTextStyle( style )
+	styleInheritsFrom( style, BaseStyle )
+
+	styleHasPropertyValue( style, 'debugOn', true )
+	styleInheritsPropertyValue( style, 'width', defaultStyles.width )
+	styleHasPropertyValue( style, 'height', 12 )
+	styleInheritsPropertyValue( style, 'anchorX', defaultStyles.anchorX )
+	styleInheritsPropertyValue( style, 'anchorY', defaultStyles.anchorY )
+	styleInheritsPropertyValue( style, 'align', defaultStyles.align )
+	styleInheritsPropertyValue( style, 'fillColor', defaultStyles.fillColor )
+	styleInheritsPropertyValue( style, 'font', defaultStyles.font )
+	styleHasPropertyValue( style, 'fontSize', 99 )
+	styleInheritsPropertyValue( style, 'marginX', defaultStyles.marginX )
+	styleInheritsPropertyValue( style, 'marginY', defaultStyles.marginY )
+	styleInheritsPropertyValue( style, 'textColor', defaultStyles.textColor )
+
+	style:removeSelf()
+
+end
+
+
 function test_copyStyle()
 
 	local Text = Widgets.Style.Text
@@ -406,141 +557,6 @@ function test_copyStyle()
 end
 
 
-function test_prepareData_minimal()
-
-	local Text = Widgets.Style.Text
-	local BaseStyle = Text:getBaseStyle()
-
-	local dataSrc = {
-		width=101,
-		height=102,
-		anchorX=103,
-		anchorY=104,
-		align='center-left',
-		fillColor={101,102,103,106},
-		font=100,
-		fontSize=101,
-		marginX=102,
-		marginY=103,
-		textColor={101,102,103,106},
-	}
-	local inherit = {inherit={}}
-	local src
-
-	src = {
-		fontSize=54,
-		marginX=55,
-		height=56
-	}
-
-	-- minimal, inherit
-	src = Text:_prepareData( src, dataSrc, inherit )
-
-	hasPropertyValue( src, 'width', nil )
-	hasPropertyValue( src, 'height', 56 )
-	hasPropertyValue( src, 'anchorX', nil )
-	hasPropertyValue( src, 'anchorY', nil )
-	hasPropertyValue( src, 'align', nil )
-	hasPropertyValue( src, 'fillColor', nil )
-	hasPropertyValue( src, 'font', nil )
-	hasPropertyValue( src, 'fontSize', 54 )
-	hasPropertyValue( src, 'marginX', 55 )
-	hasPropertyValue( src, 'marginY', nil )
-	hasPropertyValue( src, 'textColor', nil )
-
-
-	src = {
-		fontSize=54,
-		marginX=55,
-		height=56
-	}
-
-	-- whole thing, using data source
-	src = Text:_prepareData( src, dataSrc, nil )
-
-	hasPropertyValue( src, 'width', dataSrc.width )
-	hasPropertyValue( src, 'height', 56 )
-	hasPropertyValue( src, 'anchorX', dataSrc.anchorX )
-	hasPropertyValue( src, 'anchorY', dataSrc.anchorY )
-	hasPropertyValue( src, 'align', dataSrc.align )
-	hasPropertyValue( src, 'fillColor', dataSrc.fillColor )
-	hasPropertyValue( src, 'font', dataSrc.font )
-	hasPropertyValue( src, 'fontSize', 54 )
-	hasPropertyValue( src, 'marginX', 55 )
-	hasPropertyValue( src, 'marginY', dataSrc.marginY )
-	hasPropertyValue( src, 'textColor', dataSrc.textColor )
-
-
-	src = {
-		fontSize=54,
-		marginX=55,
-		height=56
-	}
-
-	-- whole thing, using Base
-	src = Text:_prepareData( src, nil, nil )
-
-	hasPropertyValue( src, 'width', BaseStyle.width )
-	hasPropertyValue( src, 'height', 56 )
-	hasPropertyValue( src, 'anchorX', BaseStyle.anchorX )
-	hasPropertyValue( src, 'anchorY', BaseStyle.anchorY )
-	hasPropertyValue( src, 'align', BaseStyle.align )
-	hasPropertyValue( src, 'fillColor', BaseStyle.fillColor )
-	hasPropertyValue( src, 'font', BaseStyle.font )
-	hasPropertyValue( src, 'fontSize', 54 )
-	hasPropertyValue( src, 'marginX', 55 )
-	hasPropertyValue( src, 'marginY', BaseStyle.marginY )
-	hasPropertyValue( src, 'textColor', BaseStyle.textColor )
-
-end
-
-
-
---[[
---]]
---[[
---]]
-function test_styleClassBasics()
-	-- print( "test_styleClassBasics" )
-	local Text = Widgets.Style.Text
-	local BaseStyle, defaultStyles
-	local style
-
-	defaultStyles = Text:getDefaultStyleValues()
-	BaseStyle = Text:getBaseStyle()
-
-	TestUtils.verifyTextStyle( BaseStyle )
-	styleInheritsFrom( BaseStyle, nil )
-
-	-- check properties initialized to the default values
-
-	styleHasPropertyValue( BaseStyle, 'debugOn', defaultStyles.debugOn )
-	-- width/height can be nil
-	hasPropertyValue( BaseStyle, 'width', defaultStyles.width )
-	hasPropertyValue( BaseStyle, 'height', defaultStyles.height )
-	styleHasPropertyValue( BaseStyle, 'anchorX', defaultStyles.anchorX )
-	styleHasPropertyValue( BaseStyle, 'anchorY', defaultStyles.anchorY )
-	styleHasPropertyValue( BaseStyle, 'align', defaultStyles.align )
-	styleHasPropertyValue( BaseStyle, 'fillColor', defaultStyles.fillColor )
-	styleHasPropertyValue( BaseStyle, 'font', defaultStyles.font )
-	styleHasPropertyValue( BaseStyle, 'fontSize', defaultStyles.fontSize )
-	styleHasPropertyValue( BaseStyle, 'marginX', defaultStyles.marginX )
-	styleHasPropertyValue( BaseStyle, 'marginY', defaultStyles.marginY )
-	styleHasPropertyValue( BaseStyle, 'textColor', defaultStyles.textColor )
-
-	--== Verify a new text style
-
-	style = Widgets.newTextStyle()
-
-	TestUtils.verifyTextStyle( style )
-	styleInheritsFrom( style, nil )
-
-	--== Destroy style
-
-	style:removeSelf()
-
-end
-
 
 
 --[[
@@ -562,19 +578,19 @@ function test_clearPropertiesWithoutInherit()
 	StyleBase = StyleClass:getBaseStyle()
 
 	assert_equal( StyleClass, Text )
-	styleInheritsFrom( s1, nil )
+	styleInheritsFrom( s1, StyleBase )
 
 	-- test inherited properties
 
-	styleHasPropertyValue( s1, 'align', StyleBase.align )
-	styleHasPropertyValue( s1, 'fillColor', StyleBase.fillColor )
-	styleHasPropertyValue( s1, 'font', StyleBase.font )
-	styleHasPropertyValue( s1, 'fontSize', StyleBase.fontSize )
-	styleHasPropertyValue( s1, 'marginX', StyleBase.marginX )
-	styleHasPropertyValue( s1, 'marginY', StyleBase.marginY )
-	styleHasPropertyValue( s1, 'strokeColor', StyleBase.strokeColor )
-	styleHasPropertyValue( s1, 'strokeWidth', StyleBase.strokeWidth )
-	styleHasPropertyValue( s1, 'textColor', StyleBase.textColor )
+	styleInheritsPropertyValue( s1, 'align', StyleBase.align )
+	styleInheritsPropertyValue( s1, 'fillColor', StyleBase.fillColor )
+	styleInheritsPropertyValue( s1, 'font', StyleBase.font )
+	styleInheritsPropertyValue( s1, 'fontSize', StyleBase.fontSize )
+	styleInheritsPropertyValue( s1, 'marginX', StyleBase.marginX )
+	styleInheritsPropertyValue( s1, 'marginY', StyleBase.marginY )
+	styleInheritsPropertyValue( s1, 'strokeColor', StyleBase.strokeColor )
+	styleInheritsPropertyValue( s1, 'strokeWidth', StyleBase.strokeWidth )
+	styleInheritsPropertyValue( s1, 'textColor', StyleBase.textColor )
 
 	-- set some properties, to make local
 
@@ -584,14 +600,14 @@ function test_clearPropertiesWithoutInherit()
 	verifyTextStyle( s1 )
 
 	styleHasPropertyValue( s1, 'align', 'left' )
-	styleHasPropertyValue( s1, 'fillColor', StyleBase.fillColor )
-	styleHasPropertyValue( s1, 'font', StyleBase.font )
-	styleHasPropertyValue( s1, 'fontSize', StyleBase.fontSize )
+	styleInheritsPropertyValue( s1, 'fillColor', StyleBase.fillColor )
+	styleInheritsPropertyValue( s1, 'font', StyleBase.font )
+	styleInheritsPropertyValue( s1, 'fontSize', StyleBase.fontSize )
 	styleHasPropertyValue( s1, 'marginX', 99 )
-	styleHasPropertyValue( s1, 'marginY', StyleBase.marginY )
-	styleHasPropertyValue( s1, 'strokeColor', StyleBase.strokeColor )
-	styleHasPropertyValue( s1, 'strokeWidth', StyleBase.strokeWidth )
-	styleHasPropertyValue( s1, 'textColor', StyleBase.textColor )
+	styleInheritsPropertyValue( s1, 'marginY', StyleBase.marginY )
+	styleInheritsPropertyValue( s1, 'strokeColor', StyleBase.strokeColor )
+	styleInheritsPropertyValue( s1, 'strokeWidth', StyleBase.strokeWidth )
+	styleInheritsPropertyValue( s1, 'textColor', StyleBase.textColor )
 
 
 	--== Clear Properties, with inherit
@@ -604,18 +620,18 @@ function test_clearPropertiesWithoutInherit()
 
 	s1:clearProperties()
 
-	styleInheritsFrom( s1, inherit )
+	styleInheritsFrom( s1, StyleBase )
 	assert_true( receivedClearedEvent, "missing clear event" )
 
-	styleHasPropertyValue( s1, 'align', StyleBase.align )
-	styleHasPropertyValue( s1, 'fillColor', StyleBase.fillColor )
-	styleHasPropertyValue( s1, 'font', StyleBase.font )
-	styleHasPropertyValue( s1, 'fontSize', StyleBase.fontSize )
-	styleHasPropertyValue( s1, 'marginX', StyleBase.marginX )
-	styleHasPropertyValue( s1, 'marginY', StyleBase.marginY )
-	styleHasPropertyValue( s1, 'strokeColor', StyleBase.strokeColor )
-	styleHasPropertyValue( s1, 'strokeWidth', StyleBase.strokeWidth )
-	styleHasPropertyValue( s1, 'textColor', StyleBase.textColor )
+	styleInheritsPropertyValue( s1, 'align', StyleBase.align )
+	styleInheritsPropertyValue( s1, 'fillColor', StyleBase.fillColor )
+	styleInheritsPropertyValue( s1, 'font', StyleBase.font )
+	styleInheritsPropertyValue( s1, 'fontSize', StyleBase.fontSize )
+	styleInheritsPropertyValue( s1, 'marginX', StyleBase.marginX )
+	styleInheritsPropertyValue( s1, 'marginY', StyleBase.marginY )
+	styleInheritsPropertyValue( s1, 'strokeColor', StyleBase.strokeColor )
+	styleInheritsPropertyValue( s1, 'strokeWidth', StyleBase.strokeWidth )
+	styleInheritsPropertyValue( s1, 'textColor', StyleBase.textColor )
 
 	-- set local properties
 
@@ -631,19 +647,19 @@ function test_clearPropertiesWithoutInherit()
 	s1.inherit = nil
 
 	verifyTextStyle( s1 )
-	styleInheritsFrom( s1, nil )
+	styleInheritsFrom( s1, StyleBase )
 
 	-- verify all properties have been copied
 
-	styleHasPropertyValue( s1, 'align', StyleBase.align )
-	styleHasPropertyValue( s1, 'fillColor', StyleBase.fillColor )
-	styleHasPropertyValue( s1, 'font', StyleBase.font )
-	styleHasPropertyValue( s1, 'fontSize', StyleBase.fontSize )
-	styleHasPropertyValue( s1, 'marginX', StyleBase.marginX )
-	styleHasPropertyValue( s1, 'marginY', StyleBase.marginY )
-	styleHasPropertyValue( s1, 'strokeColor', StyleBase.strokeColor )
-	styleHasPropertyValue( s1, 'strokeWidth', StyleBase.strokeWidth )
-	styleHasPropertyValue( s1, 'textColor', StyleBase.textColor )
+	styleInheritsPropertyValue( s1, 'align', StyleBase.align )
+	styleInheritsPropertyValue( s1, 'fillColor', StyleBase.fillColor )
+	styleInheritsPropertyValue( s1, 'font', StyleBase.font )
+	styleInheritsPropertyValue( s1, 'fontSize', StyleBase.fontSize )
+	styleInheritsPropertyValue( s1, 'marginX', StyleBase.marginX )
+	styleInheritsPropertyValue( s1, 'marginY', StyleBase.marginY )
+	styleInheritsPropertyValue( s1, 'strokeColor', StyleBase.strokeColor )
+	styleInheritsPropertyValue( s1, 'strokeWidth', StyleBase.strokeWidth )
+	styleInheritsPropertyValue( s1, 'textColor', StyleBase.textColor )
 
 
 	--== Clear Properties, without Inherit
@@ -656,18 +672,18 @@ function test_clearPropertiesWithoutInherit()
 
 	s1:clearProperties()
 
-	styleInheritsFrom( s1, nil )
+	styleInheritsFrom( s1, StyleBase )
 	assert_true( receivedClearedEvent, "missing clear event" )
 
-	styleHasPropertyValue( s1, 'align', StyleBase.align )
-	styleHasPropertyValue( s1, 'fillColor', StyleBase.fillColor )
-	styleHasPropertyValue( s1, 'font', StyleBase.font )
-	styleHasPropertyValue( s1, 'fontSize', StyleBase.fontSize )
-	styleHasPropertyValue( s1, 'marginX', StyleBase.marginX )
-	styleHasPropertyValue( s1, 'marginY', StyleBase.marginY )
-	styleHasPropertyValue( s1, 'strokeColor', StyleBase.strokeColor )
-	styleHasPropertyValue( s1, 'strokeWidth', StyleBase.strokeWidth )
-	styleHasPropertyValue( s1, 'textColor', StyleBase.textColor )
+	styleInheritsPropertyValue( s1, 'align', StyleBase.align )
+	styleInheritsPropertyValue( s1, 'fillColor', StyleBase.fillColor )
+	styleInheritsPropertyValue( s1, 'font', StyleBase.font )
+	styleInheritsPropertyValue( s1, 'fontSize', StyleBase.fontSize )
+	styleInheritsPropertyValue( s1, 'marginX', StyleBase.marginX )
+	styleInheritsPropertyValue( s1, 'marginY', StyleBase.marginY )
+	styleInheritsPropertyValue( s1, 'strokeColor', StyleBase.strokeColor )
+	styleInheritsPropertyValue( s1, 'strokeWidth', StyleBase.strokeWidth )
+	styleInheritsPropertyValue( s1, 'textColor', StyleBase.textColor )
 
 end
 
@@ -761,21 +777,22 @@ function test_clearPropertiesWithInherit()
 	--== Break inheritance
 
 	s1.inherit = nil
+	-- inherit = StyleBase -- reminder
 
 	verifyTextStyle( s1 )
-	styleInheritsFrom( s1, nil )
+	styleInheritsFrom( s1, StyleBase )
 
 	-- verify all properties have been copied, except for our changes
 
-	styleHasPropertyValue( s1, 'align', 'left' )
-	styleHasPropertyValue( s1, 'fillColor', inherit.fillColor )
-	styleHasPropertyValue( s1, 'font', inherit.font )
-	styleHasPropertyValue( s1, 'fontSize', inherit.fontSize )
-	styleHasPropertyValue( s1, 'marginX', 99 )
-	styleHasPropertyValue( s1, 'marginY', inherit.marginY )
-	styleHasPropertyValue( s1, 'strokeColor', inherit.strokeColor )
-	styleHasPropertyValue( s1, 'strokeWidth', inherit.strokeWidth )
-	styleHasPropertyValue( s1, 'textColor', StyleBase.textColor )
+	styleInheritsPropertyValue( s1, 'align', inherit.align )
+	styleInheritsPropertyValue( s1, 'fillColor', inherit.fillColor )
+	styleInheritsPropertyValue( s1, 'font', inherit.font )
+	styleInheritsPropertyValue( s1, 'fontSize', inherit.fontSize )
+	styleInheritsPropertyValue( s1, 'marginX', inherit.marginX )
+	styleInheritsPropertyValue( s1, 'marginY', inherit.marginY )
+	styleInheritsPropertyValue( s1, 'strokeColor', inherit.strokeColor )
+	styleInheritsPropertyValue( s1, 'strokeWidth', inherit.strokeWidth )
+	styleInheritsPropertyValue( s1, 'textColor', StyleBase.textColor )
 
 
 	--== Clear Properties, without Inherit
@@ -788,24 +805,22 @@ function test_clearPropertiesWithInherit()
 
 	s1:clearProperties()
 
-	styleInheritsFrom( s1, nil )
+	styleInheritsFrom( s1, StyleBase )
 	assert_true( receivedClearedEvent, "missing clear event" )
 
 	-- values reset to inherit
 
-	styleHasPropertyValue( s1, 'align', inherit.align )
-	styleHasPropertyValue( s1, 'fillColor', inherit.fillColor )
-	styleHasPropertyValue( s1, 'font', inherit.font )
-	styleHasPropertyValue( s1, 'fontSize', inherit.fontSize )
-	styleHasPropertyValue( s1, 'marginX', inherit.marginX )
-	styleHasPropertyValue( s1, 'marginY', inherit.marginY )
-	styleHasPropertyValue( s1, 'strokeColor', inherit.strokeColor )
-	styleHasPropertyValue( s1, 'strokeWidth', inherit.strokeWidth )
-	styleHasPropertyValue( s1, 'textColor', inherit.textColor )
+	styleInheritsPropertyValue( s1, 'align', inherit.align )
+	styleInheritsPropertyValue( s1, 'fillColor', inherit.fillColor )
+	styleInheritsPropertyValue( s1, 'font', inherit.font )
+	styleInheritsPropertyValue( s1, 'fontSize', inherit.fontSize )
+	styleInheritsPropertyValue( s1, 'marginX', inherit.marginX )
+	styleInheritsPropertyValue( s1, 'marginY', inherit.marginY )
+	styleInheritsPropertyValue( s1, 'strokeColor', inherit.strokeColor )
+	styleInheritsPropertyValue( s1, 'strokeWidth', inherit.strokeWidth )
+	styleInheritsPropertyValue( s1, 'textColor', inherit.textColor )
 
 end
-
-
 
 
 --[[
@@ -831,7 +846,7 @@ function test_initializeStyleWithLuaStructure()
 
 	StyleClass = s1.class
 	assert_equal( StyleClass, Text )
-	styleInheritsFrom( s1, nil )
+	styleInheritsFrom( s1, StyleBase )
 
 	-- inherit = StyleBase
 
@@ -839,15 +854,15 @@ function test_initializeStyleWithLuaStructure()
 
 	styleHasPropertyValue( s1, 'width', 10 )
 	styleHasPropertyValue( s1, 'height', 100 )
-	styleHasPropertyValue( s1, 'anchorX', StyleBase.anchorX )
-	styleHasPropertyValue( s1, 'anchorY', StyleBase.anchorY )
-	styleHasPropertyValue( s1, 'font', StyleBase.font )
+	styleInheritsPropertyValue( s1, 'anchorX', StyleBase.anchorX )
+	styleInheritsPropertyValue( s1, 'anchorY', StyleBase.anchorY )
+	styleInheritsPropertyValue( s1, 'font', StyleBase.font )
 	styleHasPropertyValue( s1, 'fontSize', 100 )
 	styleHasPropertyValue( s1, 'marginX', 20 )
-	styleHasPropertyValue( s1, 'marginY', StyleBase.marginY )
-	styleHasPropertyValue( s1, 'strokeColor', StyleBase.strokeColor )
-	styleHasPropertyValue( s1, 'strokeWidth', StyleBase.strokeWidth )
-	styleHasPropertyValue( s1, 'textColor', StyleBase.textColor )
+	styleInheritsPropertyValue( s1, 'marginY', StyleBase.marginY )
+	styleInheritsPropertyValue( s1, 'strokeColor', StyleBase.strokeColor )
+	styleInheritsPropertyValue( s1, 'strokeWidth', StyleBase.strokeWidth )
+	styleInheritsPropertyValue( s1, 'textColor', StyleBase.textColor )
 
 	-- set some properties, to make local
 
@@ -857,14 +872,14 @@ function test_initializeStyleWithLuaStructure()
 	verifyTextStyle( s1 )
 
 	styleHasPropertyValue( s1, 'align', 'left' )
-	styleHasPropertyValue( s1, 'fillColor', StyleBase.fillColor )
-	styleHasPropertyValue( s1, 'font', StyleBase.font )
+	styleInheritsPropertyValue( s1, 'fillColor', StyleBase.fillColor )
+	styleInheritsPropertyValue( s1, 'font', StyleBase.font )
 	styleHasPropertyValue( s1, 'fontSize', 100 )
 	styleHasPropertyValue( s1, 'marginX', 99 )
-	styleHasPropertyValue( s1, 'marginY', StyleBase.marginY )
-	styleHasPropertyValue( s1, 'strokeColor', StyleBase.strokeColor )
-	styleHasPropertyValue( s1, 'strokeWidth', StyleBase.strokeWidth )
-	styleHasPropertyValue( s1, 'textColor', StyleBase.textColor )
+	styleInheritsPropertyValue( s1, 'marginY', StyleBase.marginY )
+	styleInheritsPropertyValue( s1, 'strokeColor', StyleBase.strokeColor )
+	styleInheritsPropertyValue( s1, 'strokeWidth', StyleBase.strokeWidth )
+	styleInheritsPropertyValue( s1, 'textColor', StyleBase.textColor )
 
 
 	--== Clear Properties, with inherit
@@ -909,23 +924,23 @@ function test_initializeStyleWithLuaStructure()
 	s1.inherit = nil
 
 	verifyTextStyle( s1 )
-	styleInheritsFrom( s1, nil )
+	styleInheritsFrom( s1, StyleBase )
 
 	-- verify all properties have been copied, except for our changes
 
 	hasPropertyValue( s1, 'width', StyleBase.width )
 	hasPropertyValue( s1, 'height', StyleBase.height )
-	styleHasPropertyValue( s1, 'anchorX', StyleBase.anchorX )
-	styleHasPropertyValue( s1, 'anchorY', StyleBase.anchorY )
-	styleHasPropertyValue( s1, 'align', 'left' )
-	styleHasPropertyValue( s1, 'fillColor', StyleBase.fillColor )
-	styleHasPropertyValue( s1, 'font', StyleBase.font )
-	styleHasPropertyValue( s1, 'fontSize', StyleBase.fontSize )
-	styleHasPropertyValue( s1, 'marginX', 99 )
-	styleHasPropertyValue( s1, 'marginY', StyleBase.marginY )
-	styleHasPropertyValue( s1, 'strokeColor', StyleBase.strokeColor )
-	styleHasPropertyValue( s1, 'strokeWidth', StyleBase.strokeWidth )
-	styleHasPropertyValue( s1, 'textColor', StyleBase.textColor )
+	styleInheritsPropertyValue( s1, 'anchorX', StyleBase.anchorX )
+	styleInheritsPropertyValue( s1, 'anchorY', StyleBase.anchorY )
+	styleInheritsPropertyValue( s1, 'align', StyleBase.align )
+	styleInheritsPropertyValue( s1, 'fillColor', StyleBase.fillColor )
+	styleInheritsPropertyValue( s1, 'font', StyleBase.font )
+	styleInheritsPropertyValue( s1, 'fontSize', StyleBase.fontSize )
+	styleInheritsPropertyValue( s1, 'marginX', StyleBase.marginX )
+	styleInheritsPropertyValue( s1, 'marginY', StyleBase.marginY )
+	styleInheritsPropertyValue( s1, 'strokeColor', StyleBase.strokeColor )
+	styleInheritsPropertyValue( s1, 'strokeWidth', StyleBase.strokeWidth )
+	styleInheritsPropertyValue( s1, 'textColor', StyleBase.textColor )
 
 
 	--== Clear Properties, without Inherit
@@ -938,20 +953,20 @@ function test_initializeStyleWithLuaStructure()
 
 	s1:clearProperties()
 
-	styleInheritsFrom( s1, nil )
+	styleInheritsFrom( s1, StyleBase )
 	assert_true( receivedClearedEvent, "missing clear event" )
 
 	-- values reset to inherit
 
-	styleHasPropertyValue( s1, 'align', StyleBase.align )
-	styleHasPropertyValue( s1, 'fillColor', StyleBase.fillColor )
-	styleHasPropertyValue( s1, 'font', StyleBase.font )
-	styleHasPropertyValue( s1, 'fontSize', StyleBase.fontSize )
-	styleHasPropertyValue( s1, 'marginX', StyleBase.marginX )
-	styleHasPropertyValue( s1, 'marginY', StyleBase.marginY )
-	styleHasPropertyValue( s1, 'strokeColor', StyleBase.strokeColor )
-	styleHasPropertyValue( s1, 'strokeWidth', StyleBase.strokeWidth )
-	styleHasPropertyValue( s1, 'textColor', StyleBase.textColor )
+	styleInheritsPropertyValue( s1, 'align', StyleBase.align )
+	styleInheritsPropertyValue( s1, 'fillColor', StyleBase.fillColor )
+	styleInheritsPropertyValue( s1, 'font', StyleBase.font )
+	styleInheritsPropertyValue( s1, 'fontSize', StyleBase.fontSize )
+	styleInheritsPropertyValue( s1, 'marginX', StyleBase.marginX )
+	styleInheritsPropertyValue( s1, 'marginY', StyleBase.marginY )
+	styleInheritsPropertyValue( s1, 'strokeColor', StyleBase.strokeColor )
+	styleInheritsPropertyValue( s1, 'strokeWidth', StyleBase.strokeWidth )
+	styleInheritsPropertyValue( s1, 'textColor', StyleBase.textColor )
 
 end
 

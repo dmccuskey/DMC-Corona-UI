@@ -358,7 +358,7 @@ function test_styleClassBasics()
 	style = StyleFactory.create( 'rounded' )
 
 	verifyBackgroundViewStyle( style )
-	styleInheritsFrom( style, nil )
+	styleInheritsFrom( style, BaseStyle )
 
 	style:removeSelf()
 
@@ -373,7 +373,7 @@ function test_clearProperties()
 	local StyleFactory = Widgets.Style.BackgroundFactory
 	local RoundedStyle = StyleFactory.Rounded
 
-	local StyleBase, StyleClass
+	local BaseStyle, StyleClass
 	local s1, inherit
 	local resetEvent, callback
 
@@ -384,23 +384,23 @@ function test_clearProperties()
 	end
 
 
-	-- by default, style inherits properties from StyleBase
+	-- by default, style inherits properties from BaseStyle
 
 	s1 = StyleFactory.create( 'rounded' )
 	s1:addEventListener( s1.EVENT, callback )
 
 
 	StyleClass = s1.class
-	StyleBase = StyleClass:getBaseStyle()
+	BaseStyle = StyleClass:getBaseStyle()
 	assert_equal( StyleClass, RoundedStyle )
-	styleInheritsFrom( s1, nil )
+	styleInheritsFrom( s1, BaseStyle )
 
 	-- test inherited properties
 
-	styleHasPropertyValue( s1, 'cornerRadius', StyleBase.cornerRadius )
-	styleHasPropertyValue( s1, 'fillColor', StyleBase.fillColor )
-	styleHasPropertyValue( s1, 'strokeColor', StyleBase.strokeColor )
-	styleHasPropertyValue( s1, 'strokeWidth', StyleBase.strokeWidth )
+	styleInheritsPropertyValue( s1, 'cornerRadius', BaseStyle.cornerRadius )
+	styleInheritsPropertyValue( s1, 'fillColor', BaseStyle.fillColor )
+	styleInheritsPropertyValue( s1, 'strokeColor', BaseStyle.strokeColor )
+	styleInheritsPropertyValue( s1, 'strokeWidth', BaseStyle.strokeWidth )
 
 	-- set some properties, to make local
 
@@ -410,8 +410,8 @@ function test_clearProperties()
 	verifyBackgroundViewStyle( s1 )
 
 	styleHasPropertyValue( s1, 'cornerRadius', 99 )
-	styleHasPropertyValue( s1, 'fillColor', StyleBase.fillColor )
-	styleHasPropertyValue( s1, 'strokeColor', StyleBase.strokeColor )
+	styleInheritsPropertyValue( s1, 'fillColor', BaseStyle.fillColor )
+	styleInheritsPropertyValue( s1, 'strokeColor', BaseStyle.strokeColor )
 	styleHasPropertyValue( s1, 'strokeWidth', 98 )
 
 	--== Clear Properties, with inherit
@@ -419,13 +419,13 @@ function test_clearProperties()
 	resetEvent = 0
 	s1:clearProperties()
 
-	styleInheritsFrom( s1, nil )
+	styleInheritsFrom( s1, BaseStyle )
 	assert_equal( 1, resetEvent, "incorrect count for reset" )
 
-	styleHasPropertyValue( s1, 'cornerRadius', StyleBase.cornerRadius )
-	styleHasPropertyValue( s1, 'fillColor', StyleBase.fillColor )
-	styleHasPropertyValue( s1, 'strokeColor', StyleBase.strokeColor )
-	styleHasPropertyValue( s1, 'strokeWidth', StyleBase.strokeWidth )
+	styleInheritsPropertyValue( s1, 'cornerRadius', BaseStyle.cornerRadius )
+	styleInheritsPropertyValue( s1, 'fillColor', BaseStyle.fillColor )
+	styleInheritsPropertyValue( s1, 'strokeColor', BaseStyle.strokeColor )
+	styleInheritsPropertyValue( s1, 'strokeWidth', BaseStyle.strokeWidth )
 
 	-- set local properties
 
@@ -437,14 +437,14 @@ function test_clearProperties()
 	s1.inherit = nil
 
 	verifyBackgroundViewStyle( s1 )
-	styleInheritsFrom( s1, nil )
+	styleInheritsFrom( s1, BaseStyle )
 
 	-- verify all properties have been copied
 
-	styleHasPropertyValue( s1, 'cornerRadius', StyleBase.cornerRadius )
-	styleHasPropertyValue( s1, 'fillColor', StyleBase.fillColor )
-	styleHasPropertyValue( s1, 'strokeColor', StyleBase.strokeColor )
-	styleHasPropertyValue( s1, 'strokeWidth', StyleBase.strokeWidth )
+	styleInheritsPropertyValue( s1, 'cornerRadius', BaseStyle.cornerRadius )
+	styleInheritsPropertyValue( s1, 'fillColor', BaseStyle.fillColor )
+	styleInheritsPropertyValue( s1, 'strokeColor', BaseStyle.strokeColor )
+	styleInheritsPropertyValue( s1, 'strokeWidth', BaseStyle.strokeWidth )
 
 
 	--== Clear Properties, without Inherit
@@ -452,13 +452,13 @@ function test_clearProperties()
 	resetEvent = 0
 	s1:clearProperties()
 
-	styleInheritsFrom( s1, nil )
+	styleInheritsFrom( s1, BaseStyle )
 	assert_equal( 1, resetEvent, "incorrect count for reset" )
 
-	styleHasPropertyValue( s1, 'cornerRadius', StyleBase.cornerRadius )
-	styleHasPropertyValue( s1, 'fillColor', StyleBase.fillColor )
-	styleHasPropertyValue( s1, 'strokeColor', StyleBase.strokeColor )
-	styleHasPropertyValue( s1, 'strokeWidth', StyleBase.strokeWidth )
+	styleInheritsPropertyValue( s1, 'cornerRadius', BaseStyle.cornerRadius )
+	styleInheritsPropertyValue( s1, 'fillColor', BaseStyle.fillColor )
+	styleInheritsPropertyValue( s1, 'strokeColor', BaseStyle.strokeColor )
+	styleInheritsPropertyValue( s1, 'strokeWidth', BaseStyle.strokeWidth )
 
 end
 

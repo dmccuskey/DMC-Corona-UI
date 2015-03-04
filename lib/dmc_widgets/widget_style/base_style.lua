@@ -176,6 +176,9 @@ function Style:__init__( params )
 	self._isDestroying = false
 
 	-- inheritance style
+	if params.inherit==nil then
+		params.inherit = self:getBaseStyle( params.data )
+	end
 	self._inherit = params.inherit
 	self._inherit_f = nil
 
@@ -634,7 +637,7 @@ function Style.__setters:inherit( value )
 	local StyleBase = StyleClass:getBaseStyle()
 	-- current / new inherit
 	local cInherit, cInherit_f = self._inherit, self._inherit_f
-	local nInherit = value
+	local nInherit = value or StyleBase
 	local reset = nil
 
 	--== Remove old inherit link
@@ -647,14 +650,14 @@ function Style.__setters:inherit( value )
 
 	self._inherit, self._inherit_f = self:_linkInherit( nInherit )
 
-	--== Choose Reset method
 
-	if not self._isInitialized then return end
 	--== Process children
 
 	self:_doChildrenInherit( value, {curr=cInherit, next=nInherit} )
 
 	--== Clear properties
+
+	if not self._isInitialized then return end
 
 	-- Choose Reset method
 	if nInherit then
@@ -1069,11 +1072,6 @@ function Style:_prepareData( data, dataSrc, params )
 
 	if not data then
 		data = StyleClass.createStyleStructure( dataSrc )
-	end
-
-	if not params.inherit then
-		if dataSrc==nil then dataSrc=self:getBaseStyle() end
-		data = StyleClass.addMissingDestProperties( data, {main=dataSrc} )
 	end
 
 	return data
