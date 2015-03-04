@@ -267,7 +267,7 @@ end
 
 
 function ButtonStateStyle.createStyleStructure( src )
-	print( "ButtonStateStyle.createStyleStructure", src )
+	-- print( "ButtonStateStyle.createStyleStructure", src )
 	src = src or {}
 	--==--
 	return {

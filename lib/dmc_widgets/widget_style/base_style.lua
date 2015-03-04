@@ -250,8 +250,6 @@ end
 --== Static Methods
 
 
-Style._CHILDREN = {}
-
 function Style:isChild( name )
 	return (self._CHILDREN[ name ]~=nil)
 end
