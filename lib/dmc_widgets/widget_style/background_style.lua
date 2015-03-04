@@ -226,11 +226,13 @@ end
 
 
 -- create empty Background Style structure
-function BackgroundStyle.createStyleStructure( data )
-	-- print( "BackgroundStyle.createStyleStructure", data )
-	data = data or BackgroundStyle._DEFAULT_VIEWTYPE
+function BackgroundStyle.createStyleStructure( src )
+	-- print( "BackgroundStyle.createStyleStructure", src )
+	src = src or {}
+	if src.type==nil then src.type = BackgroundStyle._DEFAULT_VIEWTYPE end
+	--==--
 	return {
-		type=data,
+		type=src.type,
 		view={}
 	}
 end
@@ -341,7 +343,7 @@ function BackgroundStyle._setDefaults( StyleClass, params )
 
 	for _, Cls in ipairs( classes ) do
 		local cls_type = Cls.TYPE
-		local struct = BackgroundStyle.createStyleStructure( cls_type )
+		local struct = BackgroundStyle.createStyleStructure( {type=cls_type} )
 		local def = Utils.extend( def, struct )
 		StyleClass._addMissingChildProperties( def, {parent=def} )
 		local style = StyleClass:new{
@@ -875,12 +877,12 @@ function BackgroundStyle:_prepareData( data, dataSrc, params )
 	--==--
 	local inherit = params.inherit
 	local StyleClass
-	local src, dest, stype
+	local src, dest, stype, tmp
 	local vInherit=false
 
 	if not data then
 		-- create basic structure if missing
-		data = BackgroundStyle.createStyleStructure()
+		data = BackgroundStyle.createStyleStructure( dataSrc )
 	end
 
 	src, dest = data, nil
@@ -905,11 +907,13 @@ function BackgroundStyle:_prepareData( data, dataSrc, params )
 		stype = self._DEFAULT_VIEWTYPE
 	end
 
+
 	StyleClass = StyleFactory.getClass( stype )
 	if not src.view then
 		-- before we copy our defaults, make sure
 		-- structure for 'view' exists
-		src.view = StyleClass.createStyleStructure()
+		tmp = dataSrc and dataSrc.view
+		src.view = StyleClass.createStyleStructure( tmp )
 	end
 
 	--== process depending on inheritance

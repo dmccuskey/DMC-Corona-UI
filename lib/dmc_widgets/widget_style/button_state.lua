@@ -266,14 +266,13 @@ function ButtonStateStyle.initialize( manager, params )
 end
 
 
--- create empty style structure
--- param data string, type of background view
---
-function ButtonStateStyle.createStyleStructure( data )
-	-- print( "ButtonStateStyle.createStyleStructure", data )
+function ButtonStateStyle.createStyleStructure( src )
+	print( "ButtonStateStyle.createStyleStructure", src )
+	src = src or {}
+	--==--
 	return {
-		label=Widgets.Style.Text.createStyleStructure(),
-		background=Widgets.Style.Background.createStyleStructure( data )
+		label=Widgets.Style.Text.createStyleStructure( src.label ),
+		background=Widgets.Style.Background.createStyleStructure( src.background )
 	}
 end
 
@@ -627,11 +626,10 @@ function ButtonStateStyle:_prepareData( data, dataSrc, params )
 	--==--
 	local inherit = params.inherit
 	local StyleClass
-	local src, dest, vtype
+	local src, dest, tmp
 
 	if not data then
-		StyleClass = self.class
-		data = StyleClass.createStyleStructure()
+		data = ButtonStateStyle.createStyleStructure( dataSrc )
 	end
 
 	src, dest = data, nil
@@ -640,12 +638,14 @@ function ButtonStateStyle:_prepareData( data, dataSrc, params )
 
 	StyleClass = Widgets.Style.Text
 	if not src.label then
-		src.label = StyleClass.createStyleStructure()
+		tmp = dataSrc and dataSrc.label
+		src.label = StyleClass.createStyleStructure( tmp )
 	end
 
 	StyleClass = Widgets.Style.Background
 	if not src.background then
-		src.background = StyleClass.createStyleStructure()
+		tmp = dataSrc and dataSrc.background
+		src.background = StyleClass.createStyleStructure( tmp )
 	end
 
 	--== process depending on inheritance

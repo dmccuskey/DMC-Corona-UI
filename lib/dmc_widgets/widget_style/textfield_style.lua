@@ -332,13 +332,14 @@ function TextFieldStyle.initialize( manager, params )
 end
 
 
--- create empty button-state-style structure
-function TextFieldStyle.createStyleStructure( data )
-	-- print( "TextFieldStyle.createStyleStructure", data )
+function TextFieldStyle.createStyleStructure( src )
+	-- print( "TextFieldStyle.createStyleStructure", src )
+	src = src or {}
+	--==--
 	return {
-		background=Widgets.Style.Background.createStyleStructure( data ),
-		hint=Widgets.Style.Text.createStyleStructure(),
-		display=Widgets.Style.Text.createStyleStructure(),
+		background=Widgets.Style.Background.createStyleStructure( src.background ),
+		hint=Widgets.Style.Text.createStyleStructure( src.hint ),
+		display=Widgets.Style.Text.createStyleStructure( src.display ),
 	}
 end
 
@@ -843,11 +844,10 @@ function TextFieldStyle:_prepareData( data, dataSrc, params )
 	--==--
 	local inherit = params.inherit
 	local StyleClass
-	local src, dest
+	local src, dest, tmp
 
 	if not data then
-		StyleClass = self.class
-		data = StyleClass.createStyleStructure()
+		data = TextFieldStyle.createStyleStructure( dataSrc )
 	end
 
 	src, dest = data, nil
@@ -856,15 +856,18 @@ function TextFieldStyle:_prepareData( data, dataSrc, params )
 
 	StyleClass = Widgets.Style.Background
 	if not src.background then
-		src.background = StyleClass.createStyleStructure()
+		tmp = dataSrc and dataSrc.background
+		src.background = StyleClass.createStyleStructure( tmp )
 	end
 
 	StyleClass = Widgets.Style.Text
 	if not src.hint then
-		src.hint = StyleClass.createStyleStructure()
+		tmp = dataSrc and dataSrc.hint
+		src.hint = StyleClass.createStyleStructure( tmp )
 	end
 	if not src.display then
-		src.display = StyleClass.createStyleStructure()
+		tmp = dataSrc and dataSrc.display
+		src.display = StyleClass.createStyleStructure( tmp )
 	end
 
 	--== process depending on inheritance

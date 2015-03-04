@@ -419,16 +419,15 @@ function ButtonStyle.initialize( manager, params )
 end
 
 
--- create empty style structure
--- param data string, type of background view
---
-function ButtonStyle.createStyleStructure( data )
-	-- print( "ButtonStyle.createStyleStructure", data )
+function ButtonStyle.createStyleStructure( src )
+	-- print( "ButtonStyle.createStyleStructure", src )
+	src = src or {}
+	--==--
 	local StyleClass = Widgets.Style.ButtonState
 	return {
-		inactive=StyleClass.createStyleStructure( data ),
-		active=StyleClass.createStyleStructure( data ),
-		disabled=StyleClass.createStyleStructure( data )
+		inactive=StyleClass.createStyleStructure( src.inactive ),
+		active=StyleClass.createStyleStructure( src.active ),
+		disabled=StyleClass.createStyleStructure( src.disabled )
 	}
 end
 
@@ -777,11 +776,10 @@ function ButtonStyle:_prepareData( data, dataSrc, params )
 	--==--
 	local inherit = params.inherit
 	local StyleClass
-	local src, dest
+	local src, dest, tmp
 
 	if not data then
-		StyleClass = self.class
-		data = StyleClass.createStyleStructure()
+		data = ButtonStyle.createStyleStructure( dataSrc )
 	end
 
 	src, dest = data, nil
@@ -790,13 +788,16 @@ function ButtonStyle:_prepareData( data, dataSrc, params )
 
 	StyleClass = Widgets.Style.ButtonState
 	if not src.inactive then
-		src.inactive = StyleClass.createStyleStructure()
+		tmp = dataSrc and dataSrc.inactive
+		src.inactive = StyleClass.createStyleStructure( tmp )
 	end
 	if not src.active then
-		src.active = StyleClass.createStyleStructure()
+		tmp = dataSrc and dataSrc.active
+		src.active = StyleClass.createStyleStructure( tmp )
 	end
 	if not src.disabled then
-		src.disabled = StyleClass.createStyleStructure()
+		tmp = dataSrc and dataSrc.active
+		src.disabled = StyleClass.createStyleStructure( tmp )
 	end
 
 	--== process depending on inheritance

@@ -268,9 +268,14 @@ function Style.initialize( manager, params )
 end
 
 
--- create empty Style structure (default)
-function Style.createStyleStructure( data )
-	-- print( "Style.createStyleStructure", data )
+-- createStyleStructure()
+-- creates basic structure for current Style
+-- 'src', table/obj with structure of current Style
+--
+function Style.createStyleStructure( src )
+	-- print( "Style.createStyleStructure", src )
+	src = src or {}
+	--==--
 	return {}
 end
 
@@ -1064,7 +1069,7 @@ function Style:_prepareData( data, dataSrc, params )
 	local StyleClass = self.class
 
 	if not data then
-		data = StyleClass.createStyleStructure()
+		data = StyleClass.createStyleStructure( dataSrc )
 	end
 
 	if not params.inherit then
