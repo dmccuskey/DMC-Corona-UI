@@ -463,6 +463,7 @@ function Style:copyStyle( params )
 	params = params or {}
 	if params.data==nil then params.data = {} end
 	params.inherit = self
+	params.dataSrc = self
 	--==--
 	return self.class:new( params )
 end
