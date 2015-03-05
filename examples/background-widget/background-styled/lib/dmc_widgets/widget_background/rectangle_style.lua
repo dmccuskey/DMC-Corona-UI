@@ -206,20 +206,17 @@ function RectangleStyle.initialize( manager, params )
 end
 
 
-function RectangleStyle.addMissingDestProperties( dest, srcs )
-	-- print( "RectangleStyle.addMissingDestProperties", dest, srcs )
+function RectangleStyle.addMissingDestProperties( dest, src )
+	-- print( "RectangleStyle.addMissingDestProperties", dest, src )
 	assert( dest )
-	srcs = srcs or {}
-	local lsrc = Utils.extend( srcs, {} )
-	if lsrc.parent==nil then lsrc.parent=dest end
-	if lsrc.main==nil then lsrc.main=RectangleStyle._DEFAULTS end
-	lsrc.widget = RectangleStyle._DEFAULTS
 	--==--
+	local srcs = { RectangleStyle._DEFAULTS }
+	if src then tinsert( srcs, 1, src ) end
 
-	dest = ViewStyle.addMissingDestProperties( dest, lsrc )
+	dest = ViewStyle.addMissingDestProperties( dest, src )
 
-	for _, key in ipairs( { 'main', 'parent', 'widget' } ) do
-		local src = lsrc[key] or {}
+	for i=1,#srcs do
+		local src = srcs[i]
 
 		if dest.fillColor==nil then dest.fillColor=src.fillColor end
 		if dest.strokeColor==nil then dest.strokeColor=src.strokeColor end
@@ -256,11 +253,13 @@ function RectangleStyle.copyExistingSrcProperties( dest, src, params )
 end
 
 
-function RectangleStyle._verifyStyleProperties( src )
+function RectangleStyle._verifyStyleProperties( src, exclude )
 	-- print( "RectangleStyle._verifyStyleProperties", src )
-	local emsg = "Style requires property '%s'"
+	assert( src, "RectangleStyle:verifyStyleProperties requires source")
+	--==--
+	local emsg = "Style (RectangleStyle) requires property '%s'"
 
-	local is_valid = ViewStyle._verifyStyleProperties( src )
+	local is_valid = ViewStyle._verifyStyleProperties( src, exclude )
 
 	if not src.fillColor then
 		print(sformat(emsg,'fillColor')) ; is_valid=false

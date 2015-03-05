@@ -232,20 +232,17 @@ function TextStyle.initialize( manager, params )
 end
 
 
-function TextStyle.addMissingDestProperties( dest, srcs )
-	-- print( "TextStyle.addMissingDestProperties", dest, srcs )
+function TextStyle.addMissingDestProperties( dest, src )
+	-- print( "TextStyle.addMissingDestProperties", dest, src )
 	assert( dest )
-	srcs = srcs or {}
-	local lsrc = Utils.extend( srcs, {} )
-	if lsrc.parent==nil then lsrc.parent=dest end
-	if lsrc.main==nil then lsrc.main=TextStyle._DEFAULTS end
-	lsrc.widget = TextStyle._DEFAULTS
 	--==--
+	local srcs = { TextStyle._DEFAULTS }
+	if src then tinsert( srcs, 1, src ) end
 
-	dest = BaseStyle.addMissingDestProperties( dest, lsrc )
+	dest = BaseStyle.addMissingDestProperties( dest, src )
 
-	for _, key in ipairs( { 'main', 'parent', 'widget' } ) do
-		local src = lsrc[key] or {}
+	for i=1,#srcs do
+		local src = srcs[i]
 
 		if dest.align==nil then dest.align=src.align end
 		if dest.fillColor==nil then dest.fillColor=src.fillColor end
@@ -312,7 +309,7 @@ end
 --
 function TextStyle._verifyStyleProperties( src )
 	-- print( "TextStyle._verifyStyleProperties", src )
-	local emsg = "Style requires property '%s'"
+	local emsg = "Style (Text) requires property '%s'"
 
 	-- exclude width/height because nil is valid value
 	local is_valid = BaseStyle._verifyStyleProperties( src, {width=true, height=true} )

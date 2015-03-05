@@ -633,7 +633,7 @@ function ButtonBase:_createBackground()
 
 	--== Reset properties
 
-	self._wgtBgStyle_dirty=true
+	self._widgetViewState_dirty=true
 end
 
 
@@ -816,7 +816,7 @@ end
 -- and reponds with the appropriate message
 --
 function ButtonBase:stylePropertyChangeHandler( event )
-	print( "ButtonBase:stylePropertyChangeHandler", event.property, event.value )
+	-- print( "ButtonBase:stylePropertyChangeHandler", event.property, event.value )
 	local style = event.target
 	local etype= event.type
 	local property= event.property
@@ -824,10 +824,10 @@ function ButtonBase:stylePropertyChangeHandler( event )
 
 	-- Utils.print( event )
 
-	print( "Style Changed", etype, property, value )
+	-- print( "Style Changed", etype, property, value )
 
 	if etype==style.STYLE_RESET then
-		self._debugOn_dirty = true
+		self._debugOn_dirty=true
 		self._width_dirty=true
 		self._height_dirty=true
 		self._anchorX_dirty=true

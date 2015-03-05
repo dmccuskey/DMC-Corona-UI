@@ -141,7 +141,6 @@ TextFieldStyle._STYLE_DEFAULTS = {
 	backgroundStyle='none',
 	inputType='default',
 	isHitActive=true,
-	isHitTestable=true,
 	isSecure=false,
 	marginX=0,
 	marginY=5,
@@ -205,7 +204,6 @@ TextFieldStyle._TEST_DEFAULTS = {
 	backgroundStyle='textf-none',
 	inputType='textf-default',
 	isHitActive=true,
-	isHitTestable=true,
 	isSecure=false,
 	marginX=510,
 	marginY=511,
@@ -328,49 +326,47 @@ function TextFieldStyle.initialize( manager, params )
 	end
 	local defaults = TextFieldStyle._DEFAULTS
 
-	TextFieldStyle._setDefaults( TextFieldStyle )
+	TextFieldStyle._setDefaults( TextFieldStyle, {defaults=defaults} )
+
 end
 
 
--- create empty button-state-style structure
-function TextFieldStyle.createStyleStructure( data )
-	-- print( "TextFieldStyle.createStyleStructure", data )
+function TextFieldStyle.createStyleStructure( src )
+	-- print( "TextFieldStyle.createStyleStructure", src )
+	src = src or {}
+	--==--
 	return {
-		background=Widgets.Style.Background.createStyleStructure( data ),
-		hint=Widgets.Style.Text.createStyleStructure(),
-		display=Widgets.Style.Text.createStyleStructure(),
+		background=Widgets.Style.Background.createStyleStructure( src.background ),
+		hint=Widgets.Style.Text.createStyleStructure( src.hint ),
+		display=Widgets.Style.Text.createStyleStructure( src.display ),
 	}
 end
 
 
-function TextFieldStyle.addMissingDestProperties( dest, srcs )
-	-- print( "TextFieldStyle.addMissingDestProperties", dest, srcs )
+function TextFieldStyle.addMissingDestProperties( dest, src )
+	-- print( "TextFieldStyle.addMissingDestProperties", dest, src )
 	assert( dest )
-	srcs = srcs or {}
-	local lsrc = Utils.extend( srcs, {} )
-	if lsrc.parent==nil then lsrc.parent=dest end
-	if lsrc.main==nil then lsrc.main=TextFieldStyle._DEFAULTS end
-	lsrc.widget = TextFieldStyle._DEFAULTS
 	--==--
+	local srcs = { TextFieldStyle._DEFAULTS }
+	if src then tinsert( srcs, 1, src ) end
 
-	dest = BaseStyle.addMissingDestProperties( dest, lsrc )
+	dest = BaseStyle.addMissingDestProperties( dest, src )
 
-	for _, key in ipairs( { 'main', 'parent', 'widget' } ) do
-		local src = lsrc[key] or {}
+	for i=1,#srcs do
+		local src = srcs[i]
 
-		if dest.align==nil or force then dest.align=src.align end
-		if dest.backgroundStyle==nil or force then dest.backgroundStyle=src.backgroundStyle end
-		if dest.inputType==nil or force then dest.inputType=src.inputType end
-		if dest.isHitActive==nil or force then dest.isHitActive=src.isHitActive end
-		if dest.isHitTestable==nil or force then dest.isHitTestable=src.isHitTestable end
-		if dest.isSecure==nil or force then dest.isSecure=src.isSecure end
-		if dest.marginX==nil or force then dest.marginX=src.marginX end
-		if dest.marginY==nil or force then dest.marginY=src.marginY end
-		if dest.returnKey==nil or force then dest.returnKey=src.returnKey end
+		if dest.align==nil then dest.align=src.align end
+		if dest.backgroundStyle==nil then dest.backgroundStyle=src.backgroundStyle end
+		if dest.inputType==nil then dest.inputType=src.inputType end
+		if dest.isHitActive==nil then dest.isHitActive=src.isHitActive end
+		if dest.isSecure==nil then dest.isSecure=src.isSecure end
+		if dest.marginX==nil then dest.marginX=src.marginX end
+		if dest.marginY==nil then dest.marginY=src.marginY end
+		if dest.returnKey==nil then dest.returnKey=src.returnKey end
 
 	end
 
-	dest = TextFieldStyle._addMissingChildProperties( dest, lsrc )
+	dest = TextFieldStyle._addMissingChildProperties( dest, src )
 
 	return dest
 end
@@ -379,11 +375,10 @@ end
 -- _addMissingChildProperties()
 -- copy properties to sub-styles
 --
-function TextFieldStyle._addMissingChildProperties( dest, srcs )
+function TextFieldStyle._addMissingChildProperties( dest, src )
 	-- print("TextFieldStyle._addMissingChildProperties", dest, srcs )
 	assert( dest )
-	srcs = srcs or {}
-	local lsrc = { parent = dest }
+	src = dest
 	--==--
 	local eStr = "ERROR: Style (BackgroundStyle) missing property '%s'"
 	local StyleClass, child
@@ -391,20 +386,17 @@ function TextFieldStyle._addMissingChildProperties( dest, srcs )
 	child = dest.background
 	-- assert( child, sformat( eStr, 'background' ) )
 	StyleClass = Widgets.Style.Background
-	lsrc.main = srcs.main and srcs.main.background
-	dest.background = StyleClass.addMissingDestProperties( child, lsrc )
+	dest.background = StyleClass.addMissingDestProperties( child, src )
 
 	child = dest.hint
 	-- assert( child, sformat( eStr, 'hint' ) )
 	StyleClass = Widgets.Style.Text
-	lsrc.main = srcs.main and srcs.main.hint
-	dest.hint = StyleClass.addMissingDestProperties( child, lsrc )
+	dest.hint = StyleClass.addMissingDestProperties( child, src )
 
 	child = dest.display
 	-- assert( child, sformat( eStr, 'display' ) )
 	StyleClass = Widgets.Style.Text
-	lsrc.main = srcs.main and srcs.main.display
-	dest.display = StyleClass.addMissingDestProperties( child, lsrc )
+	dest.display = StyleClass.addMissingDestProperties( child, src )
 
 	return dest
 end
@@ -422,44 +414,47 @@ function TextFieldStyle.copyExistingSrcProperties( dest, src, params)
 	dest = BaseStyle.copyExistingSrcProperties( dest, src, params )
 
 	if (src.align~=nil and dest.align==nil) or force then
-		src.align=src.align
+		dest.align=src.align
 	end
 	if (src.backgroundStyle~=nil and dest.backgroundStyle==nil) or force then
-		src.backgroundStyle=src.backgroundStyle
+		dest.backgroundStyle=src.backgroundStyle
 	end
 	if (src.inputType~=nil and dest.inputType==nil) or force then
-		src.inputType=src.inputType
+		dest.inputType=src.inputType
 	end
 	if (src.isHitActive~=nil and dest.isHitActive==nil) or force then
-		src.isHitActive=src.isHitActive
+		dest.isHitActive=src.isHitActive
 	end
 	if (src.isSecure~=nil and dest.isSecure==nil) or force then
-		src.isSecure=src.isSecure
+		dest.isSecure=src.isSecure
 	end
 	if (src.marginX~=nil and dest.marginX==nil) or force then
-		src.marginX=src.marginX
+		dest.marginX=src.marginX
 	end
 	if (src.marginY~=nil and dest.marginY==nil) or force then
-		src.marginY=src.marginY
+		dest.marginY=src.marginY
 	end
 	if (src.returnKey~=nil and dest.returnKey==nil) or force then
-		src.returnKey=src.returnKey
+		dest.returnKey=src.returnKey
 	end
 
 	return dest
 end
 
 
-function TextFieldStyle._verifyProperties( src, exclude )
-	-- print("TextFieldStyle._verifyProperties", src, exclude )
-	local emsg = "Style: requires property '%s'"
+function TextFieldStyle._verifyStyleProperties( src, exclude )
+	-- print("TextFieldStyle._verifyStyleProperties", src, exclude )
+	assert( src, "TextFieldStyle:verifyStyleProperties requires source" )
+	--==--
+	local emsg = "Style (TextFieldStyle) requires property '%s'"
 
-	local is_valid = BaseStyle._verifyProperties( src, exclude )
+	local is_valid = BaseStyle._verifyStyleProperties( src, exclude )
 
 	if not src.align then
 		print(sformat(emsg,'align')) ; is_valid=false
 	end
-	if not src.backgroundStyle then print(sformat(emsg,'backgroundStyle')) ; is_valid=false
+	if not src.backgroundStyle then
+		print(sformat(emsg,'backgroundStyle')) ; is_valid=false
 	end
 	if not src.inputType then
 		print(sformat(emsg,'inputType')) ; is_valid=false
@@ -482,22 +477,37 @@ function TextFieldStyle._verifyProperties( src, exclude )
 
 	local child, StyleClass
 
-	child = src._inactive
-	StyleClass = child.class
-	if not StyleClass._verifyStyleProperties( child, exclude ) then
+	child = src.background
+	if not child then
+		print( "TextFieldStyle child test skipped for 'background'" )
 		is_valid=false
+	else
+		StyleClass = Widgets.Style.Background
+		if not StyleClass._verifyStyleProperties( child, exclude ) then
+			is_valid=false
+		end
 	end
 
-	child = src._hint
-	StyleClass = child.class
-	if not StyleClass._verifyStyleProperties( child, exclude ) then
+	child = src.hint
+	if not child then
+		print( "TextFieldStyle child test skipped for 'hint'" )
 		is_valid=false
+	else
+		StyleClass = Widgets.Style.Text
+		if not StyleClass._verifyStyleProperties( child, exclude ) then
+			is_valid=false
+		end
 	end
 
-	child = src._display
-	StyleClass = child.class
-	if not StyleClass._verifyStyleProperties( child, exclude ) then
+	child = src.display
+	if not child then
+		print( "TextFieldStyle child test skipped for 'display'" )
 		is_valid=false
+	else
+		StyleClass = Widgets.Style.Text
+		if not StyleClass._verifyStyleProperties( child, exclude ) then
+			is_valid=false
+		end
 	end
 
 	return is_valid
@@ -523,7 +533,7 @@ function TextFieldStyle.__setters:background( data )
 	assert( data==nil or type( data )=='table' )
 	--==--
 	local StyleClass = Widgets.Style.Background
-	local inherit = self._inherit and self._inherit._background
+	local inherit = self._inherit and self._inherit._background or self._inherit
 
 	self._background = StyleClass:createStyleFrom{
 		name=TextFieldStyle.BACKGROUND_NAME,
@@ -544,7 +554,7 @@ function TextFieldStyle.__setters:hint( data )
 	assert( data==nil or type( data )=='table' )
 	--==--
 	local StyleClass = Widgets.Style.Text
-	local inherit = self._inherit and self._inherit._hint
+	local inherit = self._inherit and self._inherit._hint or self._inherit
 
 	self._hint = StyleClass:createStyleFrom{
 		name=TextFieldStyle.HINT_NAME,
@@ -564,7 +574,7 @@ function TextFieldStyle.__setters:display( data )
 	assert( data==nil or type( data )=='table' )
 	--==--
 	local StyleClass = Widgets.Style.Text
-	local inherit = self._inherit and self._inherit._display
+	local inherit = self._inherit and self._inherit._display or self._inherit
 
 	self._display = StyleClass:createStyleFrom{
 		name=TextFieldStyle.DISPLAY_NAME,
@@ -797,9 +807,9 @@ function TextFieldStyle:_doChildrenInherit( value )
 	-- print( "TextFieldStyle:_doChildrenInherit", value )
 	if not self._isInitialized then return end
 
-	self._background.inherit = value and value.background
-	self._hint.inherit = value and value.hint
-	self._display.inherit = value and value.display
+	self._background.inherit = value and value.background or value
+	self._hint.inherit = value and value.hint or value
+	self._display.inherit = value and value.display or value
 end
 
 
@@ -837,48 +847,52 @@ end
 
 
 -- TODO: more work when inheriting, etc (Background Style)
-function TextFieldStyle:_prepareData( data )
+function TextFieldStyle:_prepareData( data, dataSrc, params )
 	-- print("TextFieldStyle:_prepareData", data, self )
-	if not data then return end
+	params = params or {}
 	--==--
-	local createStruct = TextFieldStyle.createStyleStructure
+	local inherit = params.inherit
+	local StyleClass
+	local src, dest, tmp
 
-	if data.isa and data:isa( TextFieldStyle ) then
-		--== Instance
-		local o = data
-		data = createStruct( o.background.type )
+	if not data then
+		data = TextFieldStyle.createStyleStructure( dataSrc )
+	end
+
+	src, dest = data, nil
+
+	--== make sure we have structure for children
+
+	StyleClass = Widgets.Style.Background
+	if not src.background then
+		tmp = dataSrc and dataSrc.background
+		src.background = StyleClass.createStyleStructure( tmp )
+	end
+
+	StyleClass = Widgets.Style.Text
+	if not src.hint then
+		tmp = dataSrc and dataSrc.hint
+		src.hint = StyleClass.createStyleStructure( tmp )
+	end
+	if not src.display then
+		tmp = dataSrc and dataSrc.display
+		src.display = StyleClass.createStyleStructure( tmp )
+	end
+
+	--== process depending on inheritance
+
+	if not inherit then
+		src = TextFieldStyle.addMissingDestProperties( src, {main=dataSrc} )
 
 	else
-		--== Lua structure
-		local StyleClass
-		local src, dest = data, nil
-
-		StyleClass = Widgets.Style.Background
-		createStruct = StyleClass.createStyleStructure
 		dest = src.background
-		if dest==nil then
-			dest = createStruct()
-			src.background = dest
-		end
-		StyleClass.copyExistingSrcProperties( dest, src )
+		src.background = StyleClass.copyExistingSrcProperties( dest, src )
 
-		StyleClass = Widgets.Style.Text
-		createStruct = StyleClass.createStyleStructure
 		dest = src.hint
-		if dest==nil then
-			dest = createStruct()
-			src.hint = dest
-		end
-		StyleClass.copyExistingSrcProperties( dest, src )
+		src.hint = StyleClass.copyExistingSrcProperties( dest, src )
 
-		StyleClass = Widgets.Style.Text
-		createStruct = StyleClass.createStyleStructure
 		dest = src.display
-		if dest==nil then
-			dest = createStruct()
-			src.display = dest
-		end
-		StyleClass.copyExistingSrcProperties( dest, src )
+		src.display = StyleClass.copyExistingSrcProperties( dest, src )
 
 	end
 

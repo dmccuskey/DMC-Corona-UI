@@ -266,32 +266,28 @@ function ButtonStateStyle.initialize( manager, params )
 end
 
 
--- create empty style structure
--- param data string, type of background view
---
-function ButtonStateStyle.createStyleStructure( data )
-	-- print( "ButtonStateStyle.createStyleStructure", data )
+function ButtonStateStyle.createStyleStructure( src )
+	-- print( "ButtonStateStyle.createStyleStructure", src )
+	src = src or {}
+	--==--
 	return {
-		label=Widgets.Style.Text.createStyleStructure(),
-		background=Widgets.Style.Background.createStyleStructure( data )
+		label=Widgets.Style.Text.createStyleStructure( src.label ),
+		background=Widgets.Style.Background.createStyleStructure( src.background )
 	}
 end
 
 
-function ButtonStateStyle.addMissingDestProperties( dest, srcs )
-	-- print( "ButtonStateStyle.addMissingDestProperties", dest, srcs )
+function ButtonStateStyle.addMissingDestProperties( dest, src )
+	-- print( "ButtonStateStyle.addMissingDestProperties", dest, src )
 	assert( dest )
-	srcs = srcs or {}
-	local lsrc = Utils.extend( srcs, {} )
-	if lsrc.parent==nil then lsrc.parent=dest end
-	if lsrc.main==nil then lsrc.main=ButtonStateStyle._DEFAULTS end
-	lsrc.widget = ButtonStateStyle._DEFAULTS
 	--==--
+	local srcs = { ButtonStateStyle._DEFAULTS }
+	if src then tinsert( srcs, 1, src ) end
 
-	dest = BaseStyle.addMissingDestProperties( dest, lsrc )
+	dest = BaseStyle.addMissingDestProperties( dest, src )
 
-	for _, key in ipairs( { 'main', 'parent', 'widget' } ) do
-		local src = lsrc[key] or {}
+	for i=1,#srcs do
+		local src = srcs[i]
 
 		if dest.align==nil then dest.align=src.align end
 		if dest.isHitActive==nil then dest.isHitActive=src.isHitActive end
@@ -307,7 +303,7 @@ function ButtonStateStyle.addMissingDestProperties( dest, srcs )
 
 	end
 
-	dest = ButtonStateStyle._addMissingChildProperties( dest, lsrc )
+	dest = ButtonStateStyle._addMissingChildProperties( dest, src )
 
 	return dest
 end
@@ -316,11 +312,10 @@ end
 -- _addMissingChildProperties()
 -- copy properties to sub-styles
 --
-function ButtonStateStyle._addMissingChildProperties( dest, srcs )
-	-- print( "ButtonStateStyle._addMissingChildProperties", dest, srcs )
+function ButtonStateStyle._addMissingChildProperties( dest, src )
+	-- print( "ButtonStateStyle._addMissingChildProperties", dest, src )
 	assert( dest )
-	srcs = srcs or {}
-	local lsrc = { parent = dest }
+	src = dest
 	--==--
 	local eStr = "ERROR: Style missing property '%s'"
 	local StyleClass, child
@@ -328,14 +323,12 @@ function ButtonStateStyle._addMissingChildProperties( dest, srcs )
 	child = dest.label
 	assert( child, sformat( eStr, 'label' ) )
 	StyleClass = Widgets.Style.Text
-	lsrc.main = srcs.main and srcs.main.label
-	dest.label = StyleClass.addMissingDestProperties( child, lsrc )
+	dest.label = StyleClass.addMissingDestProperties( child, src )
 
 	child = dest.background
 	assert( child, sformat( eStr, 'background' ) )
 	StyleClass = Widgets.Style.Background
-	lsrc.main = srcs.main and srcs.main.background
-	dest.background = StyleClass.addMissingDestProperties( child, lsrc )
+	dest.background = StyleClass.addMissingDestProperties( child, src )
 
 	return dest
 end
@@ -377,9 +370,9 @@ end
 
 function ButtonStateStyle._verifyStyleProperties( src, exclude )
 	-- print( "ButtonStateStyle._verifyStyleProperties", src, exclude )
-	assert( src )
+	assert( src, "ButtonStateStyle:verifyStyleProperties requires source" )
 	--==--
-	local emsg = "Style: requires property '%s'"
+	local emsg = "Style (ButtonStateStyle) requires property '%s'"
 
 	local is_valid = BaseStyle._verifyStyleProperties( src, exclude )
 
@@ -404,18 +397,28 @@ function ButtonStateStyle._verifyStyleProperties( src, exclude )
 
 	-- check sub-styles
 
-	local child, StyleClass
+	local StyleClass, child
 
 	child = src.label
-	StyleClass = child.class
-	if not StyleClass._verifyStyleProperties( child, exclude ) then
+	if not child then
+		print( "ButtonStateStyle child test skipped for 'label'" )
 		is_valid=false
+	else
+		StyleClass = Widgets.Style.Text
+		if not StyleClass._verifyStyleProperties( child, exclude ) then
+			is_valid=false
+		end
 	end
 
 	child = src.background
-	StyleClass = child.class
-	if not StyleClass._verifyStyleProperties( child, exclude ) then
+	if not child then
+		print( "ButtonStateStyle child test skipped for 'background'" )
 		is_valid=false
+	else
+		StyleClass = Widgets.Style.Background
+		if not StyleClass._verifyStyleProperties( child, exclude ) then
+			is_valid=false
+		end
 	end
 
 	return is_valid
@@ -439,7 +442,7 @@ function ButtonStateStyle.__setters:background( data )
 	assert( data==nil or type( data )=='table' )
 	--==--
 	local StyleClass = Widgets.Style.Background
-	local inherit = self._inherit and self._inherit._background or nil
+	local inherit = self._inherit and self._inherit._background or self._inherit
 
 	self._background = StyleClass:createStyleFrom{
 		name=ButtonStateStyle.BACKGROUND_NAME,
@@ -460,7 +463,7 @@ function ButtonStateStyle.__setters:label( data )
 	assert( data==nil or type( data )=='table' )
 	--==--
 	local StyleClass = Widgets.Style.Text
-	local inherit = self._inherit and self._inherit._label
+	local inherit = self._inherit and self._inherit._label or self._inherit
 
 	self._label = StyleClass:createStyleFrom{
 		name=ButtonStateStyle.LABEL_NAME,
@@ -594,8 +597,9 @@ end
 
 function ButtonStateStyle:_doChildrenInherit( value )
 	-- print( "ButtonStateStyle", value, self )
-	self._background.inherit = value and value.background
-	self._label.inherit = value and value.label
+	if not self._isInitialized then return end
+	self._background.inherit = value and value.background or value
+	self._label.inherit = value and value.label or value
 end
 
 
@@ -621,31 +625,43 @@ end
 --== Private Methods
 
 
-function ButtonStateStyle:_prepareData( data )
+function ButtonStateStyle:_prepareData( data, dataSrc, params )
 	-- print( "ButtonStateStyle:_prepareData", data )
-	if not data then return end
+	params = params or {}
 	--==--
-	local createStruct = ButtonStateStyle.createStyleStructure
+	local inherit = params.inherit
+	local StyleClass
+	local src, dest, tmp
 
-	if data.isa and data:isa( ButtonStateStyle ) then
-		--== Instance
-		local o = data
-		data = createStruct( o.background.view.type )
-
-	else
-		--== Lua structure
-		local StyleClass
-		local src, dest = data, nil
-
-		dest = src.label
-		StyleClass = Widgets.Style.Text
-		StyleClass.copyExistingSrcProperties( dest, src )
-
-		dest = src.background
-		StyleClass = Widgets.Style.Background
-		StyleClass.copyExistingSrcProperties( dest, src )
-
+	if not data then
+		data = ButtonStateStyle.createStyleStructure( dataSrc )
 	end
+
+	src, dest = data, nil
+
+	--== make sure we have structure for children
+
+	StyleClass = Widgets.Style.Text
+	if not src.label then
+		tmp = dataSrc and dataSrc.label
+		src.label = StyleClass.createStyleStructure( tmp )
+	end
+
+	StyleClass = Widgets.Style.Background
+	if not src.background then
+		tmp = dataSrc and dataSrc.background
+		src.background = StyleClass.createStyleStructure( tmp )
+	end
+
+	--== process children
+
+	StyleClass = Widgets.Style.Text
+	dest = src.label
+	src.label = StyleClass.copyExistingSrcProperties( dest, src )
+
+	StyleClass = Widgets.Style.Background
+	dest = src.background
+	src.background = StyleClass.copyExistingSrcProperties( dest, src )
 
 	return data
 end

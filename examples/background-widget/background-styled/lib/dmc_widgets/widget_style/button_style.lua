@@ -130,20 +130,23 @@ ButtonStyle._EXCLUDE_PROPERTY_CHECK = {
 ButtonStyle._STYLE_DEFAULTS = {
 	name='button-default-style',
 	debugOn=false,
-	width=75,
-	height=30,
+	width=76,
+	height=40,
 	anchorX=0.5,
 	anchorY=0.5,
 
-	align='left',
+	align='center',
 	hitMarginX=0,
 	hitMarginY=0,
 	isHitActive=true,
 	marginX=0,
 	marginY=0,
 
+	--[[
+	TODO: update this
 	font=native.systemFontBold,
 	fontSize=16,
+	--]]
 
 	inactive={ -- << this is a Button Style State
 		--[[
@@ -166,15 +169,20 @@ ButtonStyle._STYLE_DEFAULTS = {
 			* offsetX/offsetY
 			* textColor
 			--]]
-			textColor={1,0,0},
+			textColor={0,0,0},
 		},
 		background={
 			type='rounded',
 			view={
-				cornerRadius=3,
-				fillColor={0.8,0.8,0.8,1},
-				strokeWidth=1,
-				strokeColor={0,0,0,1},
+				cornerRadius=9,
+				fillColor={
+					type='gradient',
+					color1={ 0.9,0.9,0.9 },
+					color2={ 0.5,0.5,0.5 },
+					direction='down'
+				},
+				strokeWidth=2,
+				strokeColor={0.2,0.2,0.2,1},
 			}
 		}
 	},
@@ -192,12 +200,12 @@ ButtonStyle._STYLE_DEFAULTS = {
 		* offsetX/offsetY
 		--]]
 		label={
-			textColor={1,0,0},
+			textColor={0.7,0.7,0.7,1},
 		},
 		background={
 			type='rounded',
 			view={
-				cornerRadius=3,
+				cornerRadius=9,
 				fillColor={0.3,0.3,0.3,1},
 				strokeWidth=1,
 				strokeColor={0,0,0,1},
@@ -223,8 +231,8 @@ ButtonStyle._STYLE_DEFAULTS = {
 		background={
 			type='rounded',
 			view={
-				cornerRadius=3,
-				fillColor={0.8,0.7,0.7,1},
+				cornerRadius=6,
+				fillColor={0.7,0.7,0.7,1},
 				strokeWidth=1,
 				strokeColor={0.4,0.4,0.4,1},
 			},
@@ -416,33 +424,30 @@ function ButtonStyle.initialize( manager, params )
 end
 
 
--- create empty style structure
--- param data string, type of background view
---
-function ButtonStyle.createStyleStructure( data )
-	-- print( "ButtonStyle.createStyleStructure", data )
+function ButtonStyle.createStyleStructure( src )
+	-- print( "ButtonStyle.createStyleStructure", src )
+	src = src or {}
+	--==--
+	local StyleClass = Widgets.Style.ButtonState
 	return {
-		inactive=Widgets.Style.ButtonState.createStyleStructure( data ),
-		active=Widgets.Style.ButtonState.createStyleStructure( data ),
-		disabled=Widgets.Style.ButtonState.createStyleStructure( data )
+		inactive=StyleClass.createStyleStructure( src.inactive ),
+		active=StyleClass.createStyleStructure( src.active ),
+		disabled=StyleClass.createStyleStructure( src.disabled )
 	}
 end
 
 
-function ButtonStyle.addMissingDestProperties( dest, srcs )
-	-- print( "ButtonStyle.addMissingDestProperties", dest, srcs )
+function ButtonStyle.addMissingDestProperties( dest, src )
+	-- print( "ButtonStyle.addMissingDestProperties", dest, src )
 	assert( dest )
-	srcs = srcs or {}
-	local lsrc = Utils.extend( srcs, {} )
-	if lsrc.parent==nil then lsrc.parent=dest end
-	if lsrc.main==nil then lsrc.main=ButtonStyle._DEFAULTS end
-	lsrc.widget = ButtonStyle._DEFAULTS
 	--==--
+	local srcs = { ButtonStyle._DEFAULTS }
+	if src then tinsert( srcs, 1, src ) end
 
-	dest = BaseStyle.addMissingDestProperties( dest, lsrc )
+	dest = BaseStyle.addMissingDestProperties( dest, src )
 
-	for _, key in ipairs( { 'main', 'parent', 'widget' } ) do
-		local src = lsrc[key] or {}
+	for i=1,#srcs do
+		local src = srcs[i]
 
 		if dest.align==nil then dest.align=src.align end
 		if dest.hitMarginX==nil then dest.hitMarginX=src.hitMarginX end
@@ -452,11 +457,12 @@ function ButtonStyle.addMissingDestProperties( dest, srcs )
 		if dest.marginY==nil then dest.marginY=src.marginY end
 
 		--== Additional properties to be handed down to children
+
 		if dest.font==nil then dest.font=src.font end
 
 	end
 
-	dest = ButtonStyle._addMissingChildProperties( dest, lsrc )
+	dest = ButtonStyle._addMissingChildProperties( dest, src )
 
 	return dest
 end
@@ -465,11 +471,10 @@ end
 -- _addMissingChildProperties()
 -- copy properties to sub-styles
 --
-function ButtonStyle._addMissingChildProperties( dest, srcs )
-	-- print("ButtonStyle._addMissingChildProperties", dest, srcs )
+function ButtonStyle._addMissingChildProperties( dest, src )
+	-- print("ButtonStyle._addMissingChildProperties", dest, src )
 	assert( dest )
-	srcs = srcs or {}
-	local lsrc = { parent = dest }
+	src = dest
 	--==--
 	local eStr = "ERROR: Style (ButtonStyle) missing property '%s'"
 	local StyleClass, child
@@ -477,20 +482,17 @@ function ButtonStyle._addMissingChildProperties( dest, srcs )
 	child = dest.inactive
 	-- assert( child, sformat( eStr, 'inactive' ) )
 	StyleClass = Widgets.Style.ButtonState
-	lsrc.main = srcs.main and srcs.main.inactive
-	dest.inactive = StyleClass.addMissingDestProperties( child, lsrc )
+	dest.inactive = StyleClass.addMissingDestProperties( child, src )
 
 	child = dest.active
 	-- assert( child, sformat( eStr, 'active' ) )
 	StyleClass = Widgets.Style.ButtonState
-	lsrc.main = srcs.main and srcs.main.active
-	dest.active = StyleClass.addMissingDestProperties( child, lsrc )
+	dest.active = StyleClass.addMissingDestProperties( child, src )
 
 	child = dest.disabled
 	-- assert( child, sformat( eStr, 'disabled' ) )
 	StyleClass = Widgets.Style.ButtonState
-	lsrc.main = srcs.main and srcs.main.disabled
-	dest.disabled = StyleClass.addMissingDestProperties( child, lsrc )
+	dest.disabled = StyleClass.addMissingDestProperties( child, src )
 
 	return dest
 end
@@ -532,6 +534,8 @@ end
 
 function ButtonStyle._verifyStyleProperties( src, exclude )
 	-- print( "ButtonStyle._verifyStyleProperties", src )
+	assert( src, "ButtonStyle:verifyStyleProperties requires source")
+	--==--
 	local emsg = "Style (ButtonStyle) requires property '%s'"
 
 	local is_valid = BaseStyle._verifyStyleProperties( src, exclude )
@@ -555,24 +559,37 @@ function ButtonStyle._verifyStyleProperties( src, exclude )
 		print(sformat(emsg,'marginY')) ; is_valid=false
 	end
 
-	local child, StyleClass
+	local StyleClass = Widgets.Style.ButtonState
+	local child
 
-	child = src._inactive
-	StyleClass = child.class
-	if not StyleClass._verifyStyleProperties( child, exclude ) then
+	child = src.inactive
+	if not child then
+		print( "ButtonStyle child test skipped for 'inactive'" )
 		is_valid=false
+	else
+		if not StyleClass._verifyStyleProperties( child, exclude ) then
+			is_valid=false
+		end
 	end
 
-	child = src._active
-	StyleClass = child.class
-	if not StyleClass._verifyStyleProperties( child, exclude ) then
+	child = src.active
+	if not child then
+		print( "ButtonStyle child test skipped for 'active'" )
 		is_valid=false
+	else
+		if not StyleClass._verifyStyleProperties( child, exclude ) then
+			is_valid=false
+		end
 	end
 
-	child = src._disabled
-	StyleClass = child.class
-	if not StyleClass._verifyStyleProperties( child, exclude ) then
+	child = src.disabled
+	if not child then
+		print( "ButtonStyle child test skipped for 'disabled'" )
 		is_valid=false
+	else
+		if not StyleClass._verifyStyleProperties( child, exclude ) then
+			is_valid=false
+		end
 	end
 
 	return is_valid
@@ -719,9 +736,9 @@ function ButtonStyle:_doChildrenInherit( value )
 	-- print( "ButtonStyle:_doChildrenInherit", value, self )
 	if not self._isInitialized then return end
 
-	self._inactive.inherit = value and value.inactive
-	self._active.inherit = value and value.active
-	self._disabled.inherit = value and value.disabled
+	self._inactive.inherit = value and value.inactive or value
+	self._active.inherit = value and value.active or value
+	self._disabled.inherit = value and value.disabled or value
 end
 
 
@@ -751,7 +768,7 @@ end
 
 
 function ButtonStyle:_destroyChildren()
-	print( 'ButtonStyle:_destroyChildren', self )
+	-- print( 'ButtonStyle:_destroyChildren', self )
 
 	self._inactive:removeSelf()
 	self._inactive=nil
@@ -767,48 +784,46 @@ end
 -- we could have nil, Lua structure, or Instance
 --
 -- TODO: more work when inheriting, etc (Background Style)
-function ButtonStyle:_prepareData( data )
+function ButtonStyle:_prepareData( data, dataSrc, params )
 	-- print("ButtonStyle:_prepareData", data, self )
-	if not data then return end
+	params = params or {}
 	--==--
-	local StyleClass = Widgets.Style.ButtonState
-	local createStruct = StyleClass.createStyleStructure
+	local inherit = params.inherit
+	local StyleClass
+	local src, dest, tmp
 
-	if data.isa and data:isa( ButtonStyle ) then
-		--== Instance
-		local o = data
-		data = {
-			inactive=createStruct(o.inactive.background.view.type),
-			active=createStruct(o.active.background.view.type),
-			disabled=createStruct(o.disabled.background.view.type)
-		}
-
-	else
-		--== Lua structure
-		local src, dest = data, nil
-
-		dest = src.inactive
-		if dest==nil then
-			dest = createStruct()
-			src.inactive = dest
-		end
-		StyleClass.copyExistingSrcProperties( dest, src )
-
-		dest = src.active
-		if dest==nil then
-			dest = createStruct()
-			src.active = dest
-		end
-		StyleClass.copyExistingSrcProperties( dest, src )
-
-		dest = src.disabled
-		if dest==nil then
-			dest = createStruct()
-			src.disabled = dest
-		end
-		StyleClass.copyExistingSrcProperties( dest, src )
-
+	if not data then
+		data = ButtonStyle.createStyleStructure( dataSrc )
 	end
+
+	src, dest = data, nil
+
+	--== make sure we have structure for children
+
+	StyleClass = Widgets.Style.ButtonState
+	if not src.inactive then
+		tmp = dataSrc and dataSrc.inactive
+		src.inactive = StyleClass.createStyleStructure( tmp )
+	end
+	if not src.active then
+		tmp = dataSrc and dataSrc.active
+		src.active = StyleClass.createStyleStructure( tmp )
+	end
+	if not src.disabled then
+		tmp = dataSrc and dataSrc.active
+		src.disabled = StyleClass.createStyleStructure( tmp )
+	end
+
+	--== process children
+
+	dest = src.inactive
+	src.inactive = StyleClass.copyExistingSrcProperties( dest, src )
+
+	dest = src.active
+	src.active = StyleClass.copyExistingSrcProperties( dest, src )
+
+	dest = src.disabled
+	src.disabled = StyleClass.copyExistingSrcProperties( dest, src )
 
 	return data
 end

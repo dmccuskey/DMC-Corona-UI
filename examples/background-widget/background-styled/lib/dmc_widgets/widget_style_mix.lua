@@ -231,10 +231,13 @@ function Theme.setActiveStyle( self, data, params )
 	if data==nil then
 		-- use our default style
 		style=self.__default_style
-	elseif not params.copy then
-		-- use style handed to us
+	elseif type(data.isa)=='function' then
 		assert( data.isa and data:isa(StyleClass), sformat( "Style not Class '%s'", tostring(StyleClass) ))
-		style = data
+		if not params.copy then
+			style = data
+		else
+			style = data:copyStyle()
+		end
 	else
 		-- Utils.print( data )
 		-- data could be a Style instance or Lua data
@@ -444,17 +447,6 @@ function Theme._destroyStyle( self, style )
 	return nil
 end
 
--- _createDefaultStyleParams()
--- params used to create the default style for
--- Widget instance, allows instance to customize the Style
---
-function Theme._createDefaultStyleParams( self )
-	local name = string.format( "default-style-%s", tostring( self ) )
-	return {
-		name=name,
-		data=nil,
-	}
-end
 
 -- _createDefaultStyle()
 -- create the default Style instance for this Widget
@@ -463,9 +455,9 @@ function Theme._createDefaultStyle( self )
 	-- print( "Theme._createDefaultStyle", self.STYLE_CLASS )
 	local StyleClass = self.STYLE_CLASS
 	assert( StyleClass, "[ERROR] Widget is missing property 'STYLE_CLASS'" )
-	-- local name = string.format( "default-style-%s", tostring( self ) )
-	local params = self:_createDefaultStyleParams()
-	local o = StyleClass:createStyleFrom( params )
+	local BaseStyle = StyleClass:getBaseStyle()
+	assert( BaseStyle, "[ERROR] Widget is missing property 'BaseStyle'" )
+	local o = BaseStyle:copyStyle()
 	assert( o, "[ERROR] Creating default style class" )
 	self.__default_style = o
 end

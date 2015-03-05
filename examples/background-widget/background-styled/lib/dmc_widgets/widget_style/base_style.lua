@@ -117,11 +117,21 @@ Style._STYLE_DEFAULTS = {
 	anchorY=0.5,
 }
 
+Style._TEST_DEFAULTS = {
+	debugOn=false,
+	-- width=nil,
+	-- height=nil,
+	anchorX=4,
+	anchorY=4,
+}
+
 Style.RUN_MODE = 'run'
 Style.TEST_MODE = 'test'
 Style.MODE = Style.RUN_MODE
 
 Style._DEFAULTS = Style._STYLE_DEFAULTS
+
+Style.NO_INHERIT = {}
 
 --== Event Constants
 
@@ -163,11 +173,18 @@ function Style:__init__( params )
 
 	self:superCall( '__init__', params )
 	--==--
+
+  if self.is_class then return end
+
 	self._isInitialized = false
 	self._isClearing = false
 	self._isDestroying = false
 
 	-- inheritance style
+	if params.inherit==nil then
+		params.inherit = self:getBaseStyle( params.data )
+	end
+
 	self._inherit = params.inherit
 	self._inherit_f = nil
 
@@ -181,6 +198,7 @@ function Style:__init__( params )
 	self._onPropertyChange_f = params.onPropertyChange
 
 	self._tmp_data = params.data -- temporary save of data
+	self._tmp_dataSrc = params.dataSrc -- temporary save of data
 
 	self._name = params.name
 	self._debugOn = params.debugOn
@@ -196,8 +214,10 @@ function Style:__initComplete__()
 	--==--
 	self._isDestroying = false
 
-	local data = self:_prepareData( self._tmp_data )
+	local data = self:_prepareData( self._tmp_data,
+		self._tmp_dataSrc, {inherit=self._inherit} )
 	self._tmp_data = nil
+	self._tmp_dataSrc = nil
 	self:_parseData( data )
 
 	-- do this after style/children constructed --
@@ -239,8 +259,6 @@ end
 --== Static Methods
 
 
-Style._CHILDREN = {}
-
 function Style:isChild( name )
 	return (self._CHILDREN[ name ]~=nil)
 end
@@ -252,39 +270,44 @@ function Style:nilProperty( name )
 end
 
 
-function Style.initialize( manager )
+function Style.initialize( manager, params )
 	error( "OVERRIDE Style.addMissingDestProperties" )
 end
 
 
--- create empty Style structure (default)
-function Style.createStyleStructure( data )
-	-- print( "Style.createStyleStructure", data )
+-- createStyleStructure()
+-- creates basic structure for current Style
+-- 'src', table/obj with structure of current Style
+--
+function Style.createStyleStructure( src )
+	-- print( "Style.createStyleStructure", src )
+	src = src or {}
+	--==--
 	return {}
 end
+
+
 
 
 -- addMissingDestProperties()
 -- copies properties from src structure to dest structure
 -- if property isn't already in dest
 -- this is used layer in all properties
--- Note: usually used by OTHER classes
+-- Note: usually used by OTHER classes but ONLY
+-- to create root Style instances
 
 -- 'dest' should be basic structure of Style type
 -- 'srcs' table of sources usually be anything, but usually parent of Style
 --
-function Style.addMissingDestProperties( dest, srcs )
-	-- print( "Style.addMissingDestProperties", dest, srcs )
+function Style.addMissingDestProperties( dest, src )
+	-- print( "Style.addMissingDestProperties", dest, src )
 	assert( dest )
-	srcs = srcs or {}
-	local lsrc = Utils.extend( srcs, {} )
-	if lsrc.parent==nil then lsrc.parent=dest end
-	if lsrc.main==nil then lsrc.main=Style._STYLE_DEFAULTS end
-	lsrc.widget = Style._STYLE_DEFAULTS
 	--==--
+	local srcs = { Style._DEFAULTS }
+	if src then tinsert( srcs, 1, src ) end
 
-	for _, key in ipairs( { 'main', 'parent', 'widget' } ) do
-		local src = lsrc[key] or {}
+	for i=1,#srcs do
+		local src = srcs[i]
 
 		if dest.debugOn==nil then dest.debugOn=src.debugOn end
 		if dest.width==nil then dest.width=src.width end
@@ -317,26 +340,7 @@ end
 -- purpose is to allow property overrides and inheritance
 -- copied down from parent style
 -- force makes exact copy of source
---[[
-source = {
-	fillColor={}
-	strokeWidth=4,
-
-	view = {
-
-	}
-}
-src=source, dest=source.view <send view>
-source = {
-	fillColor={}
-	strokeWidth=4,
-
-	view = {
-		fillColor={},
-		strokeWidth=4
-	}
-}
---]]
+--
 function Style.copyExistingSrcProperties( dest, src, params )
 	-- print( "Style.copyExistingSrcProperties", dest, src, params )
 	assert( dest )
@@ -368,9 +372,10 @@ end
 
 function Style._verifyStyleProperties( src, exclude )
 	-- print( "Style:_verifyStyleProperties", src, self )
+	assert( src, "Style:verifyStyleProperties requires source")
 	exclude = exclude or {}
 	--==--
-	local emsg = "Style requires property '%s'"
+	local emsg = "Style (Base) requires property '%s'"
 	local is_valid = true
 
 	if type(src.debugOn)~='boolean' then
@@ -396,17 +401,19 @@ end
 -- _setDefaults()
 -- generic method to set defaults
 function Style._setDefaults( StyleClass, params )
-	-- print( "Style._setDefaults" )
+	-- print( "Style._setDefaults", StyleClass )
 	params = params or {}
-	if params.defaults==nil then params.defaults=StyleClass._STYLE_DEFAULTS end
+	if params.defaults==nil then params.defaults=StyleClass._DEFAULTS end
 	--==--
 	local def = params.defaults
 
-	def = StyleClass.addMissingDestProperties( def, {main=def} )
+	def = StyleClass.addMissingDestProperties( def )
 
 	local style = StyleClass:new{
-		data=def
+		data=def,
+		inherit=Style.NO_INHERIT
 	}
+
 	StyleClass.__base_style__ = style
 end
 
@@ -422,14 +429,7 @@ function Style:getBaseStyle()
 end
 
 
-function Style:getDefaultStyleValues( params )
-	params = params or {}
-	if params.mode==nil then params.mode=Style.RUN_MODE end
-	--==--
-	local defStyle = self._STYLE_DEFAULTS
-	if params.mode==Style.TEST_MODE then
-		defStyle = self._DEFAULTS
-	end
+function Style:getDefaultStyleValues()
 	-- TODO: make a copy
 	return self._DEFAULTS
 end
@@ -469,7 +469,9 @@ end
 function Style:copyStyle( params )
 	-- print( "Style:copyStyle", self )
 	params = params or {}
+	if params.data==nil then params.data = {} end
 	params.inherit = self
+	params.dataSrc = self
 	--==--
 	return self.class:new( params )
 end
@@ -604,7 +606,7 @@ end
 
 function Style:_linkInherit( o )
 	local f
-	if o then
+	if o and o~=Style.NO_INHERIT then
 		f = self:createCallback( self._inheritedStyleEvent_handler )
 		o:addEventListener( o.EVENT, f )
 	end
@@ -636,13 +638,13 @@ end
 --
 function Style.__setters:inherit( value )
 	-- print( "Style.__setters:inherit from ", value, self, self._isInitialized )
-	assert( value==nil or value:isa( Style ) )
+	assert( value==nil or value==Style.NO_INHERIT or value:isa( Style ) )
 	--==--
 	local StyleClass = self.class
 	local StyleBase = StyleClass:getBaseStyle()
 	-- current / new inherit
 	local cInherit, cInherit_f = self._inherit, self._inherit_f
-	local nInherit = value
+	local nInherit = value or StyleBase
 	local reset = nil
 
 	--== Remove old inherit link
@@ -655,28 +657,16 @@ function Style.__setters:inherit( value )
 
 	self._inherit, self._inherit_f = self:_linkInherit( nInherit )
 
-	--== Choose Reset method
-
-	if nInherit then
-		-- we have inherit, so clear all properties
-		reset = nil
-	elseif self._isInitialized then
-		-- no inherit, so reset with previous inherit
-		-- note, could be nil
-		reset = cInherit
-	else
-		-- reset with class base
-		reset = StyleBase
-	end
-
 	--== Process children
+
+	if not self._isInitialized then return end
 
 	self:_doChildrenInherit( value, {curr=cInherit, next=nInherit} )
 
 	--== Clear properties
 
 	-- Choose Reset method
-	if nInherit then
+	if nInherit~=Style.NO_INHERIT then
 		-- we have inherit, so clear all properties
 		reset = nil
 	elseif self._isInitialized then
@@ -1080,15 +1070,19 @@ end
 -- the goal is to have enough of a structure to be able
 -- to process with _parseData()
 --
-function Style:_prepareData( data )
-	-- print( "Style:_prepareData", self )
-	-- data could be nil, Lua structure, or class instance
-	if type(data)=='table' and data.isa then
-		-- if we have an Instance, dump it
-		data=nil
+function Style:_prepareData( data, dataSrc, params )
+	-- print( "Style:_prepareData", data, dataSrc, self )
+	params = params or {}
+	--==--
+	local StyleClass = self.class
+
+	if not data then
+		data = StyleClass.createStyleStructure( dataSrc )
 	end
+
 	return data
 end
+
 
 -- _parseData()
 -- parse through the Lua data given, creating properties
@@ -1100,7 +1094,7 @@ function Style:_parseData( data )
 	--==--
 
 	-- prep tables of things to exclude, etc
-	local DEF = self._STYLE_DEFAULTS
+	local DEF = self._DEFAULTS
 	local EXCL = self._EXCLUDE_PROPERTY_CHECK
 
 	--== process properties, skip children
