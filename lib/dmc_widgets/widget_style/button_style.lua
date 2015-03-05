@@ -535,6 +535,8 @@ end
 
 function ButtonStyle._verifyStyleProperties( src, exclude )
 	-- print( "ButtonStyle._verifyStyleProperties", src )
+	assert( src, "ButtonStyle:verifyStyleProperties requires source")
+	--==--
 	local emsg = "Style (ButtonStyle) requires property '%s'"
 
 	local is_valid = BaseStyle._verifyStyleProperties( src, exclude )
@@ -558,24 +560,37 @@ function ButtonStyle._verifyStyleProperties( src, exclude )
 		print(sformat(emsg,'marginY')) ; is_valid=false
 	end
 
-	local child, StyleClass
+	local StyleClass = Widgets.Style.ButtonState
+	local child
 
-	child = src._inactive
-	StyleClass = child.class
-	if not StyleClass._verifyStyleProperties( child, exclude ) then
+	child = src.inactive
+	if not child then
+		print( "ButtonStyle child test skipped for 'inactive'" )
 		is_valid=false
+	else
+		if not StyleClass._verifyStyleProperties( child, exclude ) then
+			is_valid=false
+		end
 	end
 
-	child = src._active
-	StyleClass = child.class
-	if not StyleClass._verifyStyleProperties( child, exclude ) then
+	child = src.active
+	if not child then
+		print( "ButtonStyle child test skipped for 'active'" )
 		is_valid=false
+	else
+		if not StyleClass._verifyStyleProperties( child, exclude ) then
+			is_valid=false
+		end
 	end
 
-	child = src._disabled
-	StyleClass = child.class
-	if not StyleClass._verifyStyleProperties( child, exclude ) then
+	child = src.disabled
+	if not child then
+		print( "ButtonStyle child test skipped for 'disabled'" )
 		is_valid=false
+	else
+		if not StyleClass._verifyStyleProperties( child, exclude ) then
+			is_valid=false
+		end
 	end
 
 	return is_valid
@@ -722,9 +737,9 @@ function ButtonStyle:_doChildrenInherit( value )
 	-- print( "ButtonStyle:_doChildrenInherit", value, self )
 	if not self._isInitialized then return end
 
-	self._inactive.inherit = value and value.inactive
-	self._active.inherit = value and value.active
-	self._disabled.inherit = value and value.disabled
+	self._inactive.inherit = value and value.inactive or value
+	self._active.inherit = value and value.active or value
+	self._disabled.inherit = value and value.disabled or value
 end
 
 
@@ -800,22 +815,16 @@ function ButtonStyle:_prepareData( data, dataSrc, params )
 		src.disabled = StyleClass.createStyleStructure( tmp )
 	end
 
-	--== process depending on inheritance
+	--== process children
 
-	if not inherit then
-		src = ButtonStyle.addMissingDestProperties( src, {main=dataSrc} )
+	dest = src.inactive
+	src.inactive = StyleClass.copyExistingSrcProperties( dest, src )
 
-	else
-		dest = src.inactive
-		src.inactive = StyleClass.copyExistingSrcProperties( dest, src )
+	dest = src.active
+	src.active = StyleClass.copyExistingSrcProperties( dest, src )
 
-		dest = src.active
-		src.active = StyleClass.copyExistingSrcProperties( dest, src )
-
-		dest = src.disabled
-		src.disabled = StyleClass.copyExistingSrcProperties( dest, src )
-
-	end
+	dest = src.disabled
+	src.disabled = StyleClass.copyExistingSrcProperties( dest, src )
 
 	return data
 end

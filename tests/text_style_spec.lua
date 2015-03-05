@@ -86,6 +86,7 @@ end
 Test to ensure that the correct property values are
 copied during initialization
 --]]
+--[[
 function test_addMissingProperties()
 	-- print( "test_addMissingProperties" )
 	local TextStyle = Widgets.Style.Text
@@ -158,14 +159,13 @@ function test_addMissingProperties()
 	hasPropertyValue( label, 'type', nil )
 
 end
+--]]
 
 
 
 --[[
 Test to ensure that the correct property values are
 copied during initialization
---]]
---[[
 --]]
 function test_copyExistingSrcProperties()
 	-- print( "test_copyExistingSrcProperties" )
@@ -440,7 +440,7 @@ function test_styleClassBasics()
 	BaseStyle = Text:getBaseStyle()
 
 	TestUtils.verifyTextStyle( BaseStyle )
-	styleInheritsFrom( BaseStyle, nil )
+	styleInheritsFrom( BaseStyle, BaseStyle.NO_INHERIT )
 
 	-- check properties initialized to the default values
 

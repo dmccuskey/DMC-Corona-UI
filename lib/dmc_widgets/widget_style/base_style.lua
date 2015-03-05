@@ -131,6 +131,8 @@ Style.MODE = Style.RUN_MODE
 
 Style._DEFAULTS = Style._STYLE_DEFAULTS
 
+Style.NO_INHERIT = {}
+
 --== Event Constants
 
 Style.EVENT = 'style-event'
@@ -171,6 +173,9 @@ function Style:__init__( params )
 
 	self:superCall( '__init__', params )
 	--==--
+
+  if self.is_class then return end
+
 	self._isInitialized = false
 	self._isClearing = false
 	self._isDestroying = false
@@ -179,6 +184,7 @@ function Style:__init__( params )
 	if params.inherit==nil then
 		params.inherit = self:getBaseStyle( params.data )
 	end
+
 	self._inherit = params.inherit
 	self._inherit_f = nil
 
@@ -405,8 +411,10 @@ function Style._setDefaults( StyleClass, params )
 	def = StyleClass.addMissingDestProperties( def, {main=def} )
 
 	local style = StyleClass:new{
-		data=def
+		data=def,
+		inherit=Style.NO_INHERIT
 	}
+
 	StyleClass.__base_style__ = style
 end
 
@@ -599,7 +607,7 @@ end
 
 function Style:_linkInherit( o )
 	local f
-	if o then
+	if o and o~=Style.NO_INHERIT then
 		f = self:createCallback( self._inheritedStyleEvent_handler )
 		o:addEventListener( o.EVENT, f )
 	end
@@ -631,7 +639,7 @@ end
 --
 function Style.__setters:inherit( value )
 	-- print( "Style.__setters:inherit from ", value, self, self._isInitialized )
-	assert( value==nil or value:isa( Style ) )
+	assert( value==nil or value==Style.NO_INHERIT or value:isa( Style ) )
 	--==--
 	local StyleClass = self.class
 	local StyleBase = StyleClass:getBaseStyle()
@@ -650,7 +658,6 @@ function Style.__setters:inherit( value )
 
 	self._inherit, self._inherit_f = self:_linkInherit( nInherit )
 
-
 	--== Process children
 
 	self:_doChildrenInherit( value, {curr=cInherit, next=nInherit} )
@@ -660,7 +667,7 @@ function Style.__setters:inherit( value )
 	if not self._isInitialized then return end
 
 	-- Choose Reset method
-	if nInherit then
+	if nInherit~=Style.NO_INHERIT then
 		-- we have inherit, so clear all properties
 		reset = nil
 	elseif self._isInitialized then

@@ -81,6 +81,7 @@ end
 Test to ensure that the correct property values are
 copied during initialization
 --]]
+--[[
 function test_addMissingProperties()
 	-- print( "test_addMissingProperties" )
 	local BackgroundFactory = Widgets.Style.BackgroundFactory
@@ -168,6 +169,7 @@ function test_addMissingProperties()
 	hasPropertyValue( child, 'type', nil )
 
 end
+--]]
 
 
 --[[

@@ -44,7 +44,6 @@ local styleInheritsPropertyValueFrom = TestTestUtils.styleInheritsPropertyValueF
 local Widgets = require 'lib.dmc_widgets'
 
 
-
 --====================================================================--
 --== Setup, Constants
 
@@ -138,8 +137,15 @@ end
 function TestUtils.verifyTextStyle( style )
 	assert( style, "TestUtils.verifyTextStyle missing arg 'style'" )
 	local Text = Widgets.Style.Text
+	local inherit = style.inherit
 
 	TestUtils.styleIsa( style, Text )
+
+	if inherit and inherit~=style.NO_INHERIT then
+		TestUtils.styleIsa( style.inherit, Text )
+	end
+
+	assert_equal( style.NAME, Text.NAME, "background name is incorrect" )
 
 	TestUtils.hasProperty( style, 'debugOn' )
 	--[[
@@ -169,6 +175,7 @@ function TestUtils.verifyBackgroundViewStyle( style )
 	local BaseViewStyle = StyleFactory.Style.Base
 	local Rectangle = StyleFactory.Style.Rectangle
 	local Rounded = StyleFactory.Style.Rounded
+	local inherit = style.inherit
 
 	TestUtils.styleIsa( style, BaseViewStyle )
 
@@ -179,24 +186,30 @@ function TestUtils.verifyBackgroundViewStyle( style )
 	TestUtils.hasProperty( style, 'anchorY' )
 	TestUtils.hasProperty( style, 'type' )
 
-	local type = style.type
+	local sType = style.type
 
-	if style.type==Rectangle.type then
+	if sType==Rectangle.type then
 		TestUtils.styleIsa( style, Rectangle )
 		assert_equal( style.NAME, Rectangle.NAME, "background view name is incorrect" )
+		if inherit and inherit~=style.NO_INHERIT then
+			TestUtils.styleIsa( style.inherit, Rectangle )
+		end
 		TestUtils.hasProperty( style, 'fillColor' )
 		TestUtils.hasProperty( style, 'strokeColor' )
 		TestUtils.hasProperty( style, 'strokeWidth' )
 
-	elseif style.type==Rounded.type then
+	elseif sType==Rounded.type then
 		TestUtils.styleIsa( style, Rounded )
 		assert_equal( style.NAME, Rounded.NAME, "background view name is incorrect" )
+		if inherit and inherit~=style.NO_INHERIT then
+			TestUtils.styleIsa( style.inherit, Rounded )
+		end
 		TestUtils.hasProperty( style, 'cornerRadius' )
 		TestUtils.hasProperty( style, 'fillColor' )
 		TestUtils.hasProperty( style, 'strokeColor' )
 		TestUtils.hasProperty( style, 'strokeWidth' )
 	else
-		error( sformat( "Background view type not implemented '%s'", tostring( style.type ) ))
+		error( sformat( "Background view type not implemented '%s'", tostring( sType ) ))
 	end
 
 
@@ -206,13 +219,12 @@ function TestUtils.verifyBackgroundStyle( style )
 	assert( style, "TestUtils.verifyBackgroundStyle missing arg 'style'" )
 	local Background = Widgets.Style.Background
 	local child, emsg
+	local inherit = style.inherit
 
 	TestUtils.styleIsa( style, Background )
 
-	if style.inherit then
+	if inherit and inherit~=style.NO_INHERIT then
 		TestUtils.styleIsa( style.inherit, Background )
-	else
-		TestUtils.styleInheritsFrom( style, nil )
 	end
 
 	assert_equal( style.NAME, Background.NAME, "background name is incorrect" )
@@ -235,8 +247,33 @@ end
 
 function TestUtils.verifyButtonStateStyle( style )
 	assert( style, "TestUtils.verifyButtonStateStyle missing arg 'style'" )
+	local ButtonState = Widgets.Style.ButtonState
+	local child, emsg
+	local inherit = style.inherit
 
-	local child
+	TestUtils.styleIsa( style, ButtonState )
+
+	if inherit and inherit~=style.NO_INHERIT then
+		TestUtils.styleIsa( style.inherit, ButtonState )
+	end
+
+	assert_equal( style.NAME, ButtonState.NAME, "Button State name is incorrect" )
+
+	if style.inherit then
+		TestUtils.styleIsa( style.inherit, ButtonState )
+	end
+
+	TestUtils.hasProperty( style, 'debugOn' )
+	TestUtils.hasProperty( style, 'width' )
+	TestUtils.hasProperty( style, 'height' )
+	TestUtils.hasProperty( style, 'anchorX' )
+	TestUtils.hasProperty( style, 'anchorY' )
+	TestUtils.hasProperty( style, 'align' )
+	TestUtils.hasProperty( style, 'isHitActive' )
+	TestUtils.hasProperty( style, 'marginX' )
+	TestUtils.hasProperty( style, 'marginY' )
+	TestUtils.hasProperty( style, 'offsetX' )
+	TestUtils.hasProperty( style, 'offsetY' )
 
 	child = style.label
 	assert_true( child )
@@ -250,8 +287,33 @@ end
 
 function TestUtils.verifyButtonStyle( style )
 	assert( style, "TestUtils.verifyButtonStyle missing arg 'style'" )
+	local Button = Widgets.Style.Button
+	local child, emsg
+	local inherit = style.inherit
 
-	local child
+	TestUtils.styleIsa( style, Button )
+
+	if inherit and inherit~=style.NO_INHERIT then
+		TestUtils.styleIsa( style.inherit, Button )
+	end
+
+	assert_equal( style.NAME, Button.NAME, "Button name is incorrect" )
+
+	if style.inherit then
+		TestUtils.styleIsa( style.inherit, Button )
+	end
+
+	TestUtils.hasProperty( style, 'debugOn' )
+	TestUtils.hasProperty( style, 'width' )
+	TestUtils.hasProperty( style, 'height' )
+	TestUtils.hasProperty( style, 'anchorX' )
+	TestUtils.hasProperty( style, 'anchorY' )
+	TestUtils.hasProperty( style, 'align' )
+	TestUtils.hasProperty( style, 'hitMarginX' )
+	TestUtils.hasProperty( style, 'hitMarginY' )
+	TestUtils.hasProperty( style, 'isHitActive' )
+	TestUtils.hasProperty( style, 'marginX' )
+	TestUtils.hasProperty( style, 'marginY' )
 
 	child = style.active
 	assert_true( child )
@@ -270,8 +332,31 @@ end
 
 function TestUtils.verifyTextFieldStyle( style )
 	assert( style, "TestUtils.verifyTextFieldStyle missing arg 'style'" )
+	local TextField = Widgets.Style.TextField
+	local child, emsg
+	local inherit = style.inherit
 
-	local child
+	TestUtils.styleIsa( style, TextField )
+
+	assert_equal( style.NAME, TextField.NAME, "TextField name is incorrect" )
+
+	if inherit and inherit~=style.NO_INHERIT then
+		TestUtils.styleIsa( style.inherit, TextField )
+	end
+
+	TestUtils.hasProperty( style, 'debugOn' )
+	TestUtils.hasProperty( style, 'width' )
+	TestUtils.hasProperty( style, 'height' )
+	TestUtils.hasProperty( style, 'anchorX' )
+	TestUtils.hasProperty( style, 'anchorY' )
+	TestUtils.hasProperty( style, 'align' )
+	TestUtils.hasProperty( style, 'backgroundStyle' )
+	TestUtils.hasProperty( style, 'inputType' )
+	TestUtils.hasProperty( style, 'isHitActive' )
+	TestUtils.hasProperty( style, 'isSecure' )
+	TestUtils.hasProperty( style, 'marginX' )
+	TestUtils.hasProperty( style, 'marginY' )
+	TestUtils.hasProperty( style, 'returnKey' )
 
 	child = style.background
 	assert_true( child )

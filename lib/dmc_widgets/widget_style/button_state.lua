@@ -403,18 +403,28 @@ function ButtonStateStyle._verifyStyleProperties( src, exclude )
 
 	-- check sub-styles
 
-	local child, StyleClass
+	local StyleClass, child
 
 	child = src.label
-	StyleClass = child.class
-	if not StyleClass._verifyStyleProperties( child, exclude ) then
+	if not child then
+		print( "ButtonStateStyle child test skipped for 'label'" )
 		is_valid=false
+	else
+		StyleClass = Widgets.Style.Text
+		if not StyleClass._verifyStyleProperties( child, exclude ) then
+			is_valid=false
+		end
 	end
 
 	child = src.background
-	StyleClass = child.class
-	if not StyleClass._verifyStyleProperties( child, exclude ) then
+	if not child then
+		print( "ButtonStateStyle child test skipped for 'background'" )
 		is_valid=false
+	else
+		StyleClass = Widgets.Style.Background
+		if not StyleClass._verifyStyleProperties( child, exclude ) then
+			is_valid=false
+		end
 	end
 
 	return is_valid
@@ -438,7 +448,7 @@ function ButtonStateStyle.__setters:background( data )
 	assert( data==nil or type( data )=='table' )
 	--==--
 	local StyleClass = Widgets.Style.Background
-	local inherit = self._inherit and self._inherit._background or nil
+	local inherit = self._inherit and self._inherit._background or self._inherit
 
 	self._background = StyleClass:createStyleFrom{
 		name=ButtonStateStyle.BACKGROUND_NAME,
@@ -459,7 +469,7 @@ function ButtonStateStyle.__setters:label( data )
 	assert( data==nil or type( data )=='table' )
 	--==--
 	local StyleClass = Widgets.Style.Text
-	local inherit = self._inherit and self._inherit._label
+	local inherit = self._inherit and self._inherit._label or self._inherit
 
 	self._label = StyleClass:createStyleFrom{
 		name=ButtonStateStyle.LABEL_NAME,
@@ -593,8 +603,8 @@ end
 
 function ButtonStateStyle:_doChildrenInherit( value )
 	-- print( "ButtonStateStyle", value, self )
-	self._background.inherit = value and value.background
-	self._label.inherit = value and value.label
+	self._background.inherit = value and value.background or value
+	self._label.inherit = value and value.label or value
 end
 
 
@@ -648,21 +658,15 @@ function ButtonStateStyle:_prepareData( data, dataSrc, params )
 		src.background = StyleClass.createStyleStructure( tmp )
 	end
 
-	--== process depending on inheritance
+	--== process children
 
-	if not inherit then
-		src = ButtonStateStyle.addMissingDestProperties( src, {main=dataSrc} )
+	StyleClass = Widgets.Style.Text
+	dest = src.label
+	src.label = StyleClass.copyExistingSrcProperties( dest, src )
 
-	else
-		StyleClass = Widgets.Style.Text
-		dest = src.label
-		src.label = StyleClass.copyExistingSrcProperties( dest, src )
-
-		StyleClass = Widgets.Style.Background
-		dest = src.background
-		src.background = StyleClass.copyExistingSrcProperties( dest, src )
-
-	end
+	StyleClass = Widgets.Style.Background
+	dest = src.background
+	src.background = StyleClass.copyExistingSrcProperties( dest, src )
 
 	return data
 end

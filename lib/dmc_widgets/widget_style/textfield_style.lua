@@ -483,22 +483,37 @@ function TextFieldStyle._verifyProperties( src, exclude )
 
 	local child, StyleClass
 
-	child = src._inactive
-	StyleClass = child.class
-	if not StyleClass._verifyStyleProperties( child, exclude ) then
+	child = src.background
+	if not child then
+		print( "TextFieldStyle child test skipped for 'background'" )
 		is_valid=false
+	else
+		StyleClass = Widgets.Style.Background
+		if not StyleClass._verifyStyleProperties( child, exclude ) then
+			is_valid=false
+		end
 	end
 
-	child = src._hint
-	StyleClass = child.class
-	if not StyleClass._verifyStyleProperties( child, exclude ) then
+	child = src.hint
+	if not child then
+		print( "TextFieldStyle child test skipped for 'hint'" )
 		is_valid=false
+	else
+		StyleClass = Widgets.Style.Text
+		if not StyleClass._verifyStyleProperties( child, exclude ) then
+			is_valid=false
+		end
 	end
 
-	child = src._display
-	StyleClass = child.class
-	if not StyleClass._verifyStyleProperties( child, exclude ) then
+	child = src.display
+	if not child then
+		print( "TextFieldStyle child test skipped for 'display'" )
 		is_valid=false
+	else
+		StyleClass = Widgets.Style.Text
+		if not StyleClass._verifyStyleProperties( child, exclude ) then
+			is_valid=false
+		end
 	end
 
 	return is_valid
@@ -524,7 +539,7 @@ function TextFieldStyle.__setters:background( data )
 	assert( data==nil or type( data )=='table' )
 	--==--
 	local StyleClass = Widgets.Style.Background
-	local inherit = self._inherit and self._inherit._background
+	local inherit = self._inherit and self._inherit._background or self._inherit
 
 	self._background = StyleClass:createStyleFrom{
 		name=TextFieldStyle.BACKGROUND_NAME,
@@ -545,7 +560,7 @@ function TextFieldStyle.__setters:hint( data )
 	assert( data==nil or type( data )=='table' )
 	--==--
 	local StyleClass = Widgets.Style.Text
-	local inherit = self._inherit and self._inherit._hint
+	local inherit = self._inherit and self._inherit._hint or self._inherit
 
 	self._hint = StyleClass:createStyleFrom{
 		name=TextFieldStyle.HINT_NAME,
@@ -565,7 +580,7 @@ function TextFieldStyle.__setters:display( data )
 	assert( data==nil or type( data )=='table' )
 	--==--
 	local StyleClass = Widgets.Style.Text
-	local inherit = self._inherit and self._inherit._display
+	local inherit = self._inherit and self._inherit._display or self._inherit
 
 	self._display = StyleClass:createStyleFrom{
 		name=TextFieldStyle.DISPLAY_NAME,
@@ -798,9 +813,9 @@ function TextFieldStyle:_doChildrenInherit( value )
 	-- print( "TextFieldStyle:_doChildrenInherit", value )
 	if not self._isInitialized then return end
 
-	self._background.inherit = value and value.background
-	self._hint.inherit = value and value.hint
-	self._display.inherit = value and value.display
+	self._background.inherit = value and value.background or value
+	self._hint.inherit = value and value.hint or value
+	self._display.inherit = value and value.display or value
 end
 
 
