@@ -1003,8 +1003,6 @@ function test_generalTest_01()
 
 	BaseStyle = Button:getBaseStyle()
 
-marker()
-
 	style = Widgets.newButtonStyle{
 		debugOn=true,
 		width=55,
