@@ -180,7 +180,7 @@ module_config = {
 				}
 			},
 			{
-				"exp_dir": "text-widget/text-themed",
+				"exp_dir": "text-widget/text-styled",
 				"requires": [],
 				"mod_dir_map": {
 					"default_dir": "",
@@ -200,7 +200,7 @@ module_config = {
 				}
 			},
 			{
-				"exp_dir": "textfield-widget/textfield-themed",
+				"exp_dir": "textfield-widget/textfield-styled",
 				"requires": [],
 				"mod_dir_map": {
 					"default_dir": "",
