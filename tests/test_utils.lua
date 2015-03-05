@@ -6,33 +6,36 @@
 --[[
 copy the following into test file
 
-local verifyButtonStyle = TestTestUtils.verifyButtonStyle
-local verifyButtonStateStyle = TestTestUtils.verifyButtonStateStyle
-local verifyBackgroundStyle = TestTestUtils.verifyBackgroundStyle
-local verifyBackgroundViewStyle = TestTestUtils.verifyBackgroundViewStyle
-local verifyTextStyle = TestTestUtils.verifyTextStyle
+local hasProperty = TestUtils.hasProperty
+local hasPropertyValue = TestUtils.hasPropertyValue
 
-local hasProperty = TestTestUtils.hasProperty
-local hasPropertyValue = TestTestUtils.hasPropertyValue
-
-local hasValidStyleProperties = TestTestUtils.hasValidStyleProperties
-local hasInvalidStyleProperties = TestTestUtils.hasInvalidStyleProperties
+local hasValidStyleProperties = TestUtils.hasValidStyleProperties
+local hasInvalidStyleProperties = TestUtils.hasInvalidStyleProperties
 
 
-local styleInheritsFrom = TestTestUtils.styleInheritsFrom
-local styleIsa = TestTestUtils.styleIsa
+local styleInheritsFrom = TestUtils.styleInheritsFrom
+local styleIsa = TestUtils.styleIsa
 
-local styleRawPropertyValueIs = TestTestUtils.styleRawPropertyValueIs
-local stylePropertyValueIs = TestTestUtils.stylePropertyValueIs
+local styleRawPropertyValueIs = TestUtils.styleRawPropertyValueIs
+local stylePropertyValueIs = TestUtils.stylePropertyValueIs
 
-local styleHasProperty = TestTestUtils.styleHasProperty
-local styleInheritsProperty = TestTestUtils.styleInheritsProperty
+local styleHasProperty = TestUtils.styleHasProperty
+local styleInheritsProperty = TestUtils.styleInheritsProperty
 
 
-local styleHasPropertyValue = TestTestUtils.styleHasPropertyValue
-local styleInheritsPropertyValue = TestTestUtils.styleInheritsPropertyValue
+local styleHasPropertyValue = TestUtils.styleHasPropertyValue
+local styleInheritsPropertyValue = TestUtils.styleInheritsPropertyValue
 
-local styleInheritsPropertyValueFrom = TestTestUtils.styleInheritsPropertyValueFrom
+local styleInheritsPropertyValueFrom = TestUtils.styleInheritsPropertyValueFrom
+
+local marker = TestUtils.outputMarker
+
+local verifyButtonStyle = TestUtils.verifyButtonStyle
+local verifyButtonStateStyle = TestUtils.verifyButtonStateStyle
+local verifyBackgroundStyle = TestUtils.verifyBackgroundStyle
+local verifyBackgroundViewStyle = TestUtils.verifyBackgroundViewStyle
+local verifyTextStyle = TestUtils.verifyTextStyle
+
 
 --]]
 
