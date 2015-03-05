@@ -131,7 +131,7 @@ ButtonStyle._STYLE_DEFAULTS = {
 	name='button-default-style',
 	debugOn=false,
 	width=76,
-	height=30,
+	height=40,
 	anchorX=0.5,
 	anchorY=0.5,
 
@@ -169,15 +169,20 @@ ButtonStyle._STYLE_DEFAULTS = {
 			* offsetX/offsetY
 			* textColor
 			--]]
-			textColor={1,0,0},
+			textColor={0,0,0},
 		},
 		background={
 			type='rounded',
 			view={
-				cornerRadius=3,
-				fillColor={0.8,0.8,0.8,1},
-				strokeWidth=1,
-				strokeColor={0,0,0,1},
+				cornerRadius=9,
+				fillColor={
+					type='gradient',
+					color1={ 0.9,0.9,0.9 },
+					color2={ 0.5,0.5,0.5 },
+					direction='down'
+				},
+				strokeWidth=2,
+				strokeColor={0.2,0.2,0.2,1},
 			}
 		}
 	},
@@ -195,12 +200,12 @@ ButtonStyle._STYLE_DEFAULTS = {
 		* offsetX/offsetY
 		--]]
 		label={
-			textColor={1,0,0},
+			textColor={0.7,0.7,0.7,1},
 		},
 		background={
 			type='rounded',
 			view={
-				cornerRadius=3,
+				cornerRadius=9,
 				fillColor={0.3,0.3,0.3,1},
 				strokeWidth=1,
 				strokeColor={0,0,0,1},
@@ -226,8 +231,8 @@ ButtonStyle._STYLE_DEFAULTS = {
 		background={
 			type='rounded',
 			view={
-				cornerRadius=3,
-				fillColor={0.8,0.7,0.7,1},
+				cornerRadius=6,
+				fillColor={0.7,0.7,0.7,1},
 				strokeWidth=1,
 				strokeColor={0.4,0.4,0.4,1},
 			},
