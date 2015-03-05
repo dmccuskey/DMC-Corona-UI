@@ -994,6 +994,107 @@ end
 --== Test Class Methods
 
 
+function test_generalTest_01()
+	local Button = Widgets.Style.Button
+	local Background = Widgets.Style.Background
+	local BaseStyle, bsState, bsLabel, bsBg, bsView
+	local style, state, label, background, view
+	local bgBase
+
+	BaseStyle = Button:getBaseStyle()
+
+marker()
+
+	style = Widgets.newButtonStyle{
+		debugOn=true,
+		width=55,
+		height=56,
+		align='right',
+		inactive={
+			width=66,
+			-- height=67,
+			label={},
+			background={
+				-- width=200,
+				height=77,
+				type='rectangle',
+				view={
+					width=87,
+					-- height=200
+					fillColor={23,23,22}
+				}
+			}
+		}
+	}
+
+	styleInheritsFrom( style, BaseStyle )
+
+	styleHasPropertyValue( style, 'debugOn', true )
+	styleHasPropertyValue( style, 'width', 55 )
+	styleHasPropertyValue( style, 'height', 56 )
+	styleInheritsPropertyValue( style, 'anchorX', BaseStyle.anchorX )
+	styleInheritsPropertyValue( style, 'anchorY', BaseStyle.anchorY )
+	styleInheritsPropertyValue( style, 'hitMarginX', BaseStyle.hitMarginX )
+	styleInheritsPropertyValue( style, 'hitMarginY', BaseStyle.hitMarginY )
+	styleInheritsPropertyValue( style, 'isHitActive', BaseStyle.isHitActive )
+	styleInheritsPropertyValue( style, 'marginX', BaseStyle.marginX )
+	styleInheritsPropertyValue( style, 'marginY', BaseStyle.marginY )
+
+	bsState = BaseStyle.inactive
+	state = style.inactive
+	styleInheritsFrom( state, bsState )
+
+	styleHasPropertyValue( state, 'debugOn', true )
+	styleHasPropertyValue( state, 'width', 66 )
+	styleHasPropertyValue( state, 'height', 56 )
+	styleInheritsPropertyValue( state, 'anchorX', bsState.anchorX )
+	styleInheritsPropertyValue( state, 'anchorY', bsState.anchorY )
+	styleHasPropertyValue( state, 'align', 'right' )
+	styleInheritsPropertyValue( state, 'isHitActive', bsState.isHitActive )
+	styleInheritsPropertyValue( state, 'marginX', bsState.marginX )
+	styleInheritsPropertyValue( state, 'marginY', bsState.marginY )
+
+	bsLabel = bsState.label
+	label = state.label
+	styleInheritsFrom( label, bsLabel )
+
+	styleHasPropertyValue( label, 'debugOn', true )
+	styleHasPropertyValue( label, 'width', 66 )
+	styleHasPropertyValue( label, 'height', 56 )
+	styleInheritsPropertyValue( label, 'anchorX', bsLabel.anchorX )
+	styleInheritsPropertyValue( label, 'anchorY', bsLabel.anchorY )
+	styleHasPropertyValue( label, 'align', 'right' )
+	styleInheritsPropertyValue( label, 'font', bsLabel.font )
+	styleInheritsPropertyValue( label, 'fontSize', bsLabel.fontSize )
+	styleInheritsPropertyValue( label, 'textColor', bsLabel.textColor )
+
+	bsBg = bsState.background
+	background = state.background
+	styleInheritsFrom( background, bsBg )
+
+	styleHasPropertyValue( background, 'type', 'rectangle' )
+	styleHasPropertyValue( background, 'debugOn', true )
+	styleHasPropertyValue( background, 'width', 66 )
+	styleHasPropertyValue( background, 'height', 77 )
+	styleInheritsPropertyValue( background, 'anchorX', bsBg.anchorX )
+	styleInheritsPropertyValue( background, 'anchorY', bsBg.anchorY )
+
+	bgBase = Background:getBaseStyle( background.type )
+	bsView = bgBase.view
+	view = background.view
+	styleInheritsFrom( view, bsView )
+
+	styleHasPropertyValue( view, 'debugOn', true )
+	styleHasPropertyValue( view, 'width', 87 )
+	styleHasPropertyValue( view, 'height', 77 )
+	styleInheritsPropertyValue( view, 'anchorX', bsView.anchorX )
+	styleInheritsPropertyValue( view, 'anchorY', bsView.anchorY )
+	styleHasPropertyValue( view, 'fillColor', {23,23,22} )
+	styleInheritsPropertyValue( view, 'strokeColor', bsView.strokeColor )
+	styleInheritsPropertyValue( view, 'strokeWidth', bsView.strokeWidth )
+
+end
+
 
 function test_styleClassBasics()
 	-- print( "test_styleClassBasics" )
