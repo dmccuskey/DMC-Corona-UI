@@ -141,7 +141,6 @@ TextFieldStyle._STYLE_DEFAULTS = {
 	backgroundStyle='none',
 	inputType='default',
 	isHitActive=true,
-	isHitTestable=true,
 	isSecure=false,
 	marginX=0,
 	marginY=5,
@@ -205,7 +204,6 @@ TextFieldStyle._TEST_DEFAULTS = {
 	backgroundStyle='textf-none',
 	inputType='textf-default',
 	isHitActive=true,
-	isHitTestable=true,
 	isSecure=false,
 	marginX=510,
 	marginY=511,
@@ -328,7 +326,8 @@ function TextFieldStyle.initialize( manager, params )
 	end
 	local defaults = TextFieldStyle._DEFAULTS
 
-	TextFieldStyle._setDefaults( TextFieldStyle )
+	TextFieldStyle._setDefaults( TextFieldStyle, {defaults=defaults} )
+
 end
 
 
@@ -359,15 +358,14 @@ function TextFieldStyle.addMissingDestProperties( dest, srcs )
 	for _, key in ipairs( { 'main', 'parent', 'widget' } ) do
 		local src = lsrc[key] or {}
 
-		if dest.align==nil or force then dest.align=src.align end
-		if dest.backgroundStyle==nil or force then dest.backgroundStyle=src.backgroundStyle end
-		if dest.inputType==nil or force then dest.inputType=src.inputType end
-		if dest.isHitActive==nil or force then dest.isHitActive=src.isHitActive end
-		if dest.isHitTestable==nil or force then dest.isHitTestable=src.isHitTestable end
-		if dest.isSecure==nil or force then dest.isSecure=src.isSecure end
-		if dest.marginX==nil or force then dest.marginX=src.marginX end
-		if dest.marginY==nil or force then dest.marginY=src.marginY end
-		if dest.returnKey==nil or force then dest.returnKey=src.returnKey end
+		if dest.align==nil then dest.align=src.align end
+		if dest.backgroundStyle==nil then dest.backgroundStyle=src.backgroundStyle end
+		if dest.inputType==nil then dest.inputType=src.inputType end
+		if dest.isHitActive==nil then dest.isHitActive=src.isHitActive end
+		if dest.isSecure==nil then dest.isSecure=src.isSecure end
+		if dest.marginX==nil then dest.marginX=src.marginX end
+		if dest.marginY==nil then dest.marginY=src.marginY end
+		if dest.returnKey==nil then dest.returnKey=src.returnKey end
 
 	end
 
