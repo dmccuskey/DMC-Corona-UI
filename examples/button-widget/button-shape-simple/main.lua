@@ -98,45 +98,61 @@ end
 setupBackground()
 
 
--- src={
--- 	debugOn=true,
-
--- 	width=100,
--- 	height=50,
-
-
--- }
-
--- dest = {
-
--- 	width=50
--- }
-
--- in borroing from lower classes, upper needs to override
-
--- in dest:
--- if src~= nil then dest=src end
-
-
--- style={
--- 	align='right'
--- }
-
 --======================================================--
---== create textfield widget, default style
+--== Example 1: create textfield widget, default style
 
 function run_example1()
 
-	local b
+	local offsetX, offsetY = 70, 100
 
-	b = Widgets.newToggleButton()
+	local s1 = Widgets.newButtonStyle{
+		debugOn=false,
+		width=100,
+		height=50,
+		-- align='right',
+		marginX=0,
+		inactive={
+			-- width=200,
+			-- height=200,
+			label={},
+			background={
+				-- width=200,
+				-- height=200,
+				type='rounded',
+				view={
+					-- width=200,
+					-- height=200
+				}
+			}
+		}
+	}
+
+	local bn1 = Widgets.newButton()
+	bn1.style = s1
+
+	local bn2 = Widgets.newPushButton()
+	local bn3 = Widgets.newRadioButton()
+	local bn4 = Widgets.newToggleButton()
+
+	bn1.x, bn1.y = H_CENTER-offsetX, V_CENTER-offsetY
+	bn2.x, bn2.y = H_CENTER+offsetX, V_CENTER-offsetY
+	bn3.x, bn3.y = H_CENTER-offsetX, V_CENTER+offsetY
+	bn4.x, bn4.y = H_CENTER+offsetX, V_CENTER+offsetY
+
+	timer.performWithDelay( 100000, function()
+		-- bn1:removeSelf()
+		-- bn2:removeSelf()
+		-- bn3:removeSelf()
+		-- bn4:removeSelf()
+	end)
 
 end
 
--- run_example1()
+run_example1()
 
 
-
+--======================================================--
+--== Example 2: create textfield widget, default style
 
 function run_example2()
 
@@ -186,8 +202,8 @@ function run_example2()
 					textColor={0,0,0},
 				},
 				background={
+					type='rectangle',
 					view={
-						type='rectangle',
 						fillColor={0.7,0.7,0.7,1},
 						strokeColor={1,1,0,1},
 						strokeWidth=6
@@ -202,8 +218,8 @@ function run_example2()
 					textColor={0.4,0.2,1,},
 				},
 				background={
+					type='rounded',
 					view={
-						type='rounded',
 						fillColor={0,1,0}
 					}
 				}
@@ -215,8 +231,8 @@ function run_example2()
 					textColor={0,0,0},
 				},
 				background={
+					type='rounded',
 					view={
-						type='rounded',
 						fillColor={0,1,0}
 					}
 				}
@@ -234,7 +250,7 @@ function run_example2()
 
 
 	timer.performWithDelay( 1000, function()
-		print( "\n\n\nProperties Updated")
+		print( "\n\n\n Properties Updated")
 		-- btn1:setLabelColor( 1,1,1)
 		-- btn1.strokeWidth=6
 		-- btn1.strokeColor={0,0,0}
@@ -267,10 +283,154 @@ function run_example2()
 
 end
 
-run_example2()
+-- run_example2()
 
 
 
+--======================================================--
+--== Example 3:
+
+function run_example3()
+
+	local st1, bw1
+
+	st1 = Widgets.newButtonStyle{
+		debugOn=false,
+		width=100,
+		height=50,
+		anchorX=0.5,
+		anchorY=0.5,
+
+		align='center',
+		hitMarginX=10,
+		hitMarginY=10,
+		isHitActive=true,
+		marginX=10,
+		marginY=10,
+
+		inactive = {
+			label = {
+				font=native.systemFont,
+				fontSize=14,
+				align='center',
+				textColor={0.5,0.2,0, 1},
+			},
+			background={
+				type='rectangle',
+				view={
+					fillColor={0.5,1,0.7,1},
+					strokeColor={0.5,0,0,1},
+					strokeWidth=6
+				}
+			}
+		},
+
+		active = {
+			label = {
+				align='left',
+				font=native.systemFontBold,
+				fontSize=10,
+				textColor={0.4,0.2,1,},
+			},
+			background={
+				type='rounded',
+				view={
+					fillColor={0,1,0}
+				}
+			}
+		},
+
+		disabled = {
+			label = {
+				align='center',
+				fontSize=12,
+				textColor={1,1,0.5},
+			},
+			background={
+				type='rectangle',
+				view={
+					fillColor={0,1,0}
+				}
+			}
+		},
+	}
+
+	bw1 = Widgets.newButton{
+		id="hello-world",
+		data=43,
+		-- style=st1,
+		labelText="Press Me",
+		onPress = onPress_handler,
+		onRelease = onRelease_handler,
+		onEvent = onEvent_handler,
+	}
+
+	bw1.x, bw1.y = H_CENTER-70, V_CENTER-50
+
+	bw2 = Widgets.newButton{
+		id="hello-world",
+		data=43,
+		style=st1,
+		labelText="Press Me",
+		onPress = onPress_handler,
+		onRelease = onRelease_handler,
+		onEvent = onEvent_handler,
+	}
+	bw2.style.inactive.background.fillColor={ 0.4, 0.5, 0.6 }
+
+	bw2.x, bw2.y = H_CENTER+40, V_CENTER-50
+
+	-- bw1.isEnabled = false
+
+	-- bw1:clearStyle()
+	-- bw2:clearStyle()
+
+	-- print( bw1.__curr_style, bw1.__curr_style._inherit, st1 )
+
+	timer.performWithDelay( 10000, function()
+		print("\n\n Update Widget")
+		-- bw1.isEnabled = true
+		st1.inactive.background.fillColor = {1,1,0}
+
+	end)
+
+	timer.performWithDelay( 2000, function()
+		print("\n\n Clear Styles")
+		-- bw1.isEnabled = true
+		-- bw1:clearStyle()
+
+		print( "wid", bw2.__curr_style._inherit, st1 )
+
+		-- st1:clearProperties()
+
+		bw2:clearStyle()
+
+	end)
+
+	timer.performWithDelay( 6000, function()
+		print("\n\n Disable Widget")
+		-- bw1.isEnabled = false
+		print( unpack( 	st1.inactive.background.view.fillColor ))
+	end)
+
+	timer.performWithDelay( 10000, function()
+		print("\n\n Clear Style")
+		-- st1:clearProperties()
+	end)
+
+
+	-- timer.performWithDelay( 10000, function()
+	-- 	bw1:removeSelf()
+	-- 	st1:removeSelf()
+	-- end)
+
+end
+
+-- run_example3()
+
+
+--======================================================--
+--== Example 4:
 
 --== Create Buttons
 

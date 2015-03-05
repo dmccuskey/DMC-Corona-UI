@@ -74,7 +74,7 @@ function _patch( obj )
 	Theme.__init__( obj )
 
 	-- add methods
-	obj.resetTheme = Theme.resetTheme
+	obj.resetStyle = Theme.resetStyle
 	obj.setTheme = Theme.setTheme
 	obj.setDebug = Theme.setDebug
 
@@ -109,20 +109,30 @@ function Theme.__init__( self, params )
 
 	--== Setup
 
-	Theme.resetTheme( self, params )
 	if LOCAL_DEBUG then
 		print( "\n\n\n DOING THEME INIT: widget", self)
 	end
-	Theme._createDefaultStyle( self )
+	self:resetStyle( params )
 	if LOCAL_DEBUG then
 		print( "\n\n\n DONE WITH THEME INIT")
 	end
 end
 
+
 function Theme.__undoInit__( self )
 	-- print( "Theme.__undoInit__" )
-	Theme._destroyDefaultStyle( self )
-	Theme.resetTheme( self )
+	self:resetStyle()
+end
+
+function Theme.__initComplete__( self )
+	-- print( 'Theme.__initComplete__' )
+	self:_createDefaultStyle()
+	self:setActiveStyle( nil )
+end
+
+function Theme.__undoInitComplete__( self )
+	-- print( 'Theme.__undoInitComplete__' )
+	self:_destroyDefaultStyle()
 end
 
 -- END: Mixin Setup for DMC Objects
@@ -134,7 +144,7 @@ end
 --== Public Methods
 
 
-function Theme.resetTheme( self, params )
+function Theme.resetStyle( self, params )
 	params = params or {}
 	if params.debug_on==nil then params.debug_on=false end
 	--==--
@@ -148,8 +158,6 @@ function Theme.resetTheme( self, params )
 	self.__curr_style_f = nil
 	self.__styles = {}
 	self.__debug_on = params.debug_on
-
-	self:setActiveStyle( nil )
 end
 
 
@@ -223,10 +231,13 @@ function Theme.setActiveStyle( self, data, params )
 	if data==nil then
 		-- use our default style
 		style=self.__default_style
-	elseif not params.copy then
-		-- use style handed to us
-		assert( data.isa and data:isa(StyleClass), sformat( "Style isn't of class '%s'", tostring(StyleClass) ))
-		style = data
+	elseif type(data.isa)=='function' then
+		assert( data.isa and data:isa(StyleClass), sformat( "Style not Class '%s'", tostring(StyleClass) ))
+		if not params.copy then
+			style = data
+		else
+			style = data:copyStyle()
+		end
 	else
 		-- Utils.print( data )
 		-- data could be a Style instance or Lua data
@@ -437,15 +448,16 @@ function Theme._destroyStyle( self, style )
 end
 
 
+-- _createDefaultStyle()
+-- create the default Style instance for this Widget
+--
 function Theme._createDefaultStyle( self )
 	-- print( "Theme._createDefaultStyle", self.STYLE_CLASS )
 	local StyleClass = self.STYLE_CLASS
 	assert( StyleClass, "[ERROR] Widget is missing property 'STYLE_CLASS'" )
-	local name = string.format( "default-style-%s", tostring( self ) )
-	local o = StyleClass:createStyleFrom{
-		name=name,
-		data=nil,
-	}
+	local BaseStyle = StyleClass:getBaseStyle()
+	assert( BaseStyle, "[ERROR] Widget is missing property 'BaseStyle'" )
+	local o = BaseStyle:copyStyle()
 	assert( o, "[ERROR] Creating default style class" )
 	self.__default_style = o
 end

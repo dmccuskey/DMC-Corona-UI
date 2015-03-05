@@ -269,6 +269,7 @@ end
 
 function ButtonBase:__initComplete__()
 	-- print( "ButtonBase:__initComplete__" )
+	self:superCall( StyleMix, '__initComplete__' )
 	self:superCall( ComponentBase, '__initComplete__' )
 	--==--
 	self._rctHit_f = self:createCallback( self._hitAreaTouch_handler )
@@ -297,6 +298,7 @@ function ButtonBase:__undoInitComplete__()
 	self._rctHit_f = nil
 	--==--
 	self:superCall( ComponentBase, '__undoInitComplete__' )
+	self:superCall( StyleMix, '__undoInitComplete__' )
 end
 
 -- END: Setup DMC Objects
@@ -492,6 +494,8 @@ function ButtonBase.__setters:isEnabled( value )
 	--==--
 	if self.curr_style.isHitActive == value then return end
 
+	self.curr_style.isHitActive = value
+
 	if value == true then
 		self:gotoState( ButtonBase.STATE_INACTIVE, { isEnabled=value } )
 	else
@@ -629,7 +633,7 @@ function ButtonBase:_createBackground()
 
 	--== Reset properties
 
-	self._wgtBgStyle_dirty=true
+	self._widgetViewState_dirty=true
 end
 
 
@@ -656,14 +660,15 @@ function ButtonBase:_createText()
 
 	--== Reset properties
 
-	self._wgtTextStyle_dirty=true
+	self._widgetStyle_dirty=true
 	self._isEditActive_dirty=true
+	self._labelText_dirty=true
 end
 
 
 
 function ButtonBase:__commitProperties__()
-	-- print( 'ButtonBase:__commitProperties__' )
+	print( 'ButtonBase:__commitProperties__' )
 
 	--== Update Widget Components ==--
 
@@ -811,7 +816,7 @@ end
 -- and reponds with the appropriate message
 --
 function ButtonBase:stylePropertyChangeHandler( event )
-	-- print( "ButtonBase:stylePropertyChangeHandler", event.property, event.value )
+	print( "ButtonBase:stylePropertyChangeHandler", event.property, event.value )
 	local style = event.target
 	local etype= event.type
 	local property= event.property
@@ -819,10 +824,10 @@ function ButtonBase:stylePropertyChangeHandler( event )
 
 	-- Utils.print( event )
 
-	-- print( "Style Changed", etype, property, value )
+	print( "Style Changed", etype, property, value )
 
-	if etype==style.STYLE_RESET or etype==style.STYLE_CLEARED then
-		self._debugOn_dirty = true
+	if etype==style.STYLE_RESET then
+		self._debugOn_dirty=true
 		self._width_dirty=true
 		self._height_dirty=true
 		self._anchorX_dirty=true
@@ -1253,7 +1258,8 @@ Buttons.RadioButton = RadioButton
 
 function Buttons.create( params )
 	-- print( "Buttons.create", params.type )
-	assert( params.action, "newButton: expected param 'action'" )
+	params = params or {}
+	if params.action==nil then params.action=PushButton.TYPE end
 	--==--
 	local action = params.action
 

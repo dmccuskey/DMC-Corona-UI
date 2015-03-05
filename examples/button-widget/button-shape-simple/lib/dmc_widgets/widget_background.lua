@@ -103,6 +103,7 @@ local Background = newClass(
 
 Background.THEME_ID = 'background'
 Background.STYLE_CLASS = nil -- added later
+Background._DEFAULT_VIEWTYPE = nil -- added later
 
 -- TODO: hook up later
 -- Background.DEFAULT = 'default'
@@ -129,6 +130,7 @@ function Background:__init__( params )
 	params = params or {}
 	if params.x==nil then params.x=0 end
 	if params.y==nil then params.y=0 end
+	if params.defaultViewType==nil then params.defaultViewType=Background._DEFAULT_VIEWTYPE end
 
 	self:superCall( LifecycleMix, '__init__', params )
 	self:superCall( ComponentBase, '__init__', params )
@@ -143,6 +145,8 @@ function Background:__init__( params )
 	self._x_dirty=true
 	self._y = params.y
 	self._y_dirty=true
+
+	self._defType = params.defaultViewType -- default style type
 
 	-- properties stored in Style
 
@@ -195,6 +199,7 @@ end
 
 function Background:__initComplete__()
 	-- print( "Background:__initComplete__" )
+	self:superCall( StyleMix, '__initComplete__' )
 	self:superCall( ComponentBase, '__initComplete__' )
 	--==--
 	self.style = self._tmp_style
@@ -206,6 +211,7 @@ function Background:__undoInitComplete__()
 	self.style = nil
 	--==--
 	self:superCall( ComponentBase, '__undoInitComplete__' )
+	self:superCall( StyleMix, '__undoInitComplete__' )
 end
 
 -- END: Setup DMC Objects
@@ -221,7 +227,8 @@ function Background.initialize( manager )
 	-- print( "Background.initialize" )
 	Widgets = manager
 	ThemeMgr = Widgets.ThemeMgr
-	Background.STYLE_CLASS = Widgets.Style.Background
+	Background.STYLE_CLASS = Widgets.Style.Background -- <<<<
+	Background._DEFAULT_VIEWTYPE = Widgets.Style.BackgroundFactory.Rounded.TYPE
 
 	ViewFactory = Widgets.BackgroundFactory
 
@@ -321,6 +328,14 @@ function Background:beforeRemoveStyle()
 end
 
 
+function Background:_createDefaultStyleParams()
+	return {
+		name=nil,
+		data={type=self._defType}
+	}
+end
+
+
 
 --====================================================================--
 --== Private Methods
@@ -336,9 +351,9 @@ function Background:_removeBackground()
 end
 
 function Background:_createBackgroundView()
-	-- print( "Background:_createBackgroundView" )
+	print( "Background:_createBackgroundView" )
 	local style = self.curr_style
-	local vtype = style.view.type
+	local vtype = style.type
 	local o = self._wgtView
 
 	-- create background if missing or type mismatch
@@ -347,6 +362,7 @@ function Background:_createBackgroundView()
 		o = ViewFactory.create( vtype )
 		self:insert( o.view )
 	end
+	print( "W", style.view.width )
 
 	o:setActiveStyle( style.view, {copy=false} )
 	self._wgtView = o
@@ -358,7 +374,7 @@ end
 
 
 function Background:__commitProperties__()
-	-- print( "Background:__commitProperties__" )
+	print( "Background:__commitProperties__" )
 
 	--== Update Widget Components
 
@@ -394,20 +410,23 @@ end
 
 
 function Background:stylePropertyChangeHandler( event )
-	-- print( "Background:stylePropertyChangeHandler", event.type, event.property )
+	print( "Background:stylePropertyChangeHandler", event.type, event.property )
 	local style = event.target
 	local etype= event.type
 	local property= event.property
 	local value = event.value
 
-	-- print( "Style Changed", etype, property, value )
+	print( "Style Changed", etype, property, value )
 
-	if etype==style.STYLE_RESET or etype==style.STYLE_CLEARED then
+	if etype==style.STYLE_RESET then
 		self._debugOn_dirty=true
 		self._width_dirty=true
 		self._height_dirty=true
 		self._anchorX_dirty=true
 		self._anchorY_dirty=true
+
+		self._wgtView_dirty=true
+		self._wgtViewStyle_dirty=true
 
 		property = etype
 
@@ -422,6 +441,8 @@ function Background:stylePropertyChangeHandler( event )
 			self._anchorX_dirty=true
 		elseif property=='anchorY' then
 			self._anchorY_dirty=true
+		elseif property=='type' then
+			self._wgtView_dirty=true
 		end
 
 	end

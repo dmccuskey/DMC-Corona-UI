@@ -309,7 +309,7 @@ end
 --======================================================--
 -- newText Support
 
-function Widget._loadBackgroundSupport()
+function Widget._loadBackgroundSupport( params )
 	-- print( "Widget._loadBackgroundSupport" )
 
 	--== Background Components
@@ -327,50 +327,87 @@ function Widget._loadBackgroundSupport()
 	Widget.Style.BackgroundFactory=BackgroundStyleFactory
 
 	--== Reverse order
-	BackgroundViewFactory.initialize( Widget )
-	BackgroundStyleFactory.initialize( Widget )
-	BackgroundStyle.initialize( Widget )
-	Background.initialize( Widget )
+	BackgroundViewFactory.initialize( Widget, params )
+	BackgroundStyleFactory.initialize( Widget, params )
+	BackgroundStyle.initialize( Widget, params )
+	Background.initialize( Widget, params )
 end
+
 
 function Widget.newBackground( options )
 	if not Widget.Background then Widget._loadBackgroundSupport() end
 	return Widget.Background:new( options )
 end
 
-function Widget.newBackgroundStyle( style_info )
-	-- print("Widget.newBackgroundStyle")
-	-- assert( type(style_info)=='table' and style_info.type, "newBackgroundStyle: missing style property 'type'" )
+function Widget.newRectangleBackground( options )
+	if not Widget.Background then Widget._loadBackgroundSupport() end
+	options = options or {}
+	options.defaultViewType=Widget.Style.BackgroundFactory.Rectangle.TYPE
+	return Widget.Background:new( options )
+end
+
+function Widget.newRoundedBackground( options )
+	if not Widget.Background then Widget._loadBackgroundSupport() end
+	options = options or {}
+	options.defaultViewType=Widget.Style.BackgroundFactory.Rounded.TYPE
+	return Widget.Background:new( options )
+end
+
+
+function Widget.newBackgroundStyle( style_info, params )
+	-- print( "Widget.newBackgroundStyle" )
+	style_info = style_info or {}
+	params = params or {}
+	--==--
+	params.data = style_info
 	if not Widget.Style.Background then Widget._loadBackgroundSupport() end
-	return Widget.Style.Background:createStyleFrom{ data=style_info }
+	return Widget.Style.Background:createStyleFrom( params )
+end
+
+function Widget.newRectangleBackgroundStyle( style_info, params )
+	style_info = style_info or {}
+	params = params or {}
+	--==--
+	if not Widget.Background then Widget._loadBackgroundSupport() end
+	style_info.type = Widget.Style.BackgroundFactory.Rectangle.TYPE
+	return Widget.newBackgroundStyle( style_info, params )
+end
+
+function Widget.newRoundedBackgroundStyle( style_info, params )
+	style_info = style_info or {}
+	params = params or {}
+	--==--
+	if not Widget.Background then Widget._loadBackgroundSupport() end
+	style_info.type = Widget.Style.BackgroundFactory.Rounded.TYPE
+	return Widget.newBackgroundStyle( style_info, params )
 end
 
 
 --======================================================--
 -- newButton Support
 
-function Widget._loadButtonSupport()
+function Widget._loadButtonSupport( params )
 	-- print( "Widget._loadButtonSupport" )
 
 	--== Dependencies
 
-	Widget._loadBackgroundSupport()
-	Widget._loadTextSupport()
+	Widget._loadBackgroundSupport( params )
+	Widget._loadTextSupport( params )
 
 	--== Button Components
 
 	local Button = require( PATH .. '.' .. 'widget_button' )
 	local ButtonStyle = require( PATH .. '.' .. 'widget_style.button_style' )
-	local ButtonStateStyle = require( PATH .. '.' .. 'widget_button.button_state_style' )
+	local ButtonStateStyle = require( PATH .. '.' .. 'widget_style.button_state' )
 
 	Widget.Button=Button
 	Widget.Style.Button=ButtonStyle
 	Widget.Style.ButtonState=ButtonStateStyle
 
 	--== Reverse order
-	ButtonStateStyle.initialize( Widget )
-	ButtonStyle.initialize( Widget )
-	Button.initialize( Widget )
+	ButtonStateStyle.initialize( Widget, params )
+	ButtonStyle.initialize( Widget, params )
+	Button.initialize( Widget, params )
 end
 
 function Widget.newButton( options )
@@ -403,6 +440,17 @@ function Widget.newToggleButton( options )
 end
 
 
+function Widget.newButtonStyle( style_info, params )
+	-- print("Widget.newButtonStyle")
+	style_info = style_info or {}
+	params = params or {}
+	--==--
+	params.data = style_info
+	if not Widget.Style.Button then Widget._loadButtonSupport() end
+	return Widget.Style.Button:createStyleFrom( params )
+end
+
+
 --======================================================--
 -- newButtonGroup Support
 
@@ -426,12 +474,12 @@ end
 --======================================================--
 -- newNavBar Support
 
-function Widget._loadNavBarSupport()
+function Widget._loadNavBarSupport( params )
 	-- print( "Widget._loadNavBarSupport" )
 
 	--== Dependencies
 
-	Widget._loadButtonSupport()
+	Widget._loadButtonSupport( params )
 
 	--== Nav Bar Components
 
@@ -442,8 +490,8 @@ function Widget._loadNavBarSupport()
 	Widget.NavItem=NavItem
 
 	--== Reverse order
-	NavItem.initialize( Widget )
-	NavBar.initialize( Widget )
+	NavItem.initialize( Widget, params )
+	NavBar.initialize( Widget, params )
 end
 
 function Widget.newNavBar( options )
@@ -500,7 +548,7 @@ end
 --======================================================--
 -- newText Support
 
-function Widget._loadTextSupport()
+function Widget._loadTextSupport( params )
 	-- print( "Widget._loadTextSupport" )
 
 	--== Text Components
@@ -512,8 +560,8 @@ function Widget._loadTextSupport()
 	Widget.Style.Text=TextStyle
 
 	--== Reverse order
-	TextStyle.initialize( Widget )
-	Text.initialize( Widget )
+	TextStyle.initialize( Widget, params )
+	Text.initialize( Widget, params )
 end
 
 function Widget.newText( options )
@@ -522,23 +570,27 @@ function Widget.newText( options )
 	return Widget.Text:new( options )
 end
 
-function Widget.newTextStyle( style_info )
+function Widget.newTextStyle( style_info, params )
 	-- print( "Widget.newTextStyle" )
+	style_info = style_info or {}
+	params = params or {}
+	--==--
+	params.data = style_info
 	if not Widget.Style.Text then Widget._loadTextSupport() end
-	return Widget.Style.Text:createStyleFrom{ data=style_info }
+	return Widget.Style.Text:createStyleFrom( params )
 end
 
 
 --======================================================--
 -- TextField Support
 
-function Widget._loadTextFieldSupport()
+function Widget._loadTextFieldSupport( params )
 	-- print( "Widget._loadTextFieldSupport" )
 
 	--== Dependencies
 
-	Widget._loadBackgroundSupport()
-	Widget._loadTextSupport()
+	Widget._loadBackgroundSupport( params )
+	Widget._loadTextSupport( params )
 
 	--== TextField Components
 
@@ -549,8 +601,8 @@ function Widget._loadTextFieldSupport()
 	Widget.Style.TextField=TextFieldStyle
 
 	--== Reverse order
-	TextFieldStyle.initialize( Widget )
-	TextField.initialize( Widget )
+	TextFieldStyle.initialize( Widget, params )
+	TextField.initialize( Widget, params )
 end
 
 function Widget.newTextField( options )
@@ -559,10 +611,14 @@ function Widget.newTextField( options )
 	return Widget.TextField:new( options )
 end
 
-function Widget.newTextFieldStyle( style_info )
+function Widget.newTextFieldStyle( style_info, params )
 	-- print( "Widget.newTextFieldStyle" )
+	style_info = style_info or {}
+	params = params or {}
+	--==--
+	params.data = style_info
 	if not Widget.Style.TextField then Widget._loadTextFieldSupport() end
-	return Widget.Style.TextField:createStyleFrom{ data=style_info }
+	return Widget.Style.TextField:createStyleFrom( params )
 end
 
 

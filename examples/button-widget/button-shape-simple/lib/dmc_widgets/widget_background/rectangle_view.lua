@@ -320,7 +320,12 @@ function RectangleView:__commitProperties__()
 		if style.debugOn==true then
 			bg:setFillColor( 1,0,0,0.5 )
 		else
-			bg:setFillColor( unpack( style.fillColor ))
+			local color = style.fillColor
+			if color and color.type then
+				bg:setFillColor( color )
+			else
+				bg:setFillColor( unpack( color ) )
+			end
 		end
 		self._fillColor_dirty=false
 		self._debugOn_dirty=false
@@ -351,7 +356,7 @@ function RectangleView:stylePropertyChangeHandler( event )
 
 	-- print( "Style Changed", etype, property, value )
 
-	if etype==style.STYLE_RESET or etype==style.STYLE_CLEARED then
+	if etype==style.STYLE_RESET then
 		self._debugOn_dirty = true
 		self._width_dirty=true
 		self._height_dirty=true

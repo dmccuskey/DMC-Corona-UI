@@ -220,6 +220,7 @@ end
 
 function Text:__initComplete__()
 	-- print( "Text:__initComplete__" )
+	self:superCall( StyleMix, '__initComplete__' )
 	self:superCall( ComponentBase, '__initComplete__' )
 	--==--
 	self.style = self._tmp_style
@@ -232,6 +233,7 @@ function Text:__undoInitComplete__()
 	self.style = nil
 	--==--
 	self:superCall( ComponentBase, '__undoInitComplete__' )
+	self:superCall( StyleMix, '__undoInitComplete__' )
 end
 
 --== END: Setup DMC Objects
@@ -355,7 +357,7 @@ end
 
 
 function Text:_removeText()
-	-- print( 'Text:_removeText' )
+	-- print( "Text:_removeText" )
 	local o = self._txt_text
 	if not o then return end
 	o:removeSelf()
@@ -363,7 +365,7 @@ function Text:_removeText()
 end
 
 function Text:_createText()
-	-- print( 'Text:_createText' )
+	-- print( "Text:_createText" )
 	local style = self.curr_style
 	local o -- object
 
@@ -599,7 +601,7 @@ function Text:stylePropertyChangeHandler( event )
 
 	-- print( "Style Changed", etype, property, value )
 
-	if etype == style.STYLE_RESET then
+	if etype==style.STYLE_RESET then
 		self._debugOn_dirty = true
 		self._width_dirty=true
 		self._height_dirty=true
