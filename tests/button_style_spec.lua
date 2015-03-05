@@ -1141,8 +1141,10 @@ end
 function test_defaultInheritance()
 	-- print( "test_defaultInheritance" )
 	local Button = Widgets.Style.Button
+	local Background = Widgets.Style.Background
 	local BaseStyle, bsState, bsLabel, bsBg, bsView
 	local s1, s1State, s1Label, s1Bg, s1View
+	local bgBase
 
 	BaseStyle = Button:getBaseStyle()
 
@@ -1186,7 +1188,9 @@ function test_defaultInheritance()
 	s1Bg = s1State.background
 	styleInheritsFrom( s1Bg, bsBg )
 
-	bsView = bsBg.view
+	bgBase = Background:getBaseStyle( s1Bg.type )
+
+	bsView = bgBase.view
 	s1View = s1Bg.view
 	styleInheritsFrom( s1View, bsView )
 
