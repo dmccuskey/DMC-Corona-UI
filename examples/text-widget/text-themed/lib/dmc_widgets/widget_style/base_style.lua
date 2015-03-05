@@ -76,7 +76,8 @@ local Utils = require 'dmc_utils'
 local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
 
-local sformat = string.format
+local sfmt = string.format
+local tinsert = table.insert
 
 
 
@@ -97,19 +98,51 @@ Style._VALID_PROPERTIES = {}
 -- table of properties to exclude from checking
 -- these are properties which value can be 'nil'
 --
-Style._EXCLUDE_PROPERTY_CHECK = {} -- d
+Style._EXCLUDE_PROPERTY_CHECK = {}
 
-Style._STYLE_DEFAULTS = nil
+Style._CHILDREN = {}
+
+Style._VALID_PROPERTIES = {
+	debugOn=true,
+	width=true,
+	height=true,
+	anchorX=true,
+	anchorY=true,
+}
+Style._STYLE_DEFAULTS = {
+	debugOn=false,
+	-- width=nil,
+	-- height=nil,
+	anchorX=0.5,
+	anchorY=0.5,
+}
+
+Style._TEST_DEFAULTS = {
+	debugOn=false,
+	-- width=nil,
+	-- height=nil,
+	anchorX=4,
+	anchorY=4,
+}
+
+Style.RUN_MODE = 'run'
+Style.TEST_MODE = 'test'
+Style.MODE = Style.RUN_MODE
+
+Style._DEFAULTS = Style._STYLE_DEFAULTS
+
+Style.NO_INHERIT = {}
 
 --== Event Constants
 
 Style.EVENT = 'style-event'
 
--- CLEARED
--- this is used when the local Style properties have been cleared
--- This is only propagated to Child Styles, they should clear also
--- affected Widgets should do a full refresh
-Style.STYLE_CLEARED = 'style-cleared-event'
+-- DESTROYED
+-- this is used to let a Widget know when a Style
+-- is about to be removed
+-- This is NOT propagated through inheritance chain
+-- affected Widgets should release the Style
+Style.STYLE_DESTROYED = 'style-destroy-event'
 
 -- RESET
 -- this is used to let a Widget know about drastic
@@ -119,43 +152,53 @@ Style.STYLE_CLEARED = 'style-cleared-event'
 -- affected Widgets should do a full refresh
 Style.STYLE_RESET = 'style-reset-event'
 
--- UPDATED
+-- PROPERTY_CHANGED
 -- this is used when a property on a Style has changed
 -- this change could be local or in inheritance chain
 -- Child Styles propagate these AS LONG AS their local
 -- value of the property is not set (ie, equal to nil )
 -- affectd Widgets should update accordingly
-Style.STYLE_UPDATED = 'style-updated-event'
+Style.PROPERTY_CHANGED = 'style-property-changed-event'
 
 
 --======================================================--
 -- Start: Setup DMC Objects
 
 function Style:__init__( params )
-	-- print( "Style:__init__", params )
+	-- print( "Style:__init__", params, self )
 	params = params or {}
 	params.data = params.data
-	if params.inherit==nil then
-		params.inherit=self.class.__base_style__
-	end
 	params.name = params.name
 	params.widget = params.widget
 
 	self:superCall( '__init__', params )
 	--==--
-	self._is_initialized = false
 
-	-- Style inheritance tree
+  if self.is_class then return end
+
+	self._isInitialized = false
+	self._isClearing = false
+	self._isDestroying = false
+
+	-- inheritance style
+	if params.inherit==nil then
+		params.inherit = self:getBaseStyle( params.data )
+	end
+
 	self._inherit = params.inherit
 	self._inherit_f = nil
 
-	-- widget delegate
+	-- parent style
 	self._parent = params.parent
+	self._parent_f = nil
+
+	-- widget delegate
 	self._widget = params.widget
+
 	self._onPropertyChange_f = params.onPropertyChange
 
-	-- self._data = params.data
 	self._tmp_data = params.data -- temporary save of data
+	self._tmp_dataSrc = params.dataSrc -- temporary save of data
 
 	self._name = params.name
 	self._debugOn = params.debugOn
@@ -169,21 +212,43 @@ function Style:__initComplete__()
 	-- print( "Style:__initComplete__", self )
 	self:superCall( '__initComplete__' )
 	--==--
-	local data = self:_prepareData( self._tmp_data )
+	self._isDestroying = false
+
+	local data = self:_prepareData( self._tmp_data,
+		self._tmp_dataSrc, {inherit=self._inherit} )
 	self._tmp_data = nil
+	self._tmp_dataSrc = nil
 	self:_parseData( data )
-	self:_checkChildren()
 
 	-- do this after style/children constructed --
 
 	self.inherit = self._inherit -- use setter
 	self.parent = self._parent -- use setter
-	-- self.widget = self._widget -- use setter
+	self.widget = self._widget -- use setter
 
-	assert( self:verifyClassProperties(), "Style: missing properties"..tostring(self.class) )
+	assert( self:verifyProperties(), sfmt( "Missing properties for Style '%s'", tostring(self.class) ) )
 
-	self._is_initialized = true
+	self._isInitialized = true
 end
+
+function Style:__undoInitComplete__()
+	-- print( "Style:__undoInitComplete__", self )
+	--==--
+
+	self._isDestroying = true
+
+	self:_dispatchDestroyEvent()
+
+	self.widget = nil
+	self.parent = nil
+	self.inherit = nil
+
+	self:_destroyChildren()
+
+	--==--
+	self:superCall( '__undoInitComplete__' )
+end
+
 
 -- End: Setup DMC Objects
 --======================================================--
@@ -194,62 +259,139 @@ end
 --== Static Methods
 
 
-function Style.initialize( manager )
+function Style:isChild( name )
+	return (self._CHILDREN[ name ]~=nil)
+end
+function Style:getChildren( name )
+	return self._CHILDREN
+end
+function Style:nilProperty( name )
+	return (self._EXCLUDE_PROPERTY_CHECK[ name ]~=nil)
+end
+
+
+function Style.initialize( manager, params )
 	error( "OVERRIDE Style.addMissingDestProperties" )
 end
 
 
--- create empty Style structure (default)
-function Style.createStyleStructure( data )
-	-- print( "Style.createStyleStructure", data )
+-- createStyleStructure()
+-- creates basic structure for current Style
+-- 'src', table/obj with structure of current Style
+--
+function Style.createStyleStructure( src )
+	-- print( "Style.createStyleStructure", src )
+	src = src or {}
+	--==--
 	return {}
 end
 
 
--- addMissingDestProperties()
--- copies properties from src structure to dest structure
--- if property isn't already in dest
--- Note: usually used by OTHER classes
---
-function Style.addMissingDestProperties( dest, src, params )
-	error( "OVERRIDE Style.addMissingDestProperties" )
-end
+
 
 -- addMissingDestProperties()
 -- copies properties from src structure to dest structure
 -- if property isn't already in dest
--- Note: usually used by OTHER classes
+-- this is used layer in all properties
+-- Note: usually used by OTHER classes but ONLY
+-- to create root Style instances
+
+-- 'dest' should be basic structure of Style type
+-- 'srcs' table of sources usually be anything, but usually parent of Style
+--
+function Style.addMissingDestProperties( dest, src )
+	-- print( "Style.addMissingDestProperties", dest, src )
+	assert( dest )
+	--==--
+	local srcs = { Style._DEFAULTS }
+	if src then tinsert( srcs, 1, src ) end
+
+	for i=1,#srcs do
+		local src = srcs[i]
+
+		if dest.debugOn==nil then dest.debugOn=src.debugOn end
+		if dest.width==nil then dest.width=src.width end
+		if dest.height==nil then dest.height=src.height end
+		if dest.anchorX==nil then dest.anchorX=src.anchorX end
+		if dest.anchorY==nil then dest.anchorY=src.anchorY end
+
+	end
+
+	return dest
+end
+
+
+-- _addMissingChildProperties()
+-- take destination and source. pass along destination
+-- to sub-style classes and let them fill in information
+-- as needed.
+-- this is used to make a structure with ALL properties
+-- 'src' allows us to send in some default properties
+-- src should be a table of items, things to copy and class master
+function Style._addMissingChildProperties( dest, srcs )
+	-- print( "OVERRIDE Style._addMissingChildProperties" )
+	return dest
+end
+
+
+-- copyExistingSrcProperties()
+-- copies properties from src structure to dest structure
+-- only if src has property and dest does not
+-- purpose is to allow property overrides and inheritance
+-- copied down from parent style
+-- force makes exact copy of source
 --
 function Style.copyExistingSrcProperties( dest, src, params )
-	error( "OVERRIDE Style.copyExistingSrcProperties" )
+	-- print( "Style.copyExistingSrcProperties", dest, src, params )
+	assert( dest )
+	if not src then return end
+	params = params or {}
+	if params.force==nil then params.force=false end
+	--==--
+	local force=params.force
+
+	if (src.debugOn~=nil and dest.debugOn==nil) or force then
+		dest.debugOn=src.debugOn
+	end
+	if (src.width~=nil and dest.width==nil) or force then
+		dest.width=src.width
+	end
+	if (src.height~=nil and dest.height==nil) or force then
+		dest.height=src.height
+	end
+	if (src.anchorX~=nil and dest.anchorX==nil) or force then
+		dest.anchorX=src.anchorX
+	end
+	if (src.anchorY~=nil and dest.anchorY==nil) or force then
+		dest.anchorY=src.anchorY
+	end
+
+	return dest
 end
 
 
-function Style._verifyClassProperties( src, excl  )
-	-- print( "Style:_verifyClassProperties" )
-	excl = excl or {}
-	assert( src, "Style:_verifyClassProperties missing source" )
+function Style._verifyStyleProperties( src, exclude )
+	-- print( "Style:_verifyStyleProperties", src, self )
+	assert( src, "Style:verifyStyleProperties requires source")
+	exclude = exclude or {}
 	--==--
-	local emsg = "Style: requires property '%s'"
+	local emsg = "Style (Base) requires property '%s'"
 	local is_valid = true
 
-	if type(src.name)~='string' then
-		print(sformat(emsg,'name')) ; is_valid=false
-	end
 	if type(src.debugOn)~='boolean' then
-		print(sformat(emsg,'debugOn')) ; is_valid=false
+		print( sfmt(emsg,'debugOn') ) ; is_valid=false
 	end
-	if not src.width and not excl.width then
-		print(sformat(emsg,'width')) ; is_valid=false
+	if not src.width and not exclude.width then
+		print( sfmt(emsg,'width') ) ; is_valid=false
 	end
-	if not src.height and not excl.height then
-		print(sformat(emsg,'height')) ; is_valid=false
+	if not src.height and not exclude.height then
+		print( sfmt(emsg,'height') ) ; is_valid=false
 	end
 	if not src.anchorX then
-		print(sformat(emsg,'anchorX')) ; is_valid=false
+		print( sfmt(emsg,'anchorX') ) ; is_valid=false
 	end
 	if not src.anchorY then
-		print(sformat(emsg,'anchorY')) ; is_valid=false
+		print( sfmt(emsg,'anchorY') ) ; is_valid=false
 	end
 
 	return is_valid
@@ -258,12 +400,20 @@ end
 
 -- _setDefaults()
 -- generic method to set defaults
-function Style._setDefaults( StyleClass )
-	-- print( "Style._setDefaults" )
-	local defaults = StyleClass._STYLE_DEFAULTS
+function Style._setDefaults( StyleClass, params )
+	-- print( "Style._setDefaults", StyleClass )
+	params = params or {}
+	if params.defaults==nil then params.defaults=StyleClass._DEFAULTS end
+	--==--
+	local def = params.defaults
+
+	def = StyleClass.addMissingDestProperties( def )
+
 	local style = StyleClass:new{
-		data=defaults
+		data=def,
+		inherit=Style.NO_INHERIT
 	}
+
 	StyleClass.__base_style__ = style
 end
 
@@ -271,6 +421,18 @@ end
 
 --====================================================================--
 --== Public Methods
+
+
+function Style:getBaseStyle()
+	-- print( "Style:getBaseStyle", self )
+	return self.class.__base_style__
+end
+
+
+function Style:getDefaultStyleValues()
+	-- TODO: make a copy
+	return self._DEFAULTS
+end
 
 
 -- cloneStyle()
@@ -281,8 +443,23 @@ function Style:cloneStyle()
 	local o = self.class:new{
 		inherit=self._inherit
 	}
-	o:updateStyle( self, {force=true} ) -- clone data, force
+	o:copyProperties( self, {force=true} ) -- clone data, force
 	return o
+end
+
+
+-- copyProperties()
+-- copy properties from a source
+-- if no source, then copy from Base Style
+--
+function Style:copyProperties( src, params )
+	-- print( "Style:copyProperties", self, src )
+	params = params or {}
+	if params.force==nil then params.force=false end
+	--==--
+	local StyleClass = self.class
+	if not src then src=StyleClass:getBaseStyle() end
+	StyleClass.copyExistingSrcProperties( self, src, params )
 end
 
 
@@ -292,7 +469,9 @@ end
 function Style:copyStyle( params )
 	-- print( "Style:copyStyle", self )
 	params = params or {}
+	if params.data==nil then params.data = {} end
 	params.inherit = self
+	params.dataSrc = self
 	--==--
 	return self.class:new( params )
 end
@@ -300,41 +479,78 @@ Style.inheritStyle=Style.copyStyle
 
 
 -- resetProperties()
--- sends out Reset event, tells listening Widget
--- to redraw itself
+-- send out Reset event
+-- tells listening Widget to redraw itself
 --
 function Style:resetProperties()
 	self:_dispatchResetEvent()
 end
 
 
-function Style:_clearProperties()
-	-- print("Style:_clearProperties")
-	self.debugOn=nil
-	self.width=nil
-	self.height=nil
-	self.anchorX=nil
-	self.anchorY=nil
-end
-
--- this would clear any local modifications on style class
+-- _clearProperties()
+-- TODO, make sure type matches
 --
-function Style:clearProperties()
-	-- print("Style:clearProperties")
-	self:_clearProperties()
-	self:_dispatchClearEvent()
+function Style:_clearProperties( src, params )
+	-- print( "Style:_clearProperties", self, src, params )
+	params = params or {}
+	if params.clearChildren==nil then params.clearChildren=true end
+	--==--
+	self._isClearing = true
+	self:copyProperties( src, params )
+	if params.clearChildren then
+		self:_clearChildrenProperties( src, params )
+	end
+	self._isClearing = false
 end
 
-function Style:getDefaultStyles()
-	-- TODO: make a copy
-	return self._STYLE_DEFAULTS
+
+-- separate method to custom clear children
+--
+function Style:_clearChildrenProperties( src, params )
+	-- print( "Style:_clearChildrenProperties", src, params )
+end
+
+-- clearProperties()
+-- clear any local modifications on Style
+-- can pass in src to "clear props to source"
+--
+function Style:clearProperties( src, params )
+	-- print( "Style:clearProperties", src, params, self )
+	params = params or {}
+	if params.clearChildren==nil then params.clearChildren=true end
+	if params.force==nil then params.force=true end
+	--==--
+	local StyleClass = self.class
+	local inherit = self._inherit
+
+	if src then
+		-- have source, 'gentle' copy
+		params.force=false
+	elseif inherit then
+		-- have inherit, then use empty to clear all properties
+		src = {}
+		params.force=true
+	else
+		-- no source
+		src = StyleClass:getBaseStyle()
+		params.force=true
+	end
+
+	self:_clearProperties( src, params )
+	self:_dispatchResetEvent()
 end
 
 
--- params:
--- data
--- widget
--- name
+-- createStyleFrom()
+-- important method to create a new style object
+-- given different parameters
+--
+-- @param params, table of options
+-- data, -- either nil, Lua structure, or Style object
+-- copy, whether to use style Object as is, or make a copy
+-- other params, given to Style Constructor
+-- (eg, name, inherit, parent, widget, etc)
+--
 function Style:createStyleFrom( params )
 	-- print( "Style:createStyleFrom", params, params.copy )
 	params = params or {}
@@ -345,21 +561,23 @@ function Style:createStyleFrom( params )
 
 	local StyleClass = self.class
 	local style
-	if data==nil then
-		style = StyleClass:new( params )
-	elseif type(data.isa)=='function' then
 
+	if data==nil then
+		-- no data, so create with given params
+		style = StyleClass:new( params )
+
+	elseif type(data.isa)=='function' then
+		-- data is a Style object, use directly or make copy
 		if not copy then
 			style = data
 		else
 			style = data:copyStyle( params )
 		end
+
 	else
-		-- Lua structure
+		-- data is Lua structure
 		style = StyleClass:new( params )
 	end
-
-	assert( style, "failed to create style" )
 
 	return style
 end
@@ -374,28 +592,91 @@ function Style.__getters:inherit()
 	return self._inherit
 end
 
+function Style:_doChildrenInherit( value )
+end
+
+
+function Style:_unlinkInherit( o, f )
+	if o and f then
+		o:removeEventListener( o.EVENT, f )
+	end
+	o, f = nil, nil
+	return o, f
+end
+
+function Style:_linkInherit( o )
+	local f
+	if o and o~=Style.NO_INHERIT then
+		f = self:createCallback( self._inheritedStyleEvent_handler )
+		o:addEventListener( o.EVENT, f )
+	end
+	return o, f
+end
+
+function Style:_doChildrenInherit( value, params )
+	-- print( "Style:_doChildrenInherit", value, params )
+	-- skip this if we're being created
+	-- because children have already been init'd
+	if not self._isInitialized then return end
+end
+
+function Style:_doClearPropertiesInherit( reset, params )
+	-- print( "Style:_doClearPropertiesInherit", self, reset, params )
+	-- params, clearChildren, force
+	params = params or {}
+	if params.clearChildren==nil then params.clearChildren=true end
+	--==--
+	if not self._isInitialized then
+		-- skip this if we're being created
+		-- because children have already been init'd
+		params.clearChildren=false
+	end
+	self:clearProperties( reset, params )
+end
+
 -- value should be a instance of Style Class or nil
 --
 function Style.__setters:inherit( value )
-	-- print( "Style.__setters:inherit", self, value )
-	assert( value==nil or value:isa( Style ) )
+	-- print( "Style.__setters:inherit from ", value, self, self._isInitialized )
+	assert( value==nil or value==Style.NO_INHERIT or value:isa( Style ) )
 	--==--
-	local o = self._inherit
-	local f = self._inherit_f
-	if o and f then
-		o:removeEventListener( o.EVENT, f )
-		self._inherit = nil
-		self._inherit_f = nil
+	local StyleClass = self.class
+	local StyleBase = StyleClass:getBaseStyle()
+	-- current / new inherit
+	local cInherit, cInherit_f = self._inherit, self._inherit_f
+	local nInherit = value or StyleBase
+	local reset = nil
+
+	--== Remove old inherit link
+
+	self._inherit, self._inherit_f = self:_unlinkInherit( cInherit, cInherit_f )
+
+	if self._isDestroying then return end
+
+	--== Add new inherit link
+
+	self._inherit, self._inherit_f = self:_linkInherit( nInherit )
+
+	--== Process children
+
+	if not self._isInitialized then return end
+
+	self:_doChildrenInherit( value, {curr=cInherit, next=nInherit} )
+
+	--== Clear properties
+
+	-- Choose Reset method
+	if nInherit~=Style.NO_INHERIT then
+		-- we have inherit, so clear all properties
+		reset = nil
+	elseif self._isInitialized then
+		-- no inherit, so reset with previous inherit
+		reset = cInherit -- could be nil
+	else
+		reset = StyleBase -- reset with class base
 	end
 
-	o = value
-
-	if o then
-		f = self:createCallback( self._inheritedStyleEvent_handler )
-		o:addEventListener( o.EVENT, f )
-		self._inherit = o
-		self._inherit_f = f
-	end
+	self:_doClearPropertiesInherit( reset )
 end
 
 --== parent
@@ -462,7 +743,7 @@ override these getters/setters/methods if necesary
 --== name
 
 function Style.__getters:name()
-	-- print( 'Style.__getters:name', self._inherit )
+	-- print( "Style.__getters:name", self._inherit )
 	local value = self._name
 	if value==nil and self._inherit then
 		value = self._inherit.name
@@ -470,8 +751,8 @@ function Style.__getters:name()
 	return value
 end
 function Style.__setters:name( value )
-	-- print( 'Style.__setters:name', value )
-	assert( (value==nil and self._inherit) or type(value)=='string' )
+	-- print( "Style.__setters:name", value )
+	assert( type(value)=='string' or (value==nil and (self._inherit or self._isClearing))  )
 	--==--
 	if value == self._name then return end
 	self._name = value
@@ -487,8 +768,8 @@ function Style.__getters:debugOn()
 	return value
 end
 function Style.__setters:debugOn( value )
-	-- print( "Style.__setters:debugOn", value )
-	assert( type(value)=='boolean' or (value==nil and self._inherit) )
+	-- print( "Style.__setters:debugOn", value, self, self._isInitialized, self._isClearing )
+	assert( type(value)=='boolean' or (value==nil and (self._inherit or self._isClearing)) )
 	--==--
 	if value == self._debugOn then return end
 	self._debugOn = value
@@ -506,7 +787,7 @@ function Style.__getters:x()
 end
 function Style.__setters:x( value )
 	-- print( "Style.__setters:x", value )
-	assert( type(value)=='number' or (value==nil and self._inherit) )
+	assert( type(value)=='number' or (value==nil and (self._inherit or self._isClearing)) )
 	--==--
 	if value == self._x then return end
 	self._x = value
@@ -524,7 +805,7 @@ function Style.__getters:y()
 end
 function Style.__setters:y( value )
 	-- print( "Style.__setters:y", value )
-	assert( type(value)=='number' or (value==nil and self._inherit) )
+	assert( type(value)=='number' or (value==nil and (self._inherit or self._isClearing)) )
 	--==--
 	if value == self._y then return end
 	self._y = value
@@ -542,8 +823,8 @@ function Style.__getters:width()
 	return value
 end
 function Style.__setters:width( value, force )
-	-- print( "Style.__setters:width", self.name, value, force )
-	assert( type(value)=='number' or (value==nil and self._inherit) )
+	-- print( "Style.__setters:width", self, self._width, value, force )
+	assert( type(value)=='number' or (value==nil and ( self._inherit or self:nilProperty('width') or self._isClearing) ) )
 	--==--
 	if value==self._width and not force then return end
 	self._width = value
@@ -561,7 +842,7 @@ function Style.__getters:height()
 end
 function Style.__setters:height( value )
 	-- print( "Style.__setters:height", self, value )
-	assert( type(value)=='number' or (value==nil and self._inherit) )
+	assert( type(value)=='number' or (value==nil and ( self._inherit or self:nilProperty('height')  or self._isClearing ) ) )
 	--==--
 	if value == self._height then return end
 	self._height = value
@@ -579,8 +860,8 @@ function Style.__getters:align()
 	return value
 end
 function Style.__setters:align( value )
-	-- print( 'Style.__setters:align', value )
-	assert( type(value)=='string' or (value==nil and self._inherit) )
+	-- print( "Style.__setters:align", value )
+	assert( type(value)=='string' or (value==nil and (self._inherit or self._isClearing)) )
 	--==--
 	if value==self._align then return end
 	self._align = value
@@ -597,8 +878,8 @@ function Style.__getters:anchorX()
 	return value
 end
 function Style.__setters:anchorX( value )
-	-- print( 'Style.__setters:anchorX', value, self )
-	assert( type(value)=='number' or (value==nil and self._inherit) )
+	-- print( "Style.__setters:anchorX", value, self )
+	assert( type(value)=='number' or (value==nil and (self._inherit or self._isClearing)) )
 	--==--
 	if value==self._anchorX then return end
 	self._anchorX = value
@@ -615,9 +896,8 @@ function Style.__getters:anchorY()
 	return value
 end
 function Style.__setters:anchorY( value )
-	-- print( 'Style.__setters:anchorY', value )
-	assert( value==nil or type(value)=='number' )
-	if value==nil and self._inherit==nil  then print( "WARN") ; return end
+	-- print( "Style.__setters:anchorY", value )
+	assert( type(value)=='number' or (value==nil and (self._inherit or self._isClearing)) )
 	--==--
 	if value==self._anchorY then return end
 	self._anchorY = value
@@ -635,8 +915,8 @@ function Style.__getters:fillColor()
 	return value
 end
 function Style.__setters:fillColor( value )
-	-- print( "Style.__setters:fillColor", value )
-	assert( value or (value==nil and self._inherit) )
+	-- print( "Style.__setters:fillColor", self._fillColor, value, self._isClearing )
+	assert( type(value)=='table' or (value==nil and (self._inherit or self._isClearing) ))
 	--==--
 	self._fillColor = value
 	self:_dispatchChangeEvent( 'fillColor', value )
@@ -653,7 +933,7 @@ function Style.__getters:font()
 end
 function Style.__setters:font( value )
 	-- print( "Style.__setters:font", value )
-	assert( value or (value==nil and self._inherit) )
+	assert( value or (value==nil and (self._inherit or self._isClearing)) )
 	--==--
 	self._font = value
 	self:_dispatchChangeEvent( 'font', value )
@@ -670,7 +950,7 @@ function Style.__getters:fontSize()
 end
 function Style.__setters:fontSize( value )
 	-- print( "Style.__setters:fontSize", value )
-	assert( type(value)=='number' or (value==nil and self._inherit) )
+	assert( type(value)=='number' or (value==nil and (self._inherit or self._isClearing)) )
 	--==--
 	self._fontSize = value
 	self:_dispatchChangeEvent( 'fontSize', value )
@@ -687,7 +967,7 @@ function Style.__getters:marginX()
 end
 function Style.__setters:marginX( value )
 	-- print( "Style.__setters:marginX", value )
-	assert( type(value)=='number' or (value==nil and self._inherit) )
+	assert( type(value)=='number' or (value==nil and (self._inherit or self._isClearing)) )
 	--==--
 	self._marginX = value
 	self:_dispatchChangeEvent( 'marginX', value )
@@ -704,7 +984,7 @@ function Style.__getters:marginY()
 end
 function Style.__setters:marginY( value )
 	-- print( "Style.__setters:marginY", value )
-	assert( type(value)=='number' or (value==nil and self._inherit) )
+	assert( type(value)=='number' or (value==nil and (self._inherit or self._isClearing)) )
 	--==--
 	self._marginY = value
 	self:_dispatchChangeEvent( 'marginY', value )
@@ -721,7 +1001,7 @@ function Style.__getters:strokeColor()
 end
 function Style.__setters:strokeColor( value )
 	-- print( "Style.__setters:strokeColor", value )
-	assert( value or (value==nil and self._inherit) )
+	assert( value or (value==nil and (self._inherit or self._isClearing) ))
 	--==--
 	self._strokeColor = value
 	self:_dispatchChangeEvent( 'strokeColor', value )
@@ -737,8 +1017,8 @@ function Style.__getters:strokeWidth( value )
 	return value
 end
 function Style.__setters:strokeWidth( value )
-	-- print( "Style.__setters:strokeWidth", value )
-	assert( type(value)=='number' or (value==nil and self._inherit) )
+	-- print( "Style.__setters:strokeWidth", self._strokeWidth, value, self._isClearing )
+	assert( value or (value==nil and (self._inherit or self._isClearing) ))
 	--==--
 	if value == self._strokeWidth then return end
 	self._strokeWidth = value
@@ -757,7 +1037,7 @@ function Style.__getters:textColor()
 end
 function Style.__setters:textColor( value )
 	-- print( "Style.__setters:textColor", value )
-	assert( value or (value==nil and self._inherit) )
+	assert( value or (value==nil and (self._inherit or self._isClearing)) )
 	--==--
 	if value == self._textColor then return end
 	self._textColor = value
@@ -765,12 +1045,14 @@ function Style.__setters:textColor( value )
 end
 
 
--- verifyClassProperties()
+-- verifyProperties()
 -- ability to check properties to make sure everything went well
+-- this is used with a Style instance
 --
-function Style:verifyClassProperties()
-	-- print( "Style:verifyClassProperties" )
-	return Style._verifyClassProperties( self )
+function Style:verifyProperties()
+	-- print( "Style:verifyProperties" )
+	local StyleClass = self.class
+	return StyleClass._verifyStyleProperties( self )
 end
 
 
@@ -781,27 +1063,24 @@ end
 --======================================================--
 -- Style Class setup
 
+
 -- _prepareData()
 -- if necessary, modify data before we process it
 -- usually this is to copy styles from parent to child
+-- the goal is to have enough of a structure to be able
+-- to process with _parseData()
 --
-function Style:_prepareData( data )
-	-- print( "OVERRIDE Style:_prepareData", self )
-	-- data could be nil, Lua structure, or class instance
-	if type(data)=='table' and data.isa then
-		-- if we have an Instance, dump it
-		data=nil
-	end
-	return data
-end
+function Style:_prepareData( data, dataSrc, params )
+	-- print( "Style:_prepareData", data, dataSrc, self )
+	params = params or {}
+	--==--
+	local StyleClass = self.class
 
--- _checkChildren()
--- check children after class initialization
--- eg, if a style doesn't have any child properties (eg, background)
--- to actually create the substyle
---
-function Style:_checkChildren()
-	-- print("OVERRIDE Style:_checkChildren")
+	if not data then
+		data = StyleClass.createStyleStructure( dataSrc )
+	end
+
+	return data
 end
 
 
@@ -811,20 +1090,33 @@ end
 --
 function Style:_parseData( data )
 	-- print( "Style:_parseData", self, data )
-	if data==nil then return end
+	if data==nil then data={} end
+	--==--
 
-	-- Utils.print( data )
 	-- prep tables of things to exclude, etc
-	local DEF = self._STYLE_DEFAULTS
+	local DEF = self._DEFAULTS
 	local EXCL = self._EXCLUDE_PROPERTY_CHECK
 
-	for k,v in pairs( data ) do
-		-- print(k,v)
-		if DEF[k]==nil and not EXCL[k] then
-			error( sformat( "Style: invalid property style found '%s'", tostring(k) ) )
+	--== process properties, skip children
+
+	for prop, value in pairs( data ) do
+		-- print( prop, value )
+		if DEF[ prop ]==nil and not EXCL[ prop ] then
+			print( sfmt("[WARNING] Skipping invalid style property '%s'", tostring(prop) ))
+			print( sfmt("[WARNING] located in style definition for '%s'", tostring(self.NAME) ))
 		end
-		self[k]=v
+		if not self:isChild( prop ) then
+			self[ prop ]=value
+		end
 	end
+
+	--== process children
+
+	for prop, _ in pairs( self:getChildren() ) do
+		-- print( "processing child", prop, _ )
+		self[ prop ] = data[ prop ]
+	end
+
 end
 
 
@@ -838,6 +1130,11 @@ function Style:_getRawProperty( name )
 end
 
 
+function Style:_destroyChildren()
+	-- print( "Style:_destroyChildren", self )
+end
+
+
 --======================================================--
 -- Event Dispatch
 
@@ -846,14 +1143,14 @@ end
 -- send out property-changed event to listeners
 -- and to any inherits
 --
-function Style:_dispatchChangeEvent( prop, value )
-	-- print( 'Style:_dispatchChangeEvent', prop, value, self )
+function Style:_dispatchChangeEvent( prop, value, data )
+	-- print( "Style:_dispatchChangeEvent", prop, value, self )
 	local widget = self._widget
 	local callback = self._onPropertyChange_f
 
-	if not self._is_initialized then return end
+	if not self._isInitialized or self._isClearing then return end
 
-	local e = self:createEvent( self.STYLE_UPDATED, {property=prop,value=value}, {merge=true} )
+	local e = self:createEvent( self.PROPERTY_CHANGED, {property=prop,value=value,data=data}, {merge=true} )
 
 	-- dispatch event to different listeners
 	if widget and widget.stylePropertyChangeHandler then
@@ -867,18 +1164,13 @@ function Style:_dispatchChangeEvent( prop, value )
 end
 
 
--- _dispatchClearEvent()
--- send out event to clear properties
--- and to any inherits
+-- _dispatchDestroyEvent()
+-- send out destroy event to listeners
 --
-function Style:_dispatchClearEvent()
-	-- print( 'Style:_dispatchClearEvent', self )
-	local widget = self._widget
-	local callback = self._onPropertyChange_f
+function Style:_dispatchDestroyEvent( prop, value )
+	-- print( "Style:_dispatchDestroyEvent", prop, value, self )
 
-	if not self._is_initialized then return end
-
-	local e = self:createEvent( self.STYLE_CLEARED )
+	local e = self:createEvent( self.STYLE_DESTROYED )
 
 	-- dispatch event to different listeners
 	if widget and widget.stylePropertyChangeHandler then
@@ -896,12 +1188,12 @@ end
 -- send out Reset event to listeners
 --
 function Style:_dispatchResetEvent()
-	-- print( 'Style:_dispatchResetEvent', self )
+	-- print( "Style:_dispatchResetEvent", self )
 	--==--
 	local widget = self._widget
 	local callback = self._onPropertyChange_f
 
-	if not widget and not callback then return end
+	if not self._isInitialized or self._isClearing then return end
 
 	local e = {
 		name=self.EVENT,
@@ -912,13 +1204,36 @@ function Style:_dispatchResetEvent()
 		widget:stylePropertyChangeHandler( e )
 	end
 	if callback then callback( e ) end
-end
+	-- styles which inherit from this one
 
+	self:dispatchRawEvent( e )
+end
 
 
 
 --====================================================================--
 --== Event Handlers
+
+
+-- _inheritedStyleEvent_handler()
+-- handle inherited style-events
+--
+function Style:_inheritedStyleEvent_handler( event )
+	-- print( "Style:_inheritedStyleEvent_handler", event, event.type, self )
+	local style = event.target
+	local etype = event.type
+
+	if etype==style.STYLE_RESET then
+		self:_dispatchResetEvent()
+
+	elseif etype==style.PROPERTY_CHANGED then
+		-- only re-dispatch property changes if our property is empty
+		if self:_getRawProperty( event.property ) == nil then
+			self:_dispatchChangeEvent( event.property, event.value )
+		end
+	end
+
+end
 
 
 -- _parentStyleEvent_handler()
@@ -929,47 +1244,26 @@ function Style:_parentStyleEvent_handler( event )
 	local style = event.target
 	local etype = event.type
 
-	if etype==style.STYLE_CLEARED then
-		self:clearProperties()
+	if etype==style.STYLE_RESET then
+		self:_dispatchResetEvent()
 
-	elseif etype==style.STYLE_RESET then
-		self._dispatchResetEvent()
-
-	elseif etype==style.STYLE_UPDATED then
+	elseif etype==style.PROPERTY_CHANGED then
 		local property, value = event.property, event.value
 		-- we accept changes to parent as our own
 		-- however, check to see if property is valid
 		-- parent could have other properties
 		if self._VALID_PROPERTIES[property] then
-			self.__setters[property]( self, value, true )
+			local func = self.__setters[property]
+			if func then
+				func( self, value, true )
+			else
+				print( sfmt( "[WARNING] Unknown property '%s' on '%s'", tostring(property), tostring(self) ))
+			end
 		end
 	end
 
 end
 
-
--- _inheritedStyleEvent_handler()
--- handle inherited style-events
---
-function Style:_inheritedStyleEvent_handler( event )
-	-- print( "Style:_inheritedStyleEvent_handler", event, self )
-	local style = event.target
-	local etype = event.type
-
-	if etype==style.STYLE_CLEARED then
-		-- pass
-
-	elseif etype==style.STYLE_RESET then
-		self._dispatchResetEvent()
-
-	elseif etype==style.STYLE_UPDATED then
-		-- only re-dispatch property changes if our property is empty
-		if self:_getRawProperty( event.property ) == nil then
-			self:_dispatchChangeEvent( event.property, event.value )
-		end
-	end
-
-end
 
 
 

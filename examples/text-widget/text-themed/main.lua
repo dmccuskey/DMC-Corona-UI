@@ -320,7 +320,7 @@ function run_example4()
 	end)
 
 	timer.performWithDelay( 3000, function()
-		print( "\n\nUpdate Properties" )
+		print( "\n\n Clear Style" )
 		-- reset local changes to text widget
 		txt5:clearStyle()
 	end)
@@ -329,4 +329,86 @@ function run_example4()
 
 end
 
-run_example4()
+-- run_example4()
+
+
+
+--======================================================--
+--== create style, apply to widget
+
+function run_example5()
+
+	local st1, txt3, txt4
+
+	st3 = Widgets.newTextStyle{
+		name='my-text-style',
+		fillColor={0.5,0.8,0.2},
+		marginX=0,
+		marginY=0,
+		textColor={0,0,0},
+	}
+
+	txt3 = Widgets.newText{
+		text="Text One"
+	}
+	txt3.style = st3
+	txt3.x, txt3.y = H_CENTER, V_CENTER-100
+
+
+	-- add another text widget, with same style
+
+	timer.performWithDelay( 2000, function()
+		print( "\n\n Update Properties" )
+
+		txt4 = Widgets.newText{
+			text="Text Two",
+			style=st3
+		}
+		txt4.x=H_CENTER
+		txt4.y=V_CENTER+100
+
+	end)
+
+	-- change some styles on one widget
+
+	timer.performWithDelay( 4000, function()
+		print( "\n\n Update Properties" )
+
+		txt3:setFillColor( 1,0.5,0.5,0.5 )
+		txt3:setTextColor( 1,0,0,0.5 )
+		txt3.align='left'
+		txt3.width=200
+
+		txt3:setTextColor( 0.5,0.2,0,0.5 )
+
+	end)
+
+
+	-- then reset both to original look
+
+	timer.performWithDelay( 6000, function()
+		print( "\n\n Clear Style Properties" )
+
+		st3:clearProperties()
+		txt4:clearStyle()
+	end)
+
+	timer.performWithDelay( 8000, function()
+		print( "\n\n Clear Widget Properties" )
+
+		-- st3:clearProperties()
+		txt4:clearStyle()
+		txt3:clearStyle()
+	end)
+
+
+	-- remove a widget
+
+	timer.performWithDelay( 12000, function()
+		print( "\n\n Removing Widget" )
+		txt3:removeSelf()
+	end)
+
+end
+
+run_example5()
