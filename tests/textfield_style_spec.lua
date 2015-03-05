@@ -251,10 +251,7 @@ function test_defaultStyleValues()
 
 	local defaults = TextField:getDefaultStyleValues()
 
-Utils.print(defaults)
-print( "table", defaults, defaults.background, defaults.background.type )
 	hasValidStyleProperties( TextField, defaults )
-
 
 end
 
