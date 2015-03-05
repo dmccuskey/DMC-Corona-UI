@@ -351,7 +351,7 @@ function Background:_removeBackground()
 end
 
 function Background:_createBackgroundView()
-	print( "Background:_createBackgroundView" )
+	-- print( "Background:_createBackgroundView" )
 	local style = self.curr_style
 	local vtype = style.type
 	local o = self._wgtView
@@ -362,7 +362,6 @@ function Background:_createBackgroundView()
 		o = ViewFactory.create( vtype )
 		self:insert( o.view )
 	end
-	print( "W", style.view.width )
 
 	o:setActiveStyle( style.view, {copy=false} )
 	self._wgtView = o
@@ -374,7 +373,7 @@ end
 
 
 function Background:__commitProperties__()
-	print( "Background:__commitProperties__" )
+	-- print( "Background:__commitProperties__" )
 
 	--== Update Widget Components
 
@@ -410,13 +409,13 @@ end
 
 
 function Background:stylePropertyChangeHandler( event )
-	print( "Background:stylePropertyChangeHandler", event.type, event.property )
+	-- print( "Background:stylePropertyChangeHandler", event.type, event.property )
 	local style = event.target
 	local etype= event.type
 	local property= event.property
 	local value = event.value
 
-	print( "Style Changed", etype, property, value )
+	-- print( "Style Changed", etype, property, value )
 
 	if etype==style.STYLE_RESET then
 		self._debugOn_dirty=true
