@@ -66,7 +66,7 @@ local widget_find = dmc_widget_func.find
 
 local LifecycleMixModule = require 'dmc_lifecycle_mix'
 local Objects = require 'dmc_objects'
-local ThemeMixModule = require( dmc_widget_func.find( 'widget_theme_mix' ) )
+local StyleMixModule = require( dmc_widget_func.find( 'widget_style_mix' ) )
 local Utils = require 'dmc_utils'
 
 --== To be set in initialize()
@@ -83,7 +83,7 @@ local newClass = Objects.newClass
 local ComponentBase = Objects.ComponentBase
 
 local LifecycleMix = LifecycleMixModule.LifecycleMix
-local ThemeMix = ThemeMixModule.ThemeMix
+local StyleMix = StyleMixModule.StyleMix
 
 
 
@@ -92,10 +92,10 @@ local ThemeMix = ThemeMixModule.ThemeMix
 --====================================================================--
 
 
--- ! put ThemeMix first !
+-- ! put StyleMix first !
 
 local TextField = newClass(
-	{ ThemeMix, ComponentBase, LifecycleMix },
+	{ StyleMix, ComponentBase, LifecycleMix },
 	{name="TextField"}
 )
 
@@ -179,7 +179,7 @@ function TextField:__init__( params )
 
 	self:superCall( LifecycleMix, '__init__', params )
 	self:superCall( ComponentBase, '__init__', params )
-	self:superCall( ThemeMix, '__init__', params )
+	self:superCall( StyleMix, '__init__', params )
 	--==--
 
 	--== Create Properties ==--
@@ -279,7 +279,7 @@ end
 function TextField:__undoInit__()
 	-- print( "TextField:__undoInit__" )
 	--==--
-	self:superCall( ThemeMix, '__undoInit__' )
+	self:superCall( StyleMix, '__undoInit__' )
 	self:superCall( ComponentBase, '__undoInit__' )
 	self:superCall( LifecycleMix, '__undoInit__' )
 end
@@ -311,6 +311,7 @@ end
 
 function TextField:__initComplete__()
 	-- print( "TextField:__initComplete__" )
+	self:superCall( StyleMix, '__initComplete__' )
 	self:superCall( ComponentBase, '__initComplete__' )
 	--==--
 	self._rctHit_f = self:createCallback( self._hitAreaTouch_handler )
@@ -342,6 +343,7 @@ function TextField:__undoInitComplete__()
 	self._rctHit_f = nil
 	--==--
 	self:superCall( ComponentBase, '__undoInitComplete__' )
+	self:superCall( StyleMix, '__undoInitComplete__' )
 end
 
 -- END: Setup DMC Objects
@@ -1310,7 +1312,7 @@ function TextField:textStyleChange_handler( event )
 
 	-- print( "Style Changed", etype, property, value )
 
-	if etype==style.STYLE_RESET or etype==style.STYLE_CLEARED then
+	if etype==style.STYLE_RESET then
 		self._debugOn_dirty = true
 
 		self._inputFieldX_dirty=true
@@ -1384,7 +1386,8 @@ function TextField:stylePropertyChangeHandler( event )
 	-- Utils.print( event )
 
 	-- print( "Style Changed", etype, property, value )
-	if etype==style.STYLE_RESET or etype==style.STYLE_CLEARED then
+
+	if etype==style.STYLE_RESET then
 		self._debugOn_dirty = true
 		self._width_dirty=true
 		self._height_dirty=true

@@ -97,7 +97,7 @@ function run_example1()
 	}
 	-- tf1:addEventListener( tf1.EVENT, widgetEvent_handler )
 	-- tf1.onProperty = widgetOnPropertyEvent_handler
-	-- tf1.debugOn = true
+	tf1.debugOn = true
 	tf1.x = H_CENTER
 	tf1.y = V_CENTER
 
@@ -107,7 +107,7 @@ function run_example1()
 
 	-- tf1.y = 300
 
-	tf1.width=200
+	tf1.width=300
 	tf1.height=60
 	tf1.align='left'
 	tf1.marginX=10
@@ -115,7 +115,7 @@ function run_example1()
 	tf1:setBackgroundFillColor( 1,0.5,0.2,1 )
 
 	-- tf1.isSecure=true
-	-- tf1.isHitActive=false
+	-- tf1.isHitActive=true
 
 	timer.performWithDelay( 1000, function()
 		print("\n\n Update Properties")

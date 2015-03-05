@@ -66,6 +66,7 @@ local widget_find = dmc_widget_func.find
 
 local Objects = require 'dmc_objects'
 local Utils = require 'dmc_utils'
+-- local WidgetUtils = require(widget_find( 'widget_utils' ))
 
 local BaseStyle = require( widget_find( 'widget_style.base_style' ) )
 
@@ -122,7 +123,10 @@ ButtonStateStyle._VALID_PROPERTIES = {
 	marginX=true,
 	marginY=true,
 	offsetX=true,
-	offsetY=true
+	offsetY=true,
+
+	-- Copyable properties
+	font=native.systemFont
 }
 
 ButtonStateStyle._EXCLUDE_PROPERTY_CHECK = nil
@@ -138,32 +142,63 @@ ButtonStateStyle._STYLE_DEFAULTS = {
 	align='center',
 	isHitActive=true,
 	marginX=0,
-	marginY=5,
+	marginY=0,
 	offsetX=0,
 	offsetY=0,
 
 	label={
-		textColor={1,0,0},
+		textColor={0,0,0,1},
 		font=native.systemFontBold,
 		fontSize=10
 	},
 	background={
-		type='rectangle',
+		type='rounded',
 		view={
-			fillColor={1,1,0.5, 0.5},
-			strokeWidth=6,
-			strokeColor={1,0,0,0.5},
+			fillColor={1,1,1,1},
+			strokeWidth=1,
+			strokeColor={0,0,0,1},
 		}
 	}
 
 }
 
+ButtonStateStyle._TEST_DEFAULTS = {
+	name='button-state-test-style',
+	debugOn=false,
+	width=201,
+	height=202,
+	anchorX=204,
+	anchorY=206,
+
+	align='center-state',
+	isHitActive=true,
+	marginX=210,
+	marginY=210,
+	offsetX=212,
+	offsetY=212,
+
+	label={
+		textColor={220,220,220,221},
+		font=native.systemFontBold,
+		fontSize=228
+	},
+	background={
+		type='rounded',
+		view={
+			fillColor={230,230,230,231},
+			strokeWidth=238,
+			strokeColor={232,232,232,231},
+		}
+	}
+
+}
+
+ButtonStateStyle.MODE = BaseStyle.RUN_MODE
+ButtonStateStyle._DEFAULTS = ButtonStateStyle._STYLE_DEFAULTS
+
 --== Event Constants
 
 ButtonStateStyle.EVENT = 'button-state-style-event'
-
--- from super
--- Class.STYLE_UPDATED
 
 
 --======================================================--
@@ -214,74 +249,86 @@ end
 --== Static Methods
 
 
-function ButtonStateStyle.initialize( manager )
+function ButtonStateStyle.initialize( manager, params )
 	-- print( "ButtonStateStyle.initialize", manager )
+	params = params or {}
+	if params.mode==nil then params.mode=BaseStyle.RUN_MODE end
+	--==--
 	Widgets = manager
 
-	ButtonStateStyle._setDefaults( ButtonStateStyle )
+	if params.mode==BaseStyle.TEST_MODE then
+		ButtonStateStyle.MODE = BaseStyle.TEST_MODE
+		ButtonStateStyle._DEFAULTS = ButtonStateStyle._TEST_DEFAULTS
+	end
+	local defaults = ButtonStateStyle._DEFAULTS
+
+	ButtonStateStyle._setDefaults( ButtonStateStyle, {defaults=defaults} )
 end
 
 
--- create empty style structure
--- param data string, type of background view
---
-function ButtonStateStyle.createStyleStructure( data )
-	-- print( "ButtonStateStyle.createStyleStructure", data )
+function ButtonStateStyle.createStyleStructure( src )
+	-- print( "ButtonStateStyle.createStyleStructure", src )
+	src = src or {}
+	--==--
 	return {
-		label=Widgets.Style.Text.createStyleStructure(),
-		background=Widgets.Style.Background.createStyleStructure( data )
+		label=Widgets.Style.Text.createStyleStructure( src.label ),
+		background=Widgets.Style.Background.createStyleStructure( src.background )
 	}
 end
 
 
-function ButtonStateStyle.addMissingDestProperties( dest, src, params )
+function ButtonStateStyle.addMissingDestProperties( dest, src )
 	-- print( "ButtonStateStyle.addMissingDestProperties", dest, src )
-	params = params or {}
-	if params.force==nil then params.force=false end
 	assert( dest )
 	--==--
-	local force=params.force
-	local srcs = { ButtonStateStyle._STYLE_DEFAULTS }
+	local srcs = { ButtonStateStyle._DEFAULTS }
 	if src then tinsert( srcs, 1, src ) end
 
-	dest = BaseStyle.addMissingDestProperties( dest, src, params )
+	dest = BaseStyle.addMissingDestProperties( dest, src )
 
 	for i=1,#srcs do
 		local src = srcs[i]
 
-		if dest.align==nil or force then dest.align=src.align end
-		if dest.isHitActive==nil or force then dest.isHitActive=src.isHitActive end
-		if dest.marginX==nil or force then dest.marginX=src.marginX end
-		if dest.marginY==nil or force then dest.marginY=src.marginY end
-		if dest.offsetX==nil or force then dest.offsetX=src.offsetX end
-		if dest.offsetY==nil or force then dest.offsetY=src.offsetY end
+		if dest.align==nil then dest.align=src.align end
+		if dest.isHitActive==nil then dest.isHitActive=src.isHitActive end
+		if dest.marginX==nil then dest.marginX=src.marginX end
+		if dest.marginY==nil then dest.marginY=src.marginY end
+		if dest.offsetX==nil then dest.offsetX=src.offsetX end
+		if dest.offsetY==nil then dest.offsetY=src.offsetY end
+
+		--== Additional properties to be handed down to children
+
+		if dest.font==nil then dest.font=src.font end
+		if dest.fontSize==nil then dest.fontSize=src.fontSize end
 
 	end
 
-	dest = ButtonStateStyle._addMissingChildProperties( dest, src, params )
+	dest = ButtonStateStyle._addMissingChildProperties( dest, src )
 
 	return dest
 end
 
 
-
---
+-- _addMissingChildProperties()
 -- copy properties to sub-styles
 --
-function ButtonStateStyle._addMissingChildProperties( dest, src, params )
+function ButtonStateStyle._addMissingChildProperties( dest, src )
 	-- print( "ButtonStateStyle._addMissingChildProperties", dest, src )
+	assert( dest )
+	src = dest
+	--==--
 	local eStr = "ERROR: Style missing property '%s'"
 	local StyleClass, child
 
 	child = dest.label
 	assert( child, sformat( eStr, 'label' ) )
 	StyleClass = Widgets.Style.Text
-	StyleClass.addMissingDestProperties( child, src, params )
+	dest.label = StyleClass.addMissingDestProperties( child, src )
 
 	child = dest.background
 	assert( child, sformat( eStr, 'background' ) )
 	StyleClass = Widgets.Style.Background
-	StyleClass.addMissingDestProperties( child, src, params )
+	dest.background = StyleClass.addMissingDestProperties( child, src )
 
 	return dest
 end
@@ -321,13 +368,11 @@ function ButtonStateStyle.copyExistingSrcProperties( dest, src, params )
 end
 
 
-
-
 function ButtonStateStyle._verifyStyleProperties( src, exclude )
 	-- print( "ButtonStateStyle._verifyStyleProperties", src, exclude )
-	assert( src )
+	assert( src, "ButtonStateStyle:verifyStyleProperties requires source" )
 	--==--
-	local emsg = "Style: requires property '%s'"
+	local emsg = "Style (ButtonStateStyle) requires property '%s'"
 
 	local is_valid = BaseStyle._verifyStyleProperties( src, exclude )
 
@@ -352,18 +397,28 @@ function ButtonStateStyle._verifyStyleProperties( src, exclude )
 
 	-- check sub-styles
 
-	local child, StyleClass
+	local StyleClass, child
 
 	child = src.label
-	StyleClass = child.class
-	if not StyleClass._verifyStyleProperties( child, exclude ) then
+	if not child then
+		print( "ButtonStateStyle child test skipped for 'label'" )
 		is_valid=false
+	else
+		StyleClass = Widgets.Style.Text
+		if not StyleClass._verifyStyleProperties( child, exclude ) then
+			is_valid=false
+		end
 	end
 
 	child = src.background
-	StyleClass = child.class
-	if not StyleClass._verifyStyleProperties( child, exclude ) then
+	if not child then
+		print( "ButtonStateStyle child test skipped for 'background'" )
 		is_valid=false
+	else
+		StyleClass = Widgets.Style.Background
+		if not StyleClass._verifyStyleProperties( child, exclude ) then
+			is_valid=false
+		end
 	end
 
 	return is_valid
@@ -387,7 +442,7 @@ function ButtonStateStyle.__setters:background( data )
 	assert( data==nil or type( data )=='table' )
 	--==--
 	local StyleClass = Widgets.Style.Background
-	local inherit = self._inherit and self._inherit._background or nil
+	local inherit = self._inherit and self._inherit._background or self._inherit
 
 	self._background = StyleClass:createStyleFrom{
 		name=ButtonStateStyle.BACKGROUND_NAME,
@@ -408,7 +463,7 @@ function ButtonStateStyle.__setters:label( data )
 	assert( data==nil or type( data )=='table' )
 	--==--
 	local StyleClass = Widgets.Style.Text
-	local inherit = self._inherit and self._inherit._label
+	local inherit = self._inherit and self._inherit._label or self._inherit
 
 	self._label = StyleClass:createStyleFrom{
 		name=ButtonStateStyle.LABEL_NAME,
@@ -434,7 +489,7 @@ function ButtonStateStyle.__getters:align()
 end
 function ButtonStateStyle.__setters:align( value )
 	-- print( "ButtonStateStyle.__setters:align", value )
-	assert( (value==nil and self._inherit) or type(value)=='string' )
+	assert( type(value)=='string' or (value==nil and (self._inherit or self._isClearing)))
 	--==--
 	if value == self._align then return end
 	self._align = value
@@ -452,7 +507,7 @@ function ButtonStateStyle.__getters:isHitActive()
 end
 function ButtonStateStyle.__setters:isHitActive( value )
 	-- print( "ButtonStateStyle.__setters:isHitActive", value )
-	assert( type(value)=='boolean' or (value==nil and self._inherit) )
+	assert( type(value)=='boolean' or (value==nil and (self._inherit or self._isClearing)) )
 	--==--
 	if value == self._isHitActive then return end
 	self._isHitActive = value
@@ -471,7 +526,7 @@ function ButtonStateStyle.__getters:marginX()
 end
 function ButtonStateStyle.__setters:marginX( value )
 	-- print( "ButtonStateStyle.__setters:marginX", value )
-	assert( (type(value)=='number' and value>=0) or (value==nil and self._inherit) )
+	assert( (type(value)=='number' and value>=0) or (value==nil and (self._inherit or self._isClearing)) )
 	--==--
 	if value == self._marginX then return end
 	self._marginX = value
@@ -490,7 +545,7 @@ function ButtonStateStyle.__getters:marginY()
 end
 function ButtonStateStyle.__setters:marginY( value )
 	-- print( "ButtonStateStyle.__setters:marginY", value )
-	assert( (type(value)=='number' and value>=0) or (value==nil and self._inherit) )
+	assert( (type(value)=='number' and value>=0) or (value==nil and (self._inherit or self._isClearing)) )
 	--==--
 	if value == self._marginY then return end
 	self._marginY = value
@@ -510,7 +565,7 @@ function ButtonStateStyle.__getters:offsetX()
 end
 function ButtonStateStyle.__setters:offsetX( value )
 	-- print( "ButtonStateStyle.__setters:offsetX", value )
-	assert( (type(value)=='number' and value>=0) or (value==nil and self._inherit) )
+	assert( (type(value)=='number' and value>=0) or (value==nil and (self._inherit or self._isClearing)) )
 	--==--
 	if value == self._offsetX then return end
 	self._offsetX = value
@@ -529,7 +584,7 @@ function ButtonStateStyle.__getters:offsetY()
 end
 function ButtonStateStyle.__setters:offsetY( value )
 	-- print( "ButtonStateStyle.__setters:offsetY", value, self )
-	assert( (type(value)=='number' and value>=0) or (value==nil and self._inherit) )
+	assert( (type(value)=='number' and value>=0) or (value==nil and (self._inherit or self._isClearing)) )
 	--==--
 	if value==self._offsetY then return end
 	self._offsetY = value
@@ -538,53 +593,75 @@ end
 
 
 --======================================================--
--- Proxy Methods
-
-
-
-
---======================================================--
 -- Misc
-
---== inherit
 
 function ButtonStateStyle:_doChildrenInherit( value )
 	-- print( "ButtonStateStyle", value, self )
-	self._background.inherit = value and value.background or nil
-	self._label.inherit = value and value.label or nil
-
+	if not self._isInitialized then return end
+	self._background.inherit = value and value.background or value
+	self._label.inherit = value and value.label or value
 end
+
+
+function ButtonStateStyle:_clearChildrenProperties( style, params )
+	-- print( "ButtonStateStyle:_clearChildrenProperties", style, self )
+	assert( style==nil or type(style)=='table' )
+	if style and type(style.isa)=='function' then
+		assert( style:isa(ButtonStateStyle) )
+	end
+	--==--
+	local substyle
+
+	substyle = style and style.background
+	self._background:_clearProperties( substyle, params )
+
+	substyle = style and style.label
+	self._label:_clearProperties( substyle, params )
+end
+
 
 
 --====================================================================--
 --== Private Methods
 
 
-function ButtonStateStyle:_prepareData( data )
+function ButtonStateStyle:_prepareData( data, dataSrc, params )
 	-- print( "ButtonStateStyle:_prepareData", data )
-	if not data then return end
+	params = params or {}
 	--==--
-	local createStruct = ButtonStateStyle.createStyleStructure
+	local inherit = params.inherit
+	local StyleClass
+	local src, dest, tmp
 
-	if data.isa and data:isa( ButtonStateStyle ) then
-		--== Instance
-		local o = data
-		data = createStruct( o.background.view.type )
-
-	else
-		--== Lua structure
-		local StyleClass
-		local src, dest = data, nil
-
-		dest = src.label
-		StyleClass = Widgets.Style.Text
-		StyleClass.copyExistingSrcProperties( dest, src )
-
-		dest = src.background
-		StyleClass = Widgets.Style.Background
-		StyleClass.copyExistingSrcProperties( dest, src )
-
+	if not data then
+		data = ButtonStateStyle.createStyleStructure( dataSrc )
 	end
+
+	src, dest = data, nil
+
+	--== make sure we have structure for children
+
+	StyleClass = Widgets.Style.Text
+	if not src.label then
+		tmp = dataSrc and dataSrc.label
+		src.label = StyleClass.createStyleStructure( tmp )
+	end
+
+	StyleClass = Widgets.Style.Background
+	if not src.background then
+		tmp = dataSrc and dataSrc.background
+		src.background = StyleClass.createStyleStructure( tmp )
+	end
+
+	--== process children
+
+	StyleClass = Widgets.Style.Text
+	dest = src.label
+	src.label = StyleClass.copyExistingSrcProperties( dest, src )
+
+	StyleClass = Widgets.Style.Background
+	dest = src.background
+	src.background = StyleClass.copyExistingSrcProperties( dest, src )
 
 	return data
 end

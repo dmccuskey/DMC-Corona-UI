@@ -67,7 +67,7 @@ local widget_find = dmc_widget_func.find
 local LifecycleMixModule = require 'dmc_lifecycle_mix'
 local Objects = require 'dmc_objects'
 local StatesMixModule = require 'dmc_states_mix'
-local ThemeMixModule = require( dmc_widget_func.find( 'widget_theme_mix' ) )
+local StyleMixModule = require( dmc_widget_func.find( 'widget_style_mix' ) )
 local Utils = require 'dmc_utils'
 
 --== To be set in initialize()
@@ -85,7 +85,7 @@ local ComponentBase = Objects.ComponentBase
 
 local LifecycleMix = LifecycleMixModule.LifecycleMix
 local StatesMix = StatesMixModule.StatesMix
-local ThemeMix = ThemeMixModule.ThemeMix
+local StyleMix = StyleMixModule.StyleMix
 
 
 
@@ -100,10 +100,10 @@ local ThemeMix = ThemeMixModule.ThemeMix
 --====================================================================--
 
 
--- ! put ThemeMix first !
+-- ! put StyleMix first !
 
 local ButtonBase = newClass(
-	{ ThemeMix, ComponentBase, StatesMix, LifecycleMix },
+	{ StyleMix, ComponentBase, StatesMix, LifecycleMix },
 	{name="Button Base"}
 )
 
@@ -151,7 +151,7 @@ function ButtonBase:__init__( params )
 	self:superCall( LifecycleMix, '__init__', params )
 	self:superCall( StatesMix, '__init__', params )
 	self:superCall( ComponentBase, '__init__', params )
-	self:superCall( ThemeMix, '__init__', params )
+	self:superCall( StyleMix, '__init__', params )
 	--==--
 
 	--== Create Properties ==--
@@ -166,7 +166,7 @@ function ButtonBase:__init__( params )
 	self._id = params.id
 	self._id_dirty=true
 
-	self._labelText = params.text
+	self._labelText = params.labelText
 	self._labelText_dirty=true
 
 	self._data = params.data
@@ -203,7 +203,9 @@ function ButtonBase:__init__( params )
 	self._hitAreaMarginX_dirty=true
 	self._hitAreaMarginY_dirty=true
 
-	self._params = params -- save for view creation
+	self._displayText_dirty=true
+
+
 
 	self._callbacks = {
 		onPress = params.onPress,
@@ -234,7 +236,7 @@ end
 function ButtonBase:__undoInit__()
 	-- print( "ButtonBase:__undoInit__" )
 	--==--
-	self:superCall( ThemeMix, '__undoInit__' )
+	self:superCall( StyleMix, '__undoInit__' )
 	self:superCall( ComponentBase, '__undoInit__' )
 	self:superCall( StatesMix, '__undoInit__' )
 	self:superCall( LifecycleMix, '__undoInit__' )
@@ -267,6 +269,7 @@ end
 
 function ButtonBase:__initComplete__()
 	-- print( "ButtonBase:__initComplete__" )
+	self:superCall( StyleMix, '__initComplete__' )
 	self:superCall( ComponentBase, '__initComplete__' )
 	--==--
 	self._rctHit_f = self:createCallback( self._hitAreaTouch_handler )
@@ -295,6 +298,7 @@ function ButtonBase:__undoInitComplete__()
 	self._rctHit_f = nil
 	--==--
 	self:superCall( ComponentBase, '__undoInitComplete__' )
+	self:superCall( StyleMix, '__undoInitComplete__' )
 end
 
 -- END: Setup DMC Objects
@@ -344,6 +348,7 @@ function ButtonBase.__getters:labelText()
 end
 function ButtonBase.__setters:labelText( value )
 	-- print( "ButtonBase.__setters:labelText", value )
+	assert( type(value)=='string' )
 	if value == self._labelText then return end
 	self._labelText = value
 	self._labelText_dirty=true
@@ -401,48 +406,36 @@ end
 
 
 
-
 --======================================================--
 -- Background Style Properties
 
 
-
--- .strokeWidth
+-- .backgroundStrokeWidth
 --
-function ButtonBase.__getters:strokeWidth()
-	return self.curr_style.background.strokeWidth
+function ButtonBase.__getters:backgroundStrokeWidth()
+	return self.curr_style.backgroundStrokeWidth
 end
-function ButtonBase.__setters:strokeWidth( value )
-	-- print( 'ButtonBase.__setters:strokeWidth', value )
-	self.curr_style.inactive.strokeWidth = value
+function ButtonBase.__setters:backgroundStrokeWidth( value )
+	-- print( 'ButtonBase.__setters:backgroundStrokeWidth', value )
+	self.curr_style.backgroundStrokeWidth = value
 end
 
-
--- .strokeWidth
+-- setBackgroundFillColor()
 --
-function ButtonBase.__getters:strokeWidth()
-	return self.curr_style.background.strokeWidth
+function ButtonBase:setBackgroundStrokeColor()
+	return self.curr_style.backgroundStrokeColor
 end
-function ButtonBase.__setters:strokeWidth( value )
-	-- print( 'ButtonBase.__setters:strokeWidth', value )
-	self.curr_style.inactive.strokeWidth = value
-end
-
-function ButtonBase.__getters:strokeColor()
-	return self.curr_style.background.strokeWidth
-end
-function ButtonBase.__setters:strokeColor( value )
-	-- print( 'ButtonBase.__setters:strokeColor', value )
-	self.curr_style.inactive.strokeColor = value
+function ButtonBase:setBackgroundStrokeColor( ... )
+	-- print( 'ButtonBase:setBackgroundStrokeColor' )
+	self.curr_style.backgroundStrokeColor = {...}
 end
 
 -- setBackgroundStrokeColor()
 --
 function ButtonBase:setBackgroundStrokeColor( ... )
 	-- print( 'ButtonBase:setBackgroundStrokeColor' )
-	self.curr_style.background.strokeColor = {...}
+	self.curr_style.backgroundStrokeColor = {...}
 end
-
 
 
 --======================================================--
@@ -452,31 +445,21 @@ end
 --
 function ButtonBase.__setters:labelFont( value )
 	-- print( 'ButtonBase.__setters:labelFont', value )
-	local style = self.curr_style
-	style.inactive.font = value
-	style.active.font = value
-	style.disabled.font = value
+	self.curr_style.font = value
 end
 
 -- .labelFontSize
 --
 function ButtonBase.__setters:labelFontSize( value )
 	-- print( 'ButtonBase.__setters:labelFontSize', value )
-	local style = self.curr_style
-	style.inactive.fontSize = value
-	style.active.fontSize = value
-	style.disabled.fontSize = value
+	self.curr_style.fontSize = value
 end
 
 -- setLabelColor()
 --
-function ButtonBase:setLabelColor( ... )
-	-- print( 'ButtonBase:setLabelColor' )
-	local args={...}
-	local style = self.curr_style
-	style.inactive.textColor = args
-	style.active.textColor = args
-	style.disabled.textColor = args
+function ButtonBase:setLabelTextColor( ... )
+	-- print( 'ButtonBase:setLabelTextColor' )
+	self.curr_style.labelTextColor = {...}
 end
 
 
@@ -500,9 +483,6 @@ function ButtonBase:beforeRemoveStyle()
 end
 
 
-
-
-
 --======================================================--
 -- Button Methods
 
@@ -513,6 +493,8 @@ function ButtonBase.__setters:isEnabled( value )
 	assert( type(value)=='boolean', "newButton: expected boolean for property 'enabled'")
 	--==--
 	if self.curr_style.isHitActive == value then return end
+
+	self.curr_style.isHitActive = value
 
 	if value == true then
 		self:gotoState( ButtonBase.STATE_INACTIVE, { isEnabled=value } )
@@ -651,12 +633,42 @@ function ButtonBase:_createBackground()
 
 	--== Reset properties
 
-	self._wgtBgStyle_dirty=true
+	self._widgetViewState_dirty=true
 end
 
 
+--== Create/Destroy Text Widget
+
+function ButtonBase:_removeText()
+	-- print( "ButtonBase:_removeText" )
+	local o = self._wgtText
+	if not o then return end
+	o.onUpdate=nil
+	o:removeSelf()
+	self._wgtText = nil
+end
+
+function ButtonBase:_createText()
+	-- print( "ButtonBase:_createText" )
+
+	self:_removeText()
+
+	local o = Widgets.newText()
+	o.onUpdate = self._wgtText_f
+	self:insert( o.view )
+	self._wgtText = o
+
+	--== Reset properties
+
+	self._widgetStyle_dirty=true
+	self._isEditActive_dirty=true
+	self._labelText_dirty=true
+end
+
+
+
 function ButtonBase:__commitProperties__()
-	-- print( 'ButtonBase:__commitProperties__' )
+	print( 'ButtonBase:__commitProperties__' )
 
 	--== Update Widget Components ==--
 
@@ -664,6 +676,12 @@ function ButtonBase:__commitProperties__()
 		self:_createBackground()
 		self._wgtBg_dirty = false
 	end
+
+	if self._wgtText_dirty then
+		self:_createText()
+		self._wgtText_dirty=false
+	end
+
 
 	--== Update Widget View ==--
 
@@ -724,15 +742,23 @@ function ButtonBase:__commitProperties__()
 		self._hitAreaMarginY_dirty=true
 	end
 
+	if self._labelText_dirty then
+		text.text = self._labelText
+		self._labelText_dirty=false
+	end
+
 	--== Set Styles
 
 	if self._widgetStyle_dirty or self._widgetViewState_dirty then
 		local state = self._widgetViewState
 		if state==ButtonBase.INACTIVE then
+			text:setActiveStyle( style.inactive.label, {copy=false} )
 			bg:setActiveStyle( style.inactive.background, {copy=false} )
 		elseif state==ButtonBase.ACTIVE then
+			text:setActiveStyle( style.active.label, {copy=false} )
 			bg:setActiveStyle( style.active.background, {copy=false} )
 		else
+			text:setActiveStyle( style.disabled.label, {copy=false} )
 			bg:setActiveStyle( style.disabled.background, {copy=false} )
 		end
 		self._widgetStyle_dirty=false
@@ -800,8 +826,8 @@ function ButtonBase:stylePropertyChangeHandler( event )
 
 	-- print( "Style Changed", etype, property, value )
 
-	if etype==style.STYLE_RESET or etype==style.STYLE_CLEARED then
-		self._debugOn_dirty = true
+	if etype==style.STYLE_RESET then
+		self._debugOn_dirty=true
 		self._width_dirty=true
 		self._height_dirty=true
 		self._anchorX_dirty=true
@@ -1207,7 +1233,6 @@ end
 --===================================================================--
 
 
-
 local function initializeButtons( manager )
 	-- print( "Buttons.initialize" )
 	Widgets = manager
@@ -1217,7 +1242,6 @@ local function initializeButtons( manager )
 
 	ThemeMgr:registerWidget( ButtonBase.THEME_ID, ButtonBase )
 end
-
 
 
 local Buttons = {}
@@ -1234,7 +1258,8 @@ Buttons.RadioButton = RadioButton
 
 function Buttons.create( params )
 	-- print( "Buttons.create", params.type )
-	assert( params.action, "newButton: expected param 'action'" )
+	params = params or {}
+	if params.action==nil then params.action=PushButton.TYPE end
 	--==--
 	local action = params.action
 
@@ -1252,52 +1277,6 @@ function Buttons.create( params )
 
 	end
 end
-
-
-
-
---[[
-getters sttters
-
-
-
---== hitMarginX
-
-
-
-complete prperties
-
--- if self._hitX_dirty or self._anchorX_dirty then
--- 	local width = style.width
--- 	hit.x = width/2+(-width*style.anchorX)
--- 	self._hitX_dirty=false
--- 	self._anchorX_dirty=false
--- end
--- if self._hitY_dirty or self._anchorY_dirty then
--- 	local height = style.height
--- 	hit.y = height/2+(-height*style.anchorY)
--- 	self._hitY_dirty=false
--- 	self._anchorY_dirty=false
--- end
-
-
-
-
-
-
-in event handler
-
-
-elseif property=='hitMarginX' then
-	self._hitMarginX_dirty=true
-elseif property=='hitMarginY' then
-	self._hitMarginY_dirty=true
-elseif property=='isHitActive' then
-	self._isHitActive_dirty=true
-elseif property=='isHitTestable' then
-	self._isHitTestable_dirty=true
-
---]]
 
 
 return Buttons

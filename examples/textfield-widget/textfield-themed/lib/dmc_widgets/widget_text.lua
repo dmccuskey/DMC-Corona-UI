@@ -66,7 +66,7 @@ local widget_find = dmc_widget_func.find
 
 local Objects = require 'dmc_objects'
 local LifecycleMixModule = require 'dmc_lifecycle_mix'
-local ThemeMixModule = require( dmc_widget_func.find( 'widget_theme_mix' ) )
+local StyleMixModule = require( dmc_widget_func.find( 'widget_style_mix' ) )
 local Utils = require( dmc_widget_func.find( 'widget_utils' ) )
 
 -- these are set later
@@ -85,7 +85,7 @@ local newClass = Objects.newClass
 local ComponentBase = Objects.ComponentBase
 
 local LifecycleMix = LifecycleMixModule.LifecycleMix
-local ThemeMix = ThemeMixModule.ThemeMix
+local StyleMix = StyleMixModule.StyleMix
 
 
 
@@ -95,7 +95,7 @@ local ThemeMix = ThemeMixModule.ThemeMix
 
 
 local Text = newClass(
-	{ ThemeMix, ComponentBase, LifecycleMix },
+	{ StyleMix, ComponentBase, LifecycleMix },
 	{ name = "Text" }
 )
 
@@ -136,7 +136,7 @@ function Text:__init__( params )
 
 	self:superCall( LifecycleMix, '__init__', params )
 	self:superCall( ComponentBase, '__init__', params )
-	self:superCall( ThemeMix, '__init__', params )
+	self:superCall( StyleMix, '__init__', params )
 	--==--
 
 	--== Create Properties ==--
@@ -189,7 +189,7 @@ end
 function Text:__undoInit__()
 	-- print( "Text:__undoInit__" )
 	--==--
-	self:superCall( ThemeMix, '__undoInit__' )
+	self:superCall( StyleMix, '__undoInit__' )
 	self:superCall( ComponentBase, '__undoInit__' )
 	self:superCall( LifecycleMix, '__undoInit__' )
 end
@@ -220,6 +220,7 @@ end
 
 function Text:__initComplete__()
 	-- print( "Text:__initComplete__" )
+	self:superCall( StyleMix, '__initComplete__' )
 	self:superCall( ComponentBase, '__initComplete__' )
 	--==--
 	self.style = self._tmp_style
@@ -232,6 +233,7 @@ function Text:__undoInitComplete__()
 	self.style = nil
 	--==--
 	self:superCall( ComponentBase, '__undoInitComplete__' )
+	self:superCall( StyleMix, '__undoInitComplete__' )
 end
 
 --== END: Setup DMC Objects
@@ -355,7 +357,7 @@ end
 
 
 function Text:_removeText()
-	-- print( 'Text:_removeText' )
+	-- print( "Text:_removeText" )
 	local o = self._txt_text
 	if not o then return end
 	o:removeSelf()
@@ -363,7 +365,7 @@ function Text:_removeText()
 end
 
 function Text:_createText()
-	-- print( 'Text:_createText' )
+	-- print( "Text:_createText" )
 	local style = self.curr_style
 	local o -- object
 
@@ -599,7 +601,7 @@ function Text:stylePropertyChangeHandler( event )
 
 	-- print( "Style Changed", etype, property, value )
 
-	if etype == style.STYLE_RESET then
+	if etype==style.STYLE_RESET then
 		self._debugOn_dirty = true
 		self._width_dirty=true
 		self._height_dirty=true
