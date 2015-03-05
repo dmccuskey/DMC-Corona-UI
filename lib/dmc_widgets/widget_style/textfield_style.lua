@@ -343,20 +343,17 @@ function TextFieldStyle.createStyleStructure( src )
 end
 
 
-function TextFieldStyle.addMissingDestProperties( dest, srcs )
-	-- print( "TextFieldStyle.addMissingDestProperties", dest, srcs )
+function TextFieldStyle.addMissingDestProperties( dest, src )
+	-- print( "TextFieldStyle.addMissingDestProperties", dest, src )
 	assert( dest )
-	srcs = srcs or {}
-	local lsrc = { main=srcs.main, parent=srcs.parent, widget=srcs.widget }
-	if lsrc.main==nil then lsrc.main=TextFieldStyle._DEFAULTS end
-	if lsrc.parent==nil then lsrc.parent=dest end
-	lsrc.widget = TextFieldStyle._DEFAULTS
 	--==--
+	local srcs = { TextFieldStyle._DEFAULTS }
+	if src then tinsert( srcs, 1, src ) end
 
-	dest = BaseStyle.addMissingDestProperties( dest, lsrc )
+	dest = BaseStyle.addMissingDestProperties( dest, src )
 
-	for _, key in ipairs( { 'main', 'parent', 'widget' } ) do
-		local src = lsrc[key] or {}
+	for i=1,#srcs do
+		local src = srcs[i]
 
 		if dest.align==nil then dest.align=src.align end
 		if dest.backgroundStyle==nil then dest.backgroundStyle=src.backgroundStyle end
@@ -369,7 +366,7 @@ function TextFieldStyle.addMissingDestProperties( dest, srcs )
 
 	end
 
-	dest = TextFieldStyle._addMissingChildProperties( dest, lsrc )
+	dest = TextFieldStyle._addMissingChildProperties( dest, src )
 
 	return dest
 end
@@ -378,11 +375,10 @@ end
 -- _addMissingChildProperties()
 -- copy properties to sub-styles
 --
-function TextFieldStyle._addMissingChildProperties( dest, srcs )
+function TextFieldStyle._addMissingChildProperties( dest, src )
 	-- print("TextFieldStyle._addMissingChildProperties", dest, srcs )
 	assert( dest )
-	srcs = srcs or {}
-	local lsrc = { parent = dest }
+	src = dest
 	--==--
 	local eStr = "ERROR: Style (BackgroundStyle) missing property '%s'"
 	local StyleClass, child
@@ -390,20 +386,17 @@ function TextFieldStyle._addMissingChildProperties( dest, srcs )
 	child = dest.background
 	-- assert( child, sformat( eStr, 'background' ) )
 	StyleClass = Widgets.Style.Background
-	lsrc.main = srcs.main and srcs.main.background
-	dest.background = StyleClass.addMissingDestProperties( child, lsrc )
+	dest.background = StyleClass.addMissingDestProperties( child, src )
 
 	child = dest.hint
 	-- assert( child, sformat( eStr, 'hint' ) )
 	StyleClass = Widgets.Style.Text
-	lsrc.main = srcs.main and srcs.main.hint
-	dest.hint = StyleClass.addMissingDestProperties( child, lsrc )
+	dest.hint = StyleClass.addMissingDestProperties( child, src )
 
 	child = dest.display
 	-- assert( child, sformat( eStr, 'display' ) )
 	StyleClass = Widgets.Style.Text
-	lsrc.main = srcs.main and srcs.main.display
-	dest.display = StyleClass.addMissingDestProperties( child, lsrc )
+	dest.display = StyleClass.addMissingDestProperties( child, src )
 
 	return dest
 end

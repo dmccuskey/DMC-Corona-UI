@@ -437,20 +437,17 @@ function ButtonStyle.createStyleStructure( src )
 end
 
 
-function ButtonStyle.addMissingDestProperties( dest, srcs )
-	-- print( "ButtonStyle.addMissingDestProperties", dest, srcs )
+function ButtonStyle.addMissingDestProperties( dest, src )
+	-- print( "ButtonStyle.addMissingDestProperties", dest, src )
 	assert( dest )
-	srcs = srcs or {}
-	local lsrc = { main=srcs.main, parent=srcs.parent, widget=srcs.widget }
-	if lsrc.main==nil then lsrc.main=ButtonStyle._DEFAULTS end
-	if lsrc.parent==nil then lsrc.parent=dest end
-	lsrc.widget = ButtonStyle._DEFAULTS
 	--==--
+	local srcs = { ButtonStyle._DEFAULTS }
+	if src then tinsert( srcs, 1, src ) end
 
-	dest = BaseStyle.addMissingDestProperties( dest, lsrc )
+	dest = BaseStyle.addMissingDestProperties( dest, src )
 
-	for _, key in ipairs( { 'main', 'parent', 'widget' } ) do
-		local src = lsrc[key] or {}
+	for i=1,#srcs do
+		local src = srcs[i]
 
 		if dest.align==nil then dest.align=src.align end
 		if dest.hitMarginX==nil then dest.hitMarginX=src.hitMarginX end
@@ -460,11 +457,12 @@ function ButtonStyle.addMissingDestProperties( dest, srcs )
 		if dest.marginY==nil then dest.marginY=src.marginY end
 
 		--== Additional properties to be handed down to children
+
 		if dest.font==nil then dest.font=src.font end
 
 	end
 
-	dest = ButtonStyle._addMissingChildProperties( dest, lsrc )
+	dest = ButtonStyle._addMissingChildProperties( dest, src )
 
 	return dest
 end
@@ -473,11 +471,10 @@ end
 -- _addMissingChildProperties()
 -- copy properties to sub-styles
 --
-function ButtonStyle._addMissingChildProperties( dest, srcs )
-	-- print("ButtonStyle._addMissingChildProperties", dest, srcs )
+function ButtonStyle._addMissingChildProperties( dest, src )
+	-- print("ButtonStyle._addMissingChildProperties", dest, src )
 	assert( dest )
-	srcs = srcs or {}
-	local lsrc = { parent = dest }
+	src = dest
 	--==--
 	local eStr = "ERROR: Style (ButtonStyle) missing property '%s'"
 	local StyleClass, child
@@ -485,20 +482,17 @@ function ButtonStyle._addMissingChildProperties( dest, srcs )
 	child = dest.inactive
 	-- assert( child, sformat( eStr, 'inactive' ) )
 	StyleClass = Widgets.Style.ButtonState
-	lsrc.main = srcs.main and srcs.main.inactive
-	dest.inactive = StyleClass.addMissingDestProperties( child, lsrc )
+	dest.inactive = StyleClass.addMissingDestProperties( child, src )
 
 	child = dest.active
 	-- assert( child, sformat( eStr, 'active' ) )
 	StyleClass = Widgets.Style.ButtonState
-	lsrc.main = srcs.main and srcs.main.active
-	dest.active = StyleClass.addMissingDestProperties( child, lsrc )
+	dest.active = StyleClass.addMissingDestProperties( child, src )
 
 	child = dest.disabled
 	-- assert( child, sformat( eStr, 'disabled' ) )
 	StyleClass = Widgets.Style.ButtonState
-	lsrc.main = srcs.main and srcs.main.disabled
-	dest.disabled = StyleClass.addMissingDestProperties( child, lsrc )
+	dest.disabled = StyleClass.addMissingDestProperties( child, src )
 
 	return dest
 end

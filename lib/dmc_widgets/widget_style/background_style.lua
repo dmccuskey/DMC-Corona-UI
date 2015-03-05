@@ -244,26 +244,23 @@ function BackgroundStyle.createStyleStructure( src )
 end
 
 
-function BackgroundStyle.addMissingDestProperties( dest, srcs )
-	-- print( "BackgroundStyle.addMissingDestProperties", dest, srcs )
+function BackgroundStyle.addMissingDestProperties( dest, src )
+	-- print( "BackgroundStyle.addMissingDestProperties", dest, src )
 	assert( dest )
-	srcs = srcs or {}
-	local lsrc = { main=srcs.main, parent=srcs.parent, widget=srcs.widget }
-	if lsrc.main==nil then lsrc.main=BackgroundStyle._DEFAULTS end
-	if lsrc.parent==nil then lsrc.parent=dest end
-	lsrc.widget = BackgroundStyle._DEFAULTS
 	--==--
+	local srcs = { BackgroundStyle._DEFAULTS }
+	if src then tinsert( srcs, 1, src ) end
 
-	dest = BaseStyle.addMissingDestProperties( dest, lsrc )
+	dest = BaseStyle.addMissingDestProperties( dest, src )
 
-	for _, key in ipairs( { 'main', 'parent', 'widget' } ) do
-		local src = lsrc[key] or {}
+	for i=1,#srcs do
+		local src = srcs[i]
 
 		if dest.type==nil then dest.type=src.type end
 
 	end
 
-	dest = BackgroundStyle._addMissingChildProperties( dest, lsrc )
+	dest = BackgroundStyle._addMissingChildProperties( dest, src )
 
 	return dest
 end
@@ -272,11 +269,10 @@ end
 -- _addMissingChildProperties()
 -- copy properties to sub-styles
 --
-function BackgroundStyle._addMissingChildProperties( dest, srcs )
-	-- print( "BackgroundStyle._addMissingChildProperties", dest, srcs )
+function BackgroundStyle._addMissingChildProperties( dest, src )
+	-- print( "BackgroundStyle._addMissingChildProperties", dest, src )
 	assert( dest )
-	srcs = srcs or {}
-	local lsrc = { parent = dest }
+	src = dest
 	--==--
 	local eStr = "ERROR: Style (BackgroundStyle) missing property '%s'"
 	local StyleClass, child
@@ -284,9 +280,7 @@ function BackgroundStyle._addMissingChildProperties( dest, srcs )
 	child = dest.view
 	-- assert( child, sformat( eStr, 'view' ) )
 	StyleClass = StyleFactory.getClass( dest.type )
-	lsrc.main = srcs.main and srcs.main.view
-	-- TODO create other local defaults for each view type
-	dest.view = StyleClass.addMissingDestProperties( child, lsrc )
+	dest.view = StyleClass.addMissingDestProperties( child, src )
 
 	return dest
 end
@@ -348,7 +342,7 @@ function BackgroundStyle._setDefaults( StyleClass, params )
 	if params.defaults==nil then params.defaults=StyleClass._STYLE_DEFAULTS end
 	--==--
 	local BASE_STYLES = StyleClass._BASE_STYLES
-	local def = params.defaults
+	local defaults = params.defaults
 
 	local classes = StyleFactory.getStyleClasses()
 
@@ -357,8 +351,8 @@ function BackgroundStyle._setDefaults( StyleClass, params )
 	for _, Cls in ipairs( classes ) do
 		local cls_type = Cls.TYPE
 		local struct = BackgroundStyle.createStyleStructure( {type=cls_type} )
-		local def = Utils.extend( def, struct )
-		StyleClass._addMissingChildProperties( def, {parent=def} )
+		local def = Utils.extend( defaults, struct )
+		StyleClass._addMissingChildProperties( def )
 		local style = StyleClass:new{
 			data=def,
 			inherit=BaseStyle.NO_INHERIT

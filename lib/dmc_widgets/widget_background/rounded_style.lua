@@ -212,20 +212,17 @@ end
 
 
 
-function RoundedStyle.addMissingDestProperties( dest, srcs )
-	-- print( "RoundedStyle.addMissingDestProperties", dest, srcs )
+function RoundedStyle.addMissingDestProperties( dest, src )
+	-- print( "RoundedStyle.addMissingDestProperties", dest, src )
 	assert( dest )
-	srcs = srcs or {}
-	local lsrc = { main=srcs.main, parent=srcs.parent, widget=srcs.widget }
-	if lsrc.main==nil then lsrc.main=RoundedStyle._DEFAULTS end
-	if lsrc.parent==nil then lsrc.parent=dest end
-	lsrc.widget = RoundedStyle._DEFAULTS
 	--==--
+	local srcs = { RoundedStyle._DEFAULTS }
+	if src then tinsert( srcs, 1, src ) end
 
-	dest = ViewStyle.addMissingDestProperties( dest, lsrc )
+	dest = ViewStyle.addMissingDestProperties( dest, src )
 
-	for _, key in ipairs( { 'main', 'parent', 'widget' } ) do
-		local src = lsrc[key] or {}
+	for i=1,#srcs do
+		local src = srcs[i]
 
 		if dest.cornerRadius==nil then dest.cornerRadius=src.cornerRadius end
 		if dest.fillColor==nil then dest.fillColor=src.fillColor end
@@ -267,9 +264,9 @@ end
 
 
 function RoundedStyle._verifyStyleProperties( src, exclude )
+	-- print( "RoundedStyle._verifyStyleProperties", src )
 	assert( src, "RoundedStyle:verifyStyleProperties requires source")
 	--==--
-	-- print( "RoundedStyle._verifyStyleProperties" )
 	local emsg = "Style (RoundedStyle) requires property '%s'"
 
 	local is_valid = ViewStyle._verifyStyleProperties( src, exclude )

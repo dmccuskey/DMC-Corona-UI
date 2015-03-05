@@ -293,23 +293,21 @@ end
 -- copies properties from src structure to dest structure
 -- if property isn't already in dest
 -- this is used layer in all properties
--- Note: usually used by OTHER classes
+-- Note: usually used by OTHER classes but ONLY
+-- to create root Style instances
 
 -- 'dest' should be basic structure of Style type
 -- 'srcs' table of sources usually be anything, but usually parent of Style
 --
-function Style.addMissingDestProperties( dest, srcs )
-	-- print( "Style.addMissingDestProperties", dest, srcs )
+function Style.addMissingDestProperties( dest, src )
+	-- print( "Style.addMissingDestProperties", dest, src )
 	assert( dest )
-	srcs = srcs or {}
-	local lsrc = { main=srcs.main, parent=srcs.parent, widget=srcs.widget }
-	if lsrc.main==nil then lsrc.main=Style._DEFAULTS end
-	if lsrc.parent==nil then lsrc.parent=dest end
-	lsrc.widget = Style._DEFAULTS
 	--==--
+	local srcs = { Style._DEFAULTS }
+	if src then tinsert( srcs, 1, src ) end
 
-	for _, key in ipairs( { 'main', 'parent', 'widget' } ) do
-		local src = lsrc[key] or {}
+	for i=1,#srcs do
+		local src = srcs[i]
 
 		if dest.debugOn==nil then dest.debugOn=src.debugOn end
 		if dest.width==nil then dest.width=src.width end
@@ -409,7 +407,7 @@ function Style._setDefaults( StyleClass, params )
 	--==--
 	local def = params.defaults
 
-	def = StyleClass.addMissingDestProperties( def, {main=def} )
+	def = StyleClass.addMissingDestProperties( def )
 
 	local style = StyleClass:new{
 		data=def,

@@ -277,20 +277,17 @@ function ButtonStateStyle.createStyleStructure( src )
 end
 
 
-function ButtonStateStyle.addMissingDestProperties( dest, srcs )
-	-- print( "ButtonStateStyle.addMissingDestProperties", dest, srcs )
+function ButtonStateStyle.addMissingDestProperties( dest, src )
+	-- print( "ButtonStateStyle.addMissingDestProperties", dest, src )
 	assert( dest )
-	srcs = srcs or {}
-	local lsrc = { main=srcs.main, parent=srcs.parent, widget=srcs.widget }
-	if lsrc.main==nil then lsrc.main=ButtonStateStyle._DEFAULTS end
-	if lsrc.parent==nil then lsrc.parent=dest end
-	lsrc.widget = ButtonStateStyle._DEFAULTS
 	--==--
+	local srcs = { ButtonStateStyle._DEFAULTS }
+	if src then tinsert( srcs, 1, src ) end
 
-	dest = BaseStyle.addMissingDestProperties( dest, lsrc )
+	dest = BaseStyle.addMissingDestProperties( dest, src )
 
-	for _, key in ipairs( { 'main', 'parent', 'widget' } ) do
-		local src = lsrc[key] or {}
+	for i=1,#srcs do
+		local src = srcs[i]
 
 		if dest.align==nil then dest.align=src.align end
 		if dest.isHitActive==nil then dest.isHitActive=src.isHitActive end
@@ -306,7 +303,7 @@ function ButtonStateStyle.addMissingDestProperties( dest, srcs )
 
 	end
 
-	dest = ButtonStateStyle._addMissingChildProperties( dest, lsrc )
+	dest = ButtonStateStyle._addMissingChildProperties( dest, src )
 
 	return dest
 end
@@ -315,11 +312,10 @@ end
 -- _addMissingChildProperties()
 -- copy properties to sub-styles
 --
-function ButtonStateStyle._addMissingChildProperties( dest, srcs )
-	-- print( "ButtonStateStyle._addMissingChildProperties", dest, srcs )
+function ButtonStateStyle._addMissingChildProperties( dest, src )
+	-- print( "ButtonStateStyle._addMissingChildProperties", dest, src )
 	assert( dest )
-	srcs = srcs or {}
-	local lsrc = { parent = dest }
+	src = dest
 	--==--
 	local eStr = "ERROR: Style missing property '%s'"
 	local StyleClass, child
@@ -327,14 +323,12 @@ function ButtonStateStyle._addMissingChildProperties( dest, srcs )
 	child = dest.label
 	assert( child, sformat( eStr, 'label' ) )
 	StyleClass = Widgets.Style.Text
-	lsrc.main = srcs.main and srcs.main.label
-	dest.label = StyleClass.addMissingDestProperties( child, lsrc )
+	dest.label = StyleClass.addMissingDestProperties( child, src )
 
 	child = dest.background
 	assert( child, sformat( eStr, 'background' ) )
 	StyleClass = Widgets.Style.Background
-	lsrc.main = srcs.main and srcs.main.background
-	dest.background = StyleClass.addMissingDestProperties( child, lsrc )
+	dest.background = StyleClass.addMissingDestProperties( child, src )
 
 	return dest
 end
