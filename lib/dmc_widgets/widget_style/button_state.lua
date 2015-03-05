@@ -603,6 +603,7 @@ end
 
 function ButtonStateStyle:_doChildrenInherit( value )
 	-- print( "ButtonStateStyle", value, self )
+	if not self._isInitialized then return end
 	self._background.inherit = value and value.background or value
 	self._label.inherit = value and value.label or value
 end

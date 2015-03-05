@@ -661,11 +661,11 @@ function Style.__setters:inherit( value )
 
 	--== Process children
 
+	if not self._isInitialized then return end
+
 	self:_doChildrenInherit( value, {curr=cInherit, next=nInherit} )
 
 	--== Clear properties
-
-	if not self._isInitialized then return end
 
 	-- Choose Reset method
 	if nInherit~=Style.NO_INHERIT then
