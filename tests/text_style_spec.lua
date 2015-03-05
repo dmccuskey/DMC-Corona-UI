@@ -463,7 +463,7 @@ function test_styleClassBasics()
 
 	style = Widgets.newTextStyle()
 
-	TestUtils.verifyTextStyle( style )
+	verifyTextStyle( style )
 	styleInheritsFrom( style, BaseStyle )
 
 	styleInheritsPropertyValue( style, 'debugOn', defaultStyles.debugOn )
