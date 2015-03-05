@@ -374,9 +374,10 @@ end
 
 function Style._verifyStyleProperties( src, exclude )
 	-- print( "Style:_verifyStyleProperties", src, self )
+	assert( src, "Style:verifyStyleProperties requires source")
 	exclude = exclude or {}
 	--==--
-	local emsg = "Style requires property '%s'"
+	local emsg = "Style (Base) requires property '%s'"
 	local is_valid = true
 
 	if type(src.debugOn)~='boolean' then
@@ -402,7 +403,7 @@ end
 -- _setDefaults()
 -- generic method to set defaults
 function Style._setDefaults( StyleClass, params )
-	-- print( "Style._setDefaults" )
+	-- print( "Style._setDefaults", StyleClass )
 	params = params or {}
 	if params.defaults==nil then params.defaults=StyleClass._DEFAULTS end
 	--==--

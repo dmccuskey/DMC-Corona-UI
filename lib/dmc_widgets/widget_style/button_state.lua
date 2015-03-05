@@ -376,9 +376,9 @@ end
 
 function ButtonStateStyle._verifyStyleProperties( src, exclude )
 	-- print( "ButtonStateStyle._verifyStyleProperties", src, exclude )
-	assert( src )
+	assert( src, "ButtonStateStyle:verifyStyleProperties requires source" )
 	--==--
-	local emsg = "Style: requires property '%s'"
+	local emsg = "Style (ButtonStateStyle) requires property '%s'"
 
 	local is_valid = BaseStyle._verifyStyleProperties( src, exclude )
 

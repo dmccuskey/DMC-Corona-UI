@@ -451,16 +451,19 @@ function TextFieldStyle.copyExistingSrcProperties( dest, src, params)
 end
 
 
-function TextFieldStyle._verifyProperties( src, exclude )
-	-- print("TextFieldStyle._verifyProperties", src, exclude )
-	local emsg = "Style: requires property '%s'"
+function TextFieldStyle._verifyStyleProperties( src, exclude )
+	-- print("TextFieldStyle._verifyStyleProperties", src, exclude )
+	assert( src, "TextFieldStyle:verifyStyleProperties requires source" )
+	--==--
+	local emsg = "Style (TextFieldStyle) requires property '%s'"
 
-	local is_valid = BaseStyle._verifyProperties( src, exclude )
+	local is_valid = BaseStyle._verifyStyleProperties( src, exclude )
 
 	if not src.align then
 		print(sformat(emsg,'align')) ; is_valid=false
 	end
-	if not src.backgroundStyle then print(sformat(emsg,'backgroundStyle')) ; is_valid=false
+	if not src.backgroundStyle then
+		print(sformat(emsg,'backgroundStyle')) ; is_valid=false
 	end
 	if not src.inputType then
 		print(sformat(emsg,'inputType')) ; is_valid=false

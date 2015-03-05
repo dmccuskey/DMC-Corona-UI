@@ -312,7 +312,7 @@ end
 --
 function TextStyle._verifyStyleProperties( src )
 	-- print( "TextStyle._verifyStyleProperties", src )
-	local emsg = "Style requires property '%s'"
+	local emsg = "Style (Text) requires property '%s'"
 
 	-- exclude width/height because nil is valid value
 	local is_valid = BaseStyle._verifyStyleProperties( src, {width=true, height=true} )

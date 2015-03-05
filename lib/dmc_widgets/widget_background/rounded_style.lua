@@ -267,8 +267,10 @@ end
 
 
 function RoundedStyle._verifyStyleProperties( src, exclude )
+	assert( src, "RoundedStyle:verifyStyleProperties requires source")
+	--==--
 	-- print( "RoundedStyle._verifyStyleProperties" )
-	local emsg = "Style: requires property '%s'"
+	local emsg = "Style (RoundedStyle) requires property '%s'"
 
 	local is_valid = ViewStyle._verifyStyleProperties( src, exclude )
 

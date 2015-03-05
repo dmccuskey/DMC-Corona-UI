@@ -326,7 +326,6 @@ function BackgroundStyle._verifyStyleProperties( src, exclude )
 
 	child = src.view
 	if not src.type or not child then
-		Utils.print( src )
 		print( "BackgroundStyle child test skipped for 'view'" )
 		is_valid=false
 	else

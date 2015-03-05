@@ -256,11 +256,13 @@ function RectangleStyle.copyExistingSrcProperties( dest, src, params )
 end
 
 
-function RectangleStyle._verifyStyleProperties( src )
+function RectangleStyle._verifyStyleProperties( src, exclude )
 	-- print( "RectangleStyle._verifyStyleProperties", src )
-	local emsg = "Style requires property '%s'"
+	assert( src, "RectangleStyle:verifyStyleProperties requires source")
+	--==--
+	local emsg = "Style (RectangleStyle) requires property '%s'"
 
-	local is_valid = ViewStyle._verifyStyleProperties( src )
+	local is_valid = ViewStyle._verifyStyleProperties( src, exclude )
 
 	if not src.fillColor then
 		print(sformat(emsg,'fillColor')) ; is_valid=false
