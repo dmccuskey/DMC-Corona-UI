@@ -231,10 +231,13 @@ function Theme.setActiveStyle( self, data, params )
 	if data==nil then
 		-- use our default style
 		style=self.__default_style
-	elseif not params.copy then
-		-- use style handed to us
+	elseif type(data.isa)=='function' then
 		assert( data.isa and data:isa(StyleClass), sformat( "Style not Class '%s'", tostring(StyleClass) ))
-		style = data
+		if not params.copy then
+			style = data
+		else
+			style = data:copyStyle()
+		end
 	else
 		-- Utils.print( data )
 		-- data could be a Style instance or Lua data
