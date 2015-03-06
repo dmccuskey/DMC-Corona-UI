@@ -668,7 +668,7 @@ end
 
 
 function ButtonBase:__commitProperties__()
-	print( 'ButtonBase:__commitProperties__' )
+	-- print( 'ButtonBase:__commitProperties__' )
 
 	--== Update Widget Components ==--
 

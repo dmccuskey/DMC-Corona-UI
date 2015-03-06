@@ -277,7 +277,7 @@ end
 
 
 --======================================================--
---== View Style Properties
+-- View Style Properties
 
 --== cornerRadius
 
@@ -315,7 +315,7 @@ end
 
 
 --======================================================--
---== Theme Mix Methods
+-- Theme Mix Methods
 
 function Background:afterAddStyle()
 	-- print( "Background:afterAddStyle" )

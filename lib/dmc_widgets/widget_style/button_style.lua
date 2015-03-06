@@ -788,7 +788,7 @@ function ButtonStyle:_prepareData( data, dataSrc, params )
 	-- print("ButtonStyle:_prepareData", data, self )
 	params = params or {}
 	--==--
-	local inherit = params.inherit
+	-- local inherit = params.inherit
 	local StyleClass
 	local src, dest, tmp
 

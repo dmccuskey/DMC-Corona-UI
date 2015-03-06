@@ -279,7 +279,7 @@ end
 
 function ButtonStateStyle.addMissingDestProperties( dest, src )
 	-- print( "ButtonStateStyle.addMissingDestProperties", dest, src )
-	assert( dest )
+	assert( dest, "ButtonStateStyle.addMissingDestProperties missing arg 'dest'" )
 	--==--
 	local srcs = { ButtonStateStyle._DEFAULTS }
 	if src then tinsert( srcs, 1, src ) end

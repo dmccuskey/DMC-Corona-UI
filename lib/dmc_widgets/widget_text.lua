@@ -123,7 +123,7 @@ Text.EVENT = 'text-widget-event'
 
 
 --======================================================--
---== Start: Setup DMC Objects
+-- Start: Setup DMC Objects
 
 --== Init
 
@@ -236,7 +236,7 @@ function Text:__undoInitComplete__()
 	self:superCall( StyleMix, '__undoInitComplete__' )
 end
 
---== END: Setup DMC Objects
+-- END: Setup DMC Objects
 --======================================================--
 
 
