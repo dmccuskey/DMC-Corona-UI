@@ -31,6 +31,11 @@ local W, H = display.contentWidth, display.contentHeight
 local H_CENTER, V_CENTER = W*0.5, H*0.5
 
 
+
+--====================================================================--
+--== Support Functions
+
+
 local verifyTextStyle = TestUtils.verifyTextStyle
 
 local hasProperty = TestUtils.hasProperty
@@ -57,11 +62,6 @@ local styleInheritsPropertyValueFrom = TestUtils.styleInheritsPropertyValueFrom
 
 
 local marker = TestUtils.outputMarker
-
-
-
---====================================================================--
---== Support Functions
 
 
 
