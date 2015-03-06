@@ -851,7 +851,7 @@ function TextFieldStyle:_prepareData( data, dataSrc, params )
 	-- print("TextFieldStyle:_prepareData", data, self )
 	params = params or {}
 	--==--
-	local inherit = params.inherit
+	-- local inherit = params.inherit
 	local StyleClass
 	local src, dest, tmp
 
@@ -879,22 +879,16 @@ function TextFieldStyle:_prepareData( data, dataSrc, params )
 		src.display = StyleClass.createStyleStructure( tmp )
 	end
 
-	--== process depending on inheritance
+	--== process children
 
-	if not inherit then
-		src = TextFieldStyle.addMissingDestProperties( src, {main=dataSrc} )
+	dest = src.background
+	src.background = StyleClass.copyExistingSrcProperties( dest, src )
 
-	else
-		dest = src.background
-		src.background = StyleClass.copyExistingSrcProperties( dest, src )
+	dest = src.hint
+	src.hint = StyleClass.copyExistingSrcProperties( dest, src )
 
-		dest = src.hint
-		src.hint = StyleClass.copyExistingSrcProperties( dest, src )
-
-		dest = src.display
-		src.display = StyleClass.copyExistingSrcProperties( dest, src )
-
-	end
+	dest = src.display
+	src.display = StyleClass.copyExistingSrcProperties( dest, src )
 
 	return data
 end
