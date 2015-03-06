@@ -20,6 +20,43 @@ require 'tests.lunatest'
 
 
 
+--===================================================================--
+--== Setup, Constants
+
+
+local W, H = display.contentWidth, display.contentHeight
+local H_CENTER, V_CENTER = W*0.5, H*0.5
+
+
+
+--===================================================================--
+--== Support Functions
+
+
+-- Setup Visual Screen Items
+--
+local function setupBackground()
+	local width, height = 100, 50
+	local o
+
+	o = display.newRect(0,0,W,H)
+	o:setFillColor(0.5,0.5,0.5)
+	o.x, o.y = H_CENTER, V_CENTER
+
+	o = display.newRect(0,0,width+4,height+4)
+	o:setStrokeColor(0,0,0)
+	o.strokeWidth=2
+	o.x, o.y = H_CENTER, V_CENTER
+
+	o = display.newRect( 0,0,10,10)
+	o:setFillColor(1,0,0)
+	o.x, o.y = H_CENTER, V_CENTER
+end
+
+
+setupBackground()
+
+
 --====================================================================--
 --== Setup test suites and run
 
@@ -36,9 +73,15 @@ lunatest.suite( 'tests.background_style_spec' )
 lunatest.suite( 'tests.button_style_spec' )
 lunatest.suite( 'tests.textfield_style_spec' )
 
+-- managers
+
+lunatest.suite( 'tests.style_mgr_spec' )
+
 
 lunatest.run({
 	-- verbose=true,
-	-- suite='background_style_spec',
-	-- test='test_backgroundStyleClassBasics'
+	-- suite='style_mgr_spec',
+	 -- test='test_addStyleToWidget'
+	-- test='test_clearProperties'
 })
+

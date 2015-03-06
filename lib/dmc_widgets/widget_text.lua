@@ -71,7 +71,7 @@ local Utils = require( dmc_widget_func.find( 'widget_utils' ) )
 
 -- these are set later
 local Widgets = nil
-local ThemeMgr = nil
+local StyleMgr = nil
 local FontMgr = nil
 
 
@@ -105,10 +105,10 @@ Text.LEFT = 'left'
 Text.CENTER = 'center'
 Text.RIGHT = 'right'
 
---== Theme Constants
+--== Style/Theme Constants
 
-Text.THEME_ID = 'text'
 Text.STYLE_CLASS = nil -- added later
+Text.STYLE_TYPE = nil -- added later
 
 -- TODO: hook up later
 -- Text.DEFAULT = 'default'
@@ -249,10 +249,12 @@ function Text.initialize( manager )
 	-- print( "Text.initialize" )
 	Widgets = manager
 	FontMgr = Widgets.FontMgr
-	ThemeMgr = Widgets.ThemeMgr
-	Text.STYLE_CLASS = Widgets.Style.Text
+	StyleMgr = Widgets.StyleMgr
 
-	ThemeMgr:registerWidget( Text.THEME_ID, Text )
+	Text.STYLE_CLASS = Widgets.Style.Text
+	Text.STYLE_TYPE = Text.STYLE_CLASS.TYPE
+
+	StyleMgr:registerWidget( Text )
 end
 
 

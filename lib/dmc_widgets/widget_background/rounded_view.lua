@@ -70,7 +70,7 @@ local StyleMixModule = require( dmc_widget_func.find( 'widget_style_mix' ) )
 
 --== To be set in initialize()
 local StyleFactory = nil
-local ThemeMgr = nil
+local StyleMgr = nil
 local ViewFactory = nil
 local Widgets = nil
 
@@ -108,8 +108,8 @@ RoundedView.RIGHT = 'right'
 
 --== Theme Constants
 
-RoundedView.THEME_ID = 'rounded-background-view'
 RoundedView.STYLE_CLASS = nil -- added later
+RoundedView.STYLE_TYPE = nil -- added later
 
 -- TODO: hook up later
 -- RoundedView.DEFAULT = 'default'
@@ -224,13 +224,14 @@ function RoundedView.initialize( manager )
 	-- print( "RoundedView.initialize" )
 	Widgets = manager
 
-	ThemeMgr = Widgets.ThemeMgr
+	StyleMgr = Widgets.StyleMgr
 	ViewFactory = Widgets.BackgroundFactory
 	StyleFactory = Widgets.Style.BackgroundFactory
 
 	RoundedView.STYLE_CLASS = StyleFactory.Rounded
+	RoundedView.STYLE_TYPE = RoundedView.STYLE_CLASS.TYPE
 
-	ThemeMgr:registerWidget( RoundedView.THEME_ID, RoundedView )
+	StyleMgr:registerWidget( RoundedView )
 end
 
 

@@ -124,22 +124,27 @@ local sformat = string.format
 --== Support Functions
 
 
-local function initialize( manager )
+local function initialize( manager, params )
 	-- print( "Widgets.initialize" )
 
-	--== Load Managers
-
-	local FontMgr = require( PATH .. '.' .. 'font_manager' )
-	local ThemeMgr = require( PATH .. '.' .. 'theme_manager' )
-
-	Widget.FontMgr = FontMgr
-	Widget.StyleMgr = StyleMgr
-	Widget.ThemeMgr = ThemeMgr
-
-	--== Load Base Style
+	--== Load Components
 
 	local BaseStyle = require( PATH .. '.' .. 'widget_style.base_style' )
+	local StyleMixModule = require( PATH .. '.' .. 'widget_style_mix' )
+	local FontMgr = require( PATH .. '.' .. 'font_manager' )
+	local StyleMgr = require( PATH .. '.' .. 'style_manager' )
+
 	Widget.Style.Base=BaseStyle
+	Widget.FontMgr=FontMgr
+	Widget.StyleMgr=StyleMgr
+	Widget.StyleMix=StyleMixModule.StyleMix
+
+	--== Initialize
+
+	BaseStyle.initialize( Widget, params )
+	StyleMgr.initialize( Widget, params )
+	-- FontMgr.initialize( Widget, params )
+	StyleMixModule.initialize( Widget, params )
 
 	--== Set UI/UX
 
@@ -222,25 +227,48 @@ Widget.PopoverMixModule.__setWidgetManager( Widget )
 --== Theme Methods
 
 
-function Widget.activateTheme( name )
+function Widget.activateTheme( theme_id )
 end
 
-function Widget.getTheme( name )
+function Widget.availableThemes()
 end
 
-function Widget.addTheme( theme )
+function Widget.availableThemeNames()
 end
 
-function Widget.deleteTheme( name )
+function Widget.availableThemeIds()
+end
+
+-- struct or name/dir
+function Widget.createTheme( theme, dir )
+end
+
+function Widget.getTheme( theme_id )
+end
+
+function Widget.getActiveTheme()
+end
+
+function Widget.deleteTheme( theme_id )
+end
+
+function Widget.addThemeStyle( theme_id, style, name )
+	return Widget.StyleMgr:addThemeStyle( theme_id, style, name )
+end
+
+function Widget.getThemeStyle( theme_id, style, name )
+end
+
+function Widget.removeThemeStyle( theme_id, style, name )
 end
 
 function Widget.loadTheme( file )
 end
 
-function Widget.unloadTheme( name )
+function Widget.unloadTheme( theme_id )
 end
 
-function Widget.reloadTheme( name )
+function Widget.reloadTheme( theme_id )
 end
 
 
@@ -249,14 +277,8 @@ end
 --== Style Methods
 
 
-function Widget.addStyle( style, theme )
-	local s = Widget.StyleMgr:addStyle( style )
-	if s.name and theme then
-		Widget.ThemeMgr:addStyle( s, theme )
-	end
-end
-
-function Widget.deleteStyle( name )
+function Widget.getStyle( style, name )
+	return Widget.StyleMgr:getStyle( style, name )
 end
 
 function Widget.loadStyles( file )

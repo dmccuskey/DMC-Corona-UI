@@ -68,7 +68,7 @@ local Objects = require 'dmc_objects'
 
 --== To be set in initialize()
 local Widgets = nil
-local ThemeMgr = nil
+local StyleMgr = nil
 local NavBar = nil
 local Button = nil
 
@@ -95,10 +95,10 @@ local LOCAL_DEBUG = false
 
 local NavItem = newClass( ObjectBase, {name="Nav Item"}  )
 
---== Theme Constants
+--== Style/Theme Constants
 
-NavItem.THEME_ID = 'navitem'
 NavItem.STYLE_CLASS = nil -- added later
+NavItem.STYLE_TYPE = nil -- added later
 
 
 --======================================================--
@@ -283,11 +283,14 @@ end
 function NavItem.initialize( manager )
 	-- print( "NavItem.initialize" )
 	Widgets = manager
-	ThemeMgr = Widgets.ThemeMgr
+	StyleMgr = Widgets.StyleMgr
 	Button = Widgets.Button
 	NavBar = Widgets.NavBar
 
-	ThemeMgr:registerWidget( NavItem.THEME_ID, NavItem )
+	NavItem.STYLE_CLASS = Widgets.Style.NavBar
+	NavItem.STYLE_TYPE = NavItem.STYLE_CLASS.TYPE
+
+	StyleMgr:registerWidget( NavItem )
 end
 
 

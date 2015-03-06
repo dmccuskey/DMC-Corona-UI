@@ -71,7 +71,7 @@ local Utils = require 'dmc_utils'
 
 --== To be set in initialize()
 local Widgets = nil
-local ThemeMgr = nil
+local StyleMgr = nil
 
 
 
@@ -141,10 +141,10 @@ TextField.STYLE_INVALID = 'invalid'
 TextField.TOP = 'top'
 TextField.BOTTOM = 'bottom'
 
---== Theme Constants
+--== Style/Theme Constants
 
-TextField.THEME_ID = 'textfield'
 TextField.STYLE_CLASS = nil -- added later
+TextField.STYLE_TYPE = nil -- added later
 
 -- TODO: hook up later
 -- Text.DEFAULT = 'default'
@@ -358,11 +358,13 @@ end
 function TextField.initialize( manager )
 	-- print( "TextField.initialize" )
 	Widgets = manager
-	ThemeMgr = Widgets.ThemeMgr
-	ThemeMgr = Widgets.ThemeMgr
-	TextField.STYLE_CLASS = Widgets.Style.TextField
+	StyleMgr = Widgets.StyleMgr
+	StyleMgr = Widgets.StyleMgr
 
-	ThemeMgr:registerWidget( TextField.THEME_ID, TextField )
+	TextField.STYLE_CLASS = Widgets.Style.TextField
+	TextField.STYLE_TYPE = TextField.STYLE_CLASS.TYPE
+
+	StyleMgr:registerWidget( TextField )
 end
 
 

@@ -73,6 +73,11 @@ local Utils = require 'dmc_utils'
 --== Setup, Constants
 
 
+--== To be set in initialize()
+local Widgets = nil
+local StyleMgr = nil
+
+
 local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
 
@@ -271,7 +276,9 @@ end
 
 
 function Style.initialize( manager, params )
-	error( "OVERRIDE Style.addMissingDestProperties" )
+	-- print( "Style.initialize" )
+	Widget = manager
+	StyleMgr = Widget.StyleMgr
 end
 
 
@@ -586,15 +593,7 @@ end
 --======================================================--
 -- Misc
 
---== inherit
-
-function Style.__getters:inherit()
-	return self._inherit
-end
-
-function Style:_doChildrenInherit( value )
-end
-
+--== Inherit Support
 
 function Style:_unlinkInherit( o, f )
 	if o and f then
@@ -634,12 +633,25 @@ function Style:_doClearPropertiesInherit( reset, params )
 	self:clearProperties( reset, params )
 end
 
+
+--== inherit
+
+function Style.__getters:inherit()
+	return self._inherit
+end
+
 -- value should be a instance of Style Class or nil
 --
 function Style.__setters:inherit( value )
 	-- print( "Style.__setters:inherit from ", value, self, self._isInitialized )
-	assert( value==nil or value==Style.NO_INHERIT or value:isa( Style ) )
+	assert( value==nil or type(value)=='string' or value==Style.NO_INHERIT or value:isa( Style ) )
 	--==--
+	if type(value)=='string' then
+		-- get named style from Style Mgr
+		-- will be Style instance or 'nil'
+		value = StyleMgr:getStyle( self, value )
+	end
+
 	local StyleClass = self.class
 	local StyleBase = StyleClass:getBaseStyle()
 	-- current / new inherit
@@ -744,18 +756,22 @@ override these getters/setters/methods if necesary
 
 function Style.__getters:name()
 	-- print( "Style.__getters:name", self._inherit )
-	local value = self._name
-	if value==nil and self._inherit then
-		value = self._inherit.name
-	end
-	return value
+	return self._name
 end
 function Style.__setters:name( value )
 	-- print( "Style.__setters:name", value )
-	assert( type(value)=='string' or (value==nil and (self._inherit or self._isClearing))  )
-	--==--
+	local cName, nName = self._name, value
 	if value == self._name then return end
+
 	self._name = value
+
+	if cName then
+		StyleMgr:removeStyle( self.TYPE, cName )
+	end
+	if nName then
+		StyleMgr:addStyle( self )
+	end
+
 end
 
 --== debugOn

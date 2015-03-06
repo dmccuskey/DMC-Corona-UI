@@ -33,7 +33,7 @@ SOFTWARE.
 
 
 --====================================================================--
---== DMC Corona Widgets : Widget Theme Mixin
+--== DMC Corona Widgets : Widget StyleMix Mixin
 --====================================================================--
 
 
@@ -49,7 +49,6 @@ local VERSION = "0.1.0"
 
 local Utils = require 'dmc_utils'
 
--- local Widgets = require 'dmc_utils'
 
 
 
@@ -57,8 +56,13 @@ local Utils = require 'dmc_utils'
 --== Setup, Constants
 
 
-local LOCAL_DEBUG = false
 local sformat = string.format
+
+--== To be set in initialize()
+local Widget = nil
+local StyleMgr = nil
+
+local LOCAL_DEBUG = false
 
 
 
@@ -66,40 +70,47 @@ local sformat = string.format
 --== Support Functions
 
 
-function _patch( obj )
+local function _patch( obj )
 
 	obj = obj or {}
 
 	-- add properties
-	Theme.__init__( obj )
+	StyleMix.__init__( obj )
 
 	-- add methods
-	obj.resetStyle = Theme.resetStyle
-	obj.setTheme = Theme.setTheme
-	obj.setDebug = Theme.setDebug
+	obj.resetStyle = StyleMix.resetStyle
+	obj.setStyleMix = StyleMix.setStyleMix
+	obj.setDebug = StyleMix.setDebug
 
 	return obj
 end
 
 
+local function initialize( manager )
+	-- print( "initialize Style Manager" )
+	Widget = manager
+	StyleMgr = Widget.StyleMgr
+end
+
+
 
 --====================================================================--
---== Theme Mixin
+--== StyleMix Mixin
 --====================================================================--
 
 
-local Theme = {}
+local StyleMix = {}
 
-Theme.NAME = "Theme Mixin"
+StyleMix.NAME = "StyleMix Mixin"
 
-Theme.__getters = {}
-Theme.__setters = {}
+StyleMix.__getters = {}
+StyleMix.__setters = {}
 
 --======================================================--
 -- START: Mixin Setup for DMC Objects
 
-function Theme.__init__( self, params )
-	-- print( 'Theme.__init__x', params )
+function StyleMix.__init__( self, params )
+	-- print( 'StyleMix.__init__x', params )
 	params = params or {}
 	--==--
 
@@ -119,19 +130,19 @@ function Theme.__init__( self, params )
 end
 
 
-function Theme.__undoInit__( self )
-	-- print( "Theme.__undoInit__" )
+function StyleMix.__undoInit__( self )
+	-- print( "StyleMix.__undoInit__" )
 	self:resetStyle()
 end
 
-function Theme.__initComplete__( self )
-	-- print( 'Theme.__initComplete__' )
+function StyleMix.__initComplete__( self )
+	-- print( 'StyleMix.__initComplete__' )
 	self:_createDefaultStyle()
 	self:setActiveStyle( nil )
 end
 
-function Theme.__undoInitComplete__( self )
-	-- print( 'Theme.__undoInitComplete__' )
+function StyleMix.__undoInitComplete__( self )
+	-- print( 'StyleMix.__undoInitComplete__' )
 	self:_destroyDefaultStyle()
 end
 
@@ -144,12 +155,12 @@ end
 --== Public Methods
 
 
-function Theme.resetStyle( self, params )
+function StyleMix.resetStyle( self, params )
 	params = params or {}
 	if params.debug_on==nil then params.debug_on=false end
 	--==--
 	if self.__debug_on then
-		print( outStr( "ResetTheme: resetting theme" ) )
+		print( outStr( "ResetStyleMix: resetting theme" ) )
 	end
 	self.__collection_name = nil -- 'navbar-home'
 	self.__curr_style_collection = nil -- <style collection obj>
@@ -161,53 +172,58 @@ function Theme.resetStyle( self, params )
 end
 
 
-function Theme.stylePropertyChangeHandler( self, event )
-	-- print( "Theme.stylePropertyChangeHandler", event )
+function StyleMix.stylePropertyChangeHandler( self, event )
+	-- print( "StyleMix.stylePropertyChangeHandler", event )
 	error("class must have event method: stylePropertyChangeHandler")
 end
 
 -- TODO
-function Theme.resetStyles( self )
+function StyleMix.resetStyles( self )
 	self.__styles = {}
 end
 
 -- TODO
-function Theme.addTheme( self )
+function StyleMix.addStyleMix( self )
 end
 
 -- TODO
-function Theme.removeTheme( self )
+function StyleMix.removeStyleMix( self )
 end
 
 
 
-function Theme.setDebug( self, value )
+function StyleMix.setDebug( self, value )
 	self.__debug_on = value
 end
 
 
 --== Style Getters/Setters ==--
 
-function Theme.__getters:style()
-	-- print( "Theme.__getters:style" )
+function StyleMix.__getters:style()
+	-- print( "StyleMix.__getters:style" )
 	return self.curr_style
 end
-function Theme.__setters:style( value )
-	-- print( "Theme.__setters:style", value )
+function StyleMix.__setters:style( value )
+	-- print( "StyleMix.__setters:style", value, self )
+	if type(value)=='string' then
+		-- get named style from Style Mgr
+		-- will be Style instance or 'nil'
+		value = StyleMgr:getStyle( self.STYLE_TYPE, value )
+	end
 	self:setActiveStyle( value )
 end
 
 
-function Theme.afterAddStyle( self )
-	-- print( "OVERRIDE Theme.afterAddStyle", self )
+function StyleMix.afterAddStyle( self )
+	-- print( "OVERRIDE StyleMix.afterAddStyle", self )
 end
-function Theme.beforeRemoveStyle( self )
-	-- print( "OVERRIDE Theme.beforeRemoveStyle", self )
+function StyleMix.beforeRemoveStyle( self )
+	-- print( "OVERRIDE StyleMix.beforeRemoveStyle", self )
 end
 
 
-function Theme.setActiveStyle( self, data, params )
-	-- print( "\n\n\n>>>>>>>Theme.setActiveStyle", self, data, self.STYLE_CLASS )
+function StyleMix.setActiveStyle( self, data, params )
+	-- print( "\n\n\n>>>>>>>StyleMix.setActiveStyle", self, data, self.STYLE_CLASS )
 	params = params or {}
 	if params.widget==nil then params.widget=self end
 	if params.copy==nil then params.copy=true end
@@ -255,7 +271,7 @@ function Theme.setActiveStyle( self, data, params )
 	end
 end
 
-function Theme:clearStyle()
+function StyleMix:clearStyle()
 	return self.curr_style:clearProperties()
 end
 
@@ -268,113 +284,113 @@ override these getters/setters/methods if necesary
 
 --== debugOn
 
-function Theme.__getters:debugOn()
+function StyleMix.__getters:debugOn()
 	return self.curr_style.debugOn
 end
-function Theme.__setters:debugOn( value )
-	-- print( 'Theme.__setters:debugOn', value )
+function StyleMix.__setters:debugOn( value )
+	-- print( 'StyleMix.__setters:debugOn', value )
 	self.curr_style.debugOn = value
 end
 
 
 --== width
 
-function Theme.__getters:width()
+function StyleMix.__getters:width()
 	return self.curr_style.width
 end
-function Theme.__setters:width( value )
-	-- print( 'Theme.__setters:width', value )
+function StyleMix.__setters:width( value )
+	-- print( 'StyleMix.__setters:width', value )
 	self.curr_style.width = value
 end
 
 --== height
 
-function Theme.__getters:height()
-	-- print( 'Theme.__getters:height' )
+function StyleMix.__getters:height()
+	-- print( 'StyleMix.__getters:height' )
 	return self.curr_style.height
 end
-function Theme.__setters:height( value )
-	-- print( 'Theme.__setters:height', value )
+function StyleMix.__setters:height( value )
+	-- print( 'StyleMix.__setters:height', value )
 	self.curr_style.height = value
 end
 
 --== align
 
-function Theme.__getters:align()
+function StyleMix.__getters:align()
 	return self.curr_style.align
 end
-function Theme.__setters:align( value )
-	-- print( 'Theme.__setters:align', value )
+function StyleMix.__setters:align( value )
+	-- print( 'StyleMix.__setters:align', value )
 	self.curr_style.align = value
 end
 
 --== anchorX
 
-function Theme.__getters:anchorX()
+function StyleMix.__getters:anchorX()
 	return self.curr_style.anchorX
 end
-function Theme.__setters:anchorX( value )
-	-- print( 'Theme.__setters:anchorX', value, self )
+function StyleMix.__setters:anchorX( value )
+	-- print( 'StyleMix.__setters:anchorX', value, self )
 	self.curr_style.anchorX = value
 end
 
 --== anchorY
 
-function Theme.__getters:anchorY()
+function StyleMix.__getters:anchorY()
 	return self.curr_style.anchorY
 end
-function Theme.__setters:anchorY( value )
-	-- print( 'Theme.__setters:anchorY', value )
+function StyleMix.__setters:anchorY( value )
+	-- print( 'StyleMix.__setters:anchorY', value )
 	self.curr_style.anchorY = value
 end
 
 --== font
 
-function Theme.__getters:font()
+function StyleMix.__getters:font()
 	return self.curr_style.font
 end
-function Theme.__setters:font( value )
-	-- print( 'Theme.__setters:font', value )
+function StyleMix.__setters:font( value )
+	-- print( 'StyleMix.__setters:font', value )
 	self.curr_style.font = value
 end
 
 --== fontSize
 
-function Theme.__getters:fontSize()
+function StyleMix.__getters:fontSize()
 	return self.curr_style.fontSize
 end
-function Theme.__setters:fontSize( value )
-	-- print( 'Theme.__setters:fontSize', value )
+function StyleMix.__setters:fontSize( value )
+	-- print( 'StyleMix.__setters:fontSize', value )
 	self.curr_style.fontSize = value
 end
 
 --== marginX
 
-function Theme.__getters:marginX()
+function StyleMix.__getters:marginX()
 	return self.curr_style.marginX
 end
-function Theme.__setters:marginX( value )
-	-- print( 'Theme.__setters:marginX', value )
+function StyleMix.__setters:marginX( value )
+	-- print( 'StyleMix.__setters:marginX', value )
 	self.curr_style.marginX = value
 end
 
 --== marginY
 
-function Theme.__getters:marginY()
+function StyleMix.__getters:marginY()
 	return self.curr_style.marginY
 end
-function Theme.__setters:marginY( value )
-	-- print( 'Theme.__setters:marginY', value )
+function StyleMix.__setters:marginY( value )
+	-- print( 'StyleMix.__setters:marginY', value )
 	self.curr_style.marginY = value
 end
 
 --== strokeWidth
 
-function Theme.__getters:strokeWidth()
+function StyleMix.__getters:strokeWidth()
 	return self.curr_style.strokeWidth
 end
-function Theme.__setters:strokeWidth( value )
-	-- print( 'Theme.__setters:strokeWidth', value )
+function StyleMix.__setters:strokeWidth( value )
+	-- print( 'StyleMix.__setters:strokeWidth', value )
 	self.curr_style.strokeWidth = value
 end
 
@@ -384,8 +400,8 @@ end
 
 --== setAnchor
 
-function Theme:setAnchor( ... )
-	-- print( 'Theme:setAnchor' )
+function StyleMix:setAnchor( ... )
+	-- print( 'StyleMix:setAnchor' )
 	local args = {...}
 
 	if type( args[1] ) == 'table' then
@@ -401,22 +417,22 @@ end
 
 --== setFillColor
 
-function Theme:setFillColor( ... )
-	-- print( 'Theme:setFillColor' )
+function StyleMix:setFillColor( ... )
+	-- print( 'StyleMix:setFillColor' )
 	self.curr_style.fillColor = {...}
 end
 
 --== setStrokeColor
 
-function Theme:setStrokeColor( ... )
-	-- print( 'Theme:setStrokeColor' )
+function StyleMix:setStrokeColor( ... )
+	-- print( 'StyleMix:setStrokeColor' )
 	self.curr_style.strokeColor = {...}
 end
 
 --== setTextColor
 
-function Theme:setTextColor( ... )
-	-- print( 'Theme:setTextColor' )
+function StyleMix:setTextColor( ... )
+	-- print( 'StyleMix:setTextColor' )
 	self.curr_style.textColor = {...}
 end
 
@@ -426,8 +442,8 @@ end
 --== Private Methods
 
 
-function Theme._createStyle( self, StyleClass, data )
-	-- print( "Theme._createStyle", self, StyleClass, data )
+function StyleMix._createStyle( self, StyleClass, data )
+	-- print( "StyleMix._createStyle", self, StyleClass, data )
 	-- create copied style
 	local name = string.format( "copied-style-%s", tostring( self ) )
 	local style = StyleClass:createStyleFrom{
@@ -439,7 +455,8 @@ function Theme._createStyle( self, StyleClass, data )
 	return style
 end
 
-function Theme._destroyStyle( self, style )
+function StyleMix._destroyStyle( self, style )
+	-- print( "StyleMix._destroyStyle", self, style )
 	if style.__active_create==true then
 		-- remove it if we created it
 		style:removeSelf()
@@ -451,8 +468,8 @@ end
 -- _createDefaultStyle()
 -- create the default Style instance for this Widget
 --
-function Theme._createDefaultStyle( self )
-	-- print( "Theme._createDefaultStyle", self.STYLE_CLASS )
+function StyleMix._createDefaultStyle( self )
+	-- print( "StyleMix._createDefaultStyle", self.STYLE_CLASS )
 	local StyleClass = self.STYLE_CLASS
 	assert( StyleClass, "[ERROR] Widget is missing property 'STYLE_CLASS'" )
 	local BaseStyle = StyleClass:getBaseStyle()
@@ -462,7 +479,7 @@ function Theme._createDefaultStyle( self )
 	self.__default_style = o
 end
 
-function Theme._destroyDefaultStyle( self )
+function StyleMix._destroyDefaultStyle( self )
 	local o = self.__default_style
 	if not o then return end
 	o:removeSelf()
@@ -473,13 +490,14 @@ end
 
 
 --====================================================================--
---== Theme Facade
+--== StyleMix Facade
 --====================================================================--
 
 
 return {
-	StyleMix=Theme,
+	StyleMix=StyleMix,
 	patch=_patch,
+	initialize=initialize
 }
 
 

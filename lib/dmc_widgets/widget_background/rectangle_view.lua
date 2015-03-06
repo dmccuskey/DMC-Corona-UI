@@ -70,7 +70,7 @@ local StyleMixModule = require( dmc_widget_func.find( 'widget_style_mix' ) )
 
 --== To be set in initialize()
 local StyleFactory = nil
-local ThemeMgr = nil
+local StyleMgr = nil
 local ViewFactory = nil
 local Widgets = nil
 
@@ -106,10 +106,10 @@ RectangleView.LEFT = 'left'
 RectangleView.CENTER = 'center'
 RectangleView.RIGHT = 'right'
 
---== Theme Constants
+--== Style/Theme Constants
 
-RectangleView.THEME_ID = 'rectangle-background-view'
 RectangleView.STYLE_CLASS = nil -- added later
+RectangleView.STYLE_TYPE = nil -- added later
 
 -- TODO: hook up later
 -- RectangleView.DEFAULT = 'default'
@@ -224,13 +224,14 @@ function RectangleView.initialize( manager )
 	-- print( "RectangleView.initialize" )
 	Widgets = manager
 
-	ThemeMgr = Widgets.ThemeMgr
+	StyleMgr = Widgets.StyleMgr
 	ViewFactory = Widgets.BackgroundFactory
 	StyleFactory = Widgets.Style.BackgroundFactory
 
 	RectangleView.STYLE_CLASS = StyleFactory.Rectangle
+	RectangleView.STYLE_TYPE = RectangleView.STYLE_CLASS.TYPE
 
-	ThemeMgr:registerWidget( RectangleView.THEME_ID, RectangleView )
+	StyleMgr:registerWidget( RectangleView )
 end
 
 

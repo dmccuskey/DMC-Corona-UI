@@ -72,7 +72,7 @@ local Utils = require 'dmc_utils'
 
 --== To be set in initialize()
 local Widgets = nil
-local ThemeMgr = nil
+local StyleMgr = nil
 
 
 
@@ -122,10 +122,10 @@ ButtonBase.INACTIVE = ButtonBase.STATE_INACTIVE
 ButtonBase.ACTIVE = ButtonBase.STATE_ACTIVE
 ButtonBase.DISABLED = ButtonBase.STATE_DISABLED
 
---== Theme Constants
+--== Style/Theme Constants
 
-ButtonBase.THEME_ID = 'button'
 ButtonBase.STYLE_CLASS = nil -- added later
+ButtonBase.STYLE_TYPE = nil -- added later
 
 --== Event Constants
 
@@ -827,7 +827,7 @@ function ButtonBase:stylePropertyChangeHandler( event )
 	-- print( "Style Changed", etype, property, value )
 
 	if etype==style.STYLE_RESET then
-		self._debugOn_dirty = true
+		self._debugOn_dirty=true
 		self._width_dirty=true
 		self._height_dirty=true
 		self._anchorX_dirty=true
@@ -1236,11 +1236,12 @@ end
 local function initializeButtons( manager )
 	-- print( "Buttons.initialize" )
 	Widgets = manager
-	ThemeMgr = Widgets.ThemeMgr
+	StyleMgr = Widgets.StyleMgr
 
 	ButtonBase.STYLE_CLASS = Widgets.Style.Button
+	ButtonBase.STYLE_TYPE = ButtonBase.STYLE_CLASS.TYPE
 
-	ThemeMgr:registerWidget( ButtonBase.THEME_ID, ButtonBase )
+	StyleMgr:registerWidget( ButtonBase )
 end
 
 

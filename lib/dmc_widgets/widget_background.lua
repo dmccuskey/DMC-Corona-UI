@@ -70,7 +70,7 @@ local StyleMixModule = require( widget_find( 'widget_style_mix' ) )
 
 --== To be set in initialize()
 local Widgets = nil
-local ThemeMgr = nil
+local StyleMgr = nil
 local ViewFactory = nil
 
 
@@ -99,10 +99,11 @@ local Background = newClass(
 	{name="Background Widget"}
 )
 
---== Theme Constants
+--== Style/Theme Constants
 
-Background.THEME_ID = 'background'
 Background.STYLE_CLASS = nil -- added later
+Background.STYLE_TYPE = nil -- added later
+
 Background._DEFAULT_VIEWTYPE = nil -- added later
 
 -- TODO: hook up later
@@ -226,13 +227,15 @@ end
 function Background.initialize( manager )
 	-- print( "Background.initialize" )
 	Widgets = manager
-	ThemeMgr = Widgets.ThemeMgr
+	StyleMgr = Widgets.StyleMgr
+
 	Background.STYLE_CLASS = Widgets.Style.Background -- <<<<
-	Background._DEFAULT_VIEWTYPE = Widgets.Style.BackgroundFactory.Rounded.TYPE
+	Background.STYLE_TYPE = Background.STYLE_CLASS.TYPE
 
 	ViewFactory = Widgets.BackgroundFactory
+	Background._DEFAULT_VIEWTYPE = Widgets.Style.BackgroundFactory.Rounded.TYPE
 
-	ThemeMgr:registerWidget( Background.THEME_ID, Background )
+	StyleMgr:registerWidget( Background )
 end
 
 
