@@ -17,7 +17,7 @@ module_config = {
 			"dmc_widgets/font_manager.lua",
 			"dmc_widgets/lib/easingx.lua",
 			"dmc_widgets/scroller_view_base.lua",
-			"dmc_widgets/theme_manager.lua",
+			"dmc_widgets/style_manager.lua",
 			"dmc_widgets/widget_background.lua",
 			"dmc_widgets/widget_background/base_view_style.lua",
 			"dmc_widgets/widget_background/rectangle_style.lua",
@@ -41,6 +41,8 @@ module_config = {
 			"dmc_widgets/widget_style/base_style.lua",
 			"dmc_widgets/widget_style/button_state.lua",
 			"dmc_widgets/widget_style/button_style.lua",
+			"dmc_widgets/widget_style/navbar_style.lua",
+			"dmc_widgets/widget_style/navitem_style.lua",
 			"dmc_widgets/widget_style/text_style.lua",
 			"dmc_widgets/widget_style/textfield_style.lua",
 			"dmc_widgets/widget_tableview.lua",
@@ -131,6 +133,16 @@ module_config = {
 			},
 			{
 				"exp_dir": "navbar-widget/navbar-simple",
+				"requires": [],
+				"mod_dir_map": {
+					"default_dir": "",
+					"libs": {
+						"dmc-corona-boot":""
+					}
+				}
+			},
+			{
+				"exp_dir": "navbar-widget/navbar-styled",
 				"requires": [],
 				"mod_dir_map": {
 					"default_dir": "",

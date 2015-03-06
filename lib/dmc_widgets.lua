@@ -329,7 +329,7 @@ end
 
 
 --======================================================--
--- newText Support
+-- newBackground Support
 
 function Widget._loadBackgroundSupport( params )
 	-- print( "Widget._loadBackgroundSupport" )
@@ -501,29 +501,57 @@ function Widget._loadNavBarSupport( params )
 
 	--== Dependencies
 
+	Widget._loadBackgroundSupport( params )
 	Widget._loadButtonSupport( params )
 
 	--== Nav Bar Components
 
 	local NavBar = require( PATH .. '.' .. 'widget_navbar' )
 	local NavItem = require( PATH .. '.' .. 'widget_navitem' )
+	local NavBarStyle = require( PATH .. '.' .. 'widget_style.navbar_style' )
+	local NavItemStyle = require( PATH .. '.' .. 'widget_style.navitem_style' )
 
 	Widget.NavBar=NavBar
 	Widget.NavItem=NavItem
+	Widget.Style.NavBar=NavBarStyle
+	Widget.Style.NavItem=NavItemStyle
 
 	--== Reverse order
+	NavItemStyle.initialize( Widget, params )
+	NavBarStyle.initialize( Widget, params )
 	NavItem.initialize( Widget, params )
 	NavBar.initialize( Widget, params )
 end
 
 function Widget.newNavBar( options )
-	if not Widget.Background then Widget._loadNavBarSupport() end
+	if not Widget.newNavBar then Widget._loadNavBarSupport() end
 	return Widget.NavBar:new( options )
 end
 
 function Widget.newNavItem( options )
-	if not Widget.Background then Widget._loadNavBarSupport() end
+	if not Widget.newNavItem then Widget._loadNavBarSupport() end
 	return Widget.NavItem:new( options )
+end
+
+
+function Widget.newNavBarStyle( style_info, params )
+	-- print( "Widget.newNavBarStyle" )
+	style_info = style_info or {}
+	params = params or {}
+	--==--
+	params.data = style_info
+	if not Widget.Style.NavBar then Widget._loadNavBarSupport() end
+	return Widget.Style.NavBar:createStyleFrom( params )
+end
+
+function Widget.newNavItemStyle( style_info, params )
+	-- print( "Widget.newNavItemStyle" )
+	style_info = style_info or {}
+	params = params or {}
+	--==--
+	params.data = style_info
+	if not Widget.Style.NavItem then Widget._loadNavBarSupport() end
+	return Widget.Style.NavItem:createStyleFrom( params )
 end
 
 
