@@ -50,6 +50,8 @@ local VERSION = "0.2.2"
 local Events
 local Utils = {} -- make copying from Utils easier
 
+local sformat = string.format
+
 
 
 --====================================================================--
@@ -81,7 +83,7 @@ end
 
 -- return event unmodified
 --
-function _createCoronaEvent( obj, event )
+local function _createCoronaEvent( obj, event )
 	return event
 end
 
@@ -93,7 +95,7 @@ end
 -- params, table of params
 -- params.merge, boolean, if to merge data (table) in with event table
 --
-function _createDmcEvent( obj, e_type, data, params )
+local function _createDmcEvent( obj, e_type, data, params )
 	params = params or {}
 	if params.merge==nil then params.merge=false end
 	--==--
@@ -119,7 +121,7 @@ end
 
 
 
-function _patch( obj )
+local function _patch( obj )
 
 	obj = obj or {}
 
@@ -229,7 +231,9 @@ end
 -- addEventListener()
 --
 function Events.addEventListener( self, e_name, listener )
-	-- print( "Events.addEventListener", e_name, listener );
+	-- print( "Events.addEventListener", e_name, listener )
+	assert( type(e_name)=='string', sformat( "Events.addEventListener event name should be a string, received '%s'", tostring(e_name)) )
+	assert( type(listener)=='function' or type(listener)=='table', sformat( "Events.addEventListener callback should be function or object, received '%s'", tostring(listener) ))
 
 	-- Sanity Check
 
