@@ -116,7 +116,7 @@ function NavItem:__init__( params )
 	params = params or {}
 	if params.x==nil then params.x=0 end
 	if params.y==nil then params.y=0 end
-	if params.title==nil then params.title="hello" end
+	if params.title==nil then params.title="" end
 
 	self:superCall( LifecycleMix, '__init__', params )
 	self:superCall( ObjectBase, '__init__', params )
@@ -336,6 +336,7 @@ function NavItem:_createBackButton()
 	self:_removeBackButton()
 
 	local o = Widgets.newButton{
+		labelText="< Back",
 		defaultStyle = self.defaultStyle.backButton
 	}
 	self._wgtBtnBack = o
