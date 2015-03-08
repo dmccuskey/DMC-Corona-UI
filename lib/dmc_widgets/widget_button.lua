@@ -413,28 +413,25 @@ end
 -- .backgroundStrokeWidth
 --
 function ButtonBase.__getters:backgroundStrokeWidth()
-	return self.curr_style.backgroundStrokeWidth
+	return self.curr_style.background.strokeWidth
 end
 function ButtonBase.__setters:backgroundStrokeWidth( value )
 	-- print( 'ButtonBase.__setters:backgroundStrokeWidth', value )
-	self.curr_style.backgroundStrokeWidth = value
+	self.curr_style.background.strokeWidth = value
 end
 
 -- setBackgroundFillColor()
 --
-function ButtonBase:setBackgroundStrokeColor()
-	return self.curr_style.backgroundStrokeColor
-end
-function ButtonBase:setBackgroundStrokeColor( ... )
-	-- print( 'ButtonBase:setBackgroundStrokeColor' )
-	self.curr_style.backgroundStrokeColor = {...}
+function ButtonBase:setBackgroundFillColor( ... )
+	-- print( 'ButtonBase:setBackgroundFillColor' )
+	self.curr_style.background.fillColor = {...}
 end
 
 -- setBackgroundStrokeColor()
 --
 function ButtonBase:setBackgroundStrokeColor( ... )
 	-- print( 'ButtonBase:setBackgroundStrokeColor' )
-	self.curr_style.backgroundStrokeColor = {...}
+	self.curr_style.background.strokeColor = {...}
 end
 
 
@@ -555,6 +552,7 @@ function ButtonBase:press()
 	evt.phase = 'ended'
 	self:_hitAreaTouch_handler( evt )
 end
+
 
 
 
