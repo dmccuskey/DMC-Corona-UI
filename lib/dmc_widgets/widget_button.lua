@@ -146,7 +146,7 @@ function ButtonBase:__init__( params )
 	if params.x==nil then params.x=0 end
 	if params.y==nil then params.y=0 end
 	if params.id==nil then params.id="" end
-	if params.labelText==nil then params.labelText="Press" end
+	if params.labelText==nil then params.labelText="OK" end
 
 	self:superCall( LifecycleMix, '__init__', params )
 	self:superCall( StatesMix, '__init__', params )
