@@ -264,7 +264,6 @@ function TextField:__init__( params )
 	self._rctHit_f = nil
 
 	self._wgtBg = nil -- background widget
-	self._wgtBg_f = nil -- widget handler
 	self._wgtBg_dirty=true
 
 	self._wgtText = nil -- text widget (for both hint and value display)
@@ -335,7 +334,6 @@ function TextField:__undoInitComplete__()
 	self:_stopKeyboardFocus()
 	self.style = nil
 
-	self._wgtBg_f = nil
 	self._textStyle_f = nil
 	self._inputField_f = nil
 
