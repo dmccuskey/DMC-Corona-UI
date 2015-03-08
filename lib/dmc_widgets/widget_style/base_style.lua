@@ -64,6 +64,7 @@ local widget_find = dmc_widget_func.find
 --== Imports
 
 
+local Kolor = require 'dmc_kolor'
 local Objects = require 'dmc_objects'
 local Utils = require 'dmc_utils'
 
@@ -932,9 +933,9 @@ function Style.__getters:fillColor()
 end
 function Style.__setters:fillColor( value )
 	-- print( "Style.__setters:fillColor", self._fillColor, value, self._isClearing )
-	assert( type(value)=='table' or (value==nil and (self._inherit or self._isClearing) ))
+	assert( value or (value==nil and (self._inherit or self._isClearing)) )
 	--==--
-	self._fillColor = value
+	self._fillColor = Kolor.translateColor( value )
 	self:_dispatchChangeEvent( 'fillColor', value )
 end
 
@@ -1017,9 +1018,9 @@ function Style.__getters:strokeColor()
 end
 function Style.__setters:strokeColor( value )
 	-- print( "Style.__setters:strokeColor", value )
-	assert( value or (value==nil and (self._inherit or self._isClearing) ))
+	assert( value or (value==nil and (self._inherit or self._isClearing)) )
 	--==--
-	self._strokeColor = value
+	self._strokeColor = Kolor.translateColor( value )
 	self:_dispatchChangeEvent( 'strokeColor', value )
 end
 
@@ -1034,7 +1035,7 @@ function Style.__getters:strokeWidth( value )
 end
 function Style.__setters:strokeWidth( value )
 	-- print( "Style.__setters:strokeWidth", self._strokeWidth, value, self._isClearing )
-	assert( value or (value==nil and (self._inherit or self._isClearing) ))
+	assert( value or (value==nil and (self._inherit or self._isClearing)) )
 	--==--
 	if value == self._strokeWidth then return end
 	self._strokeWidth = value
@@ -1055,8 +1056,7 @@ function Style.__setters:textColor( value )
 	-- print( "Style.__setters:textColor", value )
 	assert( value or (value==nil and (self._inherit or self._isClearing)) )
 	--==--
-	if value == self._textColor then return end
-	self._textColor = value
+	self._textColor = Kolor.translateColor( value )
 	self:_dispatchChangeEvent( 'textColor', value )
 end
 
@@ -1070,6 +1070,7 @@ function Style:verifyProperties()
 	local StyleClass = self.class
 	return StyleClass._verifyStyleProperties( self )
 end
+
 
 
 --====================================================================--
