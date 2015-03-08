@@ -121,84 +121,65 @@ NavItemStyle._EXCLUDE_PROPERTY_CHECK = {
 NavItemStyle._STYLE_DEFAULTS = {
 	name='textfield-default-style',
 	debugOn=false,
-	width=200,
+	width=60,
 	height=40,
 	anchorX=0.5,
 	anchorY=0.5,
 
 	backButton={
+		anchorX=0,
+		anchorY=0.5,
 		align='center',
 		hitMarginX=0,
 		hitMarginY=0,
 		isHitActive=true,
 		marginX=0,
 		marginY=0,
-		width=40,
-		height=20,
 
 		inactive={
 			label={
-				textColor={0,0,0},
+				textColor='#007BFF'
 			},
 			background={
-				width=40,
-				height=20,
-				type='rounded',
+				type='rectangle',
 				view={
-				height=20,
-					cornerRadius=9,
-					fillColor={
-						type='gradient',
-						color1={ 0.9,0.9,0.9 },
-						color2={ 0.5,0.5,0.5 },
-						direction='down'
-					},
-					strokeWidth=2,
-					strokeColor={0.2,0.2,0.2,1},
+					height=20,
+					fillColor={ 0,0,0,0 },
+					strokeWidth=0,
+					strokeColor={ 0,0,0,0 },
 				}
 			}
-
 		},
+
 		active={
 			label={
-				textColor={0,0,0},
+				textColor={ '#007BFF', 0.5 },
 			},
 			background={
-				type='rounded',
+				type='rectangle',
 				view={
-					cornerRadius=9,
-					fillColor={
-						type='gradient',
-						color1={ 0.9,0.9,0.9 },
-						color2={ 0.5,0.5,0.5 },
-						direction='down'
-					},
-					strokeWidth=2,
-					strokeColor={0.2,0.2,0.2,1},
+					fillColor={ 0,0,0,0 },
+					strokeWidth=0,
+					strokeColor={ 0,0,0,0 },
 				}
 			}
-
 		},
+
 		disabled={
 			label={
-				textColor={0,0,0},
+				textColor={ 0.6,0.6,0.6,0.8 },
 			},
 			background={
-				type='rounded',
+				type='rectangle',
 				view={
-					cornerRadius=9,
-					fillColor={
-						type='gradient',
-						color1={ 0.9,0.9,0.9 },
-						color2={ 0.5,0.5,0.5 },
-						direction='down'
-					},
-					strokeWidth=2,
-					strokeColor={0.2,0.2,0.2,1},
+					fillColor={ 0,0,0,0 },
+					strokeWidth=0,
+					strokeColor={ 0,0,0,0 },
 				}
 			}
 		}
 	},
+
 	leftButton={
 		align='center',
 		hitMarginX=0,
