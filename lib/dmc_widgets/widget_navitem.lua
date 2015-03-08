@@ -326,7 +326,6 @@ function NavItem:_removeBackButton()
 	-- print( "NavItem:_removeBackButton" )
 	local o = self._wgtBtnBack
 	if not o then return end
-	o.onUpdate=nil
 	o:removeSelf()
 	self._wgtBtnBack = nil
 end
@@ -339,11 +338,7 @@ function NavItem:_createBackButton()
 	local o = Widgets.newButton{
 		defaultStyle = self.defaultStyle.backButton
 	}
-	-- o.onUpdate = self._wgtText_f
-	-- self:insert( o.view )
 	self._wgtBtnBack = o
-
-	-- TODO: set default style
 
 	--== Reset properties
 
@@ -370,8 +365,6 @@ function NavItem:_createText()
 	local o = Widgets.newText{
 	defaultStyle = self.defaultStyle.title
 	}
-	-- o.onUpdate = self._wgtText_f
-	-- self:insert( o.view )
 	self._wgtText = o
 
 	--== Reset properties
@@ -424,6 +417,7 @@ function NavItem:__commitProperties__()
 end
 
 
+
 --====================================================================--
 --== Event Handlers
 
@@ -471,7 +465,6 @@ function NavItem:stylePropertyChangeHandler( event )
 	self:__invalidateProperties__()
 	self:__dispatchInvalidateNotification__( property, value )
 end
-
 
 
 
