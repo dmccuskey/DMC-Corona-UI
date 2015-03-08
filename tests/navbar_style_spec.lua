@@ -431,9 +431,9 @@ function test_instanceBasics()
 		widget:pushNavItem( navItem )
 	end)
 
-	-- timer.performWithDelay( 2000, function()
-	-- 	widget:popNavItemAnimated()
-	-- end)
+	timer.performWithDelay( 3000, function()
+		widget:popNavItemAnimated()
+	end)
 
 end
 
