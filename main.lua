@@ -70,6 +70,7 @@ lunatest.suite( 'tests.rounded_view_style_spec' )
 -- Styles with children
 
 lunatest.suite( 'tests.background_style_spec' )
+lunatest.suite( 'tests.navbar_style_spec' )
 lunatest.suite( 'tests.button_style_spec' )
 lunatest.suite( 'tests.textfield_style_spec' )
 
