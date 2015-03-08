@@ -118,7 +118,7 @@ NavBarStyle._EXCLUDE_PROPERTY_CHECK = {
 NavBarStyle._STYLE_DEFAULTS = {
 	name='textfield-default-style',
 	debugOn=false,
-	width=200,
+	width=nil, -- set in initialization()
 	height=40,
 	anchorX=0.5,
 	anchorY=0.5,
@@ -218,6 +218,9 @@ function NavBarStyle.initialize( manager, params )
 	if params.mode==nil then params.mode=BaseStyle.RUN_MODE end
 	--==--
 	Widgets = manager
+
+	-- set width to screen default
+	NavBarStyle._STYLE_DEFAULTS.width = manager.WIDTH
 
 	if params.mode==BaseStyle.TEST_MODE then
 		NavBarStyle.MODE = BaseStyle.TEST_MODE
