@@ -87,7 +87,13 @@ local function colorsAreEqual( c1, c2 )
 		if c1[1]~=c2[1] then result=false end
 		if c1[2]~=c2[2] then result=false end
 		if c1[3]~=c2[3] then result=false end
-		if c1[4]~=c2[4] then result=false end
+		if c1[4]==nil and c2[4]==nil then
+			-- pass
+		elseif c1[4]==nil or c2[4]==nil then
+			result=false
+		elseif c1[4]~=c2[4] then
+			result=false
+		end
 	end
 	return result
 end
