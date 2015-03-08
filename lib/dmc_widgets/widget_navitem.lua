@@ -311,7 +311,9 @@ function NavItem:_createBackButton()
 
 	self:_removeBackButton()
 
-	local o = Widgets.newButton()
+	local o = Widgets.newButton{
+		defaultStyle = self.defaultStyle.backButton
+	}
 	-- o.onUpdate = self._wgtText_f
 	-- self:insert( o.view )
 	self._wgtBtnBack = o
@@ -340,7 +342,9 @@ function NavItem:_createText()
 
 	self:_removeText()
 
-	local o = Widgets.newText()
+	local o = Widgets.newText{
+	defaultStyle = self.defaultStyle.title
+	}
 	-- o.onUpdate = self._wgtText_f
 	-- self:insert( o.view )
 	self._wgtText = o

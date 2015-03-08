@@ -124,6 +124,9 @@ function StyleMix.__init__( self, params )
 		print( "\n\n\n DOING THEME INIT: widget", self)
 	end
 	self:resetStyle( params )
+
+	self.__default_style = params.defaultStyle
+
 	if LOCAL_DEBUG then
 		print( "\n\n\n DONE WITH THEME INIT")
 	end
@@ -137,13 +140,16 @@ end
 
 function StyleMix.__initComplete__( self )
 	-- print( 'StyleMix.__initComplete__' )
-	self:_createDefaultStyle()
+	if not self.__default_style then
+		self.__default_style = self:_createDefaultStyle()
+	end
 	self:setActiveStyle( nil )
 end
 
 function StyleMix.__undoInitComplete__( self )
 	-- print( 'StyleMix.__undoInitComplete__' )
-	self:_destroyDefaultStyle()
+	local o = self.__default_style
+	self.__default_style = self:_destroyDefaultStyle( o )
 end
 
 -- END: Mixin Setup for DMC Objects
@@ -437,6 +443,11 @@ function StyleMix:setTextColor( ... )
 end
 
 
+function StyleMix.__getters:defaultStyle()
+	return self.__default_style
+end
+
+
 
 --====================================================================--
 --== Private Methods
@@ -468,22 +479,25 @@ end
 -- _createDefaultStyle()
 -- create the default Style instance for this Widget
 --
-function StyleMix._createDefaultStyle( self )
+function StyleMix._createDefaultStyle( self, params )
 	-- print( "StyleMix._createDefaultStyle", self.STYLE_CLASS )
+	params = params or {}
+	if params.copy==nil then params.copy=true end
+	--==--
 	local StyleClass = self.STYLE_CLASS
 	assert( StyleClass, "[ERROR] Widget is missing property 'STYLE_CLASS'" )
 	local BaseStyle = StyleClass:getBaseStyle()
 	assert( BaseStyle, "[ERROR] Widget is missing property 'BaseStyle'" )
 	local o = BaseStyle:copyStyle()
 	assert( o, "[ERROR] Creating default style class" )
-	self.__default_style = o
+	o.__mix_created = true
+	return o
 end
 
-function StyleMix._destroyDefaultStyle( self )
-	local o = self.__default_style
-	if not o then return end
-	o:removeSelf()
-	self.__default_style = nil
+function StyleMix._destroyDefaultStyle( self, style )
+	-- print( "StyleMix._destroyDefaultStyle", style )
+	if not style or not style.__mix_created then return nil end
+	style:removeSelf()
 	return nil
 end
 

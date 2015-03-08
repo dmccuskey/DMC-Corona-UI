@@ -734,7 +734,9 @@ function TextField:_createBackground()
 
 	self:_removeBackground()
 
-	local o = Widgets.newBackground()
+	local o = Widgets.newBackground{
+		defaultStyle = self.defaultStyle.background
+	}
 	self:insert( o.view )
 	self._wgtBg = o
 
@@ -760,7 +762,9 @@ function TextField:_createText()
 
 	self:_removeText()
 
-	local o = Widgets.newText()
+	local o = Widgets.newText{
+		defaultStyle = self.defaultStyle.label
+	}
 	o.onUpdate = self._wgtText_f
 	self:insert( o.view )
 	self._wgtText = o
