@@ -295,6 +295,31 @@ function NavItem.__setters:title( title )
 end
 
 
+--======================================================--
+-- Theme Methods
+
+-- afterAddStyle()
+--
+function NavItem:afterAddStyle()
+	-- print( "NavItem:afterAddStyle", self )
+	self._widgetStyle_dirty=true
+	self:__invalidateProperties__()
+end
+
+-- beforeRemoveStyle()
+--
+function NavItem:beforeRemoveStyle()
+	-- print( "NavItem:beforeRemoveStyle", self )
+	self._widgetStyle_dirty=true
+	self:__invalidateProperties__()
+end
+
+
+
+--====================================================================--
+--== Private Methods
+
+
 --== Create/Destroy Text Widget
 
 function NavItem:_removeBackButton()
