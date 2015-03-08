@@ -102,6 +102,8 @@ dmc_lib_info = dmc_lib_data.dmc_corona
 --== Imports
 
 
+local Kolor = require 'dmc_kolor'
+
 -- Widgets
 Widget.ButtonGroup = require( PATH .. '.' .. 'button_group' )
 Widget.Formatter = require( PATH .. '.' .. 'data_formatters' )
@@ -124,6 +126,14 @@ local sformat = string.format
 --== Support Functions
 
 
+local function initKolors( func )
+	local format = Kolor.getColorFormat()
+	Kolor.setColorFormat( Kolor.dRGBA )
+	func()
+	Kolor.setColorFormat( format )
+end
+
+
 local function initialize( manager, params )
 	-- print( "Widgets.initialize" )
 
@@ -141,10 +151,12 @@ local function initialize( manager, params )
 
 	--== Initialize
 
-	BaseStyle.initialize( Widget, params )
-	StyleMgr.initialize( Widget, params )
-	-- FontMgr.initialize( Widget, params )
-	StyleMixModule.initialize( Widget, params )
+	initKolors( function()
+		BaseStyle.initialize( Widget, params )
+		StyleMgr.initialize( Widget, params )
+		-- FontMgr.initialize( Widget, params )
+		StyleMixModule.initialize( Widget, params )
+	end)
 
 	--== Set UI/UX
 
@@ -348,11 +360,13 @@ function Widget._loadBackgroundSupport( params )
 	Widget.Style.Background=BackgroundStyle
 	Widget.Style.BackgroundFactory=BackgroundStyleFactory
 
-	--== Reverse order
-	BackgroundViewFactory.initialize( Widget, params )
-	BackgroundStyleFactory.initialize( Widget, params )
-	BackgroundStyle.initialize( Widget, params )
-	Background.initialize( Widget, params )
+	initKolors( function()
+		--== Reverse order
+		BackgroundViewFactory.initialize( Widget, params )
+		BackgroundStyleFactory.initialize( Widget, params )
+		BackgroundStyle.initialize( Widget, params )
+		Background.initialize( Widget, params )
+	end)
 end
 
 
@@ -426,10 +440,12 @@ function Widget._loadButtonSupport( params )
 	Widget.Style.Button=ButtonStyle
 	Widget.Style.ButtonState=ButtonStateStyle
 
-	--== Reverse order
-	ButtonStateStyle.initialize( Widget, params )
-	ButtonStyle.initialize( Widget, params )
-	Button.initialize( Widget, params )
+	initKolors( function()
+		--== Reverse order
+		ButtonStateStyle.initialize( Widget, params )
+		ButtonStyle.initialize( Widget, params )
+		Button.initialize( Widget, params )
+	end)
 end
 
 function Widget.newButton( options )
@@ -517,10 +533,12 @@ function Widget._loadNavBarSupport( params )
 	Widget.Style.NavItem=NavItemStyle
 
 	--== Reverse order
-	NavItemStyle.initialize( Widget, params )
-	NavBarStyle.initialize( Widget, params )
-	NavItem.initialize( Widget, params )
-	NavBar.initialize( Widget, params )
+	initKolors( function()
+		NavItemStyle.initialize( Widget, params )
+		NavBarStyle.initialize( Widget, params )
+		NavItem.initialize( Widget, params )
+		NavBar.initialize( Widget, params )
+	end)
 end
 
 function Widget.newNavBar( options )
@@ -610,8 +628,10 @@ function Widget._loadTextSupport( params )
 	Widget.Style.Text=TextStyle
 
 	--== Reverse order
-	TextStyle.initialize( Widget, params )
-	Text.initialize( Widget, params )
+	initKolors( function()
+		TextStyle.initialize( Widget, params )
+		Text.initialize( Widget, params )
+	end)
 end
 
 function Widget.newText( options )
@@ -651,8 +671,10 @@ function Widget._loadTextFieldSupport( params )
 	Widget.Style.TextField=TextFieldStyle
 
 	--== Reverse order
-	TextFieldStyle.initialize( Widget, params )
-	TextField.initialize( Widget, params )
+	initKolors( function()
+		TextFieldStyle.initialize( Widget, params )
+		TextField.initialize( Widget, params )
+	end)
 end
 
 function Widget.newTextField( options )
