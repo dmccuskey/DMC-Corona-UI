@@ -424,6 +424,13 @@ function test_instanceBasics()
 		widget:pushNavItem( navItem )
 	end)
 
+	timer.performWithDelay( 2000, function()
+		navItem=Widget.newNavItem{
+			title="Third"
+		}
+		widget:pushNavItem( navItem )
+	end)
+
 	-- timer.performWithDelay( 2000, function()
 	-- 	widget:popNavItemAnimated()
 	-- end)
