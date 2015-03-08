@@ -319,7 +319,6 @@ NavItemStyle._STYLE_DEFAULTS = {
 
 	},
 	title={
-
 		anchorX=0.5,
 		anchorY=0.5,
 
@@ -871,44 +870,6 @@ end
 
 
 
---======================================================--
--- Background Style Properties
-
---== fillColor
-
--- function NavItemStyle.__getters:backgroundFillColor()
--- 	-- print( "NavItemStyle.__getters:backgroundFillColor" )
--- 	return self._background.fillColor
--- end
--- function NavItemStyle.__setters:backgroundFillColor( value )
--- 	-- print( "NavItemStyle.__setters:backgroundFillColor", value )
--- 	self._background.fillColor = value
--- end
-
--- --== strokeColor
-
--- function NavItemStyle.__getters:backgroundStrokeColor()
--- 	-- print( "NavItemStyle.__getters:backgroundStrokeColor" )
--- 	return self._background.strokeColor
--- end
--- function NavItemStyle.__setters:backgroundStrokeColor( value )
--- 	-- print( "NavItemStyle.__setters:backgroundStrokeColor", value )
--- 	self._background.strokeColor = value
--- end
-
--- --== strokeWidth
-
--- function NavItemStyle.__getters:backgroundStrokeWidth()
--- 	-- print( "NavItemStyle.__getters:backgroundStrokeWidth" )
--- 	return self._background.strokeWidth
--- end
--- function NavItemStyle.__setters:backgroundStrokeWidth( value )
--- 	-- print( "NavItemStyle.__setters:backgroundStrokeWidth", value )
--- 	self._background.strokeWidth = value
--- end
-
-
-
 --====================================================================--
 --== Private Methods
 
@@ -960,7 +921,6 @@ function NavItemStyle:_destroyChildren()
 	self._rightButton:removeSelf()
 	self._rightButton=nil
 end
-
 
 
 function NavItemStyle:_prepareData( data, dataSrc, params )
