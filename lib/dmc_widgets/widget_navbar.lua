@@ -232,6 +232,9 @@ function NavBar:__initComplete__()
 	--==--
 	self.style = self._tmp_style
 	self:setTouchBlock( self._rctHit )
+
+	self._back_f = self:createCallback( self._backButtonEvent_handler )
+
 end
 
 function NavBar:__undoInitComplete__()
@@ -326,7 +329,7 @@ function NavBar:pushNavItem( item, params )
 	params = params or {}
 	assert( type(item)=='table' and item.isa and item:isa( NavItem ), "pushNavItem: item must be a NavItem" )
 	--==--
-	self:_setNextItem( item, params )
+	self:_setNextItem( item, params ) -- params.animate set here
 	self:_gotoNext( params.animate )
 end
 
@@ -507,16 +510,32 @@ function NavBar:_gotoPrev( animate )
 end
 
 
+function NavBar:_attachBackListener( back )
+	-- print( "NavBar:_attachBackListener" )
+	if not back then return end
+	back:addEventListener( back.EVENT, self._back_f )
+end
+
+function NavBar:_detachBackListener( back )
+	-- print( "NavBar:_detachBackListener" )
+	if not back then return end
+	back:removeEventListener( back.EVENT, self._back_f )
+end
+
+
 function NavBar:_getTransition( from_item, to_item, direction )
 	-- print( "NavBar:_getTransition", from_item, to_item, direction )
 	local style = self.curr_style
 	local W, H = style.width, style.height
 	local H_CENTER, V_CENTER = W*0.5, H*0.5
 	local MARGINS = {x=5,y=0}
+	local isAtEdge = true -- if we're at the start/edge of our transition
 
 	-- display(left/back), back, left, title, right
 	local f_d, f_b, f_l, f_t, f_r
+	local fHasLeft=false
 	local t_d, t_b, t_l, t_t, t_r
+	local tHasLeft=false
 	local callback
 
 	-- setup from_item vars
@@ -525,6 +544,7 @@ function NavBar:_getTransition( from_item, to_item, direction )
 		f_t = from_item.title
 		f_d = f_b
 		if f_l then
+			fHasLeft=true
 			f_b.isVisible = false
 			f_d = f_l
 		end
@@ -536,6 +556,7 @@ function NavBar:_getTransition( from_item, to_item, direction )
 		t_t = to_item.title
 		t_d = t_b
 		if t_l then
+			tHasLeft=true
 			t_b.isVisible=false
 			t_d = t_l
 		end
@@ -570,6 +591,14 @@ function NavBar:_getTransition( from_item, to_item, direction )
 				self._top_item = from_item
 				self._new_item = nil
 				self._back_item = stack[ #stack-1 ] -- get previous
+
+				if to_item then
+					self:_detachBackListener( to_item.backButton )
+				end
+				if from_item then
+					self:_attachBackListener( from_item.backButton )
+				end
+
 			end
 
 			--== Left/Back
@@ -578,9 +607,9 @@ function NavBar:_getTransition( from_item, to_item, direction )
 				t_d.isVisible = false
 			end
 
-			if f_l or #self._items>1 then
+			if fHasLeft or #self._items>1 then
 				f_d.isVisible = true
-				f_d.x = -H_CENTER+f_d.width/2+MARGINS.x
+				f_d.x = -H_CENTER+MARGINS.x
 				f_d.alpha = 1
 			else
 				f_d.isVisible = false
@@ -614,13 +643,18 @@ function NavBar:_getTransition( from_item, to_item, direction )
 		elseif percent==100 then
 			--== edge of transition ==--
 
+			if isAtEdge==true then
+				-- we jumped here without going through middle of trans
+			end
+
 			--== Left/Back
 
 			-- checking if Left exists or Stack, still use t_d
-			if t_l or stack_size>0 then
-				t_d.x = -H_CENTER+t_d.width/2+MARGINS.x
+			if tHasLeft or stack_size>0 then
+				t_d.x = -H_CENTER+MARGINS.x
 				t_d.isVisible = true
 				t_d.alpha = 1
+				-- attach listener
 			else
 				t_d.isVisible = false
 			end
@@ -656,9 +690,17 @@ function NavBar:_getTransition( from_item, to_item, direction )
 			--== Finish up
 
 			if direction==self.FORWARD then
+
 				self._back_item = from_item
 				self._new_item = nil
 				self._top_item = to_item
+
+				if from_item then
+					self:_detachBackListener( from_item.backButton )
+				end
+				if to_item then
+					self:_attachBackListener( to_item.backButton )
+				end
 
 				tinsert( self._items, to_item )
 			end
@@ -666,19 +708,23 @@ function NavBar:_getTransition( from_item, to_item, direction )
 		else
 			--== middle of transition ==--
 
+			if isAtEdge then
+				-- unattach current listener
+
+			end
 			--== Left/Back
 
-			if t_l or stack_size>(0+stack_offset) then
+			if tHasLeft or stack_size>(0+stack_offset) then
 				t_d.isVisible = true
-				t_d.x = -X_OFF+t_d.width/2+MARGINS.x
+				t_d.x = -X_OFF+MARGINS.x
 				t_d.alpha = to_a
 			else
 				t_d.isVisible = false
 			end
 
-			if f_l or stack_size>(1+stack_offset) then
+			if fHasLeft or stack_size>(1+stack_offset) then
 				f_d.isVisible = true
-				f_d.x = -H_CENTER-X_OFF+f_d.width/2+MARGINS.x
+				f_d.x = -H_CENTER-X_OFF+MARGINS.x
 				f_d.alpha = from_a
 			else
 				f_d.isVisible = false
@@ -830,6 +876,16 @@ end
 
 --====================================================================--
 --== Event Handlers
+
+
+function NavBar:_backButtonEvent_handler( event )
+	-- print( "NavBar:_backButtonEvent_handler", event.property, event.value )
+	local target = event.target
+	local phase = event.phase
+	if phase==target.RELEASED then
+		self:popNavItemAnimated()
+	end
+end
 
 
 function NavBar:stylePropertyChangeHandler( event )
