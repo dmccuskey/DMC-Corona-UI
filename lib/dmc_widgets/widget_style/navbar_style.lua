@@ -132,9 +132,9 @@ NavBarStyle._STYLE_DEFAULTS = {
 		--]]
 		type='rectangle',
 		view={
-			fillColor={0.9,0.7,0.7,1},
-			strokeWidth=1,
-			strokeColor={0,0,0,1},
+			fillColor={ 1,1,1,0.9},
+			strokeWidth=0,
+			strokeColor={0,0,0,0},
 		}
 	},
 }
