@@ -18,7 +18,7 @@ print( "\n\n#########################################################\n\n" )
 --== Imports
 
 
-local Widgets = require 'lib.dmc_widgets'
+local dUI = require 'lib.dmc_ui'
 
 
 
@@ -83,7 +83,7 @@ function run_example1()
 
 	local txt1
 
-	txt1 = Widgets.newText{}
+	txt1 = dUI.newText{}
 	txt1.text = "default style"
 	txt1.x, txt1.y = H_CENTER, 100
 
@@ -99,7 +99,7 @@ function run_example2()
 
 	local txt2
 
-	txt2 = Widgets.newText{
+	txt2 = dUI.newText{
 		text="inline style",
 
 		style={
@@ -197,7 +197,7 @@ function run_example3()
 
 	local st1, txt3, txt4
 
-	st3 = Widgets.newTextStyle{
+	st3 = dUI.newTextStyle{
 		name='my-text-style',
 		fillColor={0.5,0.8,0.2},
 		marginX=5,
@@ -205,7 +205,7 @@ function run_example3()
 		textColor={0,0,0},
 	}
 
-	txt3 = Widgets.newText{
+	txt3 = dUI.newText{
 		text="Text One"
 	}
 	txt3.style = st3
@@ -217,7 +217,7 @@ function run_example3()
 	timer.performWithDelay( 1500, function()
 		print( "\n\nUpdate Properties" )
 
-		txt4 = Widgets.newText{
+		txt4 = dUI.newText{
 			text="Text Two",
 			style=st3
 		}
@@ -272,7 +272,7 @@ function run_example4()
 
 	local st4, txt3, txt5
 
-	st4 = Widgets.newTextStyle{
+	st4 = dUI.newTextStyle{
 		name='my-text-style',
 
 		width=120,
@@ -285,7 +285,7 @@ function run_example4()
 
 	-- add text widget, give style
 
-	txt3 = Widgets.newText{
+	txt3 = dUI.newText{
 		text="Text One",
 		style=st4
 	}
@@ -293,7 +293,7 @@ function run_example4()
 
 	-- add another text widget, give same style
 
-	txt5 = Widgets.newText{
+	txt5 = dUI.newText{
 		text="Text Two"
 	}
 	txt5.style = st4
@@ -340,7 +340,7 @@ function run_example5()
 
 	local st1, txt3, txt4
 
-	st3 = Widgets.newTextStyle{
+	st3 = dUI.newTextStyle{
 		name='my-text-style',
 		fillColor={0.5,0.8,0.2},
 		marginX=0,
@@ -348,7 +348,7 @@ function run_example5()
 		textColor={0,0,0},
 	}
 
-	txt3 = Widgets.newText{
+	txt3 = dUI.newText{
 		text="Text One"
 	}
 	txt3.style = st3
@@ -360,7 +360,7 @@ function run_example5()
 	timer.performWithDelay( 2000, function()
 		print( "\n\n Update Properties" )
 
-		txt4 = Widgets.newText{
+		txt4 = dUI.newText{
 			text="Text Two",
 			style=st3
 		}
