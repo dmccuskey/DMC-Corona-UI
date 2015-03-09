@@ -18,7 +18,7 @@ print( "\n\n#########################################################\n\n" )
 --== Imports
 
 
-local Widgets = require 'lib.dmc_widgets'
+local dUI = require 'lib.dmc_ui'
 
 
 
@@ -72,7 +72,7 @@ function run_example1a()
 
 	local bw1
 
-	bw1 = Widgets.newBackground{}
+	bw1 = dUI.newBackground{}
 	bw1.x, bw1.y = H_CENTER, V_CENTER-50
 
 	bw1:setViewFillColor( 1, 1, 0 )
@@ -95,7 +95,7 @@ function run_example1b()
 
 	local bw1
 
-	bw1 = Widgets.newRoundedBackground{}
+	bw1 = dUI.newRoundedBackground{}
 	bw1.x, bw1.y = H_CENTER, V_CENTER-100
 
 end
@@ -110,7 +110,7 @@ function run_example1c()
 
 	local bw1
 
-	bw1 = Widgets.newRectangleBackground{}
+	bw1 = dUI.newRectangleBackground{}
 	bw1.x, bw1.y = H_CENTER, V_CENTER+100
 
 end
@@ -125,7 +125,7 @@ function run_example2()
 
 	local st2, bw2
 
-	st2 = Widgets.newBackgroundStyle{
+	st2 = dUI.newBackgroundStyle{
 		debugOn=true,
 
 		width = 125,
@@ -144,7 +144,7 @@ function run_example2()
 
 	-- apply style to widgete
 
-	bw2 = Widgets.newBackground{
+	bw2 = dUI.newBackground{
 		style=st2
 	}
 
@@ -186,7 +186,7 @@ function run_example3()
 
 	local st2, st3, bw3
 
-	st2 = Widgets.newBackgroundStyle{
+	st2 = dUI.newBackgroundStyle{
 		debugOn=true,
 
 		width = 125,
@@ -203,7 +203,7 @@ function run_example3()
 		}
 	}
 
-	st3 = Widgets.newBackgroundStyle{
+	st3 = dUI.newBackgroundStyle{
 		debugOn=true,
 
 		width = 125,
@@ -222,7 +222,7 @@ function run_example3()
 	}
 
 
-	bw3 = Widgets.newBackground{
+	bw3 = dUI.newBackground{
 		style=st3
 	}
 	-- bw3.x, bw3.y = H_CENTER-100, V_CENTER+100
@@ -272,7 +272,7 @@ function run_example4()
 
 	local st1, st2, st3, bw3
 
-	st1 = Widgets.newBackgroundStyle{
+	st1 = dUI.newBackgroundStyle{
 		debugOn=true,
 
 		width = 130,
@@ -289,13 +289,13 @@ function run_example4()
 		}
 	}
 
-	st2 = Widgets.newBackgroundStyle()
+	st2 = dUI.newBackgroundStyle()
 	st2.inherit = st1
 
-	st3 = Widgets.newBackgroundStyle()
+	st3 = dUI.newBackgroundStyle()
 	st3.inherit = st2
 
-	bw3 = Widgets.newBackground{
+	bw3 = dUI.newBackground{
 		style=st3
 	}
 	-- bw3.x, bw3.y = H_CENTER-100, V_CENTER+100
