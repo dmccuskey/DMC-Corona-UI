@@ -44,7 +44,7 @@ local verifyTextStyle = TestUtils.verifyTextStyle
 --== Imports
 
 
-local Widgets = require 'lib.dmc_widgets'
+local dUI = require 'lib.dmc_ui'
 
 
 --====================================================================--
@@ -53,7 +53,7 @@ local Widgets = require 'lib.dmc_widgets'
 
 local Utils = {}
 
-local sformat = string.format
+local sfmt = string.format
 
 
 
@@ -102,13 +102,13 @@ end
 local function formatColor( value )
 	local str = ""
 	if value==nil then
-		str = sformat( "(nil, nil, nil, nil)" )
+		str = sfmt( "(nil, nil, nil, nil)" )
 	elseif value.type=='gradient' then
-		str = sformat( "(gradient)" )
+		str = sfmt( "(gradient)" )
 	elseif #value==3 then
-		str = sformat( "(%s, %s, %s, nil)", unpack( value ) )
+		str = sfmt( "(%s, %s, %s, nil)", unpack( value ) )
 	else
-		str = sformat( "(%s, %s, %s, %s)", unpack( value ) )
+		str = sfmt( "(%s, %s, %s, %s)", unpack( value ) )
 	end
 	return str
 end
@@ -118,9 +118,9 @@ local function format( property, value )
 	-- print( "format", property, value )
 	local str = ""
 	if propertyIsColor( property ) then
-		str = sformat( "'%s' %s", tostring(property), formatColor( value ) )
+		str = sfmt( "'%s' %s", tostring(property), formatColor( value ) )
 	else
-		str = sformat( "'%s'", tostring(property) )
+		str = sfmt( "'%s'", tostring(property) )
 	end
 	return str
 end
@@ -145,7 +145,7 @@ end
 
 function TestUtils.verifyTextStyle( style )
 	assert( style, "TestUtils.verifyTextStyle missing arg 'style'" )
-	local Text = Widgets.Style.Text
+	local Text = dUI.Style.Text
 	local inherit = style.inherit
 
 	TestUtils.styleIsa( style, Text )
@@ -180,7 +180,7 @@ end
 
 function TestUtils.verifyBackgroundViewStyle( style )
 	assert( style, "TestUtils.verifyBackgroundViewStyle missing arg 'style'" )
-	local StyleFactory = Widgets.Style.BackgroundFactory
+	local StyleFactory = dUI.Style.BackgroundFactory
 	local BaseViewStyle = StyleFactory.Style.Base
 	local Rectangle = StyleFactory.Style.Rectangle
 	local Rounded = StyleFactory.Style.Rounded
@@ -218,7 +218,7 @@ function TestUtils.verifyBackgroundViewStyle( style )
 		TestUtils.hasProperty( style, 'strokeColor' )
 		TestUtils.hasProperty( style, 'strokeWidth' )
 	else
-		error( sformat( "Background view type not implemented '%s'", tostring( sType ) ))
+		error( sfmt( "Background view type not implemented '%s'", tostring( sType ) ))
 	end
 
 
@@ -226,7 +226,7 @@ end
 
 function TestUtils.verifyBackgroundStyle( style )
 	assert( style, "TestUtils.verifyBackgroundStyle missing arg 'style'" )
-	local Background = Widgets.Style.Background
+	local Background = dUI.Style.Background
 	local child, emsg
 	local inherit = style.inherit
 
@@ -256,7 +256,7 @@ end
 
 function TestUtils.verifyButtonStateStyle( style )
 	assert( style, "TestUtils.verifyButtonStateStyle missing arg 'style'" )
-	local ButtonState = Widgets.Style.ButtonState
+	local ButtonState = dUI.Style.ButtonState
 	local child, emsg
 	local inherit = style.inherit
 
@@ -296,7 +296,7 @@ end
 
 function TestUtils.verifyButtonStyle( style )
 	assert( style, "TestUtils.verifyButtonStyle missing arg 'style'" )
-	local Button = Widgets.Style.Button
+	local Button = dUI.Style.Button
 	local child, emsg
 	local inherit = style.inherit
 
@@ -341,7 +341,7 @@ end
 
 function TestUtils.verifyTextFieldStyle( style )
 	assert( style, "TestUtils.verifyTextFieldStyle missing arg 'style'" )
-	local TextField = Widgets.Style.TextField
+	local TextField = dUI.Style.TextField
 	local child, emsg
 	local inherit = style.inherit
 
@@ -394,7 +394,7 @@ end
 function TestUtils.hasProperty( source, property )
 	assert( source, "TestUtils.hasProperty missing arg 'source'" )
 	assert( property, "TestUtils.hasProperty missing arg 'property'" )
-	local emsg = sformat( "missing property '%s'", tostring( property ) )
+	local emsg = sfmt( "missing property '%s'", tostring( property ) )
 	assert_true( source[property]~=nil, emsg )
 end
 
@@ -405,9 +405,9 @@ end
 function TestUtils.hasPropertyValue( source, property, value )
 	assert( source, "TestUtils.hasPropertyValue missing arg 'source'" )
 	assert( property, "TestUtils.hasPropertyValue missing arg 'property'" )
-	local emsg = sformat( "incorrect value for property '%s'", tostring( property ) )
+	local emsg = sfmt( "incorrect value for property '%s'", tostring( property ) )
 	if propertyIsColor( property ) then
-		emsg = sformat( "color mismatch %s<>%s", formatColor( source[property] ), formatColor( value ) )
+		emsg = sfmt( "color mismatch %s<>%s", formatColor( source[property] ), formatColor( value ) )
 		assert_true( colorsAreEqual( value, source[property] ), emsg )
 	else
 		assert_equal( value, source[property], emsg )
@@ -418,14 +418,14 @@ end
 function TestUtils.hasValidStyleProperties( class, source )
 	assert( class, "TestUtils.hasValidStyleProperties missing 'class'" )
 	assert( source, "TestUtils.hasValidStyleProperties missing 'source'" )
-	local emsg = sformat( "invalid class properties for '%s'", tostring( class ) )
+	local emsg = sfmt( "invalid class properties for '%s'", tostring( class ) )
 	assert_true( class._verifyStyleProperties( source ), emsg )
 end
 
 function TestUtils.hasInvalidStyleProperties( class, source )
 	assert( class, "TestUtils.hasInvalidStyleProperties missing arg 'class'" )
 	assert( source, "TestUtils.hasInvalidStyleProperties missing arg 'source'" )
-	local emsg = sformat( "invalid class properties for '%s'", tostring( class.NAME ) )
+	local emsg = sfmt( "invalid class properties for '%s'", tostring( class.NAME ) )
 	assert_false( class._verifyStyleProperties( source ), emsg )
 end
 
@@ -440,7 +440,7 @@ end
 --
 function TestUtils.styleInheritsFrom( style, class )
 	assert( style, "TestUtils.styleInheritsFrom missing arg 'style'" )
-	local emsg = sformat( "incorrect class inheritance for '%s'", tostring( style ) )
+	local emsg = sfmt( "incorrect class inheritance for '%s'", tostring( style ) )
 	assert_equal( style._inherit, class, emsg )
 end
 
@@ -448,7 +448,7 @@ end
 function TestUtils.styleIsa( style, class )
 	assert( style, "TestUtils.styleIsa missing arg 'style'" )
 	assert( class, "TestUtils.styleIsa missing arg 'class'" )
-	local emsg = sformat( "incorrect base class for '%s', expected '%s'", tostring(style), tostring(class) )
+	local emsg = sfmt( "incorrect base class for '%s', expected '%s'", tostring(style), tostring(class) )
 	assert_true( style:isa( class ), emsg )
 end
 
@@ -460,11 +460,11 @@ end
 function TestUtils.styleRawPropertyValueIs( style, property, value )
 	assert( style, "TestUtils.styleRawPropertyValueIs missing arg 'style'" )
 	assert( property, "TestUtils.styleRawPropertyValueIs missing arg 'property'" )
-	local emsg = sformat( "incorrect local property value for '%s'", format( property, value ) )
+	local emsg = sfmt( "incorrect local property value for '%s'", format( property, value ) )
 
 	if propertyIsColor( property ) then
 		local color = style:_getRawProperty( property )
-		emsg = sformat( "color mismatch for property '%s' %s<>%s", property, formatColor( color ), formatColor( value ) )
+		emsg = sfmt( "color mismatch for property '%s' %s<>%s", property, formatColor( color ), formatColor( value ) )
 		assert_true( colorsAreEqual( value, color ), emsg )
 	else
 		-- local value
@@ -479,10 +479,10 @@ end
 function TestUtils.stylePropertyValueIs( style, property, value )
 	assert( style, "TestUtils.stylePropertyValueIs missing arg 'style'" )
 	assert( property, "TestUtils.stylePropertyValueIs missing arg 'property'" )
-	local emsg = sformat( "incorrect value for property '%s'", format( property, value ) )
+	local emsg = sfmt( "incorrect value for property '%s'", format( property, value ) )
 	-- using getters (inheritance)
 	if propertyIsColor( property ) then
-		emsg = sformat( "color mismatch for '%s' %s<>%s", property, formatColor( style[property] ), formatColor( value ) )
+		emsg = sfmt( "color mismatch for '%s' %s<>%s", property, formatColor( style[property] ), formatColor( value ) )
 		assert_true( colorsAreEqual( value, style[property] ), emsg )
 	else
 		assert_equal( value, style[property], emsg )
@@ -497,7 +497,7 @@ end
 function TestUtils.styleHasProperty( style, property )
 	assert( style, "TestUtils.styleHasProperty missing arg 'style'" )
 	assert( property, "TestUtils.styleHasProperty missing arg 'property'" )
-	local emsg = sformat( "style inherits property '%s'", tostring( property ) )
+	local emsg = sfmt( "style inherits property '%s'", tostring( property ) )
 	assert_true( style:_getRawProperty(property)~=nil, emsg )
 end
 
@@ -508,7 +508,7 @@ end
 function TestUtils.styleInheritsProperty( style, property )
 	assert( style, "TestUtils.styleInheritsProperty missing arg style'" )
 	assert( property, "TestUtils.styleInheritsProperty missing arg 'property'" )
-	local emsg = sformat( "style has local property '%s'", tostring( property ) )
+	local emsg = sfmt( "style has local property '%s'", tostring( property ) )
 	assert_true( style:_getRawProperty(property)==nil, emsg )
 end
 

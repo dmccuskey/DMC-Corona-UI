@@ -15,7 +15,7 @@ local VERSION = "0.1.0"
 --== Imports
 
 
-local Widget = require 'lib.dmc_widgets'
+local dUI = require 'lib.dmc_ui'
 local TestUtils = require 'tests.test_utils'
 local Utils = require 'dmc_utils'
 
@@ -69,7 +69,7 @@ local marker = TestUtils.outputMarker
 
 function suite_setup()
 
-	Widget._loadNavBarSupport( {modex='test'} )
+	dUI.Style._loadNavBarStyleSupport( {mode=dUI.TEST_MODE} )
 
 end
 
@@ -87,25 +87,25 @@ function test_instanceBasics()
 	-- print( "test_instanceBasics" )
 	local style, widget, navItem
 
-	widget = Widget.newNavBar()
+	widget = dUI.newNavBar()
 	widget.x, widget.y = H_CENTER, V_CENTER
 
 	-- Add 1st Nav Item
 
-	navItem=Widget.newNavItem{
+	navItem=dUI.newNavItem{
 		title="First"
 	}
 	widget:pushNavItem( navItem )
 
 	timer.performWithDelay( 1000, function()
-		navItem=Widget.newNavItem{
+		navItem=dUI.newNavItem{
 			title="Second"
 		}
 		widget:pushNavItem( navItem )
 	end)
 
 	timer.performWithDelay( 2000, function()
-		navItem=Widget.newNavItem{
+		navItem=dUI.newNavItem{
 			title="Third"
 		}
 		widget:pushNavItem( navItem )

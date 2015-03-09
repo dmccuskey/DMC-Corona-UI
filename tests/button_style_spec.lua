@@ -15,7 +15,7 @@ local VERSION = "0.1.0"
 --== Imports
 
 
-local Widgets = require 'lib.dmc_widgets'
+local dUI = require 'lib.dmc_ui'
 local TestUtils = require 'tests.test_utils'
 local Utils = require 'dmc_utils'
 
@@ -65,7 +65,7 @@ local marker = TestUtils.outputMarker
 
 function suite_setup()
 
-	Widgets._loadButtonSupport( {mode='test'} )
+	dUI.Style._loadButtonStyleSupport( {mode=dUI.TEST_MODE} )
 
 end
 
@@ -77,8 +77,8 @@ end
 
 function test_defaultStyleValues()
 	-- print( "test_defaultStyleValues" )
-	local Button = Widgets.Style.Button
-	local Text = Widgets.Style.Text
+	local Button = dUI.Style.Button
+	local Text = dUI.Style.Text
 
 	local state, background, text
 
@@ -172,10 +172,10 @@ copied during initialization
 --[[
 function test_addMissingProperties_Rounded()
 	-- print( "test_addMissingProperties_Rounded" )
-	local BackgroundFactory = Widgets.Style.BackgroundFactory
-	local Button = Widgets.Style.Button
-	local Text = Widgets.Style.Text
-	local Background = Widgets.Style.Background
+	local BackgroundFactory = dUI.Style.BackgroundFactory
+	local Button = dUI.Style.Button
+	local Text = dUI.Style.Text
+	local Background = dUI.Style.Background
 	local Rectangle = BackgroundFactory.Rectangle
 
 	local defaults, bDefaults, tDefaults, vDefaults
@@ -295,10 +295,10 @@ end
 --[[
 function test_addMissingProperties_Rounded2()
 	-- print( "test_addMissingProperties_Rounded2" )
-	local BackgroundFactory = Widgets.Style.BackgroundFactory
-	local Button = Widgets.Style.Button
-	local Text = Widgets.Style.Text
-	local Background = Widgets.Style.Background
+	local BackgroundFactory = dUI.Style.BackgroundFactory
+	local Button = dUI.Style.Button
+	local Text = dUI.Style.Text
+	local Background = dUI.Style.Background
 	local Rectangle = BackgroundFactory.Rectangle
 
 	local defaults, bDefaults, tDefaults, vDefaults
@@ -429,7 +429,7 @@ end
 
 function test_copyExistingSrcProperties()
 	-- print( "test_copyExistingSrcProperties" )
-	local Button = Widgets.Style.Button
+	local Button = dUI.Style.Button
 
 	local src, dest
 
@@ -523,7 +523,7 @@ end
 
 function test_copyExistingSrcProperties_withForce()
 	-- print( "test_copyExistingSrcProperties_withForce" )
-	local Button = Widgets.Style.Button
+	local Button = dUI.Style.Button
 
 	local src, dest
 
@@ -619,7 +619,7 @@ end
 
 function test_verifyStyleProperties()
 	-- print( "test_verifyStyleProperties" )
-	local Button = Widgets.Style.Button
+	local Button = dUI.Style.Button
 
 	local src
 
@@ -995,15 +995,15 @@ end
 
 
 function test_generalTest_01()
-	local Button = Widgets.Style.Button
-	local Background = Widgets.Style.Background
+	local Button = dUI.Style.Button
+	local Background = dUI.Style.Background
 	local BaseStyle, bsState, bsLabel, bsBg, bsView
 	local style, state, label, background, view
 	local bgBase
 
 	BaseStyle = Button:getBaseStyle()
 
-	style = Widgets.newButtonStyle{
+	style = dUI.newButtonStyle{
 		debugOn=true,
 		width=55,
 		height=56,
@@ -1096,7 +1096,7 @@ end
 
 function test_styleClassBasics()
 	-- print( "test_styleClassBasics" )
-	local Button = Widgets.Style.Button
+	local Button = dUI.Style.Button
 	local BaseStyle, defaultStyles
 	local style
 
@@ -1105,7 +1105,7 @@ function test_styleClassBasics()
 
 	--== Verify a new button style
 
-	style = Widgets.newButtonStyle()
+	style = dUI.newButtonStyle()
 
 	TestUtils.verifyButtonStyle( style )
 	styleInheritsFrom( style, BaseStyle )
@@ -1125,7 +1125,7 @@ copied during initialization
 --]]
 function test_basicStyleProperties()
 	-- print( "test_classBackgroundStyle" )
-	local Button = Widgets.Style.Button
+	local Button = dUI.Style.Button
 	local BaseStyle = Button:getBaseStyle()
 
 	assert_equal( Button.NAME, "Button Style", "name is incorrect" )
@@ -1138,8 +1138,8 @@ end
 
 function test_defaultInheritance()
 	-- print( "test_defaultInheritance" )
-	local Button = Widgets.Style.Button
-	local Background = Widgets.Style.Background
+	local Button = dUI.Style.Button
+	local Background = dUI.Style.Background
 	local BaseStyle, bsState, bsLabel, bsBg, bsView
 	local s1, s1State, s1Label, s1Bg, s1View
 	local bgBase
@@ -1148,7 +1148,7 @@ function test_defaultInheritance()
 
 	--== default button
 
-	s1 = Widgets.newButtonStyle()
+	s1 = dUI.newButtonStyle()
 	verifyButtonStyle( s1 )
 
 	styleInheritsFrom( s1, BaseStyle )
@@ -1217,7 +1217,7 @@ end
 
 function test_copyStyle()
 
-	local Button = Widgets.Style.Button
+	local Button = dUI.Style.Button
 	local BaseStyle = Button:getBaseStyle()
 	local style, copy
 	local child, label, background, view

@@ -15,7 +15,7 @@ local VERSION = "0.1.0"
 --== Imports
 
 
-local Widgets = require 'lib.dmc_widgets'
+local dUI = require 'lib.dmc_ui'
 local TestUtils = require 'tests.test_utils'
 local Utils = require 'dmc_utils'
 
@@ -69,7 +69,7 @@ local marker = TestUtils.outputMarker
 
 function suite_setup()
 
-	Widgets._loadBackgroundSupport( {mode='test'} )
+	dUI.Style._loadBackgroundStyleSupport( {mode=dUI.TEST_MODE} )
 
 end
 
@@ -173,7 +173,7 @@ copied during initialization
 --]]
 function test_copyExistingSrcProperties()
 	-- print( "test_copyExistingSrcProperties" )
-	local BackgroundFactory = Widgets.Style.BackgroundFactory
+	local BackgroundFactory = dUI.Style.BackgroundFactory
 	local RectangleStyle = BackgroundFactory.Rectangle
 
 	local src, dest
@@ -269,7 +269,7 @@ end
 
 function test_verifyStyleProperties()
 	-- print( "test_verifyStyleProperties" )
-	local BackgroundFactory = Widgets.Style.BackgroundFactory
+	local BackgroundFactory = dUI.Style.BackgroundFactory
 	local RectangleStyle = BackgroundFactory.Rectangle
 
 	local src
@@ -320,7 +320,7 @@ end
 
 function test_styleClassBasics()
 	-- print( "test_styleClassBasics" )
-	local StyleFactory = Widgets.Style.BackgroundFactory
+	local StyleFactory = dUI.Style.BackgroundFactory
 	local RectangleStyle = StyleFactory.Rectangle
 
 	local BaseStyle, defaultStyles
@@ -329,7 +329,7 @@ function test_styleClassBasics()
 	defaultStyles = RectangleStyle:getDefaultStyleValues()
 	BaseStyle = RectangleStyle:getBaseStyle()
 
-	style = StyleFactory.create( 'rectangle' )
+	style = StyleFactory.create( dUI.RECTANGLE )
 
 	verifyBackgroundViewStyle( style )
 	styleInheritsFrom( style, BaseStyle )
@@ -343,7 +343,7 @@ end
 --]]
 function test_clearProperties()
 	-- print( "test_clearProperties" )
-	local StyleFactory = Widgets.Style.BackgroundFactory
+	local StyleFactory = dUI.Style.BackgroundFactory
 	local RectangleStyle = StyleFactory.Rectangle
 
 	local BaseStyle, StyleClass
@@ -358,7 +358,7 @@ function test_clearProperties()
 
 	-- by default, style inherits properties from BaseStyle
 
-	s1 = StyleFactory.create( 'rectangle' )
+	s1 = StyleFactory.create( dUI.RECTANGLE )
 	s1:addEventListener( s1.EVENT, callback )
 
 

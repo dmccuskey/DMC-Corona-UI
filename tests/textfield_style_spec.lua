@@ -15,7 +15,7 @@ local VERSION = "0.1.0"
 --== Imports
 
 
-local Widgets = require 'lib.dmc_widgets'
+local dUI = require 'lib.dmc_ui'
 local TestUtils = require 'tests.test_utils'
 local Utils = require 'dmc_utils'
 
@@ -69,7 +69,7 @@ local marker = TestUtils.outputMarker
 
 function suite_setup()
 
-	Widgets._loadTextFieldSupport( {mode='test'} )
+	dUI.Style._loadTextFieldStyleSupport( {dUI.TEST_MODE} )
 
 end
 
@@ -82,7 +82,7 @@ end
 
 function test_verifyStyleProperties()
 	-- print( "test_verifyStyleProperties" )
-	local TextField = Widgets.Style.TextField
+	local TextField = dUI.Style.TextField
 
 	local src
 
@@ -247,7 +247,7 @@ end
 
 function test_defaultStyleValues()
 	print( "test_defaultStyleValues" )
-	local TextField = Widgets.Style.TextField
+	local TextField = dUI.Style.TextField
 
 	local defaults = TextField:getDefaultStyleValues()
 
@@ -261,7 +261,7 @@ end
 
 function test_copyExistingSrcProperties()
 	-- print( "test_copyExistingSrcProperties" )
-	local TextField = Widgets.Style.TextField
+	local TextField = dUI.Style.TextField
 
 	local src, dest
 
@@ -376,7 +376,7 @@ end
 
 function test_styleClassBasics()
 	-- print( "test_styleClassBasics" )
-	local TextField = Widgets.Style.TextField
+	local TextField = dUI.Style.TextField
 	local BaseStyle, defaultStyles
 	local style
 
@@ -385,7 +385,7 @@ function test_styleClassBasics()
 
 	--== Verify a new button style
 
-	style = Widgets.newTextFieldStyle()
+	style = dUI.newTextFieldStyle()
 
 	TestUtils.verifyTextFieldStyle( style )
 	styleInheritsFrom( style, BaseStyle )

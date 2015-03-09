@@ -1,4 +1,3 @@
-
 --====================================================================--
 -- Test: Text Widget
 --====================================================================--
@@ -16,8 +15,7 @@ local VERSION = "0.1.0"
 --== Imports
 
 
-local Widgets = require 'lib.dmc_widgets'
-
+local dUI = require 'lib.dmc_ui'
 local TestUtils = require 'tests.test_utils'
 local Utils = require 'dmc_utils'
 
@@ -72,7 +70,7 @@ local marker = TestUtils.outputMarker
 
 function suite_setup()
 
-	Widgets._loadTextSupport( {mode='test'} )
+	dUI.Style._loadTextStyleSupport( {mode=dUI.TEST_MODE} )
 
 end
 
@@ -89,7 +87,7 @@ copied during initialization
 --[[
 function test_addMissingProperties()
 	-- print( "test_addMissingProperties" )
-	local TextStyle = Widgets.Style.Text
+	local TextStyle = dUI.Style.Text
 	local defaults = TextStyle:getDefaultStyleValues()
 	local srcs, src, base, dest, label
 
@@ -169,7 +167,7 @@ copied during initialization
 --]]
 function test_copyExistingSrcProperties()
 	-- print( "test_copyExistingSrcProperties" )
-	local TextStyle = Widgets.Style.Text
+	local TextStyle = dUI.Style.Text
 
 	local src, dest
 
@@ -303,7 +301,7 @@ end
 --]]
 function test_verifyStyleProperties()
 	-- print( "test_verifyStyleProperties" )
-	local Text = Widgets.Style.Text
+	local Text = dUI.Style.Text
 
 	local src
 
@@ -363,7 +361,7 @@ end
 
 function test_prepareData_minimal()
 
-	local Text = Widgets.Style.Text
+	local Text = dUI.Style.Text
 	local BaseStyle = Text:getBaseStyle()
 
 	local dataSrc = {
@@ -432,7 +430,7 @@ end
 --]]
 function test_styleClassBasics()
 	-- print( "test_styleClassBasics" )
-	local Text = Widgets.Style.Text
+	local Text = dUI.Style.Text
 	local BaseStyle, defaultStyles
 	local style
 
@@ -461,7 +459,7 @@ function test_styleClassBasics()
 
 	--== Create a new text style
 
-	style = Widgets.newTextStyle()
+	style = dUI.newTextStyle()
 
 	verifyTextStyle( style )
 	styleInheritsFrom( style, BaseStyle )
@@ -484,7 +482,7 @@ function test_styleClassBasics()
 
 	--== Create a new text style
 
-	style = Widgets.newTextStyle{
+	style = dUI.newTextStyle{
 		debugOn=true,
 		height=12,
 		fontSize=99
@@ -513,7 +511,7 @@ end
 
 function test_copyStyle()
 
-	local Text = Widgets.Style.Text
+	local Text = dUI.Style.Text
 	local BaseStyle = Text:getBaseStyle()
 	local style, copy
 
@@ -533,7 +531,7 @@ function test_copyStyle()
 	styleInheritsPropertyValue( copy, 'textColor', BaseStyle.textColor )
 
 
-	style = Widgets.newTextStyle{
+	style = dUI.newTextStyle{
 		width=10,
 		height=100,
 		fontSize=100,
@@ -563,7 +561,7 @@ end
 --]]
 function test_clearPropertiesWithoutInherit()
 	-- print( "test_clearPropertiesWithoutInherit" )
-	local Text = Widgets.Style.Text
+	local Text = dUI.Style.Text
 
 	local StyleBase, StyleClass
 	local s1, inherit
@@ -572,7 +570,7 @@ function test_clearPropertiesWithoutInherit()
 
 	-- by default, style has no inheritance
 
-	s1 = Widgets.newTextStyle()
+	s1 = dUI.newTextStyle()
 
 	StyleClass = s1.class
 	StyleBase = StyleClass:getBaseStyle()
@@ -693,7 +691,7 @@ end
 --]]
 function test_clearPropertiesWithInherit()
 	-- print( "test_clearPropertiesWithInherit" )
-	local Text = Widgets.Style.Text
+	local Text = dUI.Style.Text
 
 	local StyleBase, StyleClass
 	local s1, inherit
@@ -703,7 +701,7 @@ function test_clearPropertiesWithInherit()
 
 	-- by default, style has no inheritance
 
-	s1 = Widgets.newTextStyle()
+	s1 = dUI.newTextStyle()
 	s1.inherit = StyleBase
 
 	StyleClass = s1.class
@@ -827,7 +825,7 @@ end
 --]]
 function test_initializeStyleWithLuaStructure()
 	-- print( "test_initializeStyleWithLuaStructure" )
-	local Text = Widgets.Style.Text
+	local Text = dUI.Style.Text
 
 	local StyleBase, StyleClass
 	local s1, inherit
@@ -837,7 +835,7 @@ function test_initializeStyleWithLuaStructure()
 
 	-- by default, style has no inheritance
 
-	s1 = Widgets.newTextStyle{
+	s1 = dUI.newTextStyle{
 		width=10,
 		height=100,
 		marginX=20,

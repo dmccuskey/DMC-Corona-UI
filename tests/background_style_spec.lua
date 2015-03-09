@@ -15,7 +15,7 @@ local VERSION = "0.1.0"
 --== Imports
 
 
-local Widgets = require 'lib.dmc_widgets'
+local dUI = require 'lib.dmc_ui'
 local TestUtils = require 'tests.test_utils'
 local Utils = require 'dmc_utils'
 
@@ -65,7 +65,7 @@ local marker = TestUtils.outputMarker
 
 function suite_setup()
 
-	Widgets._loadBackgroundSupport( {mode='test'} )
+	dUI.Style._loadBackgroundStyleSupport( {dUI.TEST_MODE} )
 
 end
 
@@ -84,9 +84,9 @@ base is like globals for Style
 --[[
 function test_addMissingProperties_Rectangle()
 	-- print( "test_addMissingProperties_Rectangle" )
-	local BackgroundFactory = Widgets.Style.BackgroundFactory
+	local BackgroundFactory = dUI.Style.BackgroundFactory
 	local Rectangle = BackgroundFactory.Rectangle
-	local Background = Widgets.Style.Background
+	local Background = dUI.Style.Background
 	local defaults, vDefaults
 	local src, base
 	local child, label, view
@@ -248,7 +248,7 @@ end
 -- --[[
 -- function test_copyExistingSrcProperties()
 -- 	-- print( "test_copyExistingSrcProperties" )
--- 	local BackgroundFactory = Widgets.Style.BackgroundFactory
+-- 	local BackgroundFactory = dUI.Style.BackgroundFactory
 -- 	local RoundedStyle = BackgroundFactory.Rounded
 
 -- 	local src
@@ -261,7 +261,7 @@ end
 --]]
 function test_verifyStyleProperties_rounded()
 	-- print( "test_verifyStyleProperties" )
-	local Background = Widgets.Style.Background
+	local Background = dUI.Style.Background
 
 	local src
 
@@ -347,7 +347,7 @@ end
 
 function test_verifyStyleProperties_rectangle()
 	-- print( "test_verifyStyleProperties" )
-	local Background = Widgets.Style.Background
+	local Background = dUI.Style.Background
 
 	local src
 
@@ -430,15 +430,15 @@ end
 
 function test_defaultStyleValues()
 	-- print( "test_defaultStyleValues" )
-	local Background = Widgets.Style.Background
+	local Background = dUI.Style.Background
 	local defaults
 
-	defaults = Background:getDefaultStyleValues( 'rounded' )
+	defaults = Background:getDefaultStyleValues( dUI.ROUNDED )
 	hasValidStyleProperties( Background, defaults )
 
 	-- TODO: check values
 
-	defaults = Background:getDefaultStyleValues( 'rectangle' )
+	defaults = Background:getDefaultStyleValues( dUI.RECTANGLE )
 	hasValidStyleProperties( Background, defaults )
 
 	-- TODO: check values
@@ -462,7 +462,7 @@ test basic characteristics
 --]]
 function test_backgroundStyleClassBasics()
 	-- print( "test_backgroundStyleClassBasics" )
-	local Background = Widgets.Style.Background
+	local Background = dUI.Style.Background
 	local BaseStyle, defaults, vDefaults
 	local style, view
 
@@ -470,7 +470,7 @@ function test_backgroundStyleClassBasics()
 
 	--== rounded
 
-	BaseStyle = Background:getBaseStyle( 'rounded' )
+	BaseStyle = Background:getBaseStyle( dUI.ROUNDED )
 	print( BaseStyle)
 	verifyBackgroundStyle( BaseStyle )
 
@@ -483,7 +483,7 @@ function test_backgroundStyleClassBasics()
 	styleHasPropertyValue( BaseStyle, 'height', defaults.height )
 	styleHasPropertyValue( BaseStyle, 'anchorX', defaults.anchorX )
 	styleHasPropertyValue( BaseStyle, 'anchorY', defaults.anchorY )
-	styleHasPropertyValue( BaseStyle, 'type', 'rounded' )
+	styleHasPropertyValue( BaseStyle, 'type', dUI.ROUNDED )
 
 	view = BaseStyle.view
 	vDefaults = view:getDefaultStyleValues()
@@ -499,7 +499,7 @@ function test_backgroundStyleClassBasics()
 
 	--== rectangle
 
-	BaseStyle = Background:getBaseStyle( 'rectangle' )
+	BaseStyle = Background:getBaseStyle( dUI.RECTANGLE )
 	verifyBackgroundStyle( BaseStyle )
 
 	styleInheritsFrom( BaseStyle, BaseStyle.NO_INHERIT )
@@ -511,7 +511,7 @@ function test_backgroundStyleClassBasics()
 	styleHasPropertyValue( BaseStyle, 'height', defaults.height )
 	styleHasPropertyValue( BaseStyle, 'anchorX', defaults.anchorX )
 	styleHasPropertyValue( BaseStyle, 'anchorY', defaults.anchorY )
-	styleHasPropertyValue( BaseStyle, 'type', 'rectangle' )
+	styleHasPropertyValue( BaseStyle, 'type', dUI.RECTANGLE )
 
 	view = BaseStyle.view
 	vDefaults = view:getDefaultStyleValues()
@@ -528,21 +528,21 @@ function test_backgroundStyleClassBasics()
 
 	--== Test constructors
 
-	style = Widgets.newBackgroundStyle()
+	style = dUI.newBackgroundStyle()
 
 	verifyBackgroundStyle( style )
 	styleInheritsFrom( BaseStyle, BaseStyle.NO_INHERIT )
 
 	style:removeSelf()
 
-	style = Widgets.newRoundedBackgroundStyle()
+	style = dUI.newRoundedBackgroundStyle()
 
 	verifyBackgroundStyle( style )
 	styleInheritsFrom( BaseStyle, BaseStyle.NO_INHERIT )
 
 	style:removeSelf()
 
-	style = Widgets.newRectangleBackgroundStyle()
+	style = dUI.newRectangleBackgroundStyle()
 
 	verifyBackgroundStyle( style )
 	styleInheritsFrom( BaseStyle, BaseStyle.NO_INHERIT )
@@ -555,7 +555,7 @@ end
 
 function test_inheritedViewUpdate_levels2_diffType()
 	-- print( "test_inheritedViewUpdate_levels2_diffType" )
-	local Background = Widgets.Style.Background
+	local Background = dUI.Style.Background
 	local BaseStyle, defaults, vDefaults
 
 	local StyleBase, sbView
@@ -604,9 +604,9 @@ function test_inheritedViewUpdate_levels2_diffType()
 
 	--== Setup Inheritance
 
-	inherit = Widgets.newRoundedBackgroundStyle()
+	inherit = dUI.newRoundedBackgroundStyle()
 
-	style = Widgets.newRoundedBackgroundStyle()
+	style = dUI.newRoundedBackgroundStyle()
 	style.inherit = inherit
 
 	iView = inherit.view
@@ -618,10 +618,10 @@ function test_inheritedViewUpdate_levels2_diffType()
 	-- Check properties
 
 	styleInheritsFrom( style, inherit )
-	styleInheritsPropertyValue( style, 'type', 'rounded' )
+	styleInheritsPropertyValue( style, 'type', dUI.ROUNDED )
 
 	styleInheritsFrom( sView, iView )
-	hasPropertyValue( sView, 'type', 'rounded' )
+	hasPropertyValue( sView, 'type', dUI.ROUNDED )
 
 	styleInheritsPropertyValue( sView, 'cornerRadius', iView.cornerRadius )
 	styleInheritsPropertyValue( sView, 'fillColor', iView.fillColor )
@@ -632,7 +632,7 @@ function test_inheritedViewUpdate_levels2_diffType()
 
 	iReset, iResetProperty = 0,0
 	iViewReset, iViewDestroy = 0,0
-	inherit.type = 'rectangle'
+	inherit.type = dUI.RECTANGLE
 
 	assert_equal( 1, iReset, "incorrect count for iReset" )
 	assert_equal( 1, iResetProperty, "incorrect count for iResetProperty" )
@@ -645,10 +645,10 @@ function test_inheritedViewUpdate_levels2_diffType()
 	sView = style.view
 
 	styleInheritsFrom( style, inherit )
-	styleInheritsPropertyValue( style, 'type', 'rectangle' )
+	styleInheritsPropertyValue( style, 'type', dUI.RECTANGLE )
 
 	styleInheritsFrom( sView, iView )
-	hasPropertyValue( sView, 'type', 'rectangle' )
+	hasPropertyValue( sView, 'type', dUI.RECTANGLE )
 
 
 end
@@ -658,7 +658,7 @@ end
 
 function test_inheritedViewUpdate_levels3_diffType()
 	-- print( "test_inheritedViewUpdate_levels3_diffType" )
-	local Background = Widgets.Style.Background
+	local Background = dUI.Style.Background
 	local BaseStyle, defaults, vDefaults
 
 	local StyleBase, sbView
@@ -710,12 +710,12 @@ function test_inheritedViewUpdate_levels3_diffType()
 
 	--== Setup Inheritance
 
-	inherit2 = Widgets.newRoundedBackgroundStyle()
+	inherit2 = dUI.newRoundedBackgroundStyle()
 
-	inherit = Widgets.newRoundedBackgroundStyle()
+	inherit = dUI.newRoundedBackgroundStyle()
 	inherit.inherit = inherit2
 
-	style = Widgets.newRoundedBackgroundStyle()
+	style = dUI.newRoundedBackgroundStyle()
 	style.inherit = inherit
 
 	i2View = inherit2.view
@@ -728,16 +728,16 @@ function test_inheritedViewUpdate_levels3_diffType()
 	-- Check properties
 
 	styleInheritsFrom( inherit, inherit2 )
-	styleInheritsPropertyValue( inherit, 'type', 'rounded' )
+	styleInheritsPropertyValue( inherit, 'type', dUI.ROUNDED )
 
 	styleInheritsFrom( iView, i2View )
-	hasPropertyValue( iView, 'type', 'rounded' )
+	hasPropertyValue( iView, 'type', dUI.ROUNDED )
 
 	styleInheritsFrom( style, inherit )
-	styleInheritsPropertyValue( style, 'type', 'rounded' )
+	styleInheritsPropertyValue( style, 'type', dUI.ROUNDED )
 
 	styleInheritsFrom( sView, iView )
-	hasPropertyValue( sView, 'type', 'rounded' )
+	hasPropertyValue( sView, 'type', dUI.ROUNDED )
 
 	styleInheritsPropertyValue( sView, 'cornerRadius', iView.cornerRadius )
 	styleInheritsPropertyValue( sView, 'fillColor', iView.fillColor )
@@ -748,7 +748,7 @@ function test_inheritedViewUpdate_levels3_diffType()
 
 	iReset, iResetProperty = 0,0
 	iViewReset, iViewDestroy = 0,0
-	inherit2.type = 'rectangle'
+	inherit2.type = dUI.RECTANGLE
 
 	-- assert_equal( 1, iReset, "incorrect count for iReset" )
 	-- assert_equal( 1, iResetProperty, "incorrect count for iResetProperty" )
@@ -762,16 +762,16 @@ function test_inheritedViewUpdate_levels3_diffType()
 	sView = style.view
 
 	styleInheritsFrom( inherit, inherit2 )
-	styleInheritsPropertyValue( inherit, 'type', 'rectangle' )
+	styleInheritsPropertyValue( inherit, 'type', dUI.RECTANGLE )
 
 	styleInheritsFrom( iView, i2View )
-	hasPropertyValue( iView, 'type', 'rectangle' )
+	hasPropertyValue( iView, 'type', dUI.RECTANGLE )
 
 	styleInheritsFrom( style, inherit )
-	styleInheritsPropertyValue( style, 'type', 'rectangle' )
+	styleInheritsPropertyValue( style, 'type', dUI.RECTANGLE )
 
 	styleInheritsFrom( sView, iView )
-	hasPropertyValue( sView, 'type', 'rectangle' )
+	hasPropertyValue( sView, 'type', dUI.RECTANGLE )
 
 end
 
@@ -779,7 +779,7 @@ end
 
 function test_inheritedViewUpdate_levels3_blockType()
 	-- print( "test_inheritedViewUpdate_levels3_blockType" )
-	local Background = Widgets.Style.Background
+	local Background = dUI.Style.Background
 	local BaseStyle, defaults, vDefaults
 
 	local StyleBase, sbView
@@ -793,7 +793,7 @@ function test_inheritedViewUpdate_levels3_blockType()
 	local inherit2, i2Reset, i2ResetCB
 	local i2View, i2ViewReset, i2ViewDestroy, i2ViewCB
 
-	local BaseStyle = Background:getBaseStyle( 'rounded' )
+	local BaseStyle = Background:getBaseStyle( dUI.ROUNDED )
 	local bsView = BaseStyle.view
 
 	iReset = 0
@@ -833,13 +833,13 @@ function test_inheritedViewUpdate_levels3_blockType()
 
 	--== Setup Inheritance
 
-	inherit2 = Widgets.newRoundedBackgroundStyle()
+	inherit2 = dUI.newRoundedBackgroundStyle()
 
-	inherit = Widgets.newRoundedBackgroundStyle()
+	inherit = dUI.newRoundedBackgroundStyle()
 	inherit.inherit = inherit2
-	inherit.type = 'rounded' -- block type
+	inherit.type = dUI.ROUNDED -- block type
 
-	style = Widgets.newRoundedBackgroundStyle()
+	style = dUI.newRoundedBackgroundStyle()
 	style.inherit = inherit
 
 	i2View = inherit2.view
@@ -852,19 +852,19 @@ function test_inheritedViewUpdate_levels3_blockType()
 	-- Check properties
 
 	styleInheritsFrom( inherit2, BaseStyle )
-	styleInheritsPropertyValue( inherit2, 'type', 'rounded' )
+	styleInheritsPropertyValue( inherit2, 'type', dUI.ROUNDED )
 
 	styleInheritsFrom( inherit, inherit2 )
-	styleHasPropertyValue( inherit, 'type', 'rounded' )
+	styleHasPropertyValue( inherit, 'type', dUI.ROUNDED )
 
 	styleInheritsFrom( iView, bsView )
-	hasPropertyValue( iView, 'type', 'rounded' )
+	hasPropertyValue( iView, 'type', dUI.ROUNDED )
 
 	styleInheritsFrom( style, inherit )
-	styleInheritsPropertyValue( style, 'type', 'rounded' )
+	styleInheritsPropertyValue( style, 'type', dUI.ROUNDED )
 
 	styleInheritsFrom( sView, iView )
-	hasPropertyValue( sView, 'type', 'rounded' )
+	hasPropertyValue( sView, 'type', dUI.ROUNDED )
 
 	styleInheritsPropertyValue( sView, 'cornerRadius', iView.cornerRadius )
 	styleInheritsPropertyValue( sView, 'fillColor', iView.fillColor )
@@ -876,7 +876,7 @@ function test_inheritedViewUpdate_levels3_blockType()
 	iReset, iResetProperty = 0,0
 	iViewReset, iViewDestroy = 0,0
 
-	inherit2.type = 'rectangle'
+	inherit2.type = dUI.RECTANGLE
 
 	-- assert_equal( 1, iReset, "incorrect count for iReset" )
 	-- assert_equal( 1, iResetProperty, "incorrect count for iResetProperty" )
@@ -895,19 +895,19 @@ function test_inheritedViewUpdate_levels3_blockType()
 	i2View = inherit2.view
 
 	styleInheritsFrom( inherit2, BaseStyle )
-	styleHasPropertyValue( inherit2, 'type', 'rectangle' )
+	styleHasPropertyValue( inherit2, 'type', dUI.RECTANGLE )
 
 	styleInheritsFrom( inherit, inherit2 )
-	styleHasPropertyValue( inherit, 'type', 'rounded' )
+	styleHasPropertyValue( inherit, 'type', dUI.ROUNDED )
 
 	styleInheritsFrom( iView, bsView )
-	hasPropertyValue( iView, 'type', 'rounded' )
+	hasPropertyValue( iView, 'type', dUI.ROUNDED )
 
 	styleInheritsFrom( style, inherit )
-	styleInheritsPropertyValue( style, 'type', 'rounded' )
+	styleInheritsPropertyValue( style, 'type', dUI.ROUNDED )
 
 	styleInheritsFrom( sView, iView )
-	hasPropertyValue( sView, 'type', 'rounded' )
+	hasPropertyValue( sView, 'type', dUI.ROUNDED )
 
 end
 
@@ -921,7 +921,7 @@ same Type
 --]]
 function test_updateView_deltaTYPE_unsetI_sameT()
 	-- print( "test_updateView_deltaTYPE_unsetI_sameT" )
-	local Background = Widgets.Style.Background
+	local Background = dUI.Style.Background
 	local BaseStyle, defaults, vDefaults
 
 	local BaseStyle, sbView
@@ -945,14 +945,14 @@ function test_updateView_deltaTYPE_unsetI_sameT()
 
 	--== Setup Rounded
 
-	style = Widgets.newRoundedBackgroundStyle()
+	style = dUI.newRoundedBackgroundStyle()
 	sView = style.view
 
 	BaseStyle = Background:getBaseStyle( style.type )
 	bsView = BaseStyle.view
 
 	styleInheritsFrom( style, BaseStyle )
-	styleInheritsPropertyValue( style, 'type', 'rounded' )
+	styleInheritsPropertyValue( style, 'type', dUI.ROUNDED )
 
 	styleInheritsFrom( sView, bsView )
 	styleInheritsPropertyValue( sView, 'cornerRadius', bsView.cornerRadius )
@@ -970,7 +970,7 @@ function test_updateView_deltaTYPE_unsetI_sameT()
 	assert_equal( 0, sViewReset, "incorrect count for sViewReset" )
 
 	styleInheritsFrom( style, BaseStyle )
-	styleHasPropertyValue( style, 'type', 'rounded' )
+	styleHasPropertyValue( style, 'type', dUI.ROUNDED )
 
 	styleInheritsFrom( sView, bsView )
 	styleHasPropertyValue( sView, 'cornerRadius', bsView.cornerRadius )
@@ -989,7 +989,7 @@ different Type
 --]]
 function test_updateView_deltaTYPE_unsetI_diffT()
 	-- print( "test_updateView_deltaTYPE_unsetI_diffT" )
-	local Background = Widgets.Style.Background
+	local Background = dUI.Style.Background
 	local BaseStyle, defaults, vDefaults
 
 	local StyleBase, sbView
@@ -1014,12 +1014,12 @@ function test_updateView_deltaTYPE_unsetI_diffT()
 
 	--== Setup Rounded
 
-	style = Widgets.newRoundedBackgroundStyle()
+	style = dUI.newRoundedBackgroundStyle()
 
 	StyleBase = Background:getBaseStyle( style.type )
 	sbView = StyleBase.view
-	styleHasPropertyValue( StyleBase, 'type', 'rounded' )
-	hasPropertyValue( sbView, 'type', 'rounded' )
+	styleHasPropertyValue( StyleBase, 'type', dUI.ROUNDED )
+	hasPropertyValue( sbView, 'type', dUI.ROUNDED )
 
 	sView = style.view
 	style:addEventListener( style.EVENT, sResetCB )
@@ -1027,10 +1027,10 @@ function test_updateView_deltaTYPE_unsetI_diffT()
 
 
 	styleInheritsFrom( style, StyleBase )
-	styleInheritsPropertyValue( style, 'type', 'rounded' )
+	styleInheritsPropertyValue( style, 'type', dUI.ROUNDED )
 
 	styleInheritsFrom( sView, sbView )
-	hasPropertyValue( sView, 'type', 'rounded' )
+	hasPropertyValue( sView, 'type', dUI.ROUNDED )
 
 	styleInheritsPropertyValue( sView, 'cornerRadius', sbView.cornerRadius )
 	styleInheritsPropertyValue( sView, 'fillColor', sbView.fillColor )
@@ -1041,12 +1041,12 @@ function test_updateView_deltaTYPE_unsetI_diffT()
 
 	sReset = 0
 	sViewReset = 0
-	style.type = 'rectangle'
+	style.type = dUI.RECTANGLE
 
 	StyleBase2 = Background:getBaseStyle( style.type )
 	sbView2 = StyleBase2.view
-	styleHasPropertyValue( StyleBase2, 'type', 'rectangle' )
-	hasPropertyValue( sbView2, 'type', 'rectangle' )
+	styleHasPropertyValue( StyleBase2, 'type', dUI.RECTANGLE )
+	hasPropertyValue( sbView2, 'type', dUI.RECTANGLE )
 
 	sView = style.view
 
@@ -1054,10 +1054,10 @@ function test_updateView_deltaTYPE_unsetI_diffT()
 	-- assert_gt( 0, sViewReset, "incorrect count for sViewReset" )
 
 	styleInheritsFrom( style, StyleBase )
-	styleHasPropertyValue( style, 'type', 'rectangle' )
+	styleHasPropertyValue( style, 'type', dUI.RECTANGLE )
 
 	styleInheritsFrom( sView, sbView2 )
-	hasPropertyValue( style, 'type', 'rectangle' )
+	hasPropertyValue( style, 'type', dUI.RECTANGLE )
 
 	styleRawPropertyValueIs( sView, 'cornerRadius', nil )
 	styleHasPropertyValue( sView, 'fillColor', sbView2.fillColor )
@@ -1075,7 +1075,7 @@ same Type
 --]]
 function test_updateView_deltaINHERIT_unsetI_sameT()
 	-- print( "test_updateView_deltaINHERIT_unsetI_sameT" )
-	local Background = Widgets.Style.Background
+	local Background = dUI.Style.Background
 	local BaseStyle, defaults, vDefaults
 
 	local StyleBase, sbView
@@ -1099,12 +1099,12 @@ function test_updateView_deltaINHERIT_unsetI_sameT()
 
 	--== Setup Rounded
 
-	style = Widgets.newRoundedBackgroundStyle()
+	style = dUI.newRoundedBackgroundStyle()
 
 	StyleBase = Background:getBaseStyle( style.type )
 	sbView = StyleBase.view
-	styleHasPropertyValue( StyleBase, 'type', 'rounded' )
-	hasPropertyValue( sbView, 'type', 'rounded' )
+	styleHasPropertyValue( StyleBase, 'type', dUI.ROUNDED )
+	hasPropertyValue( sbView, 'type', dUI.ROUNDED )
 
 	sView = style.view
 	style:addEventListener( style.EVENT, sResetCB )
@@ -1113,10 +1113,10 @@ function test_updateView_deltaINHERIT_unsetI_sameT()
 	-- Check properties
 
 	styleInheritsFrom( style, StyleBase )
-	styleInheritsPropertyValue( style, 'type', 'rounded' )
+	styleInheritsPropertyValue( style, 'type', dUI.ROUNDED )
 
 	styleInheritsFrom( sView, sbView )
-	hasPropertyValue( sView, 'type', 'rounded' )
+	hasPropertyValue( sView, 'type', dUI.ROUNDED )
 
 	styleInheritsPropertyValue( sView, 'cornerRadius', sbView.cornerRadius )
 	styleInheritsPropertyValue( sView, 'fillColor', sbView.fillColor )
@@ -1126,7 +1126,7 @@ function test_updateView_deltaINHERIT_unsetI_sameT()
 	--== Setup Inherit Style
 
 
-	inherit = Widgets.newRoundedBackgroundStyle()
+	inherit = dUI.newRoundedBackgroundStyle()
 
 	iView = inherit.view
 
@@ -1136,7 +1136,7 @@ function test_updateView_deltaINHERIT_unsetI_sameT()
 	-- Check properties
 
 	styleInheritsFrom( inherit, StyleBase )
-	styleInheritsPropertyValue( inherit, 'type', 'rounded' )
+	styleInheritsPropertyValue( inherit, 'type', dUI.ROUNDED )
 
 	styleInheritsFrom( iView, sbView )
 
@@ -1157,10 +1157,10 @@ function test_updateView_deltaINHERIT_unsetI_sameT()
 	assert_gt( 0, sViewReset, "incorrect count for sViewReset" )
 
 	styleInheritsFrom( style, inherit )
-	styleInheritsProperty( style, 'type', 'rounded' )
+	styleInheritsProperty( style, 'type', dUI.ROUNDED )
 
 	styleInheritsFrom( sView, iView )
-	hasPropertyValue( sView, 'type', 'rounded' )
+	hasPropertyValue( sView, 'type', dUI.ROUNDED )
 
 	styleInheritsProperty( sView, 'cornerRadius', iView.cornerRadius )
 	styleInheritsProperty( sView, 'fillColor', iView.fillColor )
@@ -1186,7 +1186,7 @@ different Type
 --]]
 function test_updateView_deltaINHERIT_unsetI_diffT()
 	-- print( "test_updateView_deltaINHERIT_unsetI_diffT" )
-	local Background = Widgets.Style.Background
+	local Background = dUI.Style.Background
 	local BaseStyle, defaults, vDefaults
 
 	local StyleBase, sbView
@@ -1210,12 +1210,12 @@ function test_updateView_deltaINHERIT_unsetI_diffT()
 
 	--== Setup Rounded
 
-	style = Widgets.newRoundedBackgroundStyle()
+	style = dUI.newRoundedBackgroundStyle()
 
 	StyleBase = Background:getBaseStyle( style.type )
 	sbView = StyleBase.view
-	styleHasPropertyValue( StyleBase, 'type', 'rounded' )
-	hasPropertyValue( sbView, 'type', 'rounded' )
+	styleHasPropertyValue( StyleBase, 'type', dUI.ROUNDED )
+	hasPropertyValue( sbView, 'type', dUI.ROUNDED )
 
 	sView = style.view
 	style:addEventListener( style.EVENT, sResetCB )
@@ -1224,10 +1224,10 @@ function test_updateView_deltaINHERIT_unsetI_diffT()
 	-- Check properties
 
 	styleInheritsFrom( style, StyleBase )
-	styleInheritsPropertyValue( style, 'type', 'rounded' )
+	styleInheritsPropertyValue( style, 'type', dUI.ROUNDED )
 
 	styleInheritsFrom( sView, sbView )
-	hasPropertyValue( sView, 'type', 'rounded' )
+	hasPropertyValue( sView, 'type', dUI.ROUNDED )
 
 	styleInheritsPropertyValue( sView, 'cornerRadius', sbView.cornerRadius )
 	styleInheritsPropertyValue( sView, 'fillColor', sbView.fillColor )
@@ -1236,7 +1236,7 @@ function test_updateView_deltaINHERIT_unsetI_diffT()
 
 	--== Setup Inherit Style
 
-	inherit = Widgets.newRectangleBackgroundStyle()
+	inherit = dUI.newRectangleBackgroundStyle()
 
 	StyleBase = Background:getBaseStyle( inherit.type )
 	sbView = StyleBase.view
@@ -1249,7 +1249,7 @@ function test_updateView_deltaINHERIT_unsetI_diffT()
 	-- Check properties
 
 	styleInheritsFrom( inherit, StyleBase )
-	styleInheritsPropertyValue( inherit, 'type', 'rectangle' )
+	styleInheritsPropertyValue( inherit, 'type', dUI.RECTANGLE )
 
 	styleInheritsFrom( iView, sbView )
 	styleRawPropertyValueIs( iView, 'cornerRadius', nil )
@@ -1269,10 +1269,10 @@ function test_updateView_deltaINHERIT_unsetI_diffT()
 	-- assert_gt( 0, sViewReset, "incorrect count for sViewReset" )
 
 	styleInheritsFrom( style, inherit )
-	styleInheritsPropertyValue( style, 'type', 'rectangle' )
+	styleInheritsPropertyValue( style, 'type', dUI.RECTANGLE )
 
 	styleInheritsFrom( sView, iView )
-	hasPropertyValue( sView, 'type', 'rectangle' )
+	hasPropertyValue( sView, 'type', dUI.RECTANGLE )
 	styleRawPropertyValueIs( sView, 'cornerRadius', nil )
 	styleInheritsProperty( sView, 'fillColor', iView.fillColor )
 	styleInheritsProperty( sView, 'strokeColor', iView.strokeColor )
@@ -1297,7 +1297,7 @@ same Type
 --]]
 function test_updateView_deltaTYPE_setI_sameT()
 	-- print( "test_updateView_deltaTYPE_setI_sameT" )
-	local Background = Widgets.Style.Background
+	local Background = dUI.Style.Background
 	local BaseStyle, defaults, vDefaults
 
 	local StyleBase, sbView
@@ -1321,10 +1321,10 @@ function test_updateView_deltaTYPE_setI_sameT()
 
 	--== Setup Inheritance
 
-	inherit = Widgets.newRoundedBackgroundStyle()
+	inherit = dUI.newRoundedBackgroundStyle()
 	iView = inherit.view
 
-	style = Widgets.newRoundedBackgroundStyle()
+	style = dUI.newRoundedBackgroundStyle()
 	style.inherit = inherit
 
 	sView = style.view
@@ -1334,10 +1334,10 @@ function test_updateView_deltaTYPE_setI_sameT()
 	-- Quick Property Check
 
 	styleInheritsFrom( style, inherit )
-	styleInheritsPropertyValue( style, 'type', 'rounded' )
+	styleInheritsPropertyValue( style, 'type', dUI.ROUNDED )
 
 	styleInheritsFrom( sView, iView )
-	hasPropertyValue( sView, 'type', 'rounded' )
+	hasPropertyValue( sView, 'type', dUI.ROUNDED )
 	styleInheritsProperty( sView, 'cornerRadius', iView.cornerRadius )
 	styleInheritsProperty( sView, 'fillColor', iView.fillColor )
 	styleInheritsProperty( sView, 'strokeColor', iView.strokeColor )
@@ -1352,7 +1352,7 @@ function test_updateView_deltaTYPE_setI_sameT()
 
 	sReset = 0
 	sViewReset = 0
-	style.type = 'rounded'
+	style.type = dUI.ROUNDED
 
 	sView = style.view -- attach to new view
 
@@ -1361,17 +1361,17 @@ function test_updateView_deltaTYPE_setI_sameT()
 
 	StyleBase = Background:getBaseStyle( style.type )
 	sbView = StyleBase.view
-	styleHasPropertyValue( StyleBase, 'type', 'rounded' )
-	hasPropertyValue( sbView, 'type', 'rounded' )
+	styleHasPropertyValue( StyleBase, 'type', dUI.ROUNDED )
+	hasPropertyValue( sbView, 'type', dUI.ROUNDED )
 
 
 	-- Check properties
 
 	styleInheritsFrom( style, inherit )
-	styleHasPropertyValue( style, 'type', 'rounded' )
+	styleHasPropertyValue( style, 'type', dUI.ROUNDED )
 
 	styleInheritsFrom( sView, sbView )
-	hasPropertyValue( sView, 'type', 'rounded' )
+	hasPropertyValue( sView, 'type', dUI.ROUNDED )
 
 	styleHasPropertyValue( sView, 'cornerRadius', iView.cornerRadius )
 	styleHasPropertyValue( sView, 'fillColor', iView.fillColor )
@@ -1402,7 +1402,7 @@ different Type
 --]]
 function test_updateView_deltaTYPE_setI_diffT()
 	-- print( "test_updateView_deltaTYPE_setI_diffT" )
-	local Background = Widgets.Style.Background
+	local Background = dUI.Style.Background
 	local BaseStyle, defaults, vDefaults
 
 	local StyleBase, sbView
@@ -1426,10 +1426,10 @@ function test_updateView_deltaTYPE_setI_diffT()
 
 	--== Setup Inheritance
 
-	inherit = Widgets.newRoundedBackgroundStyle()
+	inherit = dUI.newRoundedBackgroundStyle()
 	iView = inherit.view
 
-	style = Widgets.newRoundedBackgroundStyle()
+	style = dUI.newRoundedBackgroundStyle()
 	style.inherit = inherit
 
 	sView = style.view
@@ -1439,10 +1439,10 @@ function test_updateView_deltaTYPE_setI_diffT()
 	-- Quick Property Check
 
 	styleInheritsFrom( style, inherit )
-	styleInheritsPropertyValue( style, 'type', 'rounded' )
+	styleInheritsPropertyValue( style, 'type', dUI.ROUNDED )
 
 	styleInheritsFrom( sView, iView )
-	hasPropertyValue( sView, 'type', 'rounded' )
+	hasPropertyValue( sView, 'type', dUI.ROUNDED )
 	styleInheritsProperty( sView, 'cornerRadius', iView.cornerRadius )
 	styleInheritsProperty( sView, 'fillColor', iView.fillColor )
 	styleInheritsProperty( sView, 'strokeColor', iView.strokeColor )
@@ -1457,7 +1457,7 @@ function test_updateView_deltaTYPE_setI_diffT()
 
 	sReset = 0
 	sViewReset = 0
-	style.type = 'rectangle'
+	style.type = dUI.RECTANGLE
 
 	sView = style.view -- attach to new view
 
@@ -1466,17 +1466,17 @@ function test_updateView_deltaTYPE_setI_diffT()
 
 	StyleBase = Background:getBaseStyle( style.type )
 	sbView = StyleBase.view
-	styleHasPropertyValue( StyleBase, 'type', 'rectangle' )
-	hasPropertyValue( sbView, 'type', 'rectangle' )
+	styleHasPropertyValue( StyleBase, 'type', dUI.RECTANGLE )
+	hasPropertyValue( sbView, 'type', dUI.RECTANGLE )
 
 
 	-- Check properties
 
 	styleInheritsFrom( style, inherit )
-	styleHasPropertyValue( style, 'type', 'rectangle' )
+	styleHasPropertyValue( style, 'type', dUI.RECTANGLE )
 
 	styleInheritsFrom( sView, sbView )
-	hasPropertyValue( sView, 'type', 'rectangle' )
+	hasPropertyValue( sView, 'type', dUI.RECTANGLE )
 
 	styleRawPropertyValueIs( sView, 'cornerRadius', nil )
 	styleHasPropertyValue( sView, 'fillColor', sbView.fillColor )
@@ -1506,7 +1506,7 @@ unset Type
 --]]
 function test_updateView_deltaINHERIT_setI_unsetT()
 	-- print( "test_updateView_deltaINHERIT_setI_unsetT" )
-	local Background = Widgets.Style.Background
+	local Background = dUI.Style.Background
 	local BaseStyle, defaults, vDefaults
 
 	local StyleBase, sbView
@@ -1530,10 +1530,10 @@ function test_updateView_deltaINHERIT_setI_unsetT()
 
 	--== Setup Test (unset inheritance)
 
-	inherit = Widgets.newRoundedBackgroundStyle()
+	inherit = dUI.newRoundedBackgroundStyle()
 	iView = inherit.view
 
-	style = Widgets.newRoundedBackgroundStyle()
+	style = dUI.newRoundedBackgroundStyle()
 	style.inherit = inherit
 
 	sView = style.view
@@ -1543,10 +1543,10 @@ function test_updateView_deltaINHERIT_setI_unsetT()
 	-- Quick Property Check
 
 	styleInheritsFrom( style, inherit )
-	styleInheritsPropertyValue( style, 'type', 'rounded' )
+	styleInheritsPropertyValue( style, 'type', dUI.ROUNDED )
 
 	styleInheritsFrom( sView, iView )
-	hasPropertyValue( sView, 'type', 'rounded' )
+	hasPropertyValue( sView, 'type', dUI.ROUNDED )
 	styleInheritsProperty( sView, 'cornerRadius', iView.cornerRadius )
 	styleInheritsProperty( sView, 'fillColor', iView.fillColor )
 	styleInheritsProperty( sView, 'strokeColor', iView.strokeColor )
@@ -1572,17 +1572,17 @@ function test_updateView_deltaINHERIT_setI_unsetT()
 
 	StyleBase = Background:getBaseStyle( style.type )
 	sbView = StyleBase.view
-	styleHasPropertyValue( StyleBase, 'type', 'rounded' )
-	hasPropertyValue( sbView, 'type', 'rounded' )
+	styleHasPropertyValue( StyleBase, 'type', dUI.ROUNDED )
+	hasPropertyValue( sbView, 'type', dUI.ROUNDED )
 
 
 	-- Check properties
 
 	styleInheritsFrom( style, StyleBase )
-	styleInheritsPropertyValue( style, 'type', 'rounded' )
+	styleInheritsPropertyValue( style, 'type', dUI.ROUNDED )
 
 	styleInheritsFrom( sView, sbView )
-	hasPropertyValue( sView, 'type', 'rounded' )
+	hasPropertyValue( sView, 'type', dUI.ROUNDED )
 
 	styleInheritsPropertyValue( sView, 'cornerRadius', sbView.cornerRadius )
 	styleInheritsPropertyValue( sView, 'fillColor', sbView.fillColor )
@@ -1613,7 +1613,7 @@ set Type (to same)
 --]]
 function test_updateView_deltaINHERIT_setI_setSameT()
 	-- print( "test_updateView_deltaINHERIT_setI_setSameT" )
-	local Background = Widgets.Style.Background
+	local Background = dUI.Style.Background
 	local BaseStyle, defaults, vDefaults
 
 	local StyleBase, sbView
@@ -1637,13 +1637,13 @@ function test_updateView_deltaINHERIT_setI_setSameT()
 
 	--== Setup Test
 
-	inherit = Widgets.newRoundedBackgroundStyle()
+	inherit = dUI.newRoundedBackgroundStyle()
 	iView = inherit.view
 
-	style = Widgets.newRoundedBackgroundStyle()
+	style = dUI.newRoundedBackgroundStyle()
 	style.inherit = inherit
 
-	style.type = 'rounded' -- set same type
+	style.type = dUI.ROUNDED -- set same type
 
 	StyleBase = Background:getBaseStyle( style.type )
 	sbView = StyleBase.view
@@ -1655,10 +1655,10 @@ function test_updateView_deltaINHERIT_setI_setSameT()
 	-- Quick Property Check
 
 	styleInheritsFrom( style, inherit )
-	styleHasPropertyValue( style, 'type', 'rounded' )
+	styleHasPropertyValue( style, 'type', dUI.ROUNDED )
 
 	styleInheritsFrom( sView, sbView )
-	hasPropertyValue( sView, 'type', 'rounded' )
+	hasPropertyValue( sView, 'type', dUI.ROUNDED )
 	styleHasPropertyValue( sView, 'cornerRadius', iView.cornerRadius )
 	styleHasPropertyValue( sView, 'fillColor', iView.fillColor )
 	styleHasPropertyValue( sView, 'strokeColor', iView.strokeColor )
@@ -1684,16 +1684,16 @@ function test_updateView_deltaINHERIT_setI_setSameT()
 
 	StyleBase = Background:getBaseStyle( style.type )
 	sbView = StyleBase.view
-	styleHasPropertyValue( StyleBase, 'type', 'rounded' )
-	hasPropertyValue( sbView, 'type', 'rounded' )
+	styleHasPropertyValue( StyleBase, 'type', dUI.ROUNDED )
+	hasPropertyValue( sbView, 'type', dUI.ROUNDED )
 
 	-- Check properties
 
 	styleInheritsFrom( style, StyleBase )
-	styleInheritsPropertyValue( style, 'type', 'rounded' )
+	styleInheritsPropertyValue( style, 'type', dUI.ROUNDED )
 
 	styleInheritsFrom( sView, sbView )
-	hasPropertyValue( sView, 'type', 'rounded' )
+	hasPropertyValue( sView, 'type', dUI.ROUNDED )
 
 	styleInheritsPropertyValue( sView, 'cornerRadius', sbView.cornerRadius )
 	styleInheritsPropertyValue( sView, 'fillColor', sbView.fillColor )
@@ -1724,7 +1724,7 @@ set Type (to different)
 --]]
 function test_updateView_deltaINHERIT_setI_setDiffT()
 	-- print( "test_updateView_deltaINHERIT_setI_setDiffT" )
-	local Background = Widgets.Style.Background
+	local Background = dUI.Style.Background
 	local BaseStyle, defaults, vDefaults
 
 	local StyleBase, sbView
@@ -1748,7 +1748,7 @@ function test_updateView_deltaINHERIT_setI_setDiffT()
 
 	--== Setup Test
 
-	inherit = Widgets.newRoundedBackgroundStyle()
+	inherit = dUI.newRoundedBackgroundStyle()
 	iView = inherit.view
 
 	iView.fillColor={8,1,3}
@@ -1758,10 +1758,10 @@ function test_updateView_deltaINHERIT_setI_setDiffT()
 	styleHasPropertyValue( iView, 'strokeWidth', 99 )
 
 
-	style = Widgets.newRoundedBackgroundStyle()
+	style = dUI.newRoundedBackgroundStyle()
 	style.inherit = inherit
 
-	style.type = 'rectangle' -- set same type
+	style.type = dUI.RECTANGLE -- set same type
 
 	StyleBase = Background:getBaseStyle( style.type )
 	sbView = StyleBase.view
@@ -1773,10 +1773,10 @@ function test_updateView_deltaINHERIT_setI_setDiffT()
 	-- Quick Property Check
 
 	styleInheritsFrom( style, inherit )
-	styleHasPropertyValue( style, 'type', 'rectangle' )
+	styleHasPropertyValue( style, 'type', dUI.RECTANGLE )
 
 	styleInheritsFrom( sView, sbView )
-	hasPropertyValue( sView, 'type', 'rectangle' )
+	hasPropertyValue( sView, 'type', dUI.RECTANGLE )
 	styleRawPropertyValueIs( sView, 'cornerRadius', nil )
 	styleHasPropertyValue( sView, 'fillColor', sbView.fillColor )
 	styleHasPropertyValue( sView, 'strokeColor', sbView.strokeColor )
@@ -1798,7 +1798,7 @@ function test_updateView_deltaINHERIT_setI_setDiffT()
 	sbView = StyleBase.view
 
 	styleInheritsFrom( style, StyleBase )
-	styleInheritsPropertyValue( style, 'type', 'rounded' )
+	styleInheritsPropertyValue( style, 'type', dUI.ROUNDED )
 
 	styleInheritsFrom( sView, sbView )
 	styleInheritsPropertyValue( sView, 'strokeWidth', sbView.strokeWidth )
@@ -1808,10 +1808,10 @@ function test_updateView_deltaINHERIT_setI_setDiffT()
 	-- Check properties
 
 	styleInheritsFrom( style, StyleBase )
-	styleInheritsPropertyValue( style, 'type', 'rounded' )
+	styleInheritsPropertyValue( style, 'type', dUI.ROUNDED )
 
 	styleInheritsFrom( sView, sbView )
-	hasPropertyValue( sView, 'type', 'rounded' )
+	hasPropertyValue( sView, 'type', dUI.ROUNDED )
 
 	styleRawPropertyValueIs( sView, 'cornerRadius', nil )
 	styleInheritsPropertyValue( sView, 'fillColor', sbView.fillColor )
@@ -1842,7 +1842,7 @@ set Type
 --]]
 function test_updateView_deltaINHERIT_unsetI_setT()
 	-- print( "test_updateView_deltaINHERIT_unsetI_setT" )
-	local Background = Widgets.Style.Background
+	local Background = dUI.Style.Background
 	local BaseStyle, defaults, vDefaults
 
 	local StyleBase, sbView
@@ -1866,7 +1866,7 @@ function test_updateView_deltaINHERIT_unsetI_setT()
 
 	--== Setup Test
 
-	style = Widgets.newRoundedBackgroundStyle()
+	style = dUI.newRoundedBackgroundStyle()
 
 	StyleBase = Background:getBaseStyle( style.type )
 	sbView = StyleBase.view
@@ -1878,10 +1878,10 @@ function test_updateView_deltaINHERIT_unsetI_setT()
 	-- Quick Property Check
 
 	styleInheritsFrom( style, StyleBase )
-	styleInheritsPropertyValue( style, 'type', 'rounded' )
+	styleInheritsPropertyValue( style, 'type', dUI.ROUNDED )
 
 	styleInheritsFrom( sView, sbView )
-	hasPropertyValue( sView, 'type', 'rounded' )
+	hasPropertyValue( sView, 'type', dUI.ROUNDED )
 	styleInheritsPropertyValue( sView, 'cornerRadius', sbView.cornerRadius )
 	styleInheritsPropertyValue( sView, 'fillColor', sbView.fillColor )
 	styleInheritsPropertyValue( sView, 'strokeColor', sbView.strokeColor )
@@ -1902,16 +1902,16 @@ function test_updateView_deltaINHERIT_unsetI_setT()
 
 	StyleBase = Background:getBaseStyle( style.type )
 	sbView = StyleBase.view
-	styleHasPropertyValue( StyleBase, 'type', 'rounded' )
-	hasPropertyValue( sbView, 'type', 'rounded' )
+	styleHasPropertyValue( StyleBase, 'type', dUI.ROUNDED )
+	hasPropertyValue( sbView, 'type', dUI.ROUNDED )
 
 	-- Check properties
 
 	styleInheritsFrom( style, StyleBase )
-	styleInheritsPropertyValue( style, 'type', 'rounded' )
+	styleInheritsPropertyValue( style, 'type', dUI.ROUNDED )
 
 	styleInheritsFrom( sView, sbView )
-	hasPropertyValue( sView, 'type', 'rounded' )
+	hasPropertyValue( sView, 'type', dUI.ROUNDED )
 
 	styleInheritsPropertyValue( sView, 'cornerRadius', sbView.cornerRadius )
 	styleInheritsPropertyValue( sView, 'fillColor', sbView.fillColor )
@@ -1931,7 +1931,7 @@ end
 --]]
 function test_clearProperties()
 	-- print( "test_clearProperties" )
-	local Background = Widgets.Style.Background
+	local Background = dUI.Style.Background
 	local BaseStyle, defaults, vDefaults
 
 	local StyleBase, sbView
@@ -1957,7 +1957,7 @@ function test_clearProperties()
 
 	-- by default, style from nil
 
-	style = Widgets.newRoundedBackgroundStyle{
+	style = dUI.newRoundedBackgroundStyle{
 		view={
 			cornerRadius=101,
 			strokeWidth=42,
@@ -1976,7 +1976,7 @@ function test_clearProperties()
 
 	-- check local properties
 
-	styleInheritsPropertyValue( style, 'type', 'rounded' )
+	styleInheritsPropertyValue( style, 'type', dUI.ROUNDED )
 
 	styleHasPropertyValue( sView, 'cornerRadius', 101 )
 	styleInheritsPropertyValue( sView, 'fillColor', sbView.fillColor )
@@ -2010,7 +2010,7 @@ function test_clearProperties()
 		if e.type==style.STYLE_RESET then iViewReset=iViewReset+1 end
 	end
 
-	inherit = Widgets.newRoundedBackgroundStyle{
+	inherit = dUI.newRoundedBackgroundStyle{
 		view={
 			strokeColor={0.15, 0.15, 0,15},
 			strokeWidth=99
@@ -2029,7 +2029,7 @@ function test_clearProperties()
 
 	-- check properties
 
-	styleInheritsPropertyValue( inherit, 'type', 'rounded' )
+	styleInheritsPropertyValue( inherit, 'type', dUI.ROUNDED )
 
 	styleInheritsPropertyValue( iView, 'fillColor', sbView.fillColor )
 	styleHasPropertyValue( iView, 'strokeColor', iView.strokeColor )
@@ -2051,7 +2051,7 @@ function test_clearProperties()
 	styleInheritsFrom( sView, iView )
 
 
-	styleInheritsPropertyValue( inherit, 'type', 'rounded' )
+	styleInheritsPropertyValue( inherit, 'type', dUI.ROUNDED )
 	styleInheritsPropertyValue( iView, 'cornerRadius', sbView.cornerRadius )
 	styleInheritsPropertyValue( iView, 'fillColor', sbView.fillColor )
 	styleHasPropertyValue( iView, 'strokeColor', iView.strokeColor )
@@ -2171,7 +2171,7 @@ end
 --]]
 function test_defaultInheritance()
 	-- print( "test_defaultInheritance" )
-	local Background = Widgets.Style.Background
+	local Background = dUI.Style.Background
 	local StyleDefault
 	local StyleBase
 
@@ -2180,7 +2180,7 @@ function test_defaultInheritance()
 
 	-- default
 
-	s1 = Widgets.newBackgroundStyle()
+	s1 = dUI.newBackgroundStyle()
 	s1View = s1.view
 
 	StyleBase = Background:getBaseStyle( s1.type )
@@ -2194,7 +2194,7 @@ function test_defaultInheritance()
 
 	-- change inheritance, same type
 
-	inherit = Widgets.newBackgroundStyle()
+	inherit = dUI.newBackgroundStyle()
 	iView = inherit.view
 
 	styleInheritsFrom( inherit, StyleBase )
@@ -2221,7 +2221,7 @@ function test_defaultInheritance()
 
 	-- rectangle
 
-	s1 = Widgets.newRectangleBackgroundStyle()
+	s1 = dUI.newRectangleBackgroundStyle()
 	StyleBase = Background:getBaseStyle( s1.type )
 
 	styleInheritsFrom( s1, StyleBase )
@@ -2231,7 +2231,7 @@ function test_defaultInheritance()
 
 	-- rounded
 
-	s1 = Widgets.newRoundedBackgroundStyle()
+	s1 = dUI.newRoundedBackgroundStyle()
 	StyleBase = Background:getBaseStyle( s1.type )
 
 	styleInheritsFrom( s1, StyleBase )
@@ -2253,7 +2253,7 @@ Instance, but just gets re/set.
 --]]
 function test_similarInheritance()
 	-- print( "test_similarInheritance" )
-	local Background = Widgets.Style.Background
+	local Background = dUI.Style.Background
 	local StyleDefault
 
 	local s1, sView
@@ -2264,8 +2264,8 @@ function test_similarInheritance()
 
 	--== start
 
-	s1 = Widgets.newRoundedBackgroundStyle()
-	inherit = Widgets.newRoundedBackgroundStyle()
+	s1 = dUI.newRoundedBackgroundStyle()
+	inherit = dUI.newRoundedBackgroundStyle()
 
 	sView = s1.view
 	iView = inherit.view
@@ -2302,7 +2302,7 @@ function test_similarInheritance()
 	end
 	s1:addEventListener( s1.EVENT, callback )
 
-	s1.type = 'rounded'
+	s1.type = dUI.ROUNDED
 
 	BaseStyle = Background:getBaseStyle( s1.type )
 	bsView = BaseStyle.view
@@ -2313,7 +2313,7 @@ function test_similarInheritance()
 
 	styleInheritsFrom( s1, inherit )
 	styleInheritsFrom( sView, bsView )
-	styleRawPropertyValueIs( s1, 'type', 'rounded' )
+	styleRawPropertyValueIs( s1, 'type', dUI.ROUNDED )
 
 	StyleBase = Background:getBaseStyle( s1.type )
 	sbView = StyleBase.view
@@ -2378,8 +2378,8 @@ tests when changing inheritance using the property 'type'
 --]]
 function test_inheritanceChangesUsingTypeProperty()
 	-- print( "test_inheritanceChangesUsingTypeProperty" )
-	local Background = Widgets.Style.Background
-	local StyleFactory = Widgets.Style.BackgroundFactory
+	local Background = dUI.Style.Background
+	local StyleFactory = dUI.Style.BackgroundFactory
 	local RectangleBackground = StyleFactory.Rectangle
 	local RoundedBackground = StyleFactory.Rounded
 	local StyleDefault
@@ -2390,12 +2390,12 @@ function test_inheritanceChangesUsingTypeProperty()
 	local receivedResetEvent, callback
 	local BaseStyle, bsView
 
-	s1 = Widgets.newRoundedBackgroundStyle()
-	inherit = Widgets.newRoundedBackgroundStyle()
+	s1 = dUI.newRoundedBackgroundStyle()
+	inherit = dUI.newRoundedBackgroundStyle()
 
 	sView, iView = s1.view, inherit.view
 
-	styleInheritsPropertyValue( s1, 'type', 'rounded' )
+	styleInheritsPropertyValue( s1, 'type', dUI.ROUNDED )
 
 	--== start
 
@@ -2425,7 +2425,7 @@ function test_inheritanceChangesUsingTypeProperty()
 	s1:addEventListener( s1.EVENT, callback )
 
 	prevView = sView
-	s1.type = 'rectangle'
+	s1.type = dUI.RECTANGLE
 
 	sView, iView = s1.view, inherit.view
 
@@ -2437,7 +2437,7 @@ function test_inheritanceChangesUsingTypeProperty()
 
 	styleInheritsFrom( s1, inherit )
 	styleInheritsFrom( sView, bsView )
-	styleRawPropertyValueIs( s1, 'type', 'rectangle' )
+	styleRawPropertyValueIs( s1, 'type', dUI.RECTANGLE )
 
 	styleIsa( sView, RectangleBackground )
 
@@ -2462,7 +2462,7 @@ function test_inheritanceChangesUsingTypeProperty()
 	s1:addEventListener( s1.EVENT, callback )
 
 	prevView = sView
-	s1.type = 'rounded'
+	s1.type = dUI.ROUNDED
 
 	sView, iView = s1.view, inherit.view
 
@@ -2475,7 +2475,7 @@ function test_inheritanceChangesUsingTypeProperty()
 	styleInheritsFrom( s1, inherit )
 	styleInheritsFrom( sView, bsView )
 
-	styleRawPropertyValueIs( s1, 'type', 'rounded' )
+	styleRawPropertyValueIs( s1, 'type', dUI.ROUNDED )
 
 	StyleBase = Background:getBaseStyle( s1.type )
 	sbView = StyleBase.view
@@ -2537,8 +2537,8 @@ tests when changing inheritance using the property 'inherit'
 --]]
 function test_inheritanceChangesUsingInheritanceProperty()
 	-- print( "test_inheritanceChangesUsingInheritanceProperty" )
-	local Background = Widgets.Style.Background
-	local StyleFactory = Widgets.Style.BackgroundFactory
+	local Background = dUI.Style.Background
+	local StyleFactory = dUI.Style.BackgroundFactory
 	local RectangleBackground = StyleFactory.Rectangle
 	local RoundedBackground = StyleFactory.Rounded
 	local StyleDefault
@@ -2550,12 +2550,12 @@ function test_inheritanceChangesUsingInheritanceProperty()
 
 	--== start
 
-	s1 = Widgets.newRoundedBackgroundStyle()
+	s1 = dUI.newRoundedBackgroundStyle()
 	TestUtils.verifyBackgroundStyle( s1 )
 
 	--== update inheritance, rectangle
 
-	inherit = Widgets.newRectangleBackgroundStyle()
+	inherit = dUI.newRectangleBackgroundStyle()
 
 	receivedResetEvent = false
 	callback = function(e)
@@ -2578,7 +2578,7 @@ function test_inheritanceChangesUsingInheritanceProperty()
 
 	--== update inheritance, rounded
 
-	inherit = Widgets.newRoundedBackgroundStyle()
+	inherit = dUI.newRoundedBackgroundStyle()
 
 
 	receivedResetEvent = false
@@ -2610,8 +2610,8 @@ tests when changing inheritance using the property 'inherit'
 --]]
 function test_inheritanceChangesUsingInheritancePropertyMismatch()
 	-- print( "test_inheritanceChangesUsingInheritancePropertyMismatch" )
-	local Background = Widgets.Style.Background
-	local StyleFactory = Widgets.Style.BackgroundFactory
+	local Background = dUI.Style.Background
+	local StyleFactory = dUI.Style.BackgroundFactory
 	local Rectangle = StyleFactory.Rectangle
 	local Rounded = StyleFactory.Rounded
 	local StyleDefault
@@ -2628,7 +2628,7 @@ function test_inheritanceChangesUsingInheritancePropertyMismatch()
 
 	--== start
 
-	inherit = Widgets.newRectangleBackgroundStyle{
+	inherit = dUI.newRectangleBackgroundStyle{
 		view={
 			fillColor={101,102,103,104},
 			strokeWidth=66
@@ -2646,8 +2646,8 @@ function test_inheritanceChangesUsingInheritancePropertyMismatch()
 
 	styleInheritsFrom( inherit, BaseStyle )
 	styleInheritsFrom( iView, bsView )
-	styleInheritsPropertyValue( inherit, 'type', 'rectangle' )
-	hasPropertyValue( iView, 'type', 'rectangle' )
+	styleInheritsPropertyValue( inherit, 'type', dUI.RECTANGLE )
+	hasPropertyValue( iView, 'type', dUI.RECTANGLE )
 
 	styleHasPropertyValue( iView, 'fillColor', {101,102,103,104} )
 	styleInheritsPropertyValue( iView, 'strokeColor', bsView.strokeColor )
@@ -2655,7 +2655,7 @@ function test_inheritanceChangesUsingInheritancePropertyMismatch()
 
 
 
-	s1 = Widgets.newRoundedBackgroundStyle{
+	s1 = dUI.newRoundedBackgroundStyle{
 		view={
 			cornerRadius=100,
 			fillColor={111,112,113,114},
@@ -2673,8 +2673,8 @@ function test_inheritanceChangesUsingInheritancePropertyMismatch()
 	TestUtils.verifyBackgroundStyle( s1 )
 	styleInheritsFrom( s1, BaseStyle )
 	styleInheritsFrom( sView, bsView )
-	styleInheritsPropertyValue( s1, 'type', 'rounded' )
-	hasPropertyValue( sView, 'type', 'rounded' )
+	styleInheritsPropertyValue( s1, 'type', dUI.ROUNDED )
+	hasPropertyValue( sView, 'type', dUI.ROUNDED )
 
 	styleHasPropertyValue( sView, 'cornerRadius', 100 )
 	styleHasPropertyValue( sView, 'fillColor', {111,112,113,114} )
@@ -2714,14 +2714,14 @@ function test_inheritanceChangesUsingInheritancePropertyMismatch()
 
 	--== start
 
-	inherit = Widgets.newRectangleBackgroundStyle{
+	inherit = dUI.newRectangleBackgroundStyle{
 		view={
 			fillColor={111,112,113,114},
 			strokeWidth=65
 		}
 	}
 
-	s1 = Widgets.newRoundedBackgroundStyle({
+	s1 = dUI.newRoundedBackgroundStyle({
 		view={
 			cornerRadius=100,
 			fillColor={101,102,103,104},
@@ -2737,9 +2737,9 @@ function test_inheritanceChangesUsingInheritancePropertyMismatch()
 	bsView = BaseStyle.view
 
 	styleInheritsFrom( s1, inherit )
-	styleHasPropertyValue( s1, 'type', 'rounded' )
+	styleHasPropertyValue( s1, 'type', dUI.ROUNDED )
 	styleInheritsFrom( sView, bsView )
-	stylePropertyValueIs( sView , 'type', 'rounded' )
+	stylePropertyValueIs( sView , 'type', dUI.ROUNDED )
 
 	styleHasPropertyValue( sView, 'cornerRadius', 100 ) -- erased
 	styleHasPropertyValue( sView, 'fillColor', {101,102,103,104} )
@@ -2758,8 +2758,8 @@ tests when changing inheritance using the property 'type'
 --]]
 function test_initializeStyleWithLuaStructure()
 	-- print( "test_initializeStyleWithLuaStructure" )
-	local Background = Widgets.Style.Background
-	local StyleFactory = Widgets.Style.BackgroundFactory
+	local Background = dUI.Style.Background
+	local StyleFactory = dUI.Style.BackgroundFactory
 	local RectangleBackground = StyleFactory.Rectangle
 	local Rounded = StyleFactory.Rounded
 	local StyleDefault
@@ -2771,7 +2771,7 @@ function test_initializeStyleWithLuaStructure()
 
 
 
-	s1 = Widgets.newRoundedBackgroundStyle{
+	s1 = dUI.newRoundedBackgroundStyle{
 		view={
 			cornerRadius=100,
 			strokeWidth=99
@@ -2785,8 +2785,8 @@ function test_initializeStyleWithLuaStructure()
 
 	styleInheritsFrom( s1, BaseStyle )
 	styleInheritsFrom( sView, bsView )
-	styleInheritsPropertyValue( s1, 'type', 'rounded' )
-	hasPropertyValue( sView, 'type', 'rounded' )
+	styleInheritsPropertyValue( s1, 'type', dUI.ROUNDED )
+	hasPropertyValue( sView, 'type', dUI.ROUNDED )
 
 	styleHasPropertyValue( sView, 'cornerRadius', 100 )
 	styleInheritsPropertyValue( sView, 'fillColor', bsView.fillColor )
@@ -2798,7 +2798,7 @@ function test_initializeStyleWithLuaStructure()
 
 	inherit = BaseStyle
 
-	s1 = Widgets.newRoundedBackgroundStyle( {
+	s1 = dUI.newRoundedBackgroundStyle( {
 			view={
 				cornerRadius=100,
 				strokeWidth=99
@@ -2811,8 +2811,8 @@ function test_initializeStyleWithLuaStructure()
 
 	styleInheritsFrom( s1, inherit )
 	styleInheritsFrom( sView, iView )
-	styleInheritsPropertyValue( s1, 'type', 'rounded' )
-	hasPropertyValue( sView, 'type', 'rounded' )
+	styleInheritsPropertyValue( s1, 'type', dUI.ROUNDED )
+	hasPropertyValue( sView, 'type', dUI.ROUNDED )
 
 	styleHasPropertyValue( sView, 'cornerRadius', 100 )
 	styleInheritsPropertyValue( sView, 'fillColor', iView.fillColor )
@@ -2822,7 +2822,7 @@ function test_initializeStyleWithLuaStructure()
 
 	--== any type is overridden
 
-	s1 = Widgets.newRoundedBackgroundStyle( {
+	s1 = dUI.newRoundedBackgroundStyle( {
 			type='rectangle',
 			view={
 				cornerRadius=100,
@@ -2836,8 +2836,8 @@ function test_initializeStyleWithLuaStructure()
 
 	styleInheritsFrom( s1, inherit )
 	styleInheritsFrom( sView, iView )
-	styleInheritsPropertyValue( s1, 'type', 'rounded' )
-	hasPropertyValue( sView, 'type', 'rounded' )
+	styleInheritsPropertyValue( s1, 'type', dUI.ROUNDED )
+	hasPropertyValue( sView, 'type', dUI.ROUNDED )
 
 	styleHasPropertyValue( sView, 'cornerRadius', 100 )
 	styleInheritsPropertyValue( sView, 'fillColor', iView.fillColor )
@@ -2847,7 +2847,7 @@ function test_initializeStyleWithLuaStructure()
 
 	--== no inherit, no type, so go to default view
 
-	s1 = Widgets.newBackgroundStyle{
+	s1 = dUI.newBackgroundStyle{
 		view={
 			cornerRadius=100,
 			strokeWidth=99
@@ -2861,8 +2861,8 @@ function test_initializeStyleWithLuaStructure()
 
 	styleInheritsFrom( s1, BaseStyle )
 	styleInheritsFrom( sView, bsView )
-	styleInheritsPropertyValue( s1, 'type', 'rounded' )
-	hasPropertyValue( sView, 'type', 'rounded' )
+	styleInheritsPropertyValue( s1, 'type', dUI.ROUNDED )
+	hasPropertyValue( sView, 'type', dUI.ROUNDED )
 
 	styleHasPropertyValue( sView, 'cornerRadius', 100 )
 	styleInheritsPropertyValue( sView, 'fillColor', bsView.fillColor )
