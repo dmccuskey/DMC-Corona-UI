@@ -84,6 +84,7 @@ local uiConst = require( ui_find( 'ui_constants' ) )
 
 --== To be set in initialize()
 local dUI = nil
+local Style = nil
 
 
 
@@ -118,6 +119,7 @@ function Widget.initialize( manager, params )
 	-- print( "Widget.initialize" )
 
 	dUI = manager
+	Style = dUI.Style
 
 	--== Add API calls
 
@@ -169,6 +171,14 @@ end
 
 function Widget._loadBackgroundSupport( params )
 	-- print( "Widget._loadBackgroundSupport" )
+	if Widget.Background then return end
+	params = params or {}
+	if params.mode==nil then params.mode=uiConst.RUN_MODE end
+	--==--
+
+	--== Dependencies
+
+	Style._loadBackgroundStyleSupport( params )
 
 	--== Components
 
@@ -209,8 +219,14 @@ end
 
 function Widget._loadButtonSupport( params )
 	-- print( "Widget._loadButtonSupport" )
+	if Widget.Button then return end
+	params = params or {}
+	if params.mode==nil then params.mode=uiConst.RUN_MODE end
+	--==--
 
 	--== Dependencies
+
+	Style._loadButtonStyleSupport( params )
 
 	Widget._loadBackgroundSupport( params )
 	Widget._loadTextSupport( params )
@@ -281,8 +297,14 @@ end
 
 function Widget._loadNavBarSupport( params )
 	-- print( "Widget._loadNavBarSupport" )
+	if Widget.NavBar then return end
+	params = params or {}
+	if params.mode==nil then params.mode=uiConst.RUN_MODE end
+	--==--
 
 	--== Dependencies
+
+	Style._loadNavBarStyleSupport( params )
 
 	Widget._loadBackgroundSupport( params )
 	Widget._loadButtonSupport( params )
@@ -357,6 +379,14 @@ end
 
 function Widget._loadTextSupport( params )
 	-- print( "Widget._loadTextSupport" )
+	if Widget.Text then return end
+	params = params or {}
+	if params.mode==nil then params.mode=uiConst.RUN_MODE end
+	--==--
+
+	--== Dependencies
+
+	Style._loadTextStyleSupport( params )
 
 	--== Components
 
@@ -381,8 +411,14 @@ end
 
 function Widget._loadTextFieldSupport( params )
 	-- print( "Widget._loadTextFieldSupport" )
+	if Widget.TextField then return end
+	params = params or {}
+	if params.mode==nil then params.mode=uiConst.RUN_MODE end
+	--==--
 
 	--== Dependencies
+
+	Style._loadTextFieldStyleSupport( params )
 
 	Widget._loadBackgroundSupport( params )
 	Widget._loadTextSupport( params )
