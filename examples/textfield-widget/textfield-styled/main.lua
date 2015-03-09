@@ -18,7 +18,7 @@ print( "\n\n#########################################################\n\n" )
 --== Imports
 
 
-local Widgets = require 'lib.dmc_widgets'
+local dUI = require 'lib.dmc_ui'
 
 
 
@@ -91,7 +91,7 @@ function run_example1()
 
 	local bw1
 
-	tf1 = Widgets.newTextField{
+	tf1 = dUI.newTextField{
 		text="",
 		hintText="Pizza Topping:"
 	}
@@ -324,9 +324,9 @@ end
 function run_example4()
 
 
--- formatter = Widgets.newFormatter( Widgets.Formatter.US_ZIPCODE )
+-- formatter = dUI.newFormatter( dUI.Formatter.US_ZIPCODE )
 
--- style = Widgets.newTextFieldStyle{
+-- style = dUI.newTextFieldStyle{
 -- 	name="text-field-default",
 -- 	width=200,
 -- 	height=40,
@@ -334,7 +334,7 @@ function run_example4()
 
 -- -- create text field
 
--- textfield = Widgets.newTextField{
+-- textfield = dUI.newTextField{
 
 -- 	text="",
 -- 	hintText = "Zipcode",
@@ -488,7 +488,7 @@ function run_example4()
 -- textfield:setTextColor( 1,1,0)
 
 
--- theme = Widgets.newTextFieldTheme{
+-- theme = dUI.newTextFieldTheme{
 -- 	placeholder={
 -- 		font=
 -- 		fontSize=
@@ -504,7 +504,7 @@ function run_example4()
 
 -- theme.default.width
 -- theme.default.placeholder.font
--- theme = Widgets.newTheme( 'textfield' )
+-- theme = dUI.newTheme( 'textfield' )
 
 -- theme.
 

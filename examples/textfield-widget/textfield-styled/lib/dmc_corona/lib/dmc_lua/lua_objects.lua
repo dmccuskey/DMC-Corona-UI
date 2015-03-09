@@ -59,7 +59,7 @@ local VERSION = "1.2.2"
 local assert, type, rawget, rawset = assert, type, rawget, rawset
 local getmetatable, setmetatable = getmetatable, setmetatable
 
-local sformat = string.format
+local sfmt = string.format
 local tinsert = table.insert
 local tremove = table.remove
 
@@ -180,7 +180,7 @@ local function superCall( self, ... )
 	-- @params name name of method to look for, string
 	-- @params lock Class object with which to constrain searching
 	--
-	function findMethod( classes, name, lock )
+	local function findMethod( classes, name, lock )
 		if not classes then return end -- when using mixins, etc
 		local cls = nil
 		for _, class in ipairs( classes ) do
@@ -484,7 +484,7 @@ end
 
 
 function ClassBase:__tostring__( id )
-	return sformat( "%s (%s)", self.NAME, id )
+	return sfmt( "%s (%s)", self.NAME, id )
 end
 
 
