@@ -18,22 +18,44 @@ print( "\n\n#########################################################\n\n" )
 --== Imports
 
 
-local Widgets = require 'lib.dmc_widgets'
+local dUI = require 'lib.dmc_ui'
 
 
 
 --===================================================================--
 --== Setup, Constants
 
+
 local W, H = display.contentWidth, display.contentHeight
 local H_CENTER, V_CENTER = W*0.5, H*0.5
 
-local nav_bar, nav_item
+local navBar, navItem
 
 
 
 --===================================================================--
--- Support Functions
+--== Support Functions
+
+
+-- Setup Visual Screen Items
+--
+local function setupBackground()
+	local width, height = 100, 50
+	local o
+
+	o = display.newRect(0,0,W,H)
+	o:setFillColor(0.5,0.5,0.5)
+	o.x, o.y = H_CENTER, V_CENTER
+
+	o = display.newRect(0,0,width+4,height+4)
+	o:setStrokeColor(0,0,0)
+	o.strokeWidth=2
+	o.x, o.y = H_CENTER, V_CENTER
+
+	o = display.newRect( 0,0,10,10)
+	o:setFillColor(1,0,0)
+	o.x, o.y = H_CENTER, V_CENTER
+end
 
 
 local function backButton_handler( event )
@@ -43,60 +65,61 @@ end
 
 
 --===================================================================--
---== Main
+-- Main
 --===================================================================--
+
+
+setupBackground()
 
 
 -- Create Nav Bar
 
-nav_bar = Widgets.newNavBar{
-	width=W
-}
-nav_bar.bg_color = { 0.5, 0.5, 0.5, 1 }
-
-nav_bar.x, nav_bar.y = H_CENTER, 50
+navBar = dUI.newNavBar()
+navBar.anchorX, navBar.anchorY = 0.5,0.5
+navBar.x, navBar.y = H_CENTER, V_CENTER
 
 
 -- Add 1st Nav Item
 
-nav_item=Widgets.newNavItem{
+navItem=dUI.newNavItem{
 	title="First"
 }
-nav_bar:pushNavItem( nav_item )
+navBar:pushNavItem( navItem )
 
 -- Add 2nd Nav Item
 
 timer.performWithDelay( 1000, function()
 	-- print( "moving forward")
-	nav_item=Widgets.newNavItem{
-		title="Second"
+	navItem=dUI.newNavItem{
+		title="Second",
+		rightButton=dUI.newButton()
 	}
-	nav_item.back_button.onRelease = backButton_handler
-	nav_bar:pushNavItem( nav_item )
+	navItem.backButton.onRelease = backButton_handler
+	navBar:pushNavItem( navItem )
 end)
 
 -- Add 3rd Nav Item
 
 timer.performWithDelay( 2000, function()
 	-- print( "moving forward")
-	nav_item=Widgets.newNavItem{
+	navItem=dUI.newNavItem{
 		title="Third"
 	}
-	nav_item.back_button.onRelease = backButton_handler
-	nav_bar:pushNavItem( nav_item )
+	navItem.backButton.onRelease = backButton_handler
+	navBar:pushNavItem( navItem )
 end)
 
 -- Go back
 
 timer.performWithDelay( 3000, function()
 	-- print( "going back" )
-	nav_bar:popNavItemAnimated()
+	navBar:popNavItemAnimated()
 end)
 
 -- Go back
 
 timer.performWithDelay( 4000, function()
 	-- print( "going back" )
-	nav_bar:popNavItemAnimated()
+	navBar:popNavItemAnimated()
 end)
 
