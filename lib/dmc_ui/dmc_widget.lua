@@ -219,7 +219,7 @@ end
 
 function Widget._loadButtonSupport( params )
 	-- print( "Widget._loadButtonSupport" )
-	if Widget.Button then return end
+	if Widget.ButtonFactory then return end
 	params = params or {}
 	if params.mode==nil then params.mode=uiConst.RUN_MODE end
 	--==--
@@ -233,42 +233,42 @@ function Widget._loadButtonSupport( params )
 
 	--== Components
 
-	local Button = require( ui_find( 'dmc_widget.widget_button' ) )
+	local ButtonFactory = require( ui_find( 'dmc_widget.widget_button' ) )
 
-	Widget.Button=Button
+	Widget.ButtonFactory=ButtonFactory
 
 	initKolors( function()
-		Button.initialize( dUI, params )
+		ButtonFactory.initialize( dUI, params )
 	end)
 end
 
 function Widget.newButton( options )
-	if not Widget.Button then Widget._loadButtonSupport() end
-	return Widget.Button.create( options )
+	if not Widget.ButtonFactory then Widget._loadButtonSupport() end
+	return Widget.ButtonFactory.create( options )
 end
 
 function Widget.newPushButton( options )
-	if not Widget.Button then Widget._loadButtonSupport() end
+	if not Widget.ButtonFactory then Widget._loadButtonSupport() end
 	options = options or {}
-	options.action = Widget.Button.PushButton.TYPE
+	options.action = Widget.ButtonFactory.PushButton.TYPE
 	--==--
-	return Widget.Button.create( options )
+	return Widget.ButtonFactory.create( options )
 end
 
 function Widget.newRadioButton( options )
-	if not Widget.Button then Widget._loadButtonSupport() end
+	if not Widget.ButtonFactory then Widget._loadButtonSupport() end
 	options = options or {}
 	options.action = Widget.Button.RadioButton.TYPE
 	--==--
-	return Widget.Button.create( options )
+	return Widget.ButtonFactory.create( options )
 end
 
 function Widget.newToggleButton( options )
-	if not Widget.Button then Widget._loadButtonSupport() end
+	if not Widget.ButtonFactory then Widget._loadButtonSupport() end
 	options = options or {}
-	options.action = Widget.Button.ToggleButton.TYPE
+	options.action = Widget.ButtonFactory.ToggleButton.TYPE
 	--==--
-	return Widget.Button.create( options )
+	return Widget.ButtonFactory.create( options )
 end
 
 
