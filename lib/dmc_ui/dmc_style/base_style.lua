@@ -274,7 +274,7 @@ end
 
 
 function BaseStyle.initialize( manager, params )
-	print( "BaseStyle.initialize", manager )
+	-- print( "BaseStyle.initialize", manager )
 	Style = manager
 end
 

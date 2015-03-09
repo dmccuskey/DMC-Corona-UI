@@ -100,7 +100,7 @@ local Style = {}
 
 
 function Style.initialize( manager, params )
-	print( "Style.initialize", manager )
+	-- print( "Style.initialize", manager )
 	params = params or {}
 	if params.mode==nil then params.mode=uiConst.RUN_MODE end
 	--==--
