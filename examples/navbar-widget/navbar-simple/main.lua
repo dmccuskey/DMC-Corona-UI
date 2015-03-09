@@ -75,7 +75,7 @@ setupBackground()
 -- Create Nav Bar
 
 navBar = dUI.newNavBar()
-navBar.anchorX, navBar.anchorY = 0.5,0.5
+navBar.anchorX, navBar.anchorY = 0.5,0
 navBar.x, navBar.y = H_CENTER, V_CENTER
 
 
@@ -91,8 +91,7 @@ navBar:pushNavItem( navItem )
 timer.performWithDelay( 1000, function()
 	-- print( "moving forward")
 	navItem=dUI.newNavItem{
-		title="Second",
-		rightButton=dUI.newButton()
+		title="Second"
 	}
 	navItem.backButton.onRelease = backButton_handler
 	navBar:pushNavItem( navItem )
@@ -100,10 +99,11 @@ end)
 
 -- Add 3rd Nav Item
 
-timer.performWithDelay( 2000, function()
+timer.performWithDelay( 3000, function()
 	-- print( "moving forward")
 	navItem=dUI.newNavItem{
-		title="Third"
+		title="Third",
+		rightButton=dUI.newButton()
 	}
 	navItem.backButton.onRelease = backButton_handler
 	navBar:pushNavItem( navItem )
@@ -111,14 +111,14 @@ end)
 
 -- Go back
 
-timer.performWithDelay( 3000, function()
+timer.performWithDelay( 5000, function()
 	-- print( "going back" )
 	navBar:popNavItemAnimated()
 end)
 
 -- Go back
 
-timer.performWithDelay( 4000, function()
+timer.performWithDelay( 7000, function()
 	-- print( "going back" )
 	navBar:popNavItemAnimated()
 end)

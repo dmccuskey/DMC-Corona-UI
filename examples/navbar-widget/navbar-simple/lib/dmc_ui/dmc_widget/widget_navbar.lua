@@ -143,6 +143,9 @@ function NavBar:__init__( params )
 	self._trans_time = params.transitionTime
 	self._items = {} -- stack of nav items
 
+	self._animation = nil
+	self._animation_dirty=false
+
 	-- properties stored in Style
 
 	self._debugOn_dirty=true
@@ -403,29 +406,19 @@ function NavBar:_addToView( item )
 
 	if back then
 		dg:insert( back.view )
-		back.anchorX, back.anchorY = 0, anchorY
-		back.y = 0
 		back.isVisible=false
 	end
 	if left then
 		dg:insert( left.view )
-		left.anchorX, left.anchorY = 0, anchorY
-		left.y = 0
 		left.isVisible=false
 	end
 	if title then
 		dg:insert( title.view )
-		title.anchorX, title.anchorY = 0.5, anchorY
-		title.y = 0
 		title.isVisible=false
 	end
 	if right then
 		dg:insert( right.view )
-		right.y = 0
-		right.anchorX, right.anchorY = 1, anchorY
 		right.isVisible=false
-
-		print( "right", right.anchorX)
 	end
 
 end
@@ -489,11 +482,18 @@ end
 function NavBar:_gotoNext( animate )
 	-- print( "NavBar:_gotoNext" )
 	local func = self:_getNextTrans()
-	if not animate then
-		func(100)
-	else
-		self:_startForward( func )
+
+	local animFunc = function()
+		if not animate then
+			func(100)
+		else
+			self:_startForward( func )
+		end
 	end
+
+	self._animation = { self._top_item, self._new_item, animFunc }
+	self._animation_dirty=true
+	self:__invalidateProperties__()
 end
 
 
@@ -506,11 +506,18 @@ end
 function NavBar:_gotoPrev( animate )
 	-- print( "NavBar:_gotoPrev" )
 	local func = self:_getPrevTrans()
-	if not animate then
-		func( 0 )
-	else
-		self:_startReverse( func )
+
+	local animFunc = function()
+		if not animate then
+			func( 0 )
+		else
+			self:_startReverse( func )
+		end
 	end
+
+	self._animation = { self._back_item, self._top_item, animFunc }
+	self._animation_dirty=true
+	self:__invalidateProperties__()
 end
 
 
@@ -850,7 +857,6 @@ function NavBar:__commitProperties__()
 		self._anchorY_dirty = false
 	end
 
-
 	--== Virtual
 
 	if self._widgetStyle_dirty then
@@ -875,6 +881,60 @@ function NavBar:__commitProperties__()
 			hit:setFillColor( 0,0,0,0 )
 		end
 		self._debugOn_dirty=false
+	end
+
+
+	if self._animation_dirty then
+
+		local anchorX, anchorY = style.anchorX, style.anchorY
+		local item1, item2, func = unpack( self._animation )
+		local o
+		if item1 then
+			o = item1.backButton
+			if o then
+				o.y = 0
+				o.anchorX, o.anchorY = 0, anchorY
+			end
+			o = item1.leftButton
+			if o then
+				o.y = 0
+				o.anchorX, o.anchorY = 0, anchorY
+			end
+			o = item1.rightButton
+			if o then
+				o.y = 0
+				o.anchorX, o.anchorY = 1, anchorY
+			end
+			o = item1.title
+			if o then
+				o.y = 0
+				o.anchorX, o.anchorY = 0.5, anchorY
+			end
+		end
+		if item2 then
+			o = item2.backButton
+			if o then
+				o.y = 0
+				o.anchorX, o.anchorY = 0, anchorY
+			end
+			o = item2.leftButton
+			if o then
+				o.y = 0
+				o.anchorX, o.anchorY = 0, anchorY
+			end
+			o = item2.rightButton
+			if o then
+				o.y = 0
+				o.anchorX, o.anchorY = 1, anchorY
+			end
+			o = item2.title
+			if o then
+				o.y = 0
+				o.anchorX, o.anchorY = 0.5, anchorY
+			end
+		end
+
+		func()
 	end
 
 end
