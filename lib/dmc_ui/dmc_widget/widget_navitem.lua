@@ -163,7 +163,7 @@ function NavItem:__init__( params )
 	self._btnLeft = nil
 	self._btnLeftStyle_dirty=true
 
-	self._btnRight = nil
+	self._btnRight = params.rightButton
 	self._btnRightStyle_dirty=true
 
 end
@@ -185,6 +185,9 @@ function NavItem:__initComplete__()
 	self:superCall( ObjectBase, '__initComplete__' )
 	--==--
 	self.style = self._tmp_style
+
+	self.rightButton = self._btnRight -- setter
+	self.leftButton = self._btnLeft -- setter
 
 	self:_createText()
 	self:_createBackButton()
@@ -258,10 +261,15 @@ function NavItem.__getters:leftButton()
 end
 function NavItem.__setters:leftButton( button )
 	-- print( "NavItem.__setters:leftButton", button )
-	assert( type(button)=='table' and button.isa, "wrong type for button" )
-	assert( button:isa( Widget.Button ), "wrong type for button" )
+	local bType = type(button)
+	assert( bType=='nil' or bType=='table', "wrong type for button" )
 	--==--
+	if bType=='table' then
+		assert( button.isa and button:isa( Widget.ButtonFactory.Base ), "button not object" )
+	end
 	self._btnLeft = button
+	self._btnLeftStyle_dirty=true
+	self:__invalidateProperties__()
 end
 
 
@@ -273,10 +281,17 @@ function NavItem.__getters:rightButton()
 end
 function NavItem.__setters:rightButton( button )
 	-- print( "NavItem.__setters:rightButton", button )
-	assert( type(button)=='table' and button.isa, "wrong type for button" )
-	assert( button:isa( Widget.Button ), "wrong type for button" )
+	local bType = type(button)
+	assert( bType=='nil' or bType=='table', "wrong type for button" )
+	--==--
+	if bType=='table' then
+		assert( button.isa and button:isa( Widget.ButtonFactory.Base ), "button not object" )
+	end
 	self._btnRight = button
+	self._btnRightStyle_dirty=true
+	self:__invalidateProperties__()
 end
+
 
 
 -- getter/setter, title TODO (inside of buttons)
@@ -362,7 +377,7 @@ function NavItem:_createText()
 	self:_removeText()
 
 	local o = Widget.newText{
-	defaultStyle = self.defaultStyle.title
+		defaultStyle = self.defaultStyle.title
 	}
 	self._wgtText = o
 
@@ -388,19 +403,19 @@ function NavItem:__commitProperties__()
 	--== Set Styles
 
 	if self._wgtBtnBackStyle_dirty then
-		back:setActiveStyle( style.buttonBack, {copy=false} )
+		back:setActiveStyle( style.backButton, {copy=false} )
 		self._wgtBtnBackStyle_dirty=false
 	end
 
 	-- TODO: check widget type (apply style if Widget)
 	if left and self._btnLeftStyle_dirty then
-		left:setActiveStyle( style.buttonLeft, {copy=false} )
+		left:setActiveStyle( style.leftButton, {copy=false} )
 		self._btnLeftStyle_dirty=false
 	end
 
 	-- TODO: check widget type (apply style if Widget)
 	if right and self._btnRightStyle_dirty then
-		right:setActiveStyle( style.buttonRight, {copy=false} )
+		right:setActiveStyle( style.rightButton, {copy=false} )
 		self._btnRightStyle_dirty=false
 	end
 
