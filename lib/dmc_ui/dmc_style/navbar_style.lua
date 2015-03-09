@@ -83,6 +83,7 @@ local sfmt = string.format
 local tinsert = table.insert
 
 --== To be set in initialize()
+local dUI = nil
 local Style = nil
 
 
@@ -218,10 +219,11 @@ function NavBarStyle.initialize( manager, params )
 	params = params or {}
 	if params.mode==nil then params.mode=uiConst.RUN_MODE end
 	--==--
-	Style = manager
+	dUI = manager
+	Style = dUI.Style
 
 	-- set width to screen default
-	NavBarStyle._STYLE_DEFAULTS.width = manager.WIDTH
+	NavBarStyle._STYLE_DEFAULTS.width = dUI.WIDTH
 
 	if params.mode==uiConst.TEST_MODE then
 		NavBarStyle.MODE = params.mode

@@ -294,7 +294,7 @@ function Style._loadNavBarStyleSupport( params )
 	initKolors(
 		function()
 			NavItemStyle.initialize( Style, params )
-			NavBarStyle.initialize( Style, params )
+			NavBarStyle.initialize( dUI, params )
 		end,
 		kmode
 	)
