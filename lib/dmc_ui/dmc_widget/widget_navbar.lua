@@ -399,26 +399,33 @@ function NavBar:_addToView( item )
 	local back, left, right = item.backButton, item.leftButton, item.rightButton
 	local title = item.title
 	local dg = self._dgMain
+	local anchorX, anchorY = style.anchorX, style.anchorY
 
 	if back then
 		dg:insert( back.view )
+		back.anchorX, back.anchorY = 0, anchorY
 		back.y = 0
 		back.isVisible=false
 	end
 	if left then
 		dg:insert( left.view )
+		left.anchorX, left.anchorY = 0, anchorY
 		left.y = 0
 		left.isVisible=false
 	end
 	if title then
 		dg:insert( title.view )
+		title.anchorX, title.anchorY = 0.5, anchorY
 		title.y = 0
 		title.isVisible=false
 	end
 	if right then
 		dg:insert( right.view )
 		right.y = 0
+		right.anchorX, right.anchorY = 1, anchorY
 		right.isVisible=false
+
+		print( "right", right.anchorX)
 	end
 
 end
@@ -569,12 +576,15 @@ function NavBar:_getTransition( from_item, to_item, direction )
 	end
 
 	local stack, stack_size = self._items, #self._items
+	local anchorX, anchorY = style.anchorX, style.anchorY
+	local mX_OFF = W*(0.5-anchorX) -- master offset
 
 	callback = function( percent )
 		-- print( "NavBar:transition", percent )
 		local dec_p = percent/100
 		local from_a, to_a = 1-dec_p, dec_p
-		local X_OFF = H_CENTER*dec_p
+
+		local aX_OFF = H_CENTER*dec_p -- animation offset
 
 		if percent==0 then
 			--== edge of transition ==--
@@ -606,7 +616,7 @@ function NavBar:_getTransition( from_item, to_item, direction )
 
 			if fHasLeft or #self._items>1 then
 				f_d.isVisible = true
-				f_d.x = -H_CENTER+MARGINS.x
+				f_d.x = mX_OFF-H_CENTER+MARGINS.x
 				f_d.alpha = 1
 			else
 				f_d.isVisible = false
@@ -620,7 +630,7 @@ function NavBar:_getTransition( from_item, to_item, direction )
 
 			if f_t then
 				f_t.isVisible = true
-				f_t.x = 0
+				f_t.x = mX_OFF
 				f_t.alpha = 1
 			end
 
@@ -632,7 +642,7 @@ function NavBar:_getTransition( from_item, to_item, direction )
 
 			if f_r then
 				f_r.isVisible = true
-				f_r.x = H_CENTER
+				f_r.x = mX_OFF+H_CENTER
 				f_r.alpha = 1
 			end
 
@@ -648,7 +658,7 @@ function NavBar:_getTransition( from_item, to_item, direction )
 
 			-- checking if Left exists or Stack, still use t_d
 			if tHasLeft or stack_size>0 then
-				t_d.x = -H_CENTER+MARGINS.x
+				t_d.x = mX_OFF-H_CENTER+MARGINS.x
 				t_d.isVisible = true
 				t_d.alpha = 1
 				-- attach listener
@@ -663,7 +673,7 @@ function NavBar:_getTransition( from_item, to_item, direction )
 			--== Title
 
 			if t_t then
-				t_t.x = 0
+				t_t.x = mX_OFF
 				t_t.isVisible = true
 				t_t.alpha = 1
 			end
@@ -675,7 +685,7 @@ function NavBar:_getTransition( from_item, to_item, direction )
 			--== Right
 
 			if t_r then
-				t_r.x = H_CENTER
+				t_r.x = mX_OFF+H_CENTER-MARGINS.x
 				t_r.isVisible = true
 				t_r.alpha = 1
 			end
@@ -713,7 +723,7 @@ function NavBar:_getTransition( from_item, to_item, direction )
 
 			if tHasLeft or stack_size>(0+stack_offset) then
 				t_d.isVisible = true
-				t_d.x = -X_OFF+MARGINS.x
+				t_d.x = mX_OFF-aX_OFF+MARGINS.x
 				t_d.alpha = to_a
 			else
 				t_d.isVisible = false
@@ -721,7 +731,7 @@ function NavBar:_getTransition( from_item, to_item, direction )
 
 			if fHasLeft or stack_size>(1+stack_offset) then
 				f_d.isVisible = true
-				f_d.x = -H_CENTER-X_OFF+MARGINS.x
+				f_d.x = mX_OFF-H_CENTER-aX_OFF+MARGINS.x
 				f_d.alpha = from_a
 			else
 				f_d.isVisible = false
@@ -732,12 +742,12 @@ function NavBar:_getTransition( from_item, to_item, direction )
 			if t_t then
 				t_t.isVisible = true
 				-- t_t.x, t_t.y = H_CENTER-X_OFF, V_CENTER
-				t_t.x = H_CENTER-X_OFF
+				t_t.x = mX_OFF+H_CENTER-aX_OFF
 				t_t.alpha = to_a
 			end
 			if f_t then
 				f_t.isVisible = true
-				f_t.x = 0-X_OFF
+				f_t.x = mX_OFF-aX_OFF
 				f_t.alpha = from_a
 			end
 
@@ -745,13 +755,13 @@ function NavBar:_getTransition( from_item, to_item, direction )
 
 			if t_r then
 				t_r.isVisible = true
-				t_r.x = W-X_OFF
+				t_r.x = mX_OFF+W-aX_OFF
 				t_r.alpha = to_a
 			end
 
 			if f_r then
 				f_r.isVisible = true
-				f_r.x = H_CENTER-X_OFF
+				f_r.x = mX_OFF+H_CENTER-aX_OFF
 				f_r.alpha = from_a
 			end
 

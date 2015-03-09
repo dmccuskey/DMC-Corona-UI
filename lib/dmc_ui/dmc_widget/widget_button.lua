@@ -1251,7 +1251,7 @@ local Buttons = {}
 Buttons.initialize = initializeButtons
 
 -- export class instantiations for direct access
-Buttons.ButtonBase = ButtonBase
+Buttons.Base = ButtonBase
 Buttons.PushButton = PushButton
 Buttons.ToggleButton = ToggleButton
 Buttons.RadioButton = RadioButton
