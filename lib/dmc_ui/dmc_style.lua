@@ -107,7 +107,7 @@ function Style.initialize( manager, params )
 
 	dUI = manager
 
-	--== Components
+	--== Base Components
 
 	local StyleMgr = require( ui_find( 'dmc_style.style_manager' ) )
 	local StyleMixModule = require( ui_find( 'dmc_style.style_mix' ) )
