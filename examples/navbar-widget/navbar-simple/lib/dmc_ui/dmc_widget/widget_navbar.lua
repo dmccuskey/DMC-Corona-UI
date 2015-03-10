@@ -53,6 +53,7 @@ local dmc_ui_func = dmc_ui_data.func
 local ui_find = dmc_ui_func.find
 
 
+
 --====================================================================--
 --== DMC UI : newNavBar
 --====================================================================--
@@ -68,9 +69,6 @@ local Objects = require 'dmc_objects'
 local StyleMixModule = require( ui_find( 'dmc_style.style_mix' ) )
 local uiConst = require( ui_find( 'ui_constants' ) )
 
---== To be set in initialize()
-local dUI = nil
-local Widget = nil
 
 
 --====================================================================--
@@ -85,6 +83,10 @@ local StyleMix = StyleMixModule.StyleMix
 
 local tinsert = table.insert
 local tremove = table.remove
+
+--== To be set in initialize()
+local dUI = nil
+local Widget = nil
 
 
 
@@ -112,6 +114,7 @@ NavBar.STYLE_TYPE = uiConst.NAVBAR
 --== Event Constants
 
 NavBar.EVENT = 'button-event'
+NavBar.BACK_BUTTON = 'back-button-released-event'
 
 
 --======================================================--
@@ -162,6 +165,8 @@ function NavBar:__init__( params )
 	--== Object References ==--
 
 	self._tmp_style = params.style -- save
+
+	self._delegate = params.delegate
 
 	self._dgBg = nil -- main group, for background
 	self._dgMain = nil -- main group, for buttons, etc
@@ -330,13 +335,13 @@ function NavBar:pushNavItem( item, params )
 	assert( type(item)=='table' and item.isa and item:isa( Widget.NavItem ), "pushNavItem: item must be a NavItem" )
 	--==--
 	self:_setNextItem( item, params ) -- params.animate set here
-	self:_gotoNext( params.animate )
+	self:_gotoNextItem( params.animate )
 end
 
 
 function NavBar:popNavItemAnimated()
 	-- print( "NavBar:popNavItemAnimated" )
-	self:_gotoPrev( true )
+	self:_gotoPrevItem( true )
 end
 
 
@@ -364,7 +369,7 @@ end
 --== Private Methods
 
 
--- private method used by dmc-navigator
+-- private method used by dUI.NavigationContrl
 --
 function NavBar:_pushNavItemGetTransition( item, params )
 	self:_setNextItem( item, params )
@@ -382,9 +387,8 @@ function NavBar:_setNextItem( item, params )
 	params = params or {}
 	if params.animate==nil then params.animate=true end
 	--==--
-	if self._root_item then
-		-- pass
-	else
+	if not self._root_item then
+		-- first item added to NavBar
 		self._root_item = item
 		self._top_item = nil
 		params.animate = false
@@ -393,8 +397,8 @@ function NavBar:_setNextItem( item, params )
 end
 
 
-function NavBar:_addToView( item )
-	-- print( "NavBar:_addToView", item )
+function NavBar:_addItemToNavBar( item )
+	-- print( "NavBar:_addItemToNavBar", item )
 	local style = self.curr_style
 	local W, H = style.width, style.height
 	local H_CENTER, V_CENTER = W*0.5, H*0.5
@@ -423,8 +427,8 @@ function NavBar:_addToView( item )
 
 end
 
-function NavBar:_removeFromView( item )
-	-- print( "NavBar:_removeFromView", item )
+function NavBar:_removeItemFromNavBar( item )
+	-- print( "NavBar:_removeItemFromNavBar", item )
 	if item.removeSelf then item:removeSelf() end
 end
 
@@ -473,14 +477,15 @@ function NavBar:_startForward( func )
 end
 
 
--- can be retreived by another object (ie, NavBar)
+-- can be retreived by another object (ie, NavBarControl)
+--
 function NavBar:_getNextTrans()
 	-- print( "NavBar:_getNextTrans" )
 	return self:_getTransition( self._top_item, self._new_item, self.FORWARD )
 end
 
-function NavBar:_gotoNext( animate )
-	-- print( "NavBar:_gotoNext" )
+function NavBar:_gotoNextItem( animate )
+	-- print( "NavBar:_gotoNextItem" )
 	local func = self:_getNextTrans()
 
 	local animFunc = function()
@@ -497,14 +502,15 @@ function NavBar:_gotoNext( animate )
 end
 
 
--- can be retreived by another object (ie, NavBar)
+-- can be retreived by another object (ie, NavBarControl)
+--
 function NavBar:_getPrevTrans()
 	-- print( "NavBar:_getPrevTrans" )
 	return self:_getTransition( self._back_item, self._top_item, self.REVERSE )
 end
 
-function NavBar:_gotoPrev( animate )
-	-- print( "NavBar:_gotoPrev" )
+function NavBar:_gotoPrevItem( animate )
+	-- print( "NavBar:_gotoPrevItem" )
 	local func = self:_getPrevTrans()
 
 	local animFunc = function()
@@ -547,7 +553,7 @@ function NavBar:_getTransition( from_item, to_item, direction )
 	local fHasLeft=false
 	local t_d, t_b, t_l, t_t, t_r
 	local tHasLeft=false
-	local callback
+	local animationFunc
 
 	-- setup from_item vars
 	if from_item then
@@ -576,7 +582,7 @@ function NavBar:_getTransition( from_item, to_item, direction )
 	-- calcs for showing left/back buttons
 	local stack_offset = 0
 	if direction==self.FORWARD then
-		self:_addToView( to_item )
+		self:_addItemToNavBar( to_item )
 		stack_offset = 0
 	else
 		stack_offset = 1
@@ -586,7 +592,7 @@ function NavBar:_getTransition( from_item, to_item, direction )
 	local anchorX, anchorY = style.anchorX, style.anchorY
 	local mX_OFF = W*(0.5-anchorX) -- master offset
 
-	callback = function( percent )
+	animationFunc = function( percent )
 		-- print( "NavBar:transition", percent )
 		local dec_p = percent/100
 		local from_a, to_a = 1-dec_p, dec_p
@@ -600,7 +606,7 @@ function NavBar:_getTransition( from_item, to_item, direction )
 
 			if direction==self.REVERSE then
 				local item = tremove( stack )
-				self:_removeFromView( item )
+				self:_removeItemFromNavBar( item )
 
 				self._top_item = from_item
 				self._new_item = nil
@@ -775,7 +781,7 @@ function NavBar:_getTransition( from_item, to_item, direction )
 		end
 	end
 
-	return callback
+	return animationFunc
 end
 
 
@@ -887,7 +893,7 @@ function NavBar:__commitProperties__()
 	if self._animation_dirty then
 
 		local anchorX, anchorY = style.anchorX, style.anchorY
-		local item1, item2, func = unpack( self._animation )
+		local item1, item2, animationFunc = unpack( self._animation )
 		local o
 		if item1 then
 			o = item1.backButton
@@ -934,7 +940,7 @@ function NavBar:__commitProperties__()
 			end
 		end
 
-		func()
+		animationFunc()
 	end
 
 end
@@ -949,8 +955,22 @@ function NavBar:_backButtonEvent_handler( event )
 	-- print( "NavBar:_backButtonEvent_handler", event.property, event.value )
 	local target = event.target
 	local phase = event.phase
+	local del = self._delegate
+
 	if phase==target.RELEASED then
-		self:popNavItemAnimated()
+		local f
+		local shouldPopItem = true
+		f = del and del.shouldPopItem
+		if f then shouldPopItem = f( del, self, self._top_item ) end
+
+		if shouldPopItem then
+			self:popNavItemAnimated()
+		end
+
+		f = del and del.didPopItem
+		if f then f( del, self, self._top_item ) end
+
+		self:dispatchEvent( NavBar.BACK_BUTTON )
 	end
 end
 
