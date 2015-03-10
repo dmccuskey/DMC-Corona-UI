@@ -134,7 +134,6 @@ function NavControl:__init__( params )
 	self._height = params.height or dUI.HEIGHT
 
 	self._trans_time = params.transitionTime
-	self._navBar_f = nil
 	self._enterFrame_f = nil
 
 	self._views = {} -- slide list, in order
@@ -157,8 +156,6 @@ function NavControl:__init__( params )
 	self._primer = nil
 
 	self._navBar = nil
-	self._navBar_f = nil -- handler
-
 
 end
 
@@ -244,28 +241,18 @@ function NavControl:__undoCreateView__()
 end
 
 
--- __initComplete__()
---
+--== initComplete
+
+--[[
 function NavControl:__initComplete__()
 	-- print( "NavControl:__initComplete__" )
 	self:superCall( ComponentBase, '__initComplete__' )
 	--==--
-	local o
-
-	-- self._navBar_f = self:createCallback( self._navBarEvent_handler )
-	-- o = self._navBar
-	-- o:addEventListener( o.EVENT, self._navBar_f )
-
 end
+--]]
 
 function NavControl:__undoInitComplete__()
 	-- print( "NavControl:__undoInitComplete__" )
-	local o
-
-	-- o = self._navBar
-	-- o:removeEventListener( o.EVENT, self._navBar_f )
-	-- self._navBar_f = nil
-
 	self:cleanUp()
 	--==--
 	self:superCall( ComponentBase, '__undoInitComplete__' )
@@ -291,14 +278,6 @@ end
 --== Public Methods
 
 
--- function NavControl.__setters:nav_bar( value )
--- 	-- print( "NavControl.__setters:nav_bar", value )
--- 	-- TODO
--- 	assert( value )
--- 	self._navBar = value
--- end
-
-
 function NavControl:cleanUp()
 	-- print( "NavControl:cleanUp" )
 	self:_stopEnterFrame()
@@ -315,24 +294,22 @@ function NavControl:pushView( view, params )
 	assert( view, "[ERROR] NavControl:pushView requires a view object" )
 	-- assert( type(item)=='table' and item.isa and item:isa( NavItem ), "pushNavItem: item must be a NavItem" )
 	--==--
+	if self._enterFrame_f then
+		error("[ERROR] Animation already in progress !!!")
+	end
 	self:_setNextView( view, params ) -- params.animate set here
 	self:_gotoNextView( params.animate )
 end
 
-
 function NavControl:popViewAnimated()
+	if self._enterFrame_f then
+		error("[ERROR] Animation already in progress !!!")
+	end
 	self:_gotoPrevView( true )
 end
 
 
-
-function NavControl:viewIsVisible( value )
-	-- print( "NavControl:viewIsVisible" )
-	local o = self._current_view
-	if o and o.viewIsVisible then o:viewIsVisible( value ) end
-end
-
-
+--[[
 function NavControl:viewIsVisible( value )
 	-- print( "NavControl:viewIsVisible" )
 	local o = self._current_view
@@ -344,6 +321,7 @@ function NavControl:viewInMotion( value )
 	local o = self._current_view
 	if o and o.viewInMotion then o:viewInMotion( value ) end
 end
+--]]
 
 
 
@@ -361,6 +339,11 @@ end
 function NavControl:_popStackView( notify )
 	return tremove( self._views )
 end
+
+function NavControl:_getPreviousView()
+	return self._views[ #self._views-1 ]
+end
+
 
 
 function NavControl:_setNextView( view, params )
@@ -432,6 +415,7 @@ end
 function NavControl:_stopEnterFrame()
 	if not self._enterFrame_f then return end
 	Runtime:removeEventListener( 'enterFrame', self._enterFrame_f )
+	self._enterFrame_f = nil
 end
 
 
@@ -519,7 +503,7 @@ function NavControl:_getNavBarNextTransition( view, params )
 		}
 		view.navItem = o
 	end
-	return self._navBar:_pushNavItemGetTransition( o )
+	return self._navBar:pushNavItemGetTransition( o )
 end
 
 function NavControl:_getNextTrans()
@@ -538,7 +522,7 @@ function NavControl:_getNavBarPrevTransition()
 	-- print( "NavControl:_getNavBarPrevTransition" )
 	params = params or {}
 	--==--
-	return self._navBar:_popNavItemGetTransition( params )
+	return self._navBar:popNavItemGetTransition( params )
 end
 
 function NavControl:_getPrevTrans()
@@ -551,7 +535,6 @@ function NavControl:_getPrevTrans()
 		nC_f( percent )
 	end
 end
-
 
 
 function NavControl:_getTransition( from_view, to_view, direction )
@@ -571,6 +554,7 @@ function NavControl:_getTransition( from_view, to_view, direction )
 	end
 
 	animationFunc = function( percent, animate )
+		-- print( "animationFunc", percent )
 		local dec_p = percent/100
 		local FROM_X_OFF = H_CENTER/2*dec_p
 		local TO_X_OFF = W*dec_p
@@ -582,7 +566,6 @@ function NavControl:_getTransition( from_view, to_view, direction )
 			notifyInMotion( true )
 			animationHasStarted = true
 		end
-
 
 		if percent==0 then
 			--== edge of transition ==--
@@ -601,8 +584,14 @@ function NavControl:_getTransition( from_view, to_view, direction )
 			--== Finish up
 
 			if animate and animationHasStarted then
+				animationIsFinished = true
 				notifyInMotion( false )
 			end
+			--[[
+			if not animate then
+				-- we jumped here without going through middle of trans
+			end
+			--]]
 
 			if direction==self.REVERSE then
 
@@ -621,12 +610,22 @@ function NavControl:_getTransition( from_view, to_view, direction )
 
 				self._top_view = from_view
 				self._new_view = nil
-				self._back_view = stack[ #stack-1 ] -- get previous
+				self._back_view = self:_getPreviousView()
 			end
 
 
 		elseif percent==100 then
 			--== edge of transition ==--
+
+			if animate and animationHasStarted then
+				animationIsFinished = true
+				notifyInMotion( false )
+			end
+			--[[
+			if not animate then
+				-- we jumped here without going through middle of trans
+			end
+			--]]
 
 			if to_view then
 				obj = to_view.__obj
@@ -640,15 +639,13 @@ function NavControl:_getTransition( from_view, to_view, direction )
 				obj.x = 0-FROM_X_OFF
 			end
 
+			--== Finish up
 
 			if direction==self.FORWARD then
+
 				self._back_view = from_view
 				self._new_view = nil
 				self._top_view = to_view
-
-				if animate and animationHasStarted then
-					notifyInMotion( false )
-				end
 
 				local f
 				if from_view then
@@ -728,7 +725,6 @@ function NavControl:__commitProperties__()
 end
 
 
-
 --======================================================--
 -- NavBar Delegate Methods
 
@@ -752,6 +748,8 @@ function NavControl:didPopItem( navBar, navItem )
 end
 
 
+--======================================================--
+-- Misc Methods
 
 function NavControl:_dispatchRemovedView( view )
 	-- print( "NavControl:_dispatchRemovedView", view )
