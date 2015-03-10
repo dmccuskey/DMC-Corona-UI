@@ -163,6 +163,8 @@ function NavBar:__init__( params )
 
 	self._tmp_style = params.style -- save
 
+	self._delegate = params.delegate
+
 	self._dgBg = nil -- main group, for background
 	self._dgMain = nil -- main group, for buttons, etc
 	self._nav_controller = nil -- dmc navigator
@@ -949,8 +951,22 @@ function NavBar:_backButtonEvent_handler( event )
 	-- print( "NavBar:_backButtonEvent_handler", event.property, event.value )
 	local target = event.target
 	local phase = event.phase
+	local del = self._delegate
+
 	if phase==target.RELEASED then
-		self:popNavItemAnimated()
+		local f
+		local shouldPopItem = true
+		f = del and del.shouldPopItem
+		if f then shouldPopItem = f( del, self, self._top_item ) end
+
+		if shouldPopItem then
+			self:popNavItemAnimated()
+		end
+
+		f = del and del.didPopItem
+		if f then f( del, self, self._top_item ) end
+
+		self:dispatchEvent( NavBar.BACK_BUTTON )
 	end
 end
 
