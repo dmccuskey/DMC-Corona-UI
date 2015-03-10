@@ -600,6 +600,10 @@ function NavControl:_getTransition( from_view, to_view, direction )
 
 			--== Finish up
 
+			if animate and animationHasStarted then
+				notifyInMotion( false )
+			end
+
 			if direction==self.REVERSE then
 
 				local f
@@ -618,10 +622,6 @@ function NavControl:_getTransition( from_view, to_view, direction )
 				self._top_view = from_view
 				self._new_view = nil
 				self._back_view = stack[ #stack-1 ] -- get previous
-			end
-
-			if animate and animationHasStarted then
-				notifyInMotion( false )
 			end
 
 
