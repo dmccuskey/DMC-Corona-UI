@@ -690,7 +690,6 @@ function NavBar:_getTransition( from_item, to_item, direction )
 
 			if animate and animationHasStarted then
 				animationIsFinished = true
-				notifyInMotion( false )
 			end
 			--[[
 			if not animate then
