@@ -617,6 +617,32 @@ function NavBar:_getTransition( from_item, to_item, direction )
 		if percent==0 then
 			--== edge of transition ==--
 
+			--[[
+			if not animate then
+				-- we jumped here without going through middle of trans
+			end
+			--]]
+
+			--== Finish up
+
+			if direction==self.REVERSE then
+				--popstack has to be before #self._items check below
+
+				local item = self:_popStackItem()
+				self:_removeItemFromNavBar( item )
+
+				self._top_item = from_item
+				self._new_item = nil
+				self._back_item = self:_getPreviousItem()
+
+				if to_item then
+					self:_detachBackListener( to_item.backButton )
+				end
+				if from_item then
+					self:_attachBackListener( from_item.backButton )
+				end
+
+
 			--== Left/Back
 
 			if t_d then
@@ -655,28 +681,6 @@ function NavBar:_getTransition( from_item, to_item, direction )
 				f_r.alpha = 1
 			end
 
-			--[[
-			if not animate then
-				-- we jumped here without going through middle of trans
-			end
-			--]]
-
-			--== Finish up
-
-			if direction==self.REVERSE then
-				local item = self:_popStackItem()
-				self:_removeItemFromNavBar( item )
-
-				self._top_item = from_item
-				self._new_item = nil
-				self._back_item = self:_getPreviousItem()
-
-				if to_item then
-					self:_detachBackListener( to_item.backButton )
-				end
-				if from_item then
-					self:_attachBackListener( from_item.backButton )
-				end
 
 			end
 
