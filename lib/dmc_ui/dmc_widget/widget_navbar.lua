@@ -385,10 +385,12 @@ end
 -- Item Methods
 
 function NavBar:_pushStackItem( item )
+	-- print("NavBar:_pushStackItem", #self._items )
 	tinsert( self._items, item )
 end
 
 function NavBar:_popStackItem( notify )
+	-- print("NavBar:_popStackItem", #self._items )
 	return tremove( self._items )
 end
 
@@ -752,7 +754,7 @@ function NavBar:_getTransition( from_item, to_item, direction )
 					self:_attachBackListener( to_item.backButton )
 				end
 
-				tinsert( self._items, to_item )
+				self:_pushStackItem( to_item )
 			end
 
 
