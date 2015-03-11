@@ -1,5 +1,5 @@
 --====================================================================--
--- dmc_ui/dmc_control/control_navigation.lua
+-- dmc_ui/dmc_control/navigation_control.lua
 --
 -- Documentation:
 --====================================================================--
@@ -8,7 +8,7 @@
 
 The MIT License (MIT)
 
-Copyright (C) 2013-2015 David McCuskey. All Rights Reserved.
+Copyright (C) 2015 David McCuskey. All Rights Reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -64,9 +64,10 @@ local ui_find = dmc_ui_func.find
 --== Imports
 
 
-local LifecycleMixModule = require 'dmc_lifecycle_mix'
 local Objects = require 'dmc_objects'
 local uiConst = require( ui_find( 'ui_constants' ) )
+
+local ViewControl = require( ui_find( 'dmc_control.core.view_control' ) )
 
 
 
@@ -74,14 +75,12 @@ local uiConst = require( ui_find( 'ui_constants' ) )
 --== Setup, Constants
 
 
--- setup some aliases to make code cleaner
 local newClass = Objects.newClass
-local ComponentBase = Objects.ComponentBase
-
-local LifecycleMix = LifecycleMixModule.LifecycleMix
 
 local tinsert = table.insert
 local tremove = table.remove
+
+local LOCAL_DEBUG = false
 
 --== To be set in initialize()
 local dUI = nil
@@ -89,25 +88,21 @@ local dUI = nil
 
 
 --====================================================================--
---== View Navigation Class
+--== Navigation Control Class
 --====================================================================--
 
 
-local NavControl = newClass(
-	{ ComponentBase, LifecycleMix }, {name="Navigation Control"}
+local NavControl = newClass( ViewControl, {name="Navigation Control"}
 )
 
 --== Class Constants
 
-NavControl.TRANSITION_TIME = 400
 NavControl.ANCHOR = { x=0.5,y=0 }
 
 NavControl.FORWARD = 'forward-direction'
 NavControl.REVERSE = 'reverse-direction'
 
 --== Event Constants
-
-NavControl.EVENT = 'navigation-control-event'
 
 NavControl.REMOVED_VIEW = 'removed-view-event'
 
@@ -118,28 +113,29 @@ NavControl.REMOVED_VIEW = 'removed-view-event'
 function NavControl:__init__( params )
 	-- print( "NavControl:__init__" )
 	params = params or {}
-	if params.x==nil then params.x=0 end
-	if params.y==nil then params.y=0 end
-	if params.transitionTime==nil then params.transitionTime=NavControl.TRANSITION_TIME end
+	if params.transitionTime==nil then params.transitionTime=uiConst.NAVBAR_TRANSITION_TIME end
 
-	self:superCall( LifecycleMix, '__init__', params )
-	self:superCall( ComponentBase, '__init__', params )
+	self:superCall( '__init__', params )
 	--==--
 
 	--== Create Properties ==--
 
 	-- properties stored in Class
 
-	self._width = params.width or dUI.WIDTH
-	self._height = params.height or dUI.HEIGHT
+	self._animation = nil
+	self._animation_dirty=false
+
+	self._enterFrame_f = nil
 
 	self._trans_time = params.transitionTime
-	self._enterFrame_f = nil
 
 	self._views = {} -- slide list, in order
 
-	self._animation = nil
-	self._animation_dirty=false
+	--== Display Groups ==--
+
+	self._dgBg = nil -- group for background
+	self._dgViews = nil -- group for views
+	self._dgUI = nil -- group for nav bar
 
 	--== Object References ==--
 
@@ -149,12 +145,7 @@ function NavControl:__init__( params )
 	self._new_view = nil
 	self._visible_view = nil
 
-	self._dgBG = nil -- background
-	self._dgViews = nil -- display for groups
-	self._dgUI = nil -- display for nav bar
-
 	self._primer = nil
-
 	self._navBar = nil
 
 end
@@ -168,14 +159,13 @@ function NavControl:__undoInit__()
 	self._visible_view = nil
 
 	--==--
-	self:superCall( ComponentBase, '__undoInit__' )
-	self:superCall( LifecycleMix, '__undoInit__' )
+	self:superCall( '__undoInit__' )
 end
 
 
 function NavControl:__createView__()
 	-- print( "NavControl:__createView__" )
-	self:superCall( ComponentBase, '__createView__' )
+	self:superCall( '__createView__' )
 	--==--
 	local ANCHOR = NavControl.ANCHOR
 	local W, H = self._width, self._height
@@ -185,7 +175,7 @@ function NavControl:__createView__()
 
 	dg = display.newGroup()
 	self:insert( dg )
-	self._dgBG = dg
+	self._dgBg = dg
 
 	dg = display.newGroup()
 	self:insert( dg )
@@ -201,12 +191,12 @@ function NavControl:__createView__()
 
 	o = display.newRect( 0, 0, W, H )
 	o:setFillColor(0,0,0,0)
-	if true then
-		o:setFillColor(1,0,0,0.2)
+	if LOCAL_DEBUG or true then
+		o:setFillColor(1,0,0,1)
 	end
 	o.anchorX, o.anchorY = ANCHOR.x, ANCHOR.y
 
-	self._dgBG:insert( o )
+	self._dgBg:insert( o )
 	self._primer = o
 
 	-- navbar
@@ -233,11 +223,11 @@ function NavControl:__undoCreateView__()
 	self._dgViews:removeSelf()
 	self._dgViews = nil
 
-	self._dgBG:removeSelf()
-	self._dgBG = nil
+	self._dgBg:removeSelf()
+	self._dgBg = nil
 
 	--==--
-	self:superCall( ComponentBase, '__undoCreateView__' )
+	self:superCall( '__undoCreateView__' )
 end
 
 
@@ -246,16 +236,16 @@ end
 --[[
 function NavControl:__initComplete__()
 	-- print( "NavControl:__initComplete__" )
-	self:superCall( ComponentBase, '__initComplete__' )
+	self:superCall( '__initComplete__' )
 	--==--
 end
 --]]
 
 function NavControl:__undoInitComplete__()
 	-- print( "NavControl:__undoInitComplete__" )
-	self:cleanUp()
+	self:_cleanUp()
 	--==--
-	self:superCall( ComponentBase, '__undoInitComplete__' )
+	self:superCall( '__undoInitComplete__' )
 end
 
 -- END: Setup DMC Objects
@@ -276,16 +266,6 @@ end
 
 --====================================================================--
 --== Public Methods
-
-
-function NavControl:cleanUp()
-	-- print( "NavControl:cleanUp" )
-	self:_stopEnterFrame()
-	for i=#self._views, 1, -1 do
-		local view = self:_popStackView()
-		self:_removeViewFromNavControl( view )
-	end
-end
 
 
 function NavControl:pushView( view, params )
@@ -309,24 +289,42 @@ function NavControl:popViewAnimated()
 end
 
 
---[[
-function NavControl:viewIsVisible( value )
-	-- print( "NavControl:viewIsVisible" )
-	local o = self._current_view
-	if o and o.viewIsVisible then o:viewIsVisible( value ) end
-end
-
-function NavControl:viewInMotion( value )
-	-- print( "NavControl:viewInMotion" )
-	local o = self._current_view
-	if o and o.viewInMotion then o:viewInMotion( value ) end
-end
---]]
-
-
 
 --====================================================================--
 --== Private Methods
+
+
+function NavControl:_widthChanged()
+	-- print( "NavControl:_widthChanged", self._width )
+	local w = self._width
+	self._primer.width = w
+	self._navBar.width = w
+	self:_modifyViews( function( i, v )
+		v.__obj.width = w
+	end)
+end
+
+function NavControl:_heightChanged()
+	-- print( "NavControl:_heightChanged", self._height )
+	local h = self._height
+	self._primer.height = h
+	self:_modifyViews( function( i, v )
+		v.__obj.height = h
+	end)
+end
+
+
+function NavControl:_modifyViews( func )
+	local views = self._views
+	for i=#views, 1, -1 do func( i, views[i] ) end
+end
+
+
+function NavControl:_cleanUp()
+	-- print( "NavControl:_cleanUp" )
+	self:_stopEnterFrame()
+	self:_removeAllViews()
+end
 
 
 --======================================================--
@@ -344,6 +342,12 @@ function NavControl:_getPreviousView()
 	return self._views[ #self._views-1 ]
 end
 
+function NavControl:_removeAllViews()
+	for i=1, #self._views do
+		local view = self:_popStackView()
+		self:_removeViewFromNavControl( view )
+	end
+end
 
 
 function NavControl:_setNextView( view, params )
@@ -511,9 +515,9 @@ function NavControl:_getNextTrans()
 	local nB_f = self:_getNavBarNextTransition( self._new_view )
 	local nC_f = self:_getTransition( self._top_view, self._new_view, self.FORWARD )
 	-- make function which wraps both
-	return function( percent )
-		nB_f( percent )
-		nC_f( percent )
+	return function( percent, animate )
+		nB_f( percent, animate )
+		nC_f( percent, animate )
 	end
 end
 
@@ -530,9 +534,9 @@ function NavControl:_getPrevTrans()
 	local nB_f = self:_getNavBarPrevTransition()
 	local nC_f = self:_getTransition( self._back_view, self._top_view, self.REVERSE )
 	-- make function which wraps both
-	return function( percent )
-		nB_f( percent )
-		nC_f( percent )
+	return function( percent, animate )
+		nB_f( percent, animate )
+		nC_f( percent, animate )
 	end
 end
 
@@ -704,14 +708,16 @@ function NavControl:__commitProperties__()
 	--== Update Widget Components ==--
 
 	if self._newViewSet_dirty then
+		local w, h = self._width, self._height
 		local ANCHOR = NavControl.ANCHOR
 		local nb_height = self._navBar.height
-		local view_height = self.height - nb_height
+		local view_height = h - nb_height
 		local view1 = self._new_view
 		local obj
 		if view1 then
 			obj = view1.__obj
 			obj.height = view_height
+			obj.width = w
 			obj.y = nb_height
 			obj.anchorX, obj.anchorY = ANCHOR.x, ANCHOR.y
 		end
