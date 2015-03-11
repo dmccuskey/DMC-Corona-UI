@@ -170,7 +170,7 @@ module_config = {
 				}
 			},
 			{
-				"exp_dir": "popover-widget/popover-simple",
+				"exp_dir": "popover-control/popover-control-simple",
 				"requires": [],
 				"mod_dir_map": {
 					"default_dir": "",
