@@ -64,9 +64,9 @@ local ui_find = dmc_ui_func.find
 --== Imports
 
 
-local Gesture = require 'dmc_corona.dmc_gestures'
+local AxisMotion = require( ui_find( 'dmc_widget.widget_scrollview.axis_motion' ) )
+local Gesture = require 'dmc_gestures'
 local Objects = require 'dmc_objects'
-local StatesMixModule = require 'dmc_states_mix'
 local Utils = require 'dmc_utils'
 
 local uiConst = require( ui_find( 'ui_constants' ) )
@@ -100,7 +100,6 @@ local tstr = tostring
 
 local ScrollView = newClass( View, { name = "ScrollView" } )
 
-StatesMixModule.patch( ScrollView )
 
 --== Class Constants
 
@@ -120,18 +119,6 @@ ScrollView.STYLE_TYPE = uiConst.SCROLLVIEW
 -- ScrollView.THEME_STATES = {
 -- 	ScrollView.DEFAULT,
 -- }
-
---== State Constants
-
-ScrollView.STATE_INIT = 'state_init'
-ScrollView.STATE_AT_REST = 'state_at_rest'
-ScrollView.STATE_TOUCH = 'state_touch'
-ScrollView.STATE_DECELERATE = 'state_scroll'
-ScrollView.STATE_RESTRAINT = 'state_restraint'
-ScrollView.STATE_RESTORE = 'state_restore'
-
-ScrollView.STATE_RESTRAINT_TRANS_TIME = 100
-ScrollView.STATE_RESTORE_TRANS_TIME = 400
 
 
 --== Event Constants
@@ -160,7 +147,7 @@ function ScrollView:__init__( params )
 	self._contentPosition = {x=0,y=0}
 	self._contentPosition_dirty=true
 
-	self._enterFrameIterator = nil
+	-- self._enterFrameIterator = nil
 
 	self._hasMoved = false
 	self._isMoving = false
@@ -176,8 +163,8 @@ function ScrollView:__init__( params )
 	self._scrollBlockedV = false
 
 	-- eg, HIT_TOP_LIMIT, HIT_LEFT_LIMIT
-	self._scrollLimitH = nil
-	self._scrollLimitV = nil
+	-- self._scrollLimitH = nil
+	-- self._scrollLimitV = nil
 
 	self._returnFocus = nil -- return focus callback
 	self._returnFocusCancel = nil -- return focus callback
@@ -214,6 +201,9 @@ function ScrollView:__init__( params )
 
 	--== Object References ==--
 
+	self._axis_x = nil -- y-axis motion
+	self._axis_y = nil -- x-axis motion
+
 	self._gesture = nil -- pan gesture
 	self._gesture_f = nil -- callback
 
@@ -223,7 +213,7 @@ function ScrollView:__init__( params )
 	self._scroller_dirty=true
 
 
-	self:setState( ScrollView.STATE_INIT )
+	-- self:setState( ScrollView.STATE_INIT )
 
 end
 
@@ -253,6 +243,14 @@ end
 
 function ScrollView:__undoCreateView__()
 	-- print( "ScrollView:__undoCreateView__" )
+	local o
+
+	self._axis_x:removeSelf()
+	self._axis_x = nil
+
+	self._axis_y:removeSelf()
+	self._axis_y = nil
+
 	self._rectBg:removeSelf()
 	self._rectBg=nil
 
@@ -277,11 +275,25 @@ function ScrollView:__initComplete__()
 	self._gesture = o
 	self._gesture_f = f
 
+	f = self:createCallback( self._axisEvent_handler )
+	self._axis_x = AxisMotion:new{
+		id='x',
+		length=self._width,
+		scrollLength=self._scrollWidth,
+		callback=f
+	}
+	self._axis_y = AxisMotion:new{
+		id='y',
+		length=self._height,
+		scrollLength=self._scrollHeight,
+		callback=f
+	}
+
 	self._touchEvtStack = {}
 
 	self._isRendered = true
 
-	self:gotoState( ScrollView.STATE_AT_REST )
+	-- self:gotoState( ScrollView.STATE_AT_REST )
 end
 
 function ScrollView:__undoInitComplete__()
@@ -477,7 +489,7 @@ function ScrollView:__commitProperties__()
 	end
 
 	if self._width_dirty then
-		-- print("width", self._width)
+		print("width", self._width)
 		bg.width = self._width
 		self._width_dirty=false
 	end
@@ -586,47 +598,47 @@ end
 
 
 
---== _checkScrollBounds()
+-- --== _checkScrollBounds()
 
-function ScrollView:_checkScrollBounds( newX, newY )
-	-- print( 'ScrollView:_checkScrollBounds' )
-	local canScrollH = self._scrollHorizontalEnabled
-	local canScrollV = self._scrollVerticalEnabled
-	local scr = self._scroller
+-- function ScrollView:_checkScrollBounds( newX, newY )
+-- 	-- print( 'ScrollView:_checkScrollBounds' )
+-- 	local canScrollH = self._scrollHorizontalEnabled
+-- 	local canScrollV = self._scrollVerticalEnabled
+-- 	local scr = self._scroller
 
-	local calcs = { minX=0,maxX=0,minY=0,maxY=0 }
+-- 	local calcs = { minX=0,maxX=0,minY=0,maxY=0 }
 
-	if canScrollH and newX then
-		local calcH = self._width - scr.width
-		calcs.minX=0
-		calcs.maxX=calcH
-		if newX >= 0 then
-			self._scrollLimitH = ScrollView.HIT_LEFT_LIMIT
-		elseif newX <= calcH then
-			self._scrollLimitH = ScrollView.HIT_RIGHT_LIMIT
-		else
-			self._scrollLimitH = nil
-		end
-	end
+-- 	if canScrollH and newX then
+-- 		local calcH = self._width - scr.width
+-- 		calcs.minX=0
+-- 		calcs.maxX=calcH
+-- 		if newX >= 0 then
+-- 			self._scrollLimitH = ScrollView.HIT_LEFT_LIMIT
+-- 		elseif newX <= calcH then
+-- 			self._scrollLimitH = ScrollView.HIT_RIGHT_LIMIT
+-- 		else
+-- 			self._scrollLimitH = nil
+-- 		end
+-- 	end
 
-	if canScrollV and newY then
-		local y_offset = scr.y_offset or 0
-		local calcV = self._height - scr.height - scr.y_offset
-		-- print( "scr.y, ", scr.y , calcV )
-		calcs.minY=0
-		calcs.maxY=calcV
-		if newY > 0 then
-			self._scrollLimitV = ScrollView.HIT_TOP_LIMIT
-		elseif newY < calcV then
-			self._scrollLimitV = ScrollView.HIT_BOTTOM_LIMIT
-		else
-			self._scrollLimitV = nil
-		end
-	end
+-- 	if canScrollV and newY then
+-- 		local y_offset = scr.y_offset or 0
+-- 		local calcV = self._height - scr.height - scr.y_offset
+-- 		-- print( "scr.y, ", scr.y , calcV )
+-- 		calcs.minY=0
+-- 		calcs.maxY=calcV
+-- 		if newY > 0 then
+-- 			self._scrollLimitV = ScrollView.HIT_TOP_LIMIT
+-- 		elseif newY < calcV then
+-- 			self._scrollLimitV = ScrollView.HIT_BOTTOM_LIMIT
+-- 		else
+-- 			self._scrollLimitV = nil
+-- 		end
+-- 	end
 
-	-- print( "CB", self._scrollLimitH, self._scrollLimitV )
-	return calcs
-end
+-- 	-- print( "CB", self._scrollLimitH, self._scrollLimitV )
+-- 	return calcs
+-- end
 
 
 
@@ -707,426 +719,501 @@ end
 
 
 
-function ScrollView:enterFrame( event )
-	print( 'ScrollView:enterFrame' )
+-- function ScrollView:enterFrame( event )
+-- 	print( 'ScrollView:enterFrame' )
 
-	local f = self._enterFrameIterator
+-- 	local f = self._enterFrameIterator
 
-	if not f or not self._isRendered then
-		Runtime:removeEventListener( 'enterFrame', self )
+-- 	if not f or not self._isRendered then
+-- 		Runtime:removeEventListener( 'enterFrame', self )
 
-	else
-		f( event )
-		local cp = self._contentPosition
+-- 	else
+-- 		f( event )
+-- 		local cp = self._contentPosition
 
-		if self._isMoving then
-			self._hasMoved = true
+-- 		if self._isMoving then
+-- 			self._hasMoved = true
 
-			local vV = self._velocityV
-			local data = {
-				x=cp.x,
-				y=cp.y,
-				velocity = vV.value * vV.vector
-			}
-			self:dispatchEvent( ScrollView.SCROLLING, data )
-		end
+-- 			local vV = self._velocityV
+-- 			local data = {
+-- 				x=cp.x,
+-- 				y=cp.y,
+-- 				velocity = vV.value * vV.vector
+-- 			}
+-- 			self:dispatchEvent( ScrollView.SCROLLING, data )
+-- 		end
 
-		if not self._enterFrameIterator and self._hasMoved then
-			self._hasMoved = false
-			local data = {
-				x=cp.x,
-				y=cp.y,
-				velocity = 0
-			}
-			self:dispatchEvent( ScrollView.SCROLLED, data )
-		end
+-- 		if not self._enterFrameIterator and self._hasMoved then
+-- 			self._hasMoved = false
+-- 			local data = {
+-- 				x=cp.x,
+-- 				y=cp.y,
+-- 				velocity = 0
+-- 			}
+-- 			self:dispatchEvent( ScrollView.SCROLLED, data )
+-- 		end
 
-	end
-end
+-- 	end
+-- end
 
-function ScrollView:touch( event )
-	-- print( "ScrollView:touch" )
-	local target = event.target
+-- function ScrollView:touch( event )
+-- 	-- print( "ScrollView:touch" )
+-- 	local target = event.target
+-- 	local phase = event.phase
+
+-- 	local bg = self._rectBg
+-- 	local scr = self._scroller
+
+-- 	local canScrollH = self._scrollHorizontalEnabled
+-- 	local canScrollV = self._scrollVerticalEnabled
+
+-- 	if not canScrollH and not canScrollV then return false end
+
+-- 	tinsert( self._touchEvtStack, event )
+
+-- 	if phase == 'began' then
+
+-- 		local bg = self._rectBg
+-- 		local scr = self._scroller
+
+-- 		-- save this event for later, movement calculations
+-- 		self._tmpTouchEvt = event
+
+-- 		display.getCurrentStage():setFocus( bg )
+-- 		self._hasFocus = true
+
+-- 		self:gotoState( ScrollView.STATE_TOUCH )
+-- 	end
+
+-- 	if not self._hasFocus then return end
+
+-- 	if phase == 'moved' then
+
+-- 		local LIMIT = 200
+-- 		local _mabs = mabs
+
+-- 		local vH = self._velocityH
+-- 		local vV = self._velocityV
+-- 		local bg = self._rectBg
+-- 		local scr = self._scroller
+-- 		local scrX, scrY = scr.x, scr.y
+-- 		local cp = self._contentPosition
+-- 		local contentX, contentY = cp.x, cp.y
+-- 		local tmpTouchEvt = self._tmpTouchEvt
+-- 		local deltaX, deltaY
+
+-- 		-- direction multipliers
+-- 		local multH, multV = 1,1
+-- 		local d, t, s
+-- 		local absDeltaX, absDeltaY
+-- 		local deltaX, deltaY
+
+-- 		--== Determine if we need to reliquish the touch
+-- 		-- this is checking in our non-scroll direction
+
+-- 		absDeltaX = _mabs( event.xStart - event.x )
+-- 		absDeltaY = _mabs( event.yStart - event.y )
+
+
+
+-- 		--== Calculate Positions
+
+-- 		local newX, newY = 0,0
+
+-- 		if canScrollH and not self._scrollBlockedH then
+
+-- 			deltaX = event.x - tmpTouchEvt.x
+-- 			newX = scrX + deltaX
+
+-- 			local calcs = self:_checkScrollBounds( newX, nil )
+
+-- 			if self._scrollLimitH==self.HIT_LEFT_LIMIT then
+-- 				-- hit top limit
+-- 				if self._bounceIsActive==false then
+-- 					newX=calcs.minX
+-- 				else
+-- 					multH = 1 - (newX/LIMIT)
+-- 					newX = scrX + ( deltaX * multH )
+-- 				end
+-- 			elseif self._scrollLimitH==self.HIT_RIGHT_LIMIT then
+-- 				if self._bounceIsActive==false then
+-- 					newX=calcs.maxX
+-- 				else
+-- 					s = (self._width - scr.width) - newX
+-- 					multH = 1 - (s/LIMIT)
+-- 					newX = scrX + ( deltaX * multH )
+-- 				end
+
+-- 			end
+
+-- 			self._contentPosition.x = newX
+-- 			self._contentPosition_dirty=true
+-- 			self:__invalidateProperties__()
+-- 		end
+
+-- 		if canScrollV and not self._scrollBlockedV then
+
+-- 			deltaY = event.y - tmpTouchEvt.y
+-- 			newY = scrY + deltaY
+
+-- 			local calcs = self:_checkScrollBounds( nil, newY )
+
+-- 			if self._scrollLimitV==self.HIT_TOP_LIMIT then
+-- 				-- hit top limit
+-- 				if self._bounceIsActive==false then
+-- 					newY=calcs.minY
+-- 				else
+-- 					multV = 1 - (newY/LIMIT)
+-- 					newY = scrY + ( deltaY * multV )
+-- 				end
+-- 			elseif self._scrollLimitV==self.HIT_BOTTOM_LIMIT then
+-- 				if self._bounceIsActive==false then
+-- 					newY=calcs.maxY
+-- 				else
+-- 					s = (self._height - scr.height) - newY
+-- 					multV = 1 - (s/LIMIT)
+-- 					newY = scrY + ( deltaY * multV )
+-- 				end
+
+-- 			end
+
+-- 			self._contentPosition.y = newY
+-- 			self._contentPosition_dirty=true
+-- 			self:__invalidateProperties__()
+-- 		end
+
+-- 		self._tmpTouchEvt = event
+
+-- 	elseif phase=='ended' or phase=='cancelled' then
+
+
+-- 		-- clean up
+-- 		display.getCurrentStage():setFocus( nil )
+-- 		self._hasFocus = false
+-- 		self._isMoving = false
+
+-- 		self._tmpTouchEvt = event
+
+-- 		-- maybe we have ended without moving
+-- 		-- so need to give back ended as a touch to our item
+
+-- 		local next_state, next_params = self:_getNextState{ event=event }
+-- 		self:gotoState( next_state, next_params )
+
+-- 	end
+
+-- end
+
+
+function ScrollView:_gestureEvent_handler( event )
+	print( "ScrollView:_gestureEvent_handler", event.phase )
+	local etype = event.type
 	local phase = event.phase
+	local gesture = event.target
 
-	local bg = self._rectBg
-	local scr = self._scroller
+	-- Utils.print( event )
+	local evt = {
+		name='touch',
+		phase=event.phase,
+		time=event.time,
+		value=0, -- this is holder for x/y
+		start=0, -- this is holder for xStart/yStart
+	}
 
-	local canScrollH = self._scrollHorizontalEnabled
-	local canScrollV = self._scrollVerticalEnabled
-
-	if not canScrollH and not canScrollV then return false end
-
-	tinsert( self._touchEvtStack, event )
-
-	if phase == 'began' then
-
-		local bg = self._rectBg
-		local scr = self._scroller
-
-		-- save this event for later, movement calculations
-		self._tmpTouchEvt = event
-
-		display.getCurrentStage():setFocus( bg )
-		self._hasFocus = true
-
-		self:gotoState( ScrollView.STATE_TOUCH )
-	end
-
-	if not self._hasFocus then return end
-
-	if phase == 'moved' then
-
-		local LIMIT = 200
-		local _mabs = mabs
-
-		local vH = self._velocityH
-		local vV = self._velocityV
-		local bg = self._rectBg
-		local scr = self._scroller
-		local scrX, scrY = scr.x, scr.y
-		local cp = self._contentPosition
-		local contentX, contentY = cp.x, cp.y
-		local tmpTouchEvt = self._tmpTouchEvt
-		local deltaX, deltaY
-
-		-- direction multipliers
-		local multH, multV = 1,1
-		local d, t, s
-		local absDeltaX, absDeltaY
-		local deltaX, deltaY
-
-		--== Determine if we need to reliquish the touch
-		-- this is checking in our non-scroll direction
-
-		absDeltaX = _mabs( event.xStart - event.x )
-		absDeltaY = _mabs( event.yStart - event.y )
-
-
-
-		--== Calculate Positions
-
-		local newX, newY = 0,0
-
-		if canScrollH and not self._scrollBlockedH then
-
-			deltaX = event.x - tmpTouchEvt.x
-			newX = scrX + deltaX
-
-			local calcs = self:_checkScrollBounds( newX, nil )
-
-			if self._scrollLimitH==self.HIT_LEFT_LIMIT then
-				-- hit top limit
-				if self._bounceIsActive==false then
-					newX=calcs.minX
-				else
-					multH = 1 - (newX/LIMIT)
-					newX = scrX + ( deltaX * multH )
-				end
-			elseif self._scrollLimitH==self.HIT_RIGHT_LIMIT then
-				if self._bounceIsActive==false then
-					newX=calcs.maxX
-				else
-					s = (self._width - scr.width) - newX
-					multH = 1 - (s/LIMIT)
-					newX = scrX + ( deltaX * multH )
-				end
-
+	if etype == gesture.GESTURE then
+		evt.phase = 'began'
+		if phase=='began' then
+			if self._axis_x then
+				evt.value = event.x
+				evt.start = event.xStart
+				self._axis_x:touch( evt )
 			end
-
-			self._contentPosition.x = newX
-			self._contentPosition_dirty=true
-			self:__invalidateProperties__()
-		end
-
-		if canScrollV and not self._scrollBlockedV then
-
-			deltaY = event.y - tmpTouchEvt.y
-			newY = scrY + deltaY
-
-			local calcs = self:_checkScrollBounds( nil, newY )
-
-			if self._scrollLimitV==self.HIT_TOP_LIMIT then
-				-- hit top limit
-				if self._bounceIsActive==false then
-					newY=calcs.minY
-				else
-					multV = 1 - (newY/LIMIT)
-					newY = scrY + ( deltaY * multV )
-				end
-			elseif self._scrollLimitV==self.HIT_BOTTOM_LIMIT then
-				if self._bounceIsActive==false then
-					newY=calcs.maxY
-				else
-					s = (self._height - scr.height) - newY
-					multV = 1 - (s/LIMIT)
-					newY = scrY + ( deltaY * multV )
-				end
-
+			if self._axis_y then
+				-- evt.value = event.y
+				-- evt.start = event.yStart
+				-- self._axis_y:touch( evt )
 			end
-
-			self._contentPosition.y = newY
-			self._contentPosition_dirty=true
-			self:__invalidateProperties__()
+		elseif phase=='changed' then
+			evt.phase = 'moved'
+			if self._axis_x then
+				evt.value = event.x
+				evt.start = event.xStart
+				self._axis_x:touch( evt )
+			end
+			if self._axis_y then
+				-- evt.value = event.y
+				-- evt.start = event.yStart
+				-- self._axis_y:touch( evt )
+			end
+		else
+			Utils.print( event )
+			evt.phase = 'ended'
+			if self._axis_x then
+				evt.value = event.x
+				evt.start = event.xStart
+				self._axis_x:touch( evt )
+			end
+			if self._axis_y then
+				-- evt.value = event.y
+				-- evt.start = event.yStart
+				-- self._axis_y:touch( evt )
+			end
 		end
-
-		self._tmpTouchEvt = event
-
-	elseif phase=='ended' or phase=='cancelled' then
-
-
-		-- clean up
-		display.getCurrentStage():setFocus( nil )
-		self._hasFocus = false
-		self._isMoving = false
-
-		self._tmpTouchEvt = event
-
-		-- maybe we have ended without moving
-		-- so need to give back ended as a touch to our item
-
-		local next_state, next_params = self:_getNextState{ event=event }
-		self:gotoState( next_state, next_params )
-
 	end
-
 end
 
+
+
+function ScrollView:_axisEvent_handler( event )
+	print( "ScrollView:_axisEvent_handler", event.state )
+	local state = event.state
+	-- local velocity = event.velocity
+	local id = event.id
+	Utils.print( event )
+	if id=='x' then
+		self._contentPosition.x = event.value
+	else
+		self._contentPosition.y = event.value
+	end
+	self._contentPosition_dirty=true
+	self:__invalidateProperties__()
+
+end
 
 --====================================================================--
 --== State Machine
 
 
-function ScrollView:_getNextState( params )
-	-- print( "ScrollView:_getNextState" )
-	params = params or {}
-	--==--
-	local sLimitV = self._scrollLimitV
-	local vV = self._velocityV
+-- function ScrollView:_getNextState( params )
+-- 	-- print( "ScrollView:_getNextState" )
+-- 	params = params or {}
+-- 	--==--
+-- 	local sLimitV = self._scrollLimitV
+-- 	local vV = self._velocityV
 
-	local s, p -- state, params
-	print( vV.value,sLimitV )
-	if vV.value <= 0 and not sLimitV then
-		s = ScrollView.STATE_AT_REST
-		p = { event=params.event }
+-- 	local s, p -- state, params
+-- 	print( vV.value,sLimitV )
+-- 	if vV.value <= 0 and not sLimitV then
+-- 		s = ScrollView.STATE_AT_REST
+-- 		p = { event=params.event }
 
-	elseif vV.value > 0 and not sLimitV then
-		s = ScrollView.STATE_DECELERATE
-		p = { event=params.event }
+-- 	elseif vV.value > 0 and not sLimitV then
+-- 		s = ScrollView.STATE_DECELERATE
+-- 		p = { event=params.event }
 
-	elseif vV.value <= 0 and sLimitV then
-		s = ScrollView.STATE_RESTORE
-		p = { event=params.event }
+-- 	elseif vV.value <= 0 and sLimitV then
+-- 		s = ScrollView.STATE_RESTORE
+-- 		p = { event=params.event }
 
-	elseif vV.value > 0 and sLimitV then
-		s = ScrollView.STATE_RESTRAINT
-		p = { event=params.event }
+-- 	elseif vV.value > 0 and sLimitV then
+-- 		s = ScrollView.STATE_RESTRAINT
+-- 		p = { event=params.event }
 
-	end
+-- 	end
 
-	return s, p
-end
+-- 	return s, p
+-- end
 
 
 
---== State Init
+-- --== State Init
 
-function ScrollView:state_init( next_state, params )
-	print( "ScrollView:state_init: >> ", next_state )
+-- function ScrollView:state_init( next_state, params )
+-- 	print( "ScrollView:state_init: >> ", next_state )
 
-	if next_state == ScrollView.STATE_AT_REST then
-		self:do_state_at_rest( params )
+-- 	if next_state == ScrollView.STATE_AT_REST then
+-- 		self:do_state_at_rest( params )
 
-	else
-		pwarn( sfmt( "ScrollView:state_init unknown trans '%s'", tstr( next_state )))
-	end
-end
+-- 	else
+-- 		pwarn( sfmt( "ScrollView:state_init unknown trans '%s'", tstr( next_state )))
+-- 	end
+-- end
 
 
-function ScrollView:do_state_at_rest( params )
-	print( "ScrollView:do_state_at_rest", params  )
-	params = params or {}
-	--==--
+-- function ScrollView:do_state_at_rest( params )
+-- 	print( "ScrollView:do_state_at_rest", params  )
+-- 	params = params or {}
+-- 	--==--
 
-	local vH, vV = self._velocityH, self._velocityV
-	local scr = self._scroller
+-- 	local vH, vV = self._velocityH, self._velocityV
+-- 	local scr = self._scroller
 
-	vH.value, vH.vector = 0, 0
-	vV.value, vV.vector = 0, 0
+-- 	vH.value, vH.vector = 0, 0
+-- 	vV.value, vV.vector = 0, 0
 
-	self._enterFrameIterator = nil
-	-- this one is redundant
-	Runtime:removeEventListener( 'enterFrame', self )
+-- 	self._enterFrameIterator = nil
+-- 	-- this one is redundant
+-- 	Runtime:removeEventListener( 'enterFrame', self )
 
-	self:setState( ScrollView.STATE_AT_REST )
-end
+-- 	self:setState( ScrollView.STATE_AT_REST )
+-- end
 
-function ScrollView:state_at_rest( next_state, params )
-	print( "ScrollView:state_at_rest: >> ", next_state )
+-- function ScrollView:state_at_rest( next_state, params )
+-- 	print( "ScrollView:state_at_rest: >> ", next_state )
 
-	if next_state == self.STATE_TOUCH then
-		self:do_state_touch( params )
+-- 	if next_state == self.STATE_TOUCH then
+-- 		self:do_state_touch( params )
 
-	else
-		pwarn( sfmt( "ScrollView:state_at_rest unknown trans '%s'", tstr( next_state )))
-	end
+-- 	else
+-- 		pwarn( sfmt( "ScrollView:state_at_rest unknown trans '%s'", tstr( next_state )))
+-- 	end
 
-end
+-- end
 
 
 
 
-function ScrollView:do_state_touch( params )
-	print( "ScrollView:do_state_touch" )
-	params = params or {}
-	--==--
+-- function ScrollView:do_state_touch( params )
+-- 	print( "ScrollView:do_state_touch" )
+-- 	params = params or {}
+-- 	--==--
 
-	local _mabs = mabs
-	local vH, vV = self._velocityH, self._velocityV
+-- 	local _mabs = mabs
+-- 	local vH, vV = self._velocityH, self._velocityV
 
-	-- number of items to use for velocity calculation
-	local VEL_STACK_LENGTH = 4
-	local velStack = {}
+-- 	-- number of items to use for velocity calculation
+-- 	local VEL_STACK_LENGTH = 4
+-- 	local velStack = {}
 
-	local evtTmp = nil -- enter frame event, updated each frame
-	local lastTouchEvt = nil -- touch events, reset for each calculation
+-- 	local evtTmp = nil -- enter frame event, updated each frame
+-- 	local lastTouchEvt = nil -- touch events, reset for each calculation
 
-	local enterFrameFunc1, enterFrameFunc2
+-- 	local enterFrameFunc1, enterFrameFunc2
 
 
-	--[[
-	enterFrameFunc2
+-- 	--[[
+-- 	enterFrameFunc2
 
-	work to do after the initial enterFrame
-	this is mostly about calculating velocity
-	--]]
-	enterFrameFunc2 = function( e )
-		print( "enterFrameFunc: enterFrameFunc2 state touch " )
+-- 	work to do after the initial enterFrame
+-- 	this is mostly about calculating velocity
+-- 	--]]
+-- 	enterFrameFunc2 = function( e )
+-- 		print( "enterFrameFunc: enterFrameFunc2 state touch " )
 
-		local teStack = self._touchEvtStack
-		local evtCount = #teStack
+-- 		local teStack = self._touchEvtStack
+-- 		local evtCount = #teStack
 
-		local deltaX, deltaY, deltaT
+-- 		local deltaX, deltaY, deltaT
 
-		--== process incoming touch events
+-- 		--== process incoming touch events
 
-		if evtCount == 0 then
-			tinsert( velStack, 1, { 0, 0 }  )
+-- 		if evtCount == 0 then
+-- 			tinsert( velStack, 1, { 0, 0 }  )
 
-		else
-			deltaT = ( e.time-evtTmp.time ) / evtCount
+-- 		else
+-- 			deltaT = ( e.time-evtTmp.time ) / evtCount
 
-			for i, tEvt in ipairs( teStack ) do
-				deltaX = tEvt.x - lastTouchEvt.x
-				deltaY = tEvt.y - lastTouchEvt.y
+-- 			for i, tEvt in ipairs( teStack ) do
+-- 				deltaX = tEvt.x - lastTouchEvt.x
+-- 				deltaY = tEvt.y - lastTouchEvt.y
 
-				-- print( "events >> ", i, ( deltaX/deltaT ), ( deltaY/deltaT ) )
-				tinsert( velStack, 1, { ( deltaX/deltaT ), ( deltaY/deltaT ) }  )
+-- 				-- print( "events >> ", i, ( deltaX/deltaT ), ( deltaY/deltaT ) )
+-- 				tinsert( velStack, 1, { ( deltaX/deltaT ), ( deltaY/deltaT ) }  )
 
-				lastTouchEvt = tEvt
-			end
+-- 				lastTouchEvt = tEvt
+-- 			end
 
-		end
+-- 		end
 
-		--== do calculations
-		-- calculate average velocity and clean off
-		-- velocity stack at same time
+-- 		--== do calculations
+-- 		-- calculate average velocity and clean off
+-- 		-- velocity stack at same time
 
-		local aveVelH, aveVelV = 0, 0
-		local vel
+-- 		local aveVelH, aveVelV = 0, 0
+-- 		local vel
 
-		for i = #velStack, 1, -1 do
-			if i > VEL_STACK_LENGTH then
-				tremove( velStack, i )
-			else
-				vel = velStack[i]
-				aveVelH = aveVelH + vel[1]
-				aveVelV = aveVelV + vel[2]
-				-- print(i, vel, vel[1], vel[2] )
-			end
-		end
-		aveVelH = aveVelH / #velStack
-		aveVelV = aveVelV / #velStack
+-- 		for i = #velStack, 1, -1 do
+-- 			if i > VEL_STACK_LENGTH then
+-- 				tremove( velStack, i )
+-- 			else
+-- 				vel = velStack[i]
+-- 				aveVelH = aveVelH + vel[1]
+-- 				aveVelV = aveVelV + vel[2]
+-- 				-- print(i, vel, vel[1], vel[2] )
+-- 			end
+-- 		end
+-- 		aveVelH = aveVelH / #velStack
+-- 		aveVelV = aveVelV / #velStack
 
-		print( 'Touch Vel ', aveVelH, aveVelV )
+-- 		print( 'Touch Vel ', aveVelH, aveVelV )
 
-		vV.value = _mabs( aveVelV )
-		vV.vector = 0
-		if aveVelV < 0 then
-			vV.vector = -1
-		elseif aveVelV > 0 then
-			vV.vector = 1
-		end
+-- 		vV.value = _mabs( aveVelV )
+-- 		vV.vector = 0
+-- 		if aveVelV < 0 then
+-- 			vV.vector = -1
+-- 		elseif aveVelV > 0 then
+-- 			vV.vector = 1
+-- 		end
 
-		vH.value = _mabs( aveVelH )
-		vH.vector = 0
-		if aveVelH < 0 then
-			vH.vector = -1
-		elseif aveVelH > 0 then
-			vH.vector = 1
-		end
+-- 		vH.value = _mabs( aveVelH )
+-- 		vH.vector = 0
+-- 		if aveVelH < 0 then
+-- 			vH.vector = -1
+-- 		elseif aveVelH > 0 then
+-- 			vH.vector = 1
+-- 		end
 
-		--== prep for next frame
+-- 		--== prep for next frame
 
-		self._touchEvtStack = {}
-		evtTmp = e
+-- 		self._touchEvtStack = {}
+-- 		evtTmp = e
 
-	end
+-- 	end
 
 
-	--[[
-	enterFrameFunc1
+-- 	--[[
+-- 	enterFrameFunc1
 
-	this is only for the first enterFrame on a touch event
-	we might already have several events in our stack,
-	especially if someone is tapping hard/fast
-	the last one is usually closer to the target,
-	so we'll start with that one
-	--]]
-	enterFrameFunc1 = function( e )
-		-- print( "enterFrameFunc: enterFrameFunc1 touch " )
+-- 	this is only for the first enterFrame on a touch event
+-- 	we might already have several events in our stack,
+-- 	especially if someone is tapping hard/fast
+-- 	the last one is usually closer to the target,
+-- 	so we'll start with that one
+-- 	--]]
+-- 	enterFrameFunc1 = function( e )
+-- 		-- print( "enterFrameFunc: enterFrameFunc1 touch " )
 
-		vV.value, vV.vector = 0, 0
-		vH.value, vH.vector = 0, 0
+-- 		vV.value, vV.vector = 0, 0
+-- 		vH.value, vH.vector = 0, 0
 
-		lastTouchEvt = tremove( self._touchEvtStack, #self._touchEvtStack )
-		self._touchEvtStack = {}
+-- 		lastTouchEvt = tremove( self._touchEvtStack, #self._touchEvtStack )
+-- 		self._touchEvtStack = {}
 
-		evtTmp = e
+-- 		evtTmp = e
 
-		-- switch to other iterator
-		self._enterFrameIterator = enterFrameFunc2
-	end
+-- 		-- switch to other iterator
+-- 		self._enterFrameIterator = enterFrameFunc2
+-- 	end
 
-	if self._enterFrameIterator == nil then
-		Runtime:addEventListener( 'enterFrame', self )
-	end
+-- 	if self._enterFrameIterator == nil then
+-- 		Runtime:addEventListener( 'enterFrame', self )
+-- 	end
 
-	self._enterFrameIterator = enterFrameFunc1
+-- 	self._enterFrameIterator = enterFrameFunc1
 
-	self:setState( ScrollView.STATE_TOUCH )
-end
+-- 	self:setState( ScrollView.STATE_TOUCH )
+-- end
 
-function ScrollView:state_touch( next_state, params )
-	-- print( "ScrollView:state_touch: >> ", next_state )
+-- function ScrollView:state_touch( next_state, params )
+-- 	-- print( "ScrollView:state_touch: >> ", next_state )
 
-	if next_state == ScrollView.STATE_RESTORE then
-		self:do_state_restore( params )
+-- 	if next_state == ScrollView.STATE_RESTORE then
+-- 		self:do_state_restore( params )
 
-	elseif next_state == ScrollView.STATE_RESTRAINT then
-		self:do_state_restraint( params )
+-- 	elseif next_state == ScrollView.STATE_RESTRAINT then
+-- 		self:do_state_restraint( params )
 
-	elseif next_state == ScrollView.STATE_AT_REST then
-		self:do_state_at_rest( params )
+-- 	elseif next_state == ScrollView.STATE_AT_REST then
+-- 		self:do_state_at_rest( params )
 
-	elseif next_state == ScrollView.STATE_DECELERATE then
-		self:do_state_scroll( params )
+-- 	elseif next_state == ScrollView.STATE_DECELERATE then
+-- 		self:do_state_scroll( params )
 
-	else
-		pwarn( sfmt( "ScrollView:state_touch unknown trans '%s'", tstr( next_state )))
-	end
+-- 	else
+-- 		pwarn( sfmt( "ScrollView:state_touch unknown trans '%s'", tstr( next_state )))
+-- 	end
 
-end
+-- end
 
 
 
