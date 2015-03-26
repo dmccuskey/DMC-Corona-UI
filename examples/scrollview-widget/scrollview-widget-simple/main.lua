@@ -37,10 +37,10 @@ local H_CENTER, V_CENTER = W*0.5, H*0.5
 
 
 local scrollView = dUI.newScrollView{
-	width=200,
-	height=100,
-	scrollWidth=500,
-	scrollHeight=400
+	width=100,
+	height=200,
+	scrollWidth=150,
+	scrollHeight=1000
 }
 scrollView.x, scrollView.y = H_CENTER/2, V_CENTER/2
 

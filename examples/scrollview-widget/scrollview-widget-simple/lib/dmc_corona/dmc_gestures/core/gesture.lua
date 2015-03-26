@@ -127,6 +127,7 @@ function Gesture:__init__( params )
 	self._total_touch_count = 0
 	self._touches = {} -- keyed on ID
 	self._multitouch_evt = nil
+	self._multitouch_queue = {}
 
 	self._gesture_mgr = params.gesture_mgr
 
@@ -210,6 +211,7 @@ function Gesture:_do_reset()
 	self._touch_count = 0
 	self._touches = {} -- keyed on ID
 	self._multitouch_evt = nil
+	self._multitouch_queue = {}
 end
 
 function Gesture:reset()

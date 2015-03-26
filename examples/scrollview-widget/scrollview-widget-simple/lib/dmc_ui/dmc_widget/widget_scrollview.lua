@@ -270,18 +270,18 @@ function ScrollView:__initComplete__()
 	local o, f
 
 	f = self:createCallback( self._gestureEvent_handler )
-	o = Gesture.newPanGesture( self._rectBg, { touches=1, id="1 pan" } )
+	o = Gesture.newPanGesture( self._rectBg, { touches=1, threshold=3 } )
 	o:addEventListener( o.EVENT, f )
 	self._gesture = o
 	self._gesture_f = f
 
 	f = self:createCallback( self._axisEvent_handler )
-	self._axis_x = AxisMotion:new{
-		id='x',
-		length=self._width,
-		scrollLength=self._scrollWidth,
-		callback=f
-	}
+	-- self._axis_x = AxisMotion:new{
+	-- 	id='x',
+	-- 	length=self._width,
+	-- 	scrollLength=self._scrollWidth,
+	-- 	callback=f
+	-- }
 	self._axis_y = AxisMotion:new{
 		id='y',
 		length=self._height,
@@ -692,17 +692,17 @@ function ScrollView:_gestureEvent_handler( event )
 	}
 
 	if etype == gesture.GESTURE then
-		evt.phase = 'began'
 		if phase=='began' then
+			evt.phase = 'began'
 			if self._axis_x then
 				evt.value = event.x
 				evt.start = event.xStart
 				self._axis_x:touch( evt )
 			end
 			if self._axis_y then
-				-- evt.value = event.y
-				-- evt.start = event.yStart
-				-- self._axis_y:touch( evt )
+				evt.value = event.y
+				evt.start = event.yStart
+				self._axis_y:touch( evt )
 			end
 		elseif phase=='changed' then
 			evt.phase = 'moved'
@@ -712,9 +712,9 @@ function ScrollView:_gestureEvent_handler( event )
 				self._axis_x:touch( evt )
 			end
 			if self._axis_y then
-				-- evt.value = event.y
-				-- evt.start = event.yStart
-				-- self._axis_y:touch( evt )
+				evt.value = event.y
+				evt.start = event.yStart
+				self._axis_y:touch( evt )
 			end
 		else
 			-- Utils.print( event )
@@ -725,9 +725,9 @@ function ScrollView:_gestureEvent_handler( event )
 				self._axis_x:touch( evt )
 			end
 			if self._axis_y then
-				-- evt.value = event.y
-				-- evt.start = event.yStart
-				-- self._axis_y:touch( evt )
+				evt.value = event.y
+				evt.start = event.yStart
+				self._axis_y:touch( evt )
 			end
 		end
 	end

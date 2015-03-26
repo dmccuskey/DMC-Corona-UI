@@ -361,10 +361,11 @@ function PanGesture:touch( event )
 	local data
 
 	local is_touch_ok = ( touch_count>=t_min and touch_count<=t_max )
-
+	-- print("Tok", is_touch_ok )
 	if phase=='began' then
 		self:_startFailTimer()
 		if is_touch_ok then
+			self:_addMultitouchToQueue( Continuous.BEGAN )
 			self:_startPanTimer()
 		elseif touch_count>t_max then
 			self:gotoState( PanGesture.STATE_FAILED )
@@ -373,6 +374,8 @@ function PanGesture:touch( event )
 	elseif phase=='moved' then
 
 		if state==Continuous.STATE_POSSIBLE then
+			-- print("POS", _mabs(event.xStart-event.x)>threshold, _mabs(event.yStart-event.y)>threshold )
+			self:_addMultitouchToQueue( Continuous.CHANGED )
 			if is_touch_ok and (_mabs(event.xStart-event.x)>threshold or _mabs(event.yStart-event.y)>threshold) then
 				self:gotoState( Continuous.STATE_BEGAN, event )
 			end
