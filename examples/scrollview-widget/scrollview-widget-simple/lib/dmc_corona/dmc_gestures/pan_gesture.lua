@@ -348,7 +348,7 @@ end
 -- event is Corona Touch Event
 --
 function PanGesture:touch( event )
-	print("PanGesture:touch", event.phase, event.id, self )
+	-- print("PanGesture:touch", event.phase, event.id, self )
 	Continuous.touch( self, event )
 
 	local _mabs = mabs

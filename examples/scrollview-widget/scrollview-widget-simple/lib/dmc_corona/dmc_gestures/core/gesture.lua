@@ -205,7 +205,7 @@ end
 
 
 function Gesture:_do_reset()
-	print( "Gesture:_do_reset" )
+	-- print( "Gesture:_do_reset" )
 	self._total_touch_count = 0
 	self._touch_count = 0
 	self._touches = {} -- keyed on ID
@@ -278,7 +278,7 @@ end
 
 -- this one goes to the Gesture consumer (who created gesture)
 function Gesture:_dispatchRecognizedEvent( data )
-	print("Gesture:_dispatchRecognizedEvent" )
+	-- print("Gesture:_dispatchRecognizedEvent" )
 	data = data or {}
 	if data.id==nil then data.id=self._id end
 	if data.gesture==nil then data.gesture=self.TYPE end
@@ -316,10 +316,10 @@ function Gesture:_updateTouchEvent( event )
 	end
 end
 
-function Gesture:_removeTouchEvent( event )
-	-- print( "Gesture:_removeTouchEvent" )
+function Gesture:_endTouchEvent( event )
+	-- print( "Gesture:_endTouchEvent" )
+	self:_updateTouchEvent( event )
 	self._touch_count = self._touch_count - 1
-	self._touches[ tostring(event.id) ] = nil
 end
 
 
@@ -336,7 +336,7 @@ function Gesture:touch( event )
 	elseif phase=='moved' then
 		self:_updateTouchEvent( event )
 	elseif phase=='cancelled' or phase=='ended' then
-	self:_removeTouchEvent( event )
+	self:_endTouchEvent( event )
 	end
 end
 

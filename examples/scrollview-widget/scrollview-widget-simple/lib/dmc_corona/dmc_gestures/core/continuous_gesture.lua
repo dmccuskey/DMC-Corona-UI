@@ -146,14 +146,13 @@ end
 -- @return Coordinate table of coordinates
 --
 function Continuous:_calculateCentroid( touches )
-	print("Continuous:_calculateCentroid" )
+	-- print("Continuous:_calculateCentroid" )
 	local cnt=0
 	local x,y = 0,0
 	for _, te in pairs( touches ) do
 		x=x+te.x ; y=y+te.y
 		cnt=cnt+1
 	end
-	print( cnt, x, y )
 	return {x=x/cnt,y=y/cnt}
 end
 
@@ -192,15 +191,14 @@ function Continuous:_updateMultitouchEvent()
 end
 
 function Continuous:_endMultitouchEvent()
-	print("Continuous:_endMultitouchEvent" )
+	-- print("Continuous:_endMultitouchEvent" )
 	local pos = self:_calculateCentroid( self._touches )
 	local me = self._multitouch_evt
 
 	me.phase = Continuous.ENDED
 	me.x, me.y = pos.x, pos.y
-	me.count=0
+	me.count=self._touch_count
 	me.time=system.getTimer()
-	me.touches=0
 
 	self._multitouch_evt = nil
 	return me
@@ -329,7 +327,7 @@ end
 --== State Recognized ==--
 
 function Continuous:do_state_recognized( params )
-	print( "Continuous:do_state_recognized", self._id )
+	-- print( "Continuous:do_state_recognized", self._id )
 	params = params or {}
 	if params.notify==nil then params.notify=true end
 	--==--
