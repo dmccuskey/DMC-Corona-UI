@@ -322,6 +322,49 @@ end
 
 
 --======================================================--
+-- newScrollView Support
+
+function Style.loadScrollViewStyleSupport( params )
+	-- print( "Style.loadScrollViewStyleSupport" )
+	if Style.ScrollView then return end
+	params = params or {}
+	if params.mode==nil then params.mode=uiConst.RUN_MODE end
+	--==--
+	local kmode
+	if params.mode==uiConst.TEST_MODE then
+		kmode = Kolor.hRGBA
+	end
+
+	--== Dependencies
+
+	Style.loadBaseStyleSupport( params )
+
+	--== Components
+
+	local ScrollViewStyle = require( ui_find( 'dmc_style.scrollview_style' ) )
+
+	Style.ScrollView=ScrollViewStyle
+
+	initKolors(
+		function()
+			ScrollViewStyle.initialize( Style, params )
+		end,
+		kmode
+	)
+end
+
+function Style.newScrollView( style_info, params )
+	-- print( "Style.newScrollView" )
+	style_info = style_info or {}
+	params = params or {}
+	--==--
+	params.data = style_info
+	if not Style.ScrollView then Style.loadScrollViewStyleSupport() end
+	return Style.ScrollView:createStyleFrom( params )
+end
+
+
+--======================================================--
 -- newTextStyle Support
 
 function Style._loadTextStyleSupport( params )

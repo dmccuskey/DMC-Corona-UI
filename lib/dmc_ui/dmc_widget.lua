@@ -104,11 +104,6 @@ local initKolors = Kolor.initializeKolorSet
 local Widget = {}
 
 
---== Give widgets access to Widget (do this last)
-
--- Widget.Popover.__setWidgetManager( Widget )
--- Widget.PopoverMixModule.__setWidgetManager( Widget )
-
 
 --====================================================================--
 --== Widget Static Functions
@@ -135,6 +130,7 @@ function Widget.initialize( manager, params )
 	dUI.newNavBar = Widget.newNavBar
 	dUI.newNavItem = Widget.newNavItem
 	dUI.newPopover = Widget.newPopover
+	dUI.newScrollView = Widget.newScrollView
 	dUI.newSlideView = Widget.newSlideView
 	dUI.newTableView = Widget.newTableView
 	dUI.newText = Widget.newText
@@ -159,6 +155,26 @@ end
 
 --====================================================================--
 --== Widget Public Functions
+
+
+--======================================================--
+-- UI View Base Support
+
+function Widget.loadViewSupport( params )
+	-- print( "Widget.loadViewSupport" )
+	if Widget.View then return end
+	params = params or {}
+	if params.mode==nil then params.mode=uiConst.RUN_MODE end
+	--==--
+
+	--== Components
+
+	local View = require( ui_find( 'core.view' ) )
+
+	Widget.View=View
+
+	View.initialize( dUI, params )
+end
 
 
 
@@ -352,6 +368,40 @@ end
 -- 	local _library = require( PATH .. '.' .. 'widget_scroller' )
 -- 	return _library:new( options, theme )
 -- end
+
+
+--======================================================--
+-- newScrollView Support
+
+function Widget.loadScrollViewSupport( params )
+	-- print( "Widget.loadScrollViewSupport" )
+	if Widget.ScrollView then return end
+	params = params or {}
+	if params.mode==nil then params.mode=uiConst.RUN_MODE end
+	--==--
+
+	--== Dependencies
+
+	Style.loadScrollViewStyleSupport( params )
+
+	Widget.loadViewSupport( params )
+
+	--== Components
+
+	local ScrollView = require( ui_find( 'dmc_widget.widget_scrollview' ) )
+
+	Widget.ScrollView=ScrollView
+
+	initKolors( function()
+		ScrollView.initialize( dUI, params )
+	end)
+end
+
+function Widget.newScrollView( options )
+	-- print( "Widget.newText" )
+	if not Widget.ScrollView then Widget.loadScrollViewSupport() end
+	return Widget.ScrollView:new( options )
+end
 
 
 --======================================================--
