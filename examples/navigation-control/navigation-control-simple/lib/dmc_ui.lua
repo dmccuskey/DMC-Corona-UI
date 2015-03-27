@@ -112,10 +112,22 @@ local LOCAL_DEBUG = false
 
 local UI = {}
 
+UI.stage = nil
+
 
 --===================================================================--
 --== Support Functions
 
+
+local function createUIStage()
+	local W, H = WIDTH, HEIGHT
+	local H_CENTER, V_CENTER = W*0.5, H*0.5
+
+	-- create main layer
+	local dg = display.newGroup()
+	dg.x, dg.y = H_CENTER, 0
+	UI.stage = dg
+end
 
 local function initialize( params )
 	-- print( "UI.initialize" )
@@ -146,6 +158,7 @@ local function initialize( params )
 		UI.setOS( uiConst.IOS )
 	end
 
+	createUIStage()
 end
 
 
@@ -191,6 +204,9 @@ UI.TEST_MODE = uiConst.TEST_MODE
 UI.ROUNDED = uiConst.ROUNDED
 UI.RECTANGLE = uiConst.RECTANGLE
 
+-- Control Modal Types
+
+UI.POPOVER = uiConst.POPOVER
 
 
 --===================================================================--

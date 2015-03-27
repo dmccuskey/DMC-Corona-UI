@@ -115,18 +115,21 @@ end
 
 
 --======================================================--
--- newBackgroundControl Support
+-- newNavigationControl Support
 
 function Control._loadNavigationControlSupport( params )
 	-- print( "Control._loadNavigationControlSupport" )
+	if Control.Navigation then return end
+	--==--
 
 	--== Dependancies
 
+	Control._loadViewControlSupport( params )
 	dUI.Widget._loadNavBarSupport( params )
 
 	--== Components
 
-	local NavControl = require( ui_find( 'dmc_control.control_navigation' ) )
+	local NavControl = require( ui_find( 'dmc_control.navigation_control' ) )
 
 	Control.Navigation=NavControl
 
@@ -143,13 +146,69 @@ function Control.newNavigationControl( params )
 end
 
 
+--======================================================--
+-- newPopoverControl Support
+
+function Control._loadPopoverControlSupport( params )
+	-- print( "Control._loadPopoverControlSupport" )
+	if Control.Popover then return end
+	--==--
+
+	--== Dependancies
+
+	Control._loadPresentationControlSupport( params )
+
+	--== Components
+
+	local PopoverControl = require( ui_find( 'dmc_control.popover_control' ) )
+
+	Control.Popover=PopoverControl
+
+	PopoverControl.initialize( dUI, params )
+
+end
+
+function Control.newPopoverControl( params )
+	-- print( "Control.newPopoverControl" )
+	params = params or {}
+	--==--
+	if not Control.Popover then Control._loadPopoverControlSupport() end
+	return Control.Popover:new( params )
+end
 
 
 --====================================================================--
 --== Private Functions
 
 
--- none
+function Control._loadViewControlSupport( params )
+	-- print( "Control._loadViewControlSupport" )
+	if Control.ViewBase then return end
+
+	--== Components
+
+	local ViewControl = require( ui_find( 'dmc_control.core.view_control' ) )
+
+	Control.ViewBase=ViewControl
+
+	ViewControl.initialize( dUI, params )
+end
+
+
+function Control._loadPresentationControlSupport( params )
+	-- print( "Control._loadPresentationControlSupport" )
+	if Control.PresentationBase then return end
+	--==--
+
+	--== Components
+
+	local PresentationControl = require( ui_find( 'dmc_control.core.presentation_control' ) )
+
+	Control.PresentationBase=PresentationControl
+
+	PresentationControl.initialize( dUI, params )
+
+end
 
 
 
