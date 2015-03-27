@@ -1,5 +1,5 @@
 --====================================================================--
--- dmc_corona/dmc_gesture/pan_gesture.lua
+-- dmc_corona/dmc_gesture/pinch_gesture.lua
 --
 -- Documentation:
 --====================================================================--
@@ -31,16 +31,16 @@ SOFTWARE.
 --]]
 
 
---- Pan Gesture Module
--- @module PanGesture
+--- Pinch Gesture Module
+-- @module PinchGesture
 -- @usage local Gesture = require 'dmc_gestures'
 -- local view = display.newRect( 100, 100, 200, 200 )
--- local g = Gesture.newPanGesture( view )
+-- local g = Gesture.newPinchGesture( view )
 -- g:addEventListener( g.EVENT, gHandler )
 
 
 --====================================================================--
---== DMC Corona Library : Pan Gesture
+--== DMC Corona Library : Pinch Gesture
 --====================================================================--
 
 
@@ -51,7 +51,7 @@ local VERSION = "0.1.0"
 
 
 --====================================================================--
---== DMC Pan Gesture
+--== DMC Pinch Gesture
 --====================================================================--
 
 
@@ -74,26 +74,30 @@ local Continuous = require 'dmc_gestures.core.continuous_gesture'
 local newClass = Objects.newClass
 
 local mabs = math.abs
+local msqrt = math.sqrt
+local tinsert = table.insert
+local tremove = table.remove
 
 
 
 --====================================================================--
---== Pan Gesture Class
+--== Pinch Gesture Class
 --====================================================================--
 
 
---- Pan Gesture Recognizer Class.
--- gestures to recognize drag and pan motions
+--- Pinch Gesture Recognizer Class.
+-- gestures to recognize pinch motions
 --
--- @type PanGesture
+-- @type PinchGesture
 --
-local PanGesture = newClass( Continuous, { name="Pan Gesture" } )
+local PinchGesture = newClass( Continuous, { name="Pinch Gesture" } )
 
 --== Class Constants
 
-PanGesture.TYPE = 'pan'
+PinchGesture.TYPE = 'pinch'
 
-PanGesture.MIN_DISTANCE_THRESHOLD = 10
+PinchGesture.RECOGNITION_TIME_LIMIT = 500
+PinchGesture.MIN_DISTANCE_THRESHOLD = 5
 
 
 --- Event name constant.
@@ -116,12 +120,12 @@ PanGesture.MIN_DISTANCE_THRESHOLD = 10
 --======================================================--
 -- Start: Setup DMC Objects
 
-function PanGesture:__init__( params )
-	-- print( "PanGesture:__init__", params )
+function PinchGesture:__init__( params )
+	-- print( "PinchGesture:__init__", params )
 	params = params or {}
-	if params.touches==nil then params.touches=1 end
-	if params.max_touches==nil then params.max_touches=params.touches end
-	if params.threshold==nil then params.threshold=PanGesture.MIN_DISTANCE_THRESHOLD end
+	if params.reset_scale==nil then params.reset_scale=true end
+	if params.threshold==nil then params.threshold=PinchGesture.MIN_DISTANCE_THRESHOLD end
+	if params.time_limit==nil then params.time_limit=PinchGesture.RECOGNITION_TIME_LIMIT end
 
 	self:superCall( '__init__', params )
 	--==--
@@ -129,31 +133,37 @@ function PanGesture:__init__( params )
 	--== Create Properties ==--
 
 	self._threshold = params.threshold
+	self._reset_scale = params.reset_scale
+	self._max_time = params.time_limit
 
-	self._max_touches = params.max_touches
-	self._min_touches = params.touches
-	self._max_time = 500
+	-- internal
 
-	self._velocity = 0
+	self._max_touches = 2
+	self._min_touches = 2
+
+	self._prev_scale = 1.0
 	self._touch_count = 0
+	self._touch_dist = 0
+	self._velocity = 0
 
-	self._fail_timer = nil
-	self._pan_timer = nil
+	self._pinch_timer=nil
+	self._fail_timer=nil
+
 end
 
-function PanGesture:__initComplete__()
-	-- print( "PanGesture:__initComplete__" )
+function PinchGesture:__initComplete__()
+	-- print( "PinchGesture:__initComplete__" )
 	self:superCall( '__initComplete__' )
 	--==--
 	--== use setters
-	self.max_touches = self._max_touches
-	self.min_touches = self._min_touches
+	self.reset_scale = self._reset_scale
 	self.threshold = self._threshold
+	self.time = self._time
 end
 
 --[[
-function PanGesture:__undoInitComplete__()
-	-- print( "PanGesture:__undoInitComplete__" )
+function PinchGesture:__undoInitComplete__()
+	-- print( "PinchGesture:__undoInitComplete__" )
 	--==--
 	self:superCall( '__undoInitComplete__' )
 end
@@ -184,7 +194,7 @@ end
 -- @usage print( gesture.id )
 -- @usage gesture.id = "myid"
 --
-function PanGesture.__gs_id() end
+function PinchGesture.__gs_id() end
 
 --- the gesture's target view (Display Object).
 --
@@ -192,7 +202,7 @@ function PanGesture.__gs_id() end
 -- @usage print( gesture.view )
 -- @usage gesture.view = DisplayObject
 --
-function PanGesture.__gs_view() end
+function PinchGesture.__gs_view() end
 
 --- the gesture's delegate (object/table)
 --
@@ -200,70 +210,70 @@ function PanGesture.__gs_view() end
 -- @usage print( gesture.delegate )
 -- @usage gesture.delegate = DisplayObject
 --
-function PanGesture.__gs_delegate() end
+function PinchGesture.__gs_delegate() end
 
 -- END: bogus methods, copied from super class
 --======================================================--
 
 
 
---- the velocity of the pan gesture motion (number).
--- Get Only
--- @function .velocity
--- @usage print( pan.velocity )
+--- whether to reset internal scale after pinch gesture is finished (boolean).
 --
-function PanGesture.__getters:velocity()
-	return self._velocity
+-- @function .reset_scale
+-- @usage print( gesture.reset_scale )
+-- @usage gesture.reset_scale = false
+--
+function PinchGesture.__getters:reset_scale()
+	return self._reset_scale
+end
+function PinchGesture.__setters:reset_scale( value )
+	assert( type(value)=='boolean' )
+	--==--
+	self._reset_scale = value
 end
 
 
---- the distance a touch must move to count as the start of a pan (number).
+--- the minimum movement required to recognize a pinch gesture (number).
 --
 -- @function .threshold
 -- @usage print( gesture.threshold )
--- @usage gesture.threshold = 10
+-- @usage gesture.threshold = 5
 --
-function PanGesture.__getters:threshold()
+function PinchGesture.__getters:threshold()
 	return self._threshold
 end
-function PanGesture.__setters:threshold( value )
+function PinchGesture.__setters:threshold( value )
 	assert( type(value)=='number' and value>0 and value<256 )
 	--==--
 	self._threshold = value
 end
 
 
---- the minimum number of touches to recognize (number).
+--- max time allowed to recognize the gesture (number).
 --
--- @function .touches
--- @usage print( gesture.touches )
--- @usage gesture.touches = 2
+-- @function .time_limit
+-- @usage print( gesture.time_limit )
+-- @usage gesture.time_limit = 500
 --
-function PanGesture.__getters:touches()
-	return self._min_touches
+function PinchGesture.__getters:time_limit()
+	return self._time_limit
 end
-function PanGesture.__setters:touches( value )
-	assert( type(value)=='number' and value>0 and value<256 )
+function PinchGesture.__setters:time_limit( value )
+	assert( type(value)=='number' and value>50 )
 	--==--
-	self._min_touches = value
+	self._time_limit = value
 end
 
 
---- the maximum number of touches to recognize (number).
+-- @TODO
+-- the velocity of the gesture motion (number).
+-- Get Only
+-- @function .velocity
+-- @usage print( gesture.velocity )
 --
--- @function .max_touches
--- @usage print( gesture.max_touches )
--- @usage gesture.max_touches = 10
---
-function PanGesture.__getters:max_touches()
-	return self._max_touches
+function PinchGesture.__getters:velocity()
+	return self._velocity
 end
-function PanGesture.__setters:max_touches( value )
-	assert( type(value)=='number' and value>0 and value<256 )
-	--==--
-	self._max_touches = value
-end
-
 
 
 
@@ -271,17 +281,21 @@ end
 --== Private Methods
 
 
-function PanGesture:_do_reset()
-	-- print( "PanGesture:_do_reset" )
+function PinchGesture:_do_reset()
+	-- print( "PinchGesture:_do_reset" )
 	Continuous._do_reset( self )
 	self._velocity=0
 	self._touch_count=0
+	self._touch_dist = 0
+	if self._reset_scale then
+		self._prev_scale = 1.0
+	end
 end
 
 
 -- create data structure for Gesture which has been recognized
--- code will put in began/changed/ended
-function PanGesture:_createGestureEvent( event )
+-- module will add phase=began/changed/ended
+function PinchGesture:_createGestureEvent( event )
 	return {
 		x=event.x,
 		y=event.y,
@@ -291,20 +305,20 @@ function PanGesture:_createGestureEvent( event )
 end
 
 
-function PanGesture:_stopFailTimer()
-	-- print( "PanGesture:_stopFailTimer" )
+function PinchGesture:_stopFailTimer()
+	-- print( "PinchGesture:_stopFailTimer" )
 	if not self._fail_timer then return end
 	timer.cancel( self._fail_timer )
 	self._fail_timer=nil
 end
 
-function PanGesture:_startFailTimer()
-	-- print( "PanGesture:_startFailTimer", self )
+function PinchGesture:_startFailTimer()
+	-- print( "PinchGesture:_startFailTimer", self )
 	self:_stopFailTimer()
 	local time = self._max_time
 	local func = function()
 		timer.performWithDelay( 1, function()
-			self:gotoState( PanGesture.STATE_FAILED )
+			self:gotoState( PinchGesture.STATE_FAILED )
 			self._fail_timer = nil
 		end)
 	end
@@ -312,30 +326,97 @@ function PanGesture:_startFailTimer()
 end
 
 
-function PanGesture:_stopPanTimer()
-	-- print( "PanGesture:_stopPanTimer" )
-	if not self._pan_timer then return end
-	timer.cancel( self._pan_timer )
-	self._pan_timer=nil
+function PinchGesture:_stopPinchTimer()
+	-- print( "PinchGesture:_stopPinchTimer" )
+	if not self._pinch_timer then return end
+	timer.cancel( self._pinch_timer )
+	self._pinch_timer=nil
 end
 
-function PanGesture:_startPanTimer()
-	-- print( "PanGesture:_startPanTimer", self )
+function PinchGesture:_startPinchTimer()
+	-- print( "PinchGesture:_startPinchTimer", self )
 	self:_stopFailTimer()
-	self:_stopPanTimer()
+	self:_stopPinchTimer()
 	local time = self._max_time
 	local func = function()
 		timer.performWithDelay( 1, function()
-			self:gotoState( PanGesture.STATE_FAILED )
-			self._pan_timer = nil
+			self:gotoState( PinchGesture.STATE_FAILED )
+			self._pinch_timer = nil
 		end)
 	end
-	self._pan_timer = timer.performWithDelay( time, func )
+	self._pinch_timer = timer.performWithDelay( time, func )
 end
 
-function PanGesture:_stopAllTimers()
+
+function PinchGesture:_stopAllTimers()
 	self:_stopFailTimer()
-	self:_stopPanTimer()
+	self:_stopPinchTimer()
+end
+
+
+
+function PinchGesture:_calculateTouchDistance( touches )
+	-- print( "PinchGesture:_calculateTouchDistance" )
+	local tch={}
+	for k,v in pairs( touches ) do
+		tinsert( tch, v)
+	end
+	local xDelta = tch[1].x-tch[2].x
+	local yDelta = tch[1].y-tch[2].y
+	return msqrt( xDelta*xDelta + yDelta*yDelta )
+end
+
+function PinchGesture:_calculateTouchChange( touches, o_dist )
+	-- print( "PinchGesture:_calculateTouchChange" )
+	local n_dist = self:_calculateTouchDistance( touches )
+	return mabs( n_dist-o_dist )
+end
+
+
+-- experimental
+function PinchGesture:_calculateAnchorPoint( x, y )
+	local view = self.view
+	local w, h = view.width, view.height
+	local xP, yP = view:contentToLocal( x, y )
+	-- print( xP, yP, w/2+xP, h/2+yP, (w/2+xP)/w, (h/2+yP)/h  )
+	return (w/2+xP)/w, (h/2+yP)/h
+end
+
+
+function PinchGesture:_startMultitouchEvent()
+	-- print( "PinchGesture:_startMultitouchEvent" )
+	-- update to our "starting" touch
+	local me = Continuous._startMultitouchEvent( self )
+
+	self._touch_dist = self:_calculateTouchDistance( self._touches )
+	local o_dist = self._touch_dist
+	local n_dist = o_dist
+	me.scale = (1-(o_dist-n_dist)/o_dist)*self._prev_scale
+	--[[
+	experimental
+	me.anchorX, me.anchorY = self:_calculateAnchorPoint( me.xStart, me.yStart )
+	--]]
+	return me
+end
+
+function PinchGesture:_updateMultitouchEvent()
+	-- print( "PinchGesture:_updateMultitouchEvent" )
+	local me = Continuous._updateMultitouchEvent( self )
+
+	local o_dist = self._touch_dist
+	local n_dist = self:_calculateTouchDistance( self._touches )
+	me.scale = (1-(o_dist-n_dist)/o_dist)*self._prev_scale
+	return me
+end
+
+function PinchGesture:_endMultitouchEvent()
+	-- print( "PinchGesture:_endMultitouchEvent" )
+	local me = Continuous._endMultitouchEvent( self )
+
+	local o_dist = self._touch_dist
+	local n_dist = self:_calculateTouchDistance( self._touches )
+	me.scale = (1-(o_dist-n_dist)/o_dist)*self._prev_scale
+	return me
 end
 
 
@@ -346,8 +427,8 @@ end
 
 -- event is Corona Touch Event
 --
-function PanGesture:touch( event )
-	-- print("PanGesture:touch", event.phase, event.id, self )
+function PinchGesture:touch( event )
+	-- print("PinchGesture:touch", event.phase, event.id, self )
 	Continuous.touch( self, event )
 
 	local _mabs = mabs
@@ -357,34 +438,32 @@ function PanGesture:touch( event )
 	local t_max = self._max_touches
 	local t_min = self._min_touches
 	local touch_count = self._touch_count
+	local touches = self._touches
 	local data
 
-	local is_touch_ok = ( touch_count>=t_min and touch_count<=t_max )
+	local is_touch_ok = ( touch_count==2 )
 
 	if phase=='began' then
 		self:_startFailTimer()
 		if is_touch_ok then
-			self:_addMultitouchToQueue( Continuous.BEGAN )
-			self:_startPanTimer()
+			self._touch_dist = self:_calculateTouchDistance( touches )
+			self:_startPinchTimer()
 		elseif touch_count>t_max then
-			self:gotoState( PanGesture.STATE_FAILED )
+			self:gotoState( PinchGesture.STATE_FAILED )
 		end
 
 	elseif phase=='moved' then
 
 		if state==Continuous.STATE_POSSIBLE then
-			self:_addMultitouchToQueue( Continuous.CHANGED )
-			if is_touch_ok and (_mabs(event.xStart-event.x)>threshold or _mabs(event.yStart-event.y)>threshold) then
+			if is_touch_ok and self:_calculateTouchChange( touches, self._touch_dist )>threshold then
 				self:gotoState( Continuous.STATE_BEGAN, event )
 			end
-
 		elseif state==Continuous.STATE_BEGAN then
 			if is_touch_ok then
 				self:gotoState( Continuous.STATE_CHANGED, event )
 			else
 				self:gotoState( Continuous.STATE_RECOGNIZED, event )
 			end
-
 		elseif state==Continuous.STATE_CHANGED then
 			if is_touch_ok then
 				self:gotoState( Continuous.STATE_CHANGED, event )
@@ -394,7 +473,7 @@ function PanGesture:touch( event )
 		end
 
 	elseif phase=='cancelled' then
-		self:gotoState( PanGesture.STATE_FAILED  )
+		self:gotoState( PinchGesture.STATE_FAILED  )
 
 	else -- ended
 		if is_touch_ok then
@@ -419,8 +498,8 @@ end
 
 --== State Recognized ==--
 
-function PanGesture:do_state_began( params )
-	-- print( "PanGesture:do_state_began" )
+function PinchGesture:do_state_began( params )
+	-- print( "PinchGesture:do_state_began" )
 	self:_stopAllTimers()
 	Continuous.do_state_began( self, params )
 end
@@ -428,8 +507,8 @@ end
 
 --== State Failed ==--
 
-function PanGesture:do_state_failed( params )
-	-- print( "PanGesture:do_state_failed" )
+function PinchGesture:do_state_failed( params )
+	-- print( "PinchGesture:do_state_failed" )
 	self:_stopAllTimers()
 	Continuous.do_state_failed( self, params )
 end
@@ -437,4 +516,5 @@ end
 
 
 
-return PanGesture
+
+return PinchGesture
