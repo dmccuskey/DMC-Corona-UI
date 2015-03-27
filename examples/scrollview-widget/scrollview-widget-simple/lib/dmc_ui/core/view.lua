@@ -113,7 +113,7 @@ View.EVENT = 'view-event'
 --== Init
 
 function View:__init__( params )
-	print( "View:__init__" )
+	-- print( "View:__init__" )
 	params = params or {}
 	if params.x==nil then params.x=0 end
 	if params.y==nil then params.y=0 end
@@ -215,7 +215,7 @@ end
 --== initComplete
 
 function View:__initComplete__()
-	print( "View:__initComplete__" )
+	-- print( "View:__initComplete__" )
 	self:superCall( StyleMix, '__initComplete__' )
 	self:superCall( ComponentBase, '__initComplete__' )
 	--==--
@@ -242,7 +242,7 @@ end
 
 
 function View.initialize( manager )
-	print( "View.initialize" )
+	-- print( "View.initialize" )
 	dUI = manager
 end
 

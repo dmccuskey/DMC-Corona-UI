@@ -1,7 +1,7 @@
 --====================================================================--
--- dmc_widget/widget_scrollview.lua
+-- dmc_ui/dmc_widget/widget_scrollview.lua
 --
--- Documentation: http://docs.davidmccuskey.com/
+-- Documentation: http://docs.davidmccuskey.com/dmc+corona+ui
 --====================================================================--
 
 --[[
@@ -85,11 +85,11 @@ local dUI = nil
 
 local newClass = Objects.newClass
 
-local mabs = math.abs
-local sfmt = string.format
-local tinsert = table.insert
-local tremove = table.remove
-local tstr = tostring
+-- local mabs = math.abs
+-- local sfmt = string.format
+-- local tinsert = table.insert
+-- local tremove = table.remove
+-- local tstr = tostring
 
 
 
@@ -99,7 +99,6 @@ local tstr = tostring
 
 
 local ScrollView = newClass( View, { name = "ScrollView" } )
-
 
 --== Class Constants
 
@@ -162,22 +161,9 @@ function ScrollView:__init__( params )
 	self._scrollBlockedH = false
 	self._scrollBlockedV = false
 
-	-- eg, HIT_TOP_LIMIT, HIT_LEFT_LIMIT
-	-- self._scrollLimitH = nil
-	-- self._scrollLimitV = nil
-
 	self._returnFocus = nil -- return focus callback
 	self._returnFocusCancel = nil -- return focus callback
 	self._returnFocus_t = nil -- return focus timer
-
-	-- ref to current touch event
-	self._tmpTouchEvt = nil
-	-- used when calculating velocity
-	self._touchEvtStack = {}
-
-	-- velocity vectors
-	self._velocityH = { value=0, vector=0 }
-	self._velocityV = { value=0, vector=0 }
 
 	-- properties from style
 
@@ -191,7 +177,6 @@ function ScrollView:__init__( params )
 
 	self._showHorizontalScrollIndicator = false
 	self._showVerticalScrollIndicator = false
-
 
 	--== Display Groups ==--
 
@@ -212,16 +197,15 @@ function ScrollView:__init__( params )
 	self._scroller = nil -- our scroll area
 	self._scroller_dirty=true
 
-
-	-- self:setState( ScrollView.STATE_INIT )
-
 end
 
+--[[
 function ScrollView:__undoInit__()
 	-- print( "ScrollView:__undoInit__" )
 	--==--
 	self:superCall( '__undoInit__' )
 end
+--]]
 
 --== createView
 
@@ -231,7 +215,7 @@ function ScrollView:__createView__()
 	--==--
 	local dg, o
 
-	-- local background, hit area
+	-- local background, gesture hit area
 
 	o = display.newRect( 0,0,0,0 )
 	o.anchorX, o.anchorY = 0, 0
@@ -276,12 +260,12 @@ function ScrollView:__initComplete__()
 	self._gesture_f = f
 
 	f = self:createCallback( self._axisEvent_handler )
-	-- self._axis_x = AxisMotion:new{
-	-- 	id='x',
-	-- 	length=self._width,
-	-- 	scrollLength=self._scrollWidth,
-	-- 	callback=f
-	-- }
+	self._axis_x = AxisMotion:new{
+		id='x',
+		length=self._width,
+		scrollLength=self._scrollWidth,
+		callback=f
+	}
 	self._axis_y = AxisMotion:new{
 		id='y',
 		length=self._height,
@@ -289,22 +273,28 @@ function ScrollView:__initComplete__()
 		callback=f
 	}
 
-	self._touchEvtStack = {}
-
 	self._isRendered = true
 
-	-- self:gotoState( ScrollView.STATE_AT_REST )
 end
 
 function ScrollView:__undoInitComplete__()
 	--print( "ScrollView:__undoInitComplete__" )
+	local o, f
+
 	self._isRendered = false
-	self._touchEvtStack = nil
+
+	self._axis_y:removeSelf()
+	self._axis_y = nil
+
+	self._axis_x:removeSelf()
+	self._axis_x = nil
+
+	o = self._gesture
+	o:removeEventListener( o.EVENT, self._gesture_f )
+	self._gesture_f = nil
+	self._gesture = nil
 
 	self:_removeScroller()
-
-	local o = self._rectBg
-	o:removeEventListener( 'touch', self )
 
 	--==--
 	self:superCall( '__undoInitComplete__' )
@@ -430,6 +420,7 @@ function ScrollView:takeFocus( event, params )
 	--==--
 	-- TODO: start animation
 end
+
 
 
 --====================================================================--
@@ -717,7 +708,6 @@ function ScrollView:_gestureEvent_handler( event )
 				self._axis_y:touch( evt )
 			end
 		else
-			-- Utils.print( event )
 			evt.phase = 'ended'
 			if self._axis_x then
 				evt.value = event.x
@@ -739,16 +729,13 @@ function ScrollView:_axisEvent_handler( event )
 	-- print( "ScrollView:_axisEvent_handler", event.state )
 	local state = event.state
 	-- local velocity = event.velocity
-	local id = event.id
-	-- Utils.print( event )
-	if id=='x' then
+	if event.id=='x' then
 		self._contentPosition.x = event.value
 	else
 		self._contentPosition.y = event.value
 	end
 	self._contentPosition_dirty=true
 	self:__invalidateProperties__()
-
 end
 
 

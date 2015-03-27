@@ -161,7 +161,7 @@ end
 -- UI View Base Support
 
 function Widget.loadViewSupport( params )
-	print( "Widget.loadViewSupport" )
+	-- print( "Widget.loadViewSupport" )
 	if Widget.View then return end
 	params = params or {}
 	if params.mode==nil then params.mode=uiConst.RUN_MODE end

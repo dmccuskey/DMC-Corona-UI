@@ -171,7 +171,7 @@ ScrollView.EVENT = 'scrollview-style-event'
 -- Start: Setup DMC Objects
 
 function ScrollView:__init__( params )
-	print( "ScrollView:__init__", params )
+	-- print( "ScrollView:__init__", params )
 	params = params or {}
 	self:superCall( '__init__', params )
 	--==--
@@ -211,7 +211,7 @@ end
 
 
 function ScrollView.initialize( manager, params )
-	print( "ScrollView.initialize", manager, params.mode )
+	-- print( "ScrollView.initialize", manager, params.mode )
 	params = params or {}
 	if params.mode==nil then params.mode=uiConst.RUN_MODE end
 	--==--

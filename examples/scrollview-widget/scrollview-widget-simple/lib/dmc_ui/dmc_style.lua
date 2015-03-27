@@ -350,7 +350,7 @@ end
 -- newScrollView Support
 
 function Style.loadScrollViewStyleSupport( params )
-	print( "Style.loadScrollViewStyleSupport" )
+	-- print( "Style.loadScrollViewStyleSupport" )
 	if Style.ScrollView then return end
 	params = params or {}
 	if params.mode==nil then params.mode=uiConst.RUN_MODE end
