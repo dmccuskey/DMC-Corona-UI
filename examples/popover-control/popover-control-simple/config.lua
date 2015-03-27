@@ -6,16 +6,21 @@
 -- http://www.coronalabs.com/blog/2012/12/04/the-ultimate-config-lua-file/
 --====================================================================--
 
-application =
-{
-	content =
-	{
-		width = 320,
-		height = 568,
-		scale = "zoomStretch",
-		fps = 30
-	},
-	showRuntimeErrors = false
-}
 
+local ratio = display.pixelHeight / display.pixelWidth
+
+application = {}
+
+--== iPad & iPad Retina
+application.content = {
+	width = 768,
+	height = 1024,
+	scale = 'letterBox',
+	xAlign = 'center',
+	yAlign = 'center',
+	imageSuffix = {
+		['@2x'] = 1.5,
+		['@4x'] = 3.0,
+	},
+}
 

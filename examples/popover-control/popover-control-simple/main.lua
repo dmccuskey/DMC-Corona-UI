@@ -1,7 +1,7 @@
 --====================================================================--
--- Navigator Simple
+-- Popover Control Simple
 --
--- basic streaming example
+-- show navigation content in popover
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
@@ -18,12 +18,10 @@ print( '\n\n##############################################\n\n' )
 --== Imports
 
 
-
 local dUI = require 'lib.dmc_ui'
 
-local galleries_data = require 'data.gallery'
-
-
+local GalleriesView = require 'view.galleries'
+local galleryData = require 'gallery_data'
 
 
 
@@ -31,68 +29,12 @@ local galleries_data = require 'data.gallery'
 --== Setup, Constants
 
 
-local W, H = display.contentWidth, display.contentHeight
+local W, H = dUI.WIDTH, dUI.HEIGHT
 local H_CENTER, V_CENTER = W*0.5, H*0.5
 
-local popover
+local button = display.newRect( 0,0,60,40 )
+button.x, button.y = H_CENTER+150, V_CENTER-200
 
-local createGalleriesView, removeGalleriesView, galleriesView_handler
-
-local onAccept, onCancel, onError
-
-
-
---====================================================================--
---== Support Functions
-
-
--- Setup Visual Screen Items
---
-local function setupBackground()
-	local width, height = 100, 50
-	local o
-
-	o = display.newRect(0,0,W,H)
-	o:setFillColor(0.5,0.5,0.5)
-	o.x, o.y = H_CENTER, V_CENTER
-
-	o = display.newRect(0,0,width+4,height+4)
-	o:setStrokeColor(0,0,0)
-	o.strokeWidth=2
-	o.x, o.y = H_CENTER, V_CENTER
-
-	o = display.newRect( 0,0,10,10)
-	o:setFillColor(1,0,0)
-	o.x, o.y = H_CENTER, V_CENTER
-end
-
-
-local function backButton_handler( event )
-	print( 'Main: backButton_handler: id', event.id, event.phase )
-end
-
-
-
--- Create Items
-
-onAccept = function()
-	print( "\n\n" )
-	print( "Watchlist Add Popup Test onAccept: " )
-	print( "\n\n" )
-	-- o:removeSelf()
-end
-onCancel = function( event )
-	print( "\n\n" )
-	print( "Watchlist Add Popup Test onCancel: " )
-	print( "\n\n" )
-	o:removeSelf()
-end
-onError = function( event )
-	print( "\n\n" )
-	print( "Watchlist Add Popup Test onError: " )
-	print( "\n\n" )
-	o:removeSelf()
-end
 
 
 --===================================================================--
@@ -100,24 +42,29 @@ end
 --===================================================================--
 
 
-setupBackground()
+local navCtl = dUI.newNavigationControl()
+local gV = GalleriesView.new( galleryData )
+navCtl:pushView( gV )
 
+navCtl.modalStyle = dUI.POPOVER  -- << this is very important
 
+local popCtl = navCtl.popoverControl
+popCtl.buttonItem = button
+popCtl.arrowDirections = 'all'
 
--- popover = MyPopover:new{}
-
--- show, customized
-popover:show{
-	data=galleries_data,
-	pos={x=H_CENTER, y=V_CENTER-100}
+navCtl:presentControl{
+	onComplete=function() print( "ONCOMPLETE: PRESENTED" ) end
 }
 
--- popover.x, popover.y = 100, 50
-
-
-timer.performWithDelay( 60000, function()
-	popover:removeSelf()
+-- move location
+timer.performWithDelay( 1000, function()
+	button.x, button.y = H_CENTER, V_CENTER-100
+	popCtl.buttonItem = button
 end)
 
-
-
+-- unhide
+-- timer.performWithDelay( 2000, function()
+-- 	navCtl:dismissControl{
+-- 		onComplete=function() print( "ONCOMPLETE: DISMISSED" ) end
+-- 	}
+-- end)

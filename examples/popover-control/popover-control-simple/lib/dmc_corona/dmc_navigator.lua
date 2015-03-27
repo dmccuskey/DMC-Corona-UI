@@ -200,7 +200,7 @@ function Navigator:__init__( params )
 	self._new_view = nil
 	self._visible_view = nil
 
-	self._nav_bar = nil
+	self._navBar = nil
 	self._primer = nil
 
 end
@@ -281,11 +281,11 @@ end
 --== Public Methods
 
 
-function Navigator.__setters:nav_bar( value )
-	-- print( "Navigator.__setters:nav_bar", value )
+function Navigator.__setters:navBar( value )
+	-- print( "Navigator.__setters:navBar", value )
 	-- TODO
 	assert( value )
-	self._nav_bar = value
+	self._navBar = value
 end
 
 
@@ -356,11 +356,11 @@ function Navigator:_getPushNavBarTransition( view, params )
 	-- print( "Navigator:_getPushNavBarTransition", view )
 	params = params or {}
 	local o, callback
-	if self._nav_bar then
+	if self._navBar then
 		o = view.nav_bar_item
 		assert( o, "view doesn't have nav bar item" )
 		o.backButton.onRelease = self._btn_back_f
-		callback = self._nav_bar:_pushNavItemGetTransition( o, {} )
+		callback = self._navBar:_pushNavItemGetTransition( o, {} )
 	end
 	return callback
 end
@@ -368,7 +368,7 @@ end
 function Navigator:_getPopNavBarTransition()
 	-- print( "Navigator:_getPopNavBarTransition" )
 	params = params or {}
-	return self._nav_bar:_popNavItemGetTransition( params )
+	return self._navBar:_popNavItemGetTransition( params )
 end
 
 
