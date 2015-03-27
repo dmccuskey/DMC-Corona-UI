@@ -150,6 +150,31 @@ end
 
 
 --======================================================--
+-- Base Style Support
+
+function Style.loadBaseStyleSupport( params )
+	-- print( "Style.loadBaseStyleSupport" )
+	if Style.Base then return end
+	params = params or {}
+	if params.mode==nil then params.mode=uiConst.RUN_MODE end
+	--==--
+	local kmode
+	if params.mode==uiConst.TEST_MODE then
+		kmode = Kolor.hRGBA
+	end
+
+	local BaseStyle = require( ui_find( 'dmc_style.base_style' ) )
+	Style.Base=BaseStyle
+	initKolors(
+		function()
+			BaseStyle.initialize( Style, params )
+		end,
+		kmode
+	)
+end
+
+
+--======================================================--
 -- newBackgroundStyle Support
 
 function Style._loadBackgroundStyleSupport( params )
@@ -165,7 +190,7 @@ function Style._loadBackgroundStyleSupport( params )
 
 	--== Dependencies
 
-	Style._loadBaseStyleSupport( params )
+	Style.loadBaseStyleSupport( params )
 
 	--== Components
 
@@ -231,7 +256,7 @@ function Style._loadButtonStyleSupport( params )
 
 	--== Dependencies
 
-	Style._loadBaseStyleSupport( params )
+	Style.loadBaseStyleSupport( params )
 	Style._loadBackgroundStyleSupport( params )
 	Style._loadTextStyleSupport( params )
 
@@ -279,7 +304,7 @@ function Style._loadNavBarStyleSupport( params )
 
 	--== Dependencies
 
-	Style._loadBaseStyleSupport( params )
+	Style.loadBaseStyleSupport( params )
 	Style._loadBackgroundStyleSupport( params )
 	Style._loadButtonStyleSupport( params )
 
@@ -380,7 +405,7 @@ function Style._loadTextStyleSupport( params )
 
 	--== Dependencies
 
-	Style._loadBaseStyleSupport( params )
+	Style.loadBaseStyleSupport( params )
 
 	--== Components
 
@@ -423,7 +448,7 @@ function Style._loadTextFieldStyleSupport( params )
 
 	--== Dependencies
 
-	Style._loadBaseStyleSupport( params )
+	Style.loadBaseStyleSupport( params )
 	Style._loadBackgroundStyleSupport( params )
 	Style._loadTextStyleSupport( params )
 
@@ -456,27 +481,6 @@ end
 --====================================================================--
 --== Private Functions
 
-
-function Style._loadBaseStyleSupport( params )
-	-- print( "Style._loadBaseStyleSupport" )
-	if Style.Base then return end
-	params = params or {}
-	if params.mode==nil then params.mode=uiConst.RUN_MODE end
-	--==--
-	local kmode
-	if params.mode==uiConst.TEST_MODE then
-		kmode = Kolor.hRGBA
-	end
-
-	local BaseStyle = require( ui_find( 'dmc_style.base_style' ) )
-	Style.Base=BaseStyle
-	initKolors(
-		function()
-			BaseStyle.initialize( Style, params )
-		end,
-		kmode
-	)
-end
 
 
 
