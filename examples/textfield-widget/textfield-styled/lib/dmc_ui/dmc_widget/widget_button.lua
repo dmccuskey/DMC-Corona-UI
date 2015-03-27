@@ -528,11 +528,11 @@ function ButtonBase.__setters:onEvent( value )
 end
 
 
-function ButtonBase.__getters:value()
-	return self._value
+function ButtonBase.__getters:data()
+	return self._data
 end
-function ButtonBase.__setters:value( value )
-	self._value = value
+function ButtonBase.__setters:data( value )
+	self._data = value
 end
 
 
@@ -574,7 +574,7 @@ function ButtonBase:_doPressEventDispatch()
 		phase=self.PRESSED,
 		target=self,
 		id=self._id,
-		value=self._value,
+		data=self._data,
 		state=self:getState()
 	}
 
@@ -596,7 +596,7 @@ function ButtonBase:_doReleaseEventDispatch()
 		phase=self.RELEASED,
 		target=self,
 		id=self._id,
-		value=self._value,
+		data=self._data,
 		state=self:getState()
 	}
 
@@ -1251,7 +1251,7 @@ local Buttons = {}
 Buttons.initialize = initializeButtons
 
 -- export class instantiations for direct access
-Buttons.ButtonBase = ButtonBase
+Buttons.Base = ButtonBase
 Buttons.PushButton = PushButton
 Buttons.ToggleButton = ToggleButton
 Buttons.RadioButton = RadioButton

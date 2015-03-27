@@ -100,14 +100,14 @@ local Style = {}
 
 
 function Style.initialize( manager, params )
-	print( "Style.initialize", manager )
+	-- print( "Style.initialize", manager )
 	params = params or {}
 	if params.mode==nil then params.mode=uiConst.RUN_MODE end
 	--==--
 
 	dUI = manager
 
-	--== Components
+	--== Base Components
 
 	local StyleMgr = require( ui_find( 'dmc_style.style_manager' ) )
 	local StyleMixModule = require( ui_find( 'dmc_style.style_mix' ) )
@@ -150,10 +150,35 @@ end
 
 
 --======================================================--
+-- Base Style Support
+
+function Style.loadBaseStyleSupport( params )
+	-- print( "Style.loadBaseStyleSupport" )
+	if Style.Base then return end
+	params = params or {}
+	if params.mode==nil then params.mode=uiConst.RUN_MODE end
+	--==--
+	local kmode
+	if params.mode==uiConst.TEST_MODE then
+		kmode = Kolor.hRGBA
+	end
+
+	local BaseStyle = require( ui_find( 'dmc_style.base_style' ) )
+	Style.Base=BaseStyle
+	initKolors(
+		function()
+			BaseStyle.initialize( Style, params )
+		end,
+		kmode
+	)
+end
+
+
+--======================================================--
 -- newBackgroundStyle Support
 
 function Style._loadBackgroundStyleSupport( params )
-	print( "Style._loadBackgroundStyleSupport" )
+	-- print( "Style._loadBackgroundStyleSupport" )
 	if Style.Background then return end
 	params = params or {}
 	if params.mode==nil then params.mode=uiConst.RUN_MODE end
@@ -165,7 +190,7 @@ function Style._loadBackgroundStyleSupport( params )
 
 	--== Dependencies
 
-	Style._loadBaseStyleSupport( params )
+	Style.loadBaseStyleSupport( params )
 
 	--== Components
 
@@ -173,8 +198,6 @@ function Style._loadBackgroundStyleSupport( params )
 	local RectangleStyle = require( ui_find( 'dmc_style.background_style.rectangle_style' ) )
 	local RoundedStyle = require( ui_find( 'dmc_style.background_style.rounded_style' ) )
 	local BackgroundStyleFactory = require( ui_find( 'dmc_style.background_style.style_factory' ) )
-
-	assert( BackgroundStyleFactory )
 
 	Style.Background=BackgroundStyle
 	Style.BackgroundFactory=BackgroundStyleFactory
@@ -233,7 +256,7 @@ function Style._loadButtonStyleSupport( params )
 
 	--== Dependencies
 
-	Style._loadBaseStyleSupport( params )
+	Style.loadBaseStyleSupport( params )
 	Style._loadBackgroundStyleSupport( params )
 	Style._loadTextStyleSupport( params )
 
@@ -269,7 +292,7 @@ end
 -- newNavBarStyle Support
 
 function Style._loadNavBarStyleSupport( params )
-	print( "Style._loadNavBarStyleSupport" )
+	-- print( "Style._loadNavBarStyleSupport" )
 	if Style.NavBar then return end
 	params = params or {}
 	if params.mode==nil then params.mode=uiConst.RUN_MODE end
@@ -281,7 +304,7 @@ function Style._loadNavBarStyleSupport( params )
 
 	--== Dependencies
 
-	Style._loadBaseStyleSupport( params )
+	Style.loadBaseStyleSupport( params )
 	Style._loadBackgroundStyleSupport( params )
 	Style._loadButtonStyleSupport( params )
 
@@ -296,7 +319,7 @@ function Style._loadNavBarStyleSupport( params )
 	initKolors(
 		function()
 			NavItemStyle.initialize( Style, params )
-			NavBarStyle.initialize( Style, params )
+			NavBarStyle.initialize( dUI, params )
 		end,
 		kmode
 	)
@@ -324,6 +347,49 @@ end
 
 
 --======================================================--
+-- newScrollView Support
+
+function Style.loadScrollViewStyleSupport( params )
+	-- print( "Style.loadScrollViewStyleSupport" )
+	if Style.ScrollView then return end
+	params = params or {}
+	if params.mode==nil then params.mode=uiConst.RUN_MODE end
+	--==--
+	local kmode
+	if params.mode==uiConst.TEST_MODE then
+		kmode = Kolor.hRGBA
+	end
+
+	--== Dependencies
+
+	Style.loadBaseStyleSupport( params )
+
+	--== Components
+
+	local ScrollViewStyle = require( ui_find( 'dmc_style.scrollview_style' ) )
+
+	Style.ScrollView=ScrollViewStyle
+
+	initKolors(
+		function()
+			ScrollViewStyle.initialize( Style, params )
+		end,
+		kmode
+	)
+end
+
+function Style.newScrollView( style_info, params )
+	-- print( "Style.newScrollView" )
+	style_info = style_info or {}
+	params = params or {}
+	--==--
+	params.data = style_info
+	if not Style.ScrollView then Style.loadScrollViewStyleSupport() end
+	return Style.ScrollView:createStyleFrom( params )
+end
+
+
+--======================================================--
 -- newTextStyle Support
 
 function Style._loadTextStyleSupport( params )
@@ -339,7 +405,7 @@ function Style._loadTextStyleSupport( params )
 
 	--== Dependencies
 
-	Style._loadBaseStyleSupport( params )
+	Style.loadBaseStyleSupport( params )
 
 	--== Components
 
@@ -382,7 +448,7 @@ function Style._loadTextFieldStyleSupport( params )
 
 	--== Dependencies
 
-	Style._loadBaseStyleSupport( params )
+	Style.loadBaseStyleSupport( params )
 	Style._loadBackgroundStyleSupport( params )
 	Style._loadTextStyleSupport( params )
 
@@ -415,27 +481,6 @@ end
 --====================================================================--
 --== Private Functions
 
-
-function Style._loadBaseStyleSupport( params )
-	-- print( "Style._loadBaseStyleSupport" )
-	if Style.Base then return end
-	params = params or {}
-	if params.mode==nil then params.mode=uiConst.RUN_MODE end
-	--==--
-	local kmode
-	if params.mode==uiConst.TEST_MODE then
-		kmode = Kolor.hRGBA
-	end
-
-	local BaseStyle = require( ui_find( 'dmc_style.base_style' ) )
-	Style.Base=BaseStyle
-	initKolors(
-		function()
-			BaseStyle.initialize( Style, params )
-		end,
-		kmode
-	)
-end
 
 
 
