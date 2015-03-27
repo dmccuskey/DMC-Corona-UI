@@ -1,7 +1,7 @@
 --====================================================================--
--- dmc_widget/widget_text.lua
+-- dmc_ui/dmc_widget/widget_scrollview.lua
 --
--- Documentation: http://docs.davidmccuskey.com/
+-- Documentation: http://docs.davidmccuskey.com/dmc+corona+ui
 --====================================================================--
 
 --[[
@@ -33,7 +33,7 @@ SOFTWARE.
 
 
 --====================================================================--
---== DMC Corona UI : Text Widget
+--== DMC Corona UI : ScrollView Widget
 --====================================================================--
 
 
@@ -55,7 +55,7 @@ local ui_find = dmc_ui_func.find
 
 
 --====================================================================--
---== DMC UI : newText
+--== DMC UI : newScrollView
 --====================================================================--
 
 
@@ -64,14 +64,15 @@ local ui_find = dmc_ui_func.find
 --== Imports
 
 
+local AxisMotion = require( ui_find( 'dmc_widget.widget_scrollview.axis_motion' ) )
+local Gesture = require 'dmc_gestures'
 local Objects = require 'dmc_objects'
-local LifecycleMixModule = require 'dmc_lifecycle_mix'
-local StyleMixModule = require( ui_find( 'dmc_style.style_mix' ) )
+local Utils = require 'dmc_utils'
+
 local uiConst = require( ui_find( 'ui_constants' ) )
 
--- these are set later
-local dUI = nil
-local FontMgr = nil
+local View = require( ui_find( 'core.view' ) )
+local Scroller = require( ui_find( 'dmc_widget.widget_scrollview.scroller' ) )
 
 
 
@@ -79,46 +80,49 @@ local FontMgr = nil
 --== Setup, Constants
 
 
--- setup some aliases to make code cleaner
+--== To be set in initialize()
+local dUI = nil
+
 local newClass = Objects.newClass
-local ComponentBase = Objects.ComponentBase
 
-local LifecycleMix = LifecycleMixModule.LifecycleMix
-local StyleMix = StyleMixModule.StyleMix
+-- local mabs = math.abs
+-- local sfmt = string.format
+-- local tinsert = table.insert
+-- local tremove = table.remove
+-- local tstr = tostring
 
 
 
 --====================================================================--
---== Text Widget Class
+--== ScrollView Widget Class
 --====================================================================--
 
 
-local Text = newClass(
-	{ StyleMix, ComponentBase, LifecycleMix },
-	{ name = "Text" }
-)
+local ScrollView = newClass( View, { name = "ScrollView" } )
 
 --== Class Constants
 
-Text.LEFT = 'left'
-Text.CENTER = 'center'
-Text.RIGHT = 'right'
+ScrollView.HIT_TOP_LIMIT = 'top_limit_hit'
+ScrollView.HIT_BOTTOM_LIMIT = 'bottom_limit_hit'
+ScrollView.HIT_LEFT_LIMIT = 'left_limit_hit'
+ScrollView.HIT_RIGHT_LIMIT = 'right_limit_hit'
 
 --== Style/Theme Constants
 
-Text.STYLE_CLASS = nil -- added later
-Text.STYLE_TYPE = uiConst.TEXT
+ScrollView.STYLE_CLASS = nil -- added later
+ScrollView.STYLE_TYPE = uiConst.SCROLLVIEW
 
 -- TODO: hook up later
--- Text.DEFAULT = 'default'
+-- ScrollView.DEFAULT = 'default'
 
--- Text.THEME_STATES = {
--- 	Text.DEFAULT,
+-- ScrollView.THEME_STATES = {
+-- 	ScrollView.DEFAULT,
 -- }
+
 
 --== Event Constants
 
-Text.EVENT = 'text-widget-event'
+ScrollView.EVENT = 'scrollview-widget-event'
 
 
 --======================================================--
@@ -126,113 +130,174 @@ Text.EVENT = 'text-widget-event'
 
 --== Init
 
-function Text:__init__( params )
-	-- print( "Text:__init__", params )
+function ScrollView:__init__( params )
+	-- print( "ScrollView:__init__", params )
 	params = params or {}
-	if params.x==nil then params.x=0 end
-	if params.y==nil then params.y=0 end
-	if params.text==nil then params.text="" end
+	if params.scrollWidth==nil then params.scrollWidth=dUI.WIDTH end
+	if params.scrollHeight==nil then params.scrollHeight=dUI.HEIGHT end
 
-	self:superCall( LifecycleMix, '__init__', params )
-	self:superCall( ComponentBase, '__init__', params )
-	self:superCall( StyleMix, '__init__', params )
+	self:superCall( '__init__', params )
 	--==--
 
 	--== Create Properties ==--
 
 	-- properties in this class
 
-	self._x = params.x
-	self._x_dirty = true
-	self._y = params.y
-	self._y_dirty = true
+	self._contentPosition = {x=0,y=0}
+	self._contentPosition_dirty=true
 
-	self._text = params.text
-	self._text_dirty=true
+	-- self._enterFrameIterator = nil
+
+	self._hasMoved = false
+	self._isMoving = false
+	self._isRendered = false
+
+	self._scrollWidth = params.scrollWidth
+	self._scrollWidth_dirty=true
+	self._scrollHeight = params.scrollHeight
+	self._scrollHeight_dirty=true
+
+	-- controlled by Directional Lock Enabled
+	self._scrollBlockedH = false
+	self._scrollBlockedV = false
+
+	self._returnFocus = nil -- return focus callback
+	self._returnFocusCancel = nil -- return focus callback
+	self._returnFocus_t = nil -- return focus timer
 
 	-- properties from style
 
-	self._width_dirty=true
-	self._height_dirty=true
-	-- virtual
-	self._rectBgWidth_dirty=true
-	self._rectBgHeight_dirty=true
-	self._displayWidth_dirty=true
-	self._displayHeight_dirty=true
+	self._bounceIsActive = true
+	self._alwaysBounceVertically = false
+	self._alwaysBounceHorizontally = false
 
-	self._align_dirty=true
-	self._anchorX_dirty=true
-	self._anchorY_dirty=true
-	self._fillColor_dirty = true
-	self._font_dirty=true
-	self._fontSize_dirty=true
-	self._marginX_dirty=true
-	self._marginY_dirty=true
-	self._strokeColor_dirty=true
-	self._strokeWidth_dirty=true
+	self._scrollHorizontalEnabled = true
+	self._scrollVerticalEnabled = true
+	self._isDirectionalLockEnabled = false
 
-	self._textColor_dirty=true
-	-- virtual
-	self._textX_dirty=true
-	self._textY_dirty=true
+	self._showHorizontalScrollIndicator = false
+	self._showVerticalScrollIndicator = false
+
+	--== Display Groups ==--
+
+	self._dgBg = nil
+	self._dgViews = nil
+	self._dgUI = nil
 
 	--== Object References ==--
 
-	self._tmp_style = params.style -- save
+	self._axis_x = nil -- y-axis motion
+	self._axis_y = nil -- x-axis motion
 
-	self._txt_text = nil -- our text object
-	self._rectBg = nil -- our background object
+	self._gesture = nil -- pan gesture
+	self._gesture_f = nil -- callback
+
+	self._rectBg = nil -- background object, touch area
+
+	self._scroller = nil -- our scroll area
+	self._scroller_dirty=true
 
 end
 
-function Text:__undoInit__()
-	-- print( "Text:__undoInit__" )
+--[[
+function ScrollView:__undoInit__()
+	-- print( "ScrollView:__undoInit__" )
 	--==--
-	self:superCall( StyleMix, '__undoInit__' )
-	self:superCall( ComponentBase, '__undoInit__' )
-	self:superCall( LifecycleMix, '__undoInit__' )
+	self:superCall( '__undoInit__' )
 end
-
+--]]
 
 --== createView
 
-function Text:__createView__()
-	-- print( "Text:__createView__" )
-	self:superCall( ComponentBase, '__createView__' )
+function ScrollView:__createView__()
+	-- print( "ScrollView:__createView__" )
+	self:superCall( '__createView__' )
 	--==--
-	local o = display.newRect( 0,0,0,0 )
-	o.anchorX, o.anchorY = 0.5, 0.5
-	self:insert( o )
+	local dg, o
+
+	-- local background, gesture hit area
+
+	o = display.newRect( 0,0,0,0 )
+	o.anchorX, o.anchorY = 0, 0
+	o:setFillColor( 1,0,0,0.4 )
+	self._dgBg:insert( o )
 	self._rectBg = o
+
 end
 
-function Text:__undoCreateView__()
-	-- print( "Text:__undoCreateView__" )
+function ScrollView:__undoCreateView__()
+	-- print( "ScrollView:__undoCreateView__" )
+	local o
+
+	self._axis_x:removeSelf()
+	self._axis_x = nil
+
+	self._axis_y:removeSelf()
+	self._axis_y = nil
+
 	self._rectBg:removeSelf()
 	self._rectBg=nil
+
+	self._dgBg:removeSelf()
+	self._dgBg=nil
 	--==--
-	self:superCall( ComponentBase, '__undoCreateView__' )
+	self:superCall( '__undoCreateView__' )
 end
 
 
 --== initComplete
 
-function Text:__initComplete__()
-	-- print( "Text:__initComplete__" )
-	self:superCall( StyleMix, '__initComplete__' )
-	self:superCall( ComponentBase, '__initComplete__' )
+function ScrollView:__initComplete__()
+	-- print( "ScrollView:__initComplete__" )
+	self:superCall( '__initComplete__' )
 	--==--
-	self.style = self._tmp_style
+	local o, f
+
+	f = self:createCallback( self._gestureEvent_handler )
+	o = Gesture.newPanGesture( self._rectBg, { touches=1, threshold=3 } )
+	o:addEventListener( o.EVENT, f )
+	self._gesture = o
+	self._gesture_f = f
+
+	f = self:createCallback( self._axisEvent_handler )
+	self._axis_x = AxisMotion:new{
+		id='x',
+		length=self._width,
+		scrollLength=self._scrollWidth,
+		callback=f
+	}
+	self._axis_y = AxisMotion:new{
+		id='y',
+		length=self._height,
+		scrollLength=self._scrollHeight,
+		callback=f
+	}
+
+	self._isRendered = true
+
 end
 
-function Text:__undoInitComplete__()
-	--print( "Text:__undoInitComplete__" )
-	self:_removeText()
+function ScrollView:__undoInitComplete__()
+	--print( "ScrollView:__undoInitComplete__" )
+	local o, f
 
-	self.style = nil
+	self._isRendered = false
+
+	self._axis_y:removeSelf()
+	self._axis_y = nil
+
+	self._axis_x:removeSelf()
+	self._axis_x = nil
+
+	o = self._gesture
+	o:removeEventListener( o.EVENT, self._gesture_f )
+	self._gesture_f = nil
+	self._gesture = nil
+
+	self:_removeScroller()
+
 	--==--
-	self:superCall( ComponentBase, '__undoInitComplete__' )
-	self:superCall( StyleMix, '__undoInitComplete__' )
+	self:superCall( '__undoInitComplete__' )
 end
 
 -- END: Setup DMC Objects
@@ -244,17 +309,15 @@ end
 --== Static Methods
 
 
-function Text.initialize( manager )
-	-- print( "Text.initialize" )
+function ScrollView.initialize( manager, params )
+	-- print( "ScrollView.initialize" )
 	dUI = manager
 	local Widget = nil
 
-	FontMgr = dUI.FontMgr
-
 	local Style = dUI.Style
-	Text.STYLE_CLASS = Style.Text
+	ScrollView.STYLE_CLASS = Style.ScrollView
 
-	Style.registerWidget( Text )
+	Style.registerWidget( ScrollView )
 end
 
 
@@ -263,173 +326,149 @@ end
 --== Public Methods
 
 
---== X
+--== .contentPosition
 
-function Text.__getters:x()
-	return self._x
+function ScrollView.__getters:contentPosition()
+	-- print( "ScrollView.__getters:contentPosition" )
+	return self._contentPosition
 end
-function Text.__setters:x( value )
-	-- print( 'Text.__setters:x', value )
-	assert( type(value)=='number' )
+function ScrollView.__setters:contentPosition( value )
+	-- print( "ScrollView.__setters:contentPosition", value )
+	self._contentPosition = value
+	self._contentPosition_dirty=true
+end
+
+
+--== .isDirectionalLockEnabled
+
+function ScrollView.__getters:isDirectionalLockEnabled()
+	-- print( "ScrollView.__getters:isDirectionalLockEnabled" )
+	return self._isDirectionalLockEnabled
+end
+function ScrollView.__setters:isDirectionalLockEnabled( value )
+	-- print( "ScrollView.__setters:isDirectionalLockEnabled", value )
+	self._isDirectionalLockEnabled = value
+end
+
+
+--== .isScrollEnabled
+
+function ScrollView.__getters:isScrollEnabled()
+	-- print( "ScrollView.__getters:isScrollEnabled" )
+	return self._scrollHorizontalEnabled
+end
+function ScrollView.__setters:isScrollEnabled( value )
+	-- print( "ScrollView.__setters:isScrollEnabled", value )
+	self._scrollHorizontalEnabled = value
+end
+
+
+--== .scrollWidth
+
+function ScrollView.__getters:scrollWidth()
+	-- print( "ScrollView.__getters:scrollWidth" )
+	return self._scrollWidth
+end
+function ScrollView.__setters:scrollWidth( value )
+	-- print( "ScrollView.__setters:scrollWidth", value )
+	if self._scrollWidth==value then return end
+	self._scrollWidth = value
+	self._scrollWidth_dirty=true
+end
+
+--== .scrollHeight
+
+function ScrollView.__getters:scrollHeight()
+	-- print( "ScrollView.__getters:scrollHeight" )
+	return self._scrollHeight
+end
+function ScrollView.__setters:scrollHeight( value )
+	-- print( "ScrollView.__setters:scrollHeight", value )
+	if self._scrollHeight==value then return end
+	self._scrollHeight = value
+	self._scrollHeight_dirty=true
+end
+
+--== scrollTo()
+
+-- pos={x,y}
+function ScrollView:scrollTo( pos, params )
+	params = params or {}
+	if params.animate==nil then params.animate=true end
+	params.time=params.time
+	params.onComplete=params.onComplete
 	--==--
-	if self._x == value then return end
-	self._x = value
-	self._x_dirty=true
-	self:__invalidateProperties__()
+	-- TODO: start animation
 end
 
---== Y
+--== scrollToPosition()
 
-function Text.__getters:y()
-	return self._y
-end
-function Text.__setters:y( value )
-	-- print( 'Text.__setters:y', value )
-	assert( type(value)=='number' )
+-- pos={x,y}
+function ScrollView:scrollToPosition( pos, params )
+	params = params or {}
+	if params.animate==nil then params.animate=true end
+	params.time=params.time
+	params.onComplete=params.onComplete
 	--==--
-	if self._y == value then return end
-	self._y = value
-	self._y_dirty=true
-	self:__invalidateProperties__()
+	-- TODO: start animation
 end
 
 
---[[
-we use custom getters for width/height
-without width/height, we just use dimensions
-from text object after creation
---]]
-
---== width (custom)
-
-
-function Text.__getters:width()
-	-- print( 'Text.__getters:width' )
-	local w, t = self.curr_style.width, self._txt_text
-	if w==nil and t then w=t.width end
-	return w
-end
-function Text.__setters:width( value )
-	-- print( 'Text.__setters:width', value )
-	self.curr_style.width = value
-end
-
---== height (custom)
-
-function Text.__getters:height()
-	-- print( 'Text.__getters:height' )
-	local h, t = self.curr_style.height, self._txt_text
-	if h==nil and t then h=t.height end
-	return h
-end
-function Text.__setters:height( value )
-	-- print( 'Text.__setters:height', value )
-	self.curr_style.height = value
-end
-
--- get just the text height
-function Text:getTextHeight()
-	-- print( "Text:getTextHeight", self._txt_text )
-	local val = 0
-	if self._txt_text then
-		val = self._txt_text.height
-	end
-	return val
-end
-
-
---== Text
-
-function Text.__getters:text()
-	return self._text
-end
-function Text.__setters:text( value )
-	-- print( 'Text.__setters:text', value )
-	assert( type(value)=='string' )
+function ScrollView:takeFocus( event, params )
+	params = params or {}
+	params.returnFocus=params.returnFocus
 	--==--
-	if self._text == value then return end
-	self._text = value
-	self._text_dirty=true
-	self:__invalidateProperties__()
+	-- TODO: start animation
 end
+
 
 
 --====================================================================--
 --== Private Methods
 
 
-function Text:_removeText()
-	-- print( "Text:_removeText" )
-	local o = self._txt_text
+function ScrollView:_removeScroller()
+	-- print( "ScrollView:_removeScroller" )
+	local o = self._scroller
 	if not o then return end
 	o:removeSelf()
-	self._txt_text = nil
+	self._scroller = nil
 end
 
-function Text:_createText()
-	-- print( "Text:_createText" )
-	local style = self.curr_style
-	local o -- object
+function ScrollView:_createScroller()
+	-- print( "ScrollView:_createScroller" )
 
-	self:_removeText()
+	self:_removeScroller()
 
-	local w, h = style.width, style.height
-	if w ~= nil then
-		w = w - style.marginX*2
-	end
-
-	o = display.newText{
-		x=0, y=0,
-
-		width=w,
-		-- don't use height, turns into multi-line
-		height=nil,
-
-		text=self._text,
-		align=style.align,
-		font=style.font,
-		fontSize=style.fontSize,
+	local o = Scroller:new{
+		width=self._scrollWidth,
+		height=self._scrollHeight
 	}
+	self:_addSubView( o )
+	self._scroller = o
 
-	self:insert( o )
-	self._txt_text = o
-
-	--== Reset properties
-
-	self._x_dirty=true
-	self._y_dirty=true
-	self._width_dirty=true
-	self._height_dirty=true
-
-	self._text_dirty=true
-	self._textColor_dirty=true
 end
 
 
-function Text:__commitProperties__()
-	-- print( 'Text:__commitProperties__' )
-	local style = self.curr_style
-	-- local metric = FontMgr:getFontMetric( style.font, style.fontSize )
-	metric={offsetX=0,offsetY=0}
+function ScrollView:_loadViews()
+	self:_createScroller()
+end
 
-	-- create new text if necessary
-	if self._align_dirty or self._font_dirty or self._fontSize_dirty then
-		self:_createText()
-		self._align_dirty=false
-		self._font_dirty=false
-		self._fontSize_dirty=false
-	end
+
+
+function ScrollView:__commitProperties__()
+	-- print( 'ScrollView:__commitProperties__' )
+	local style = self.curr_style
 
 	local view = self.view
 	local bg = self._rectBg
-	local display = self._txt_text
+	local scr = self._scroller
 
 	--== position sensitive
 
 	-- set text string
 
 	if self._text_dirty then
-		display.text = self._text
 		self._text_dirty=false
 
 		self._width_dirty=true
@@ -437,26 +476,28 @@ function Text:__commitProperties__()
 	end
 
 	if self._align_dirty then
-		display.align=style.align
 		self._align_dirty = false
 	end
 
 	if self._width_dirty then
-		bg.width = self.width -- use getter
+		-- print("width", self._width)
+		bg.width = self._width
 		self._width_dirty=false
-
-		self._anchorX_dirty=true
-		self._rectBgWidth_dirty=true
-		self._displayWidth_dirty=true
 	end
 	if self._height_dirty then
-		bg.height = self.height -- use getter
+		bg.height = self._height
 		self._height_dirty=false
-
-		self._anchorY_dirty=true
-		self._rectBgHeight_dirty=true
-		self._displayHeight_dirty=true
 	end
+
+	if self._scrollWidth_dirty then
+		scr.width = self._scrollWidth
+		self._scrollWidth_dirty=false
+	end
+	if self._scrollHeight_dirty then
+		scr.height = self._scrollHeight
+		self._scrollHeight_dirty=false
+	end
+
 
 	if self._marginX_dirty then
 		self._marginX_dirty=false
@@ -483,29 +524,18 @@ function Text:__commitProperties__()
 		self._rectBgHeight_dirty=false
 	end
 
-	if self._displayWidth_dirty then
-		display.width = self.width-style.marginX*2 -- use getter
-		self._displayWidth_dirty=false
-	end
-	if self._displayHeight_dirty then
-		--== !! DO NOT SET HEIGHT OF TEXT !! ==--
-		--[[
-		-- -- display.height = self.height
-		--]]
-		self._displayHeight_dirty=false
-	end
 
 	-- anchorX/anchorY
 
 	if self._anchorX_dirty then
-		bg.anchorX = style.anchorX
+		-- bg.anchorX = style.anchorX
 		self._anchorX_dirty=false
 
 		self._x_dirty=true
 		self._textX_dirty=true
 	end
 	if self._anchorY_dirty then
-		bg.anchorY = style.anchorY
+		-- bg.anchorY = style.anchorY
 		self._anchorY_dirty=false
 
 		self._y_dirty=true
@@ -517,47 +547,17 @@ function Text:__commitProperties__()
 	if self._x_dirty then
 		view.x = self._x
 		self._x_dirty = false
-
-		self._textX_dirty=true
 	end
 	if self._y_dirty then
 		view.y = self._y
 		self._y_dirty = false
-
-		self._textY_dirty=true
 	end
 
-	-- text align x/y
-
-	if self._textX_dirty then
-		local align = style.align
-		local width = self.width -- use getter, it's smart
-		local offset
-		if align == self.LEFT then
-			display.anchorX = 0
-			offset = -width*(style.anchorX)+style.marginX
-			display.x=offset
-		elseif align == self.RIGHT then
-			display.anchorX = 1
-			offset = width*(1-style.anchorX)-style.marginX
-			display.x=offset
-		else
-			display.anchorX = 0.5
-			offset = width*(0.5-style.anchorX)
-			display.x=offset
-		end
-		self._textX_dirty = false
+	if self._contentPosition_dirty then
+		scr.x = self._contentPosition.x
+		scr.y = self._contentPosition.y
+		self._contentPosition_dirty=false
 	end
-
-	if self._textY_dirty then
-		local height = self.height -- use getter
-		local offset
-		display.anchorY = 0.5
-		offset = height/2-height*(style.anchorY)
-		display.y=offset
-		self._textY_dirty=false
-	end
-
 
 	--== non-position sensitive
 
@@ -573,15 +573,15 @@ function Text:__commitProperties__()
 		self._debugOn_dirty=false
 	end
 	if self._strokeColor_dirty then
-		bg:setStrokeColor( unpack( style.strokeColor ))
+		-- bg:setStrokeColor( unpack( style.strokeColor ))
 		self._strokeColor_dirty=false
 	end
 	if self._strokeWidth_dirty then
-		bg.strokeWidth = style.strokeWidth
+		-- bg.strokeWidth = style.strokeWidth
 		self._strokeWidth_dirty=false
 	end
 	if self._textColor_dirty then
-		display:setTextColor( unpack( style.textColor ) )
+		-- display:setScrollViewColor( unpack( style.textColor ) )
 		self._textColor_dirty=false
 	end
 
@@ -589,13 +589,12 @@ end
 
 
 
-
 --====================================================================--
 --== Event Handlers
 
 
-function Text:stylePropertyChangeHandler( event )
-	-- print( "Text:stylePropertyChangeHandler", event.type, event.property )
+function ScrollView:stylePropertyChangeHandler( event )
+	-- print( "ScrollView:stylePropertyChangeHandler", event.type, event.property )
 	local style = event.target
 	local etype= event.type
 	local property= event.property
@@ -667,4 +666,79 @@ end
 
 
 
-return Text
+
+function ScrollView:_gestureEvent_handler( event )
+	-- print( "ScrollView:_gestureEvent_handler", event.phase )
+	local etype = event.type
+	local phase = event.phase
+	local gesture = event.target
+
+	-- Utils.print( event )
+	local evt = {
+		name='touch',
+		phase=event.phase,
+		time=event.time,
+		value=0, -- this is holder for x/y
+		start=0, -- this is holder for xStart/yStart
+	}
+
+	if etype == gesture.GESTURE then
+		if phase=='began' then
+			evt.phase = 'began'
+			if self._axis_x then
+				evt.value = event.x
+				evt.start = event.xStart
+				self._axis_x:touch( evt )
+			end
+			if self._axis_y then
+				evt.value = event.y
+				evt.start = event.yStart
+				self._axis_y:touch( evt )
+			end
+		elseif phase=='changed' then
+			evt.phase = 'moved'
+			if self._axis_x then
+				evt.value = event.x
+				evt.start = event.xStart
+				self._axis_x:touch( evt )
+			end
+			if self._axis_y then
+				evt.value = event.y
+				evt.start = event.yStart
+				self._axis_y:touch( evt )
+			end
+		else
+			evt.phase = 'ended'
+			if self._axis_x then
+				evt.value = event.x
+				evt.start = event.xStart
+				self._axis_x:touch( evt )
+			end
+			if self._axis_y then
+				evt.value = event.y
+				evt.start = event.yStart
+				self._axis_y:touch( evt )
+			end
+		end
+	end
+end
+
+
+
+function ScrollView:_axisEvent_handler( event )
+	-- print( "ScrollView:_axisEvent_handler", event.state )
+	local state = event.state
+	-- local velocity = event.velocity
+	if event.id=='x' then
+		self._contentPosition.x = event.value
+	else
+		self._contentPosition.y = event.value
+	end
+	self._contentPosition_dirty=true
+	self:__invalidateProperties__()
+end
+
+
+
+
+return ScrollView

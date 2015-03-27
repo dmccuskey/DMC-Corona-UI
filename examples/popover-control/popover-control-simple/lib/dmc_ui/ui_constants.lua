@@ -106,6 +106,15 @@ function Constant.getKeyboardHeight()
 end
 
 
+
+--====================================================================--
+--== Views
+
+
+Constant.VIEW_LAYOUT_MARGINS = {top=8,left=8,bottom=8,right=8}
+
+
+
 --====================================================================--
 --== Widgets & Styles
 
@@ -115,6 +124,7 @@ Constant.BUTTON = 'Button'
 Constant.BUTTON_STATE = 'Button-State'
 Constant.NAVITEM = 'NavItem'
 Constant.NAVBAR = 'NavBar'
+Constant.SCROLLVIEW = 'ScrollView'
 Constant.TEXT = 'Text'
 Constant.TEXTFIELD = 'TextField'
 
