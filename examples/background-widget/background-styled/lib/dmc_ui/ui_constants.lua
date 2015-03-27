@@ -94,6 +94,25 @@ Constant.IS_ANDROID = ( PLATFORM=='Android' )
 Constant.IS_WINDOWS = ( PLATFORM=='WinPhone' )
 Constant.IS_SIMULATOR = ( PLATFORM=='Mac OS X' or PLATFORM=='Win' )
 
+Constant.ANDROID_KEYBOARD = 80
+Constant.IOS_KEYBOARD = 80
+
+function Constant.getKeyboardHeight()
+	if Constant.IS_IOS then
+		return Constant.IOS_KEYBOARD
+	else
+		return Constant.ANDROID_KEYBOARD
+	end
+end
+
+
+
+--====================================================================--
+--== Views
+
+
+Constant.VIEW_LAYOUT_MARGINS = {top=8,left=8,bottom=8,right=8}
+
 
 
 --====================================================================--
@@ -105,6 +124,7 @@ Constant.BUTTON = 'Button'
 Constant.BUTTON_STATE = 'Button-State'
 Constant.NAVITEM = 'NavItem'
 Constant.NAVBAR = 'NavBar'
+Constant.SCROLLVIEW = 'ScrollView'
 Constant.TEXT = 'Text'
 Constant.TEXTFIELD = 'TextField'
 
@@ -112,6 +132,22 @@ Constant.TEXTFIELD = 'TextField'
 
 Constant.ROUNDED = 'rounded'
 Constant.RECTANGLE = 'rectangle'
+
+
+
+--====================================================================--
+--== Controls
+
+
+-- Transition Times
+
+Constant.NAVBAR_TRANSITION_TIME = 400
+Constant.PRESENT_CONTROL_TRANSITION_TIME = 100
+
+-- Modal Types
+
+Constant.POPOVER = 'popover'
+Constant.POPOVER_PREFERRED_SIZE = {width=320,height=600}
 
 
 

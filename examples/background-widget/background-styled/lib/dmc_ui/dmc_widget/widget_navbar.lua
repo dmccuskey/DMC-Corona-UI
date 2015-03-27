@@ -53,6 +53,7 @@ local dmc_ui_func = dmc_ui_data.func
 local ui_find = dmc_ui_func.find
 
 
+
 --====================================================================--
 --== DMC UI : newNavBar
 --====================================================================--
@@ -68,9 +69,6 @@ local Objects = require 'dmc_objects'
 local StyleMixModule = require( ui_find( 'dmc_style.style_mix' ) )
 local uiConst = require( ui_find( 'ui_constants' ) )
 
---== To be set in initialize()
-local dUI = nil
-local Widget = nil
 
 
 --====================================================================--
@@ -85,6 +83,10 @@ local StyleMix = StyleMixModule.StyleMix
 
 local tinsert = table.insert
 local tremove = table.remove
+
+--== To be set in initialize()
+local dUI = nil
+local Widget = nil
 
 
 
@@ -111,7 +113,8 @@ NavBar.STYLE_TYPE = uiConst.NAVBAR
 
 --== Event Constants
 
-NavBar.EVENT = 'button-event'
+NavBar.EVENT = 'navbar-event'
+NavBar.BACK_BUTTON = 'back-button-released-event'
 
 
 --======================================================--
@@ -143,6 +146,11 @@ function NavBar:__init__( params )
 	self._trans_time = params.transitionTime
 	self._items = {} -- stack of nav items
 
+	self._animation = nil
+	self._animation_dirty=false
+
+	self._enterFrame_f = nil
+
 	-- properties stored in Style
 
 	self._debugOn_dirty=true
@@ -160,9 +168,10 @@ function NavBar:__init__( params )
 
 	self._tmp_style = params.style -- save
 
+	self._delegate = params.delegate
+
 	self._dgBg = nil -- main group, for background
 	self._dgMain = nil -- main group, for buttons, etc
-	self._nav_controller = nil -- dmc navigator
 
 	-- references to Nav Items
 	self._root_item = nil
@@ -307,17 +316,9 @@ end
 --======================================================--
 -- Nav Bar Methods
 
--- setter: set background color of table view
---
-function NavBar.__setters:bg_color( color )
-	-- print( "NavBar.__setters:bg_color", color )
-	assert( type(color)=='table', "color must be a table of values" )
-	self._rctHit:setFillColor( unpack( color ) )
-end
-
-function NavBar.__setters:controller( obj )
-	-- print( "NavBar.__setters:controller", obj )
-	self._nav_controller = obj
+function NavBar.__setters:delegate( obj )
+	-- print( "NavBar.__setters:delegate", obj )
+	self._delegate = obj
 end
 
 
@@ -326,15 +327,33 @@ function NavBar:pushNavItem( item, params )
 	params = params or {}
 	assert( type(item)=='table' and item.isa and item:isa( Widget.NavItem ), "pushNavItem: item must be a NavItem" )
 	--==--
+	if self._enterFrame_f then
+		error("[ERROR] Animation already in progress !!!")
+	end
 	self:_setNextItem( item, params ) -- params.animate set here
-	self:_gotoNext( params.animate )
+	self:_gotoNextItem( params.animate )
 end
-
 
 function NavBar:popNavItemAnimated()
 	-- print( "NavBar:popNavItemAnimated" )
-	self:_gotoPrev( true )
+	if self._enterFrame_f then
+		error("[ERROR] Animation already in progress !!!")
+	end
+	self:_gotoPrevItem( true )
 end
+
+
+--== methods used by dUI.NavigationControl
+
+function NavBar:pushNavItemGetTransition( item, params )
+	self:_setNextItem( item, params )
+	return self:_getNextTrans()
+end
+
+function NavBar:popNavItemGetTransition()
+	return self:_getPrevTrans()
+end
+
 
 
 --======================================================--
@@ -357,21 +376,26 @@ function NavBar:beforeRemoveStyle()
 end
 
 
+
 --====================================================================--
 --== Private Methods
 
 
--- private method used by dmc-navigator
---
-function NavBar:_pushNavItemGetTransition( item, params )
-	self:_setNextItem( item, params )
-	return self:_getNextTrans()
+--======================================================--
+-- Item Methods
+
+function NavBar:_pushStackItem( item )
+	-- print("NavBar:_pushStackItem", #self._items )
+	tinsert( self._items, item )
 end
 
--- private method used by dmc-navigator
---
-function NavBar:_popNavItemGetTransition()
-	return self:_getPrevTrans()
+function NavBar:_popStackItem( notify )
+	-- print("NavBar:_popStackItem", #self._items )
+	return tremove( self._items )
+end
+
+function NavBar:_getPreviousItem()
+	return self._items[ #self._items-1 ]
 end
 
 
@@ -379,144 +403,149 @@ function NavBar:_setNextItem( item, params )
 	params = params or {}
 	if params.animate==nil then params.animate=true end
 	--==--
-	if self._root_item then
-		-- pass
-	else
+	if not self._root_item then
+		-- first item added to NavBar
 		self._root_item = item
 		self._top_item = nil
 		params.animate = false
 	end
 	self._new_item = item
+
+	self._newItemSet_dirty=true
+	self:__invalidateProperties__()
 end
 
 
-function NavBar:_addToView( item )
-	-- print( "NavBar:_addToView", item )
-	local style = self.curr_style
-	local W, H = style.width, style.height
-	local H_CENTER, V_CENTER = W*0.5, H*0.5
-
-	local back, left, right = item.backButton, item.leftButton, item.rightButton
-	local title = item.title
+function NavBar:_addItemToNavBar( item )
+	-- print( "NavBar:_addItemToNavBar", item )
 	local dg = self._dgMain
+	local o
 
-	if back then
-		dg:insert( back.view )
-		back.y = 0
-		back.isVisible=false
+	o = item.title
+	if o then
+		dg:insert( o.view )
+		o.isVisible=false
 	end
-	if left then
-		dg:insert( left.view )
-		left.y = 0
-		left.isVisible=false
+	o = item.backButton
+	if o then
+		dg:insert( o.view )
+		o.isVisible=false
 	end
-	if title then
-		dg:insert( title.view )
-		title.y = 0
-		title.isVisible=false
+	o = item.leftButton
+	if o then
+		dg:insert( o.view )
+		o.isVisible=false
 	end
-	if right then
-		dg:insert( right.view )
-		right.y = 0
-		right.isVisible=false
+	o = item.rightButton
+	if o then
+		dg:insert( o.view )
+		o.isVisible=false
 	end
 
 end
 
-function NavBar:_removeFromView( item )
-	-- print( "NavBar:_removeFromView", item )
+function NavBar:_removeItemFromNavBar( item )
+	-- print( "NavBar:_removeItemFromNavBar", item )
 	if item.removeSelf then item:removeSelf() end
 end
 
 
+--======================================================--
+-- Animation Methods
+
 function NavBar:_startEnterFrame( func )
+	self._enterFrame_f = func
 	Runtime:addEventListener( 'enterFrame', func )
 end
 
-function NavBar:_stopEnterFrame( func )
-	Runtime:removeEventListener( 'enterFrame', func )
+function NavBar:_stopEnterFrame()
+	if not self._enterFrame_f then return end
+	Runtime:removeEventListener( 'enterFrame', self._enterFrame_f )
+	self._enterFrame_f = nil
 end
 
-
-function NavBar:_startReverse( func )
-	local start_time = system.getTimer()
-	local duration = self.TRANSITION_TIME
-	local rev_f
-
-	rev_f = function(e)
-		local delta_t = e.time-start_time
-		local perc = 100-(delta_t/duration*100)
-		if perc < 0 then
-			perc = 0
-			self:_stopEnterFrame( rev_f )
-		end
-		func( perc )
-	end
-	self:_startEnterFrame( rev_f )
-end
 
 function NavBar:_startForward( func )
 	local start_time = system.getTimer()
-	local duration = self.TRANSITION_TIME
-	local frw_f
+	local duration = self._trans_time
+	local frw_f -- forward
 
 	frw_f = function(e)
 		local delta_t = e.time-start_time
 		local perc = delta_t/duration*100
 		if perc > 100 then
 			perc = 100
-			self:_stopEnterFrame( frw_f )
+			self:_stopEnterFrame()
 		end
-		func( perc )
+		func( perc, true )
 	end
 	self:_startEnterFrame( frw_f )
 end
 
+function NavBar:_startReverse( func )
+	local start_time = system.getTimer()
+	local duration = self._trans_time
+	local rev_f -- forward
 
--- can be retreived by another object (ie, NavBar)
+	rev_f = function(e)
+		local delta_t = e.time-start_time
+		local perc = 100-(delta_t/duration*100)
+		if perc < 0 then
+			perc = 0
+			self:_stopEnterFrame()
+		end
+		func( perc, true )
+	end
+	self:_startEnterFrame( rev_f )
+end
+
+
+function NavBar:_gotoNextItem( animate )
+	-- print( "NavBar:_gotoNextItem" )
+	local func = self:_getNextTrans()
+
+	local animFunc = function()
+		if not animate then
+			func( 100, animate )
+		else
+			self:_startForward( func )
+		end
+	end
+
+	self._animation = animFunc
+	self._animation_dirty=true
+	self:__invalidateProperties__()
+end
+
+function NavBar:_gotoPrevItem( animate )
+	-- print( "NavBar:_gotoPrevItem" )
+	local func = self:_getPrevTrans()
+
+	local animFunc = function()
+		if not animate then
+			func( 0, animate )
+		else
+			self:_startReverse( func )
+		end
+	end
+
+	self._animation = animFunc
+	self._animation_dirty=true
+	self:__invalidateProperties__()
+end
+
+
+--======================================================--
+-- Transition Methods
+
 function NavBar:_getNextTrans()
 	-- print( "NavBar:_getNextTrans" )
 	return self:_getTransition( self._top_item, self._new_item, self.FORWARD )
 end
 
-function NavBar:_gotoNext( animate )
-	-- print( "NavBar:_gotoNext" )
-	local func = self:_getNextTrans()
-	if not animate then
-		func(100)
-	else
-		self:_startForward( func )
-	end
-end
-
-
--- can be retreived by another object (ie, NavBar)
 function NavBar:_getPrevTrans()
 	-- print( "NavBar:_getPrevTrans" )
 	return self:_getTransition( self._back_item, self._top_item, self.REVERSE )
-end
-
-function NavBar:_gotoPrev( animate )
-	-- print( "NavBar:_gotoPrev" )
-	local func = self:_getPrevTrans()
-	if not animate then
-		func( 0 )
-	else
-		self:_startReverse( func )
-	end
-end
-
-
-function NavBar:_attachBackListener( back )
-	-- print( "NavBar:_attachBackListener" )
-	if not back then return end
-	back:addEventListener( back.EVENT, self._back_f )
-end
-
-function NavBar:_detachBackListener( back )
-	-- print( "NavBar:_detachBackListener" )
-	if not back then return end
-	back:removeEventListener( back.EVENT, self._back_f )
 end
 
 
@@ -533,7 +562,10 @@ function NavBar:_getTransition( from_item, to_item, direction )
 	local fHasLeft=false
 	local t_d, t_b, t_l, t_t, t_r
 	local tHasLeft=false
-	local callback
+
+	local animationFunc
+	local animationHasStarted = false
+	local animationIsFinished = false
 
 	-- setup from_item vars
 	if from_item then
@@ -562,32 +594,48 @@ function NavBar:_getTransition( from_item, to_item, direction )
 	-- calcs for showing left/back buttons
 	local stack_offset = 0
 	if direction==self.FORWARD then
-		self:_addToView( to_item )
+		self:_addItemToNavBar( to_item )
 		stack_offset = 0
 	else
 		stack_offset = 1
 	end
 
-	local stack, stack_size = self._items, #self._items
+	local stack_size = #self._items
+	local anchorX, anchorY = style.anchorX, style.anchorY
+	local mX_OFF = W*(0.5-anchorX) -- master offset
 
-	callback = function( percent )
+	animationFunc = function( percent, animate )
 		-- print( "NavBar:transition", percent )
 		local dec_p = percent/100
 		local from_a, to_a = 1-dec_p, dec_p
-		local X_OFF = H_CENTER*dec_p
+
+		local aX_OFF = H_CENTER*dec_p -- animation offset
+
+		if animate and not animationHasStarted then
+			-- TODO: unattach current listener
+			animationHasStarted = true
+		end
 
 		if percent==0 then
 			--== edge of transition ==--
 
+			--[[
+			if not animate then
+				-- we jumped here without going through middle of trans
+			end
+			--]]
+
 			--== Finish up
 
 			if direction==self.REVERSE then
-				local item = tremove( stack )
-				self:_removeFromView( item )
+				--popstack has to be before #self._items check below
+
+				local item = self:_popStackItem()
+				self:_removeItemFromNavBar( item )
 
 				self._top_item = from_item
 				self._new_item = nil
-				self._back_item = stack[ #stack-1 ] -- get previous
+				self._back_item = self:_getPreviousItem()
 
 				if to_item then
 					self:_detachBackListener( to_item.backButton )
@@ -596,7 +644,6 @@ function NavBar:_getTransition( from_item, to_item, direction )
 					self:_attachBackListener( from_item.backButton )
 				end
 
-			end
 
 			--== Left/Back
 
@@ -606,7 +653,7 @@ function NavBar:_getTransition( from_item, to_item, direction )
 
 			if fHasLeft or #self._items>1 then
 				f_d.isVisible = true
-				f_d.x = -H_CENTER+MARGINS.x
+				f_d.x = mX_OFF-H_CENTER+MARGINS.x
 				f_d.alpha = 1
 			else
 				f_d.isVisible = false
@@ -620,7 +667,7 @@ function NavBar:_getTransition( from_item, to_item, direction )
 
 			if f_t then
 				f_t.isVisible = true
-				f_t.x = 0
+				f_t.x = mX_OFF
 				f_t.alpha = 1
 			end
 
@@ -632,23 +679,31 @@ function NavBar:_getTransition( from_item, to_item, direction )
 
 			if f_r then
 				f_r.isVisible = true
-				f_r.x = H_CENTER
+				f_r.x = mX_OFF+H_CENTER
 				f_r.alpha = 1
+			end
+
+
 			end
 
 
 		elseif percent==100 then
 			--== edge of transition ==--
 
-			if isAtEdge==true then
+			if animate and animationHasStarted then
+				animationIsFinished = true
+			end
+			--[[
+			if not animate then
 				-- we jumped here without going through middle of trans
 			end
+			--]]
 
 			--== Left/Back
 
 			-- checking if Left exists or Stack, still use t_d
 			if tHasLeft or stack_size>0 then
-				t_d.x = -H_CENTER+MARGINS.x
+				t_d.x = mX_OFF-H_CENTER+MARGINS.x
 				t_d.isVisible = true
 				t_d.alpha = 1
 				-- attach listener
@@ -663,7 +718,7 @@ function NavBar:_getTransition( from_item, to_item, direction )
 			--== Title
 
 			if t_t then
-				t_t.x = 0
+				t_t.x = mX_OFF
 				t_t.isVisible = true
 				t_t.alpha = 1
 			end
@@ -675,7 +730,7 @@ function NavBar:_getTransition( from_item, to_item, direction )
 			--== Right
 
 			if t_r then
-				t_r.x = H_CENTER
+				t_r.x = mX_OFF+H_CENTER-MARGINS.x
 				t_r.isVisible = true
 				t_r.alpha = 1
 			end
@@ -699,21 +754,18 @@ function NavBar:_getTransition( from_item, to_item, direction )
 					self:_attachBackListener( to_item.backButton )
 				end
 
-				tinsert( self._items, to_item )
+				self:_pushStackItem( to_item )
 			end
+
 
 		else
 			--== middle of transition ==--
 
-			if isAtEdge then
-				-- unattach current listener
-
-			end
 			--== Left/Back
 
 			if tHasLeft or stack_size>(0+stack_offset) then
 				t_d.isVisible = true
-				t_d.x = -X_OFF+MARGINS.x
+				t_d.x = mX_OFF-aX_OFF+MARGINS.x
 				t_d.alpha = to_a
 			else
 				t_d.isVisible = false
@@ -721,7 +773,7 @@ function NavBar:_getTransition( from_item, to_item, direction )
 
 			if fHasLeft or stack_size>(1+stack_offset) then
 				f_d.isVisible = true
-				f_d.x = -H_CENTER-X_OFF+MARGINS.x
+				f_d.x = mX_OFF-H_CENTER-aX_OFF+MARGINS.x
 				f_d.alpha = from_a
 			else
 				f_d.isVisible = false
@@ -732,12 +784,12 @@ function NavBar:_getTransition( from_item, to_item, direction )
 			if t_t then
 				t_t.isVisible = true
 				-- t_t.x, t_t.y = H_CENTER-X_OFF, V_CENTER
-				t_t.x = H_CENTER-X_OFF
+				t_t.x = mX_OFF+H_CENTER-aX_OFF
 				t_t.alpha = to_a
 			end
 			if f_t then
 				f_t.isVisible = true
-				f_t.x = 0-X_OFF
+				f_t.x = mX_OFF-aX_OFF
 				f_t.alpha = from_a
 			end
 
@@ -745,22 +797,25 @@ function NavBar:_getTransition( from_item, to_item, direction )
 
 			if t_r then
 				t_r.isVisible = true
-				t_r.x = W-X_OFF
+				t_r.x = mX_OFF+W-aX_OFF
 				t_r.alpha = to_a
 			end
 
 			if f_r then
 				f_r.isVisible = true
-				f_r.x = H_CENTER-X_OFF
+				f_r.x = mX_OFF+H_CENTER-aX_OFF
 				f_r.alpha = from_a
 			end
 
 		end
 	end
 
-	return callback
+	return animationFunc
 end
 
+
+--======================================================--
+-- DMC Lifecycle Methods
 
 --== Create/Destroy Background Widget
 
@@ -834,12 +889,15 @@ function NavBar:__commitProperties__()
 	if self._anchorX_dirty then
 		hit.anchorX = style.anchorX
 		self._anchorX_dirty = false
+
+		self._stackItemsAnchors_dirty=true
 	end
 	if self._anchorY_dirty then
 		hit.anchorY = style.anchorY
 		self._anchorY_dirty = false
-	end
 
+		self._stackItemsAnchors_dirty=true
+	end
 
 	--== Virtual
 
@@ -867,6 +925,60 @@ function NavBar:__commitProperties__()
 		self._debugOn_dirty=false
 	end
 
+
+	if self._stackItemsAnchors_dirty then
+		-- TODO: if anchor changes while view is set
+		-- will this ever happen ?
+		self._stackItemsAnchors_dirty=false
+	end
+
+	if self._newItemSet_dirty then
+		local anchorX, anchorY = style.anchorX, style.anchorY
+		local item = self._new_item
+		local o
+		o = item.title
+		if o then
+			o.y = 0
+			o.anchorX, o.anchorY = 0.5, anchorY
+		end
+		o = item.backButton
+		if o then
+			o.y = 0
+			o.anchorX, o.anchorY = 0, anchorY
+		end
+		o = item.leftButton
+		if o then
+			o.y = 0
+			o.anchorX, o.anchorY = 0, anchorY
+		end
+		o = item.rightButton
+		if o then
+			o.y = 0
+			o.anchorX, o.anchorY = 0, anchorY
+		end
+		self._newItemSet_dirty=false
+	end
+
+	if self._animation_dirty then
+		self._animation()
+	end
+
+end
+
+
+--======================================================--
+-- Misc Methods
+
+function NavBar:_attachBackListener( back )
+	-- print( "NavBar:_attachBackListener" )
+	if not back then return end
+	back:addEventListener( back.EVENT, self._back_f )
+end
+
+function NavBar:_detachBackListener( back )
+	-- print( "NavBar:_detachBackListener" )
+	if not back then return end
+	back:removeEventListener( back.EVENT, self._back_f )
 end
 
 
@@ -879,8 +991,22 @@ function NavBar:_backButtonEvent_handler( event )
 	-- print( "NavBar:_backButtonEvent_handler", event.property, event.value )
 	local target = event.target
 	local phase = event.phase
+	local del = self._delegate
+
 	if phase==target.RELEASED then
-		self:popNavItemAnimated()
+		local f
+		local shouldPopItem = true
+		f = del and del.shouldPopItem
+		if f then shouldPopItem = f( del, self, self._top_item ) end
+
+		if shouldPopItem then
+			self:popNavItemAnimated()
+		end
+
+		f = del and del.didPopItem
+		if f then f( del, self, self._top_item ) end
+
+		self:dispatchEvent( NavBar.BACK_BUTTON )
 	end
 end
 
