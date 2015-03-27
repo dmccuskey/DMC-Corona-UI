@@ -333,7 +333,6 @@ function PanGesture:_startPanTimer()
 	self._pan_timer = timer.performWithDelay( time, func )
 end
 
-
 function PanGesture:_stopAllTimers()
 	self:_stopFailTimer()
 	self:_stopPanTimer()
@@ -365,6 +364,7 @@ function PanGesture:touch( event )
 	if phase=='began' then
 		self:_startFailTimer()
 		if is_touch_ok then
+			self:_addMultitouchToQueue( Continuous.BEGAN )
 			self:_startPanTimer()
 		elseif touch_count>t_max then
 			self:gotoState( PanGesture.STATE_FAILED )
@@ -373,15 +373,18 @@ function PanGesture:touch( event )
 	elseif phase=='moved' then
 
 		if state==Continuous.STATE_POSSIBLE then
+			self:_addMultitouchToQueue( Continuous.CHANGED )
 			if is_touch_ok and (_mabs(event.xStart-event.x)>threshold or _mabs(event.yStart-event.y)>threshold) then
 				self:gotoState( Continuous.STATE_BEGAN, event )
 			end
+
 		elseif state==Continuous.STATE_BEGAN then
 			if is_touch_ok then
 				self:gotoState( Continuous.STATE_CHANGED, event )
 			else
 				self:gotoState( Continuous.STATE_RECOGNIZED, event )
 			end
+
 		elseif state==Continuous.STATE_CHANGED then
 			if is_touch_ok then
 				self:gotoState( Continuous.STATE_CHANGED, event )
@@ -430,7 +433,6 @@ function PanGesture:do_state_failed( params )
 	self:_stopAllTimers()
 	Continuous.do_state_failed( self, params )
 end
-
 
 
 
