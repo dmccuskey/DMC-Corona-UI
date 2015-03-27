@@ -113,7 +113,7 @@ NavBar.STYLE_TYPE = uiConst.NAVBAR
 
 --== Event Constants
 
-NavBar.EVENT = 'button-event'
+NavBar.EVENT = 'navbar-event'
 NavBar.BACK_BUTTON = 'back-button-released-event'
 
 
