@@ -199,7 +199,7 @@ StatesMixModule.patch( ScrollerBase )
 --== Class Constants
 
 -- pixel amount to edges of ScrollerBase in which rows are de-/rendered
-ScrollerBase.DEFAULT_RENDER_MARGIN = 100
+ScrollerBase.DEFAULT_RENDER_MARGIN = 0
 
 ScrollerBase.DEFAULT_BG_COLOR = {1,1,1,1}
 
@@ -289,10 +289,10 @@ function ScrollerBase:__init__( params )
 	self._is_moving = false
 	self._has_moved = false
 
-	-- self._v_velocity = { value=0, vector=0 }
-	-- self._h_velocity = { value=0, vector=0 }
+	self._v_velocity = { value=0, vector=0 }
+	self._h_velocity = { value=0, vector=0 }
 
-	-- self._transition = nil -- handle of active transition
+	self._transition = nil -- handle of active transition
 
 	self._returnFocus = nil -- return focus callback
 	self._returnFocusCancel = nil -- return focus callback
@@ -1332,8 +1332,8 @@ function ScrollerBase:_getNextState( params )
 end
 
 
---== state_create()
-
+-- state_create()
+--
 function ScrollerBase:state_create( next_state, params )
 	-- print( "ScrollerBase:state_create: >> ", next_state )
 
@@ -1396,7 +1396,7 @@ function ScrollerBase:do_state_touch( params )
 	-- work to do after first event
 	--
 	enterFrameFunc2 = function( e )
-		print( "enterFrameFunc: enterFrameFunc2 state touch " )
+		-- print( "enterFrameFunc: enterFrameFunc2 state touch " )
 
 		local te_stack = self._touch_evt_stack
 		local num_evts = #te_stack
@@ -1581,7 +1581,7 @@ function ScrollerBase:touch( event )
 	local phase = event.phase
 	local target = event.target -- scroller view
 
-	local deltaX, deltaY
+	local x_delta, y_delta
 
 	tinsert( self._touch_evt_stack, event )
 
@@ -1597,7 +1597,7 @@ function ScrollerBase:touch( event )
 		self:gotoState( self.STATE_TOUCH )
 
 		-- save event for movement calculations
-		self._tmpTouchEvt = event
+		self._tch_event_tmp = event
 
 		-- handle touch
 		display.getCurrentStage():setFocus( scr.view )
@@ -1613,21 +1613,21 @@ function ScrollerBase:touch( event )
 		local scr = self._dg_scroller
 		local h_v = self._h_velocity
 		local v_v = self._v_velocity
-		local multH, multV
+		local h_mult, v_mult
 		local d, t, s
-		local deltaX, deltaY
+		local x_delta, y_delta
 
 		--== Check to see if we need to reliquish the touch
 		-- this is checking in our non-scroll direction
 
-		deltaX = math.abs( event.xStart - event.x )
-		if not self._v_touch_lock and deltaX > self._h_touch_limit then
+		x_delta = math.abs( event.xStart - event.x )
+		if not self._v_touch_lock and x_delta > self._h_touch_limit then
 			-- we're only moving in H direction now
-			self._isMoving = true
+			self._is_moving = true
 			self._h_touch_lock = true
 		end
 		if not self._v_touch_lock and not self._h_scroll_enabled then
-			if deltaX > self._h_touch_limit then
+			if x_delta > self._h_touch_limit then
 				self:dispatchEvent( self.TAKE_FOCUS, event )
 			end
 		end
@@ -1635,19 +1635,19 @@ function ScrollerBase:touch( event )
 			self._returnFocusCancel()
 		end
 
-		deltaY = math.abs( event.yStart - event.y )
-		if not self._h_touch_lock and deltaY > self._v_touch_limit then
+		y_delta = math.abs( event.yStart - event.y )
+		if not self._h_touch_lock and y_delta > self._v_touch_limit then
 			-- we're only moving in V direction now
-			self._isMoving = true
+			self._is_moving = true
 			self._v_touch_lock = true
 		end
 
 		if not self._h_touch_lock and not self._v_scroll_enabled then
-			if deltaY > self._v_touch_limit then
+			if y_delta > self._v_touch_limit then
 				self:dispatchEvent( self.TAKE_FOCUS, event )
 			end
 		end
-		if self._returnFocusCancel and deltaY > self._v_touch_limit*0.5 and self._v_scroll_enabled then
+		if self._returnFocusCancel and y_delta > self._v_touch_limit*0.5 and self._v_scroll_enabled then
 			self._returnFocusCancel()
 		end
 
@@ -1657,32 +1657,32 @@ function ScrollerBase:touch( event )
 
 		-- horizonal
 		s = 0
-		if self._scrollLimitH == self.HIT_TOP_LIMIT then
+		if self._h_scroll_limit == self.HIT_TOP_LIMIT then
 			s = scr.x
-		elseif self._scrollLimitH == self.HIT_BOTTOM_LIMIT then
+		elseif self._h_scroll_limit == self.HIT_BOTTOM_LIMIT then
 			s = ( self._width - background.width ) - scr.x
 		end
-		multH = 1 - (s/LIMIT)
+		h_mult = 1 - (s/LIMIT)
 
 		-- vertical
 		s = 0
-		if self._scrollLimitV == self.HIT_TOP_LIMIT then
+		if self._v_scroll_limit == self.HIT_TOP_LIMIT then
 			s = scr.y
-		elseif self._scrollLimitV == self.HIT_BOTTOM_LIMIT then
+		elseif self._v_scroll_limit == self.HIT_BOTTOM_LIMIT then
 			s = ( self._height - background.height ) - scr.y
 		end
-		multV = 1 - (s/LIMIT)
+		v_mult = 1 - (s/LIMIT)
 
 		--== Move scroller
 
 		if self._h_scroll_enabled and not self._v_touch_lock then
-			deltaX = event.x - self._tmpTouchEvt.x
-			scr.x = scr.x + ( deltaX * multH )
+			x_delta = event.x - self._tch_event_tmp.x
+			scr.x = scr.x + ( x_delta * h_mult )
 		end
 
 		if self._v_scroll_enabled and not self._h_touch_lock then
-			deltaY = event.y - self._tmpTouchEvt.y
-			scr.y = scr.y + ( deltaY * multV )
+			y_delta = event.y - self._tch_event_tmp.y
+			scr.y = scr.y + ( y_delta * v_mult )
 		end
 
 		--== The Rest
@@ -1690,7 +1690,7 @@ function ScrollerBase:touch( event )
 		self:_updateView()
 
 		-- save event for movement calculation
-		self._tmpTouchEvt = event
+		self._tch_event_tmp = event
 
 
 	elseif phase == 'ended' or phase == 'cancelled' then
@@ -1701,10 +1701,10 @@ function ScrollerBase:touch( event )
 		-- clean up
 		display.getCurrentStage():setFocus( nil )
 		self._has_focus = false
-		self._isMoving = false
+		self._is_moving = false
 
 		-- add system time, we can re-use this event for Runtime
-		self._tmpTouchEvt = event
+		self._tch_event_tmp = event
 		-- event.time = system.getTimer()
 
 

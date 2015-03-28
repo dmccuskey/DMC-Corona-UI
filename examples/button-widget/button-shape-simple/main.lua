@@ -18,7 +18,7 @@ print( "\n\n#########################################################\n\n" )
 --== Imports
 
 
-local Widgets = require 'lib.dmc_widgets'
+local dUI = require 'lib.dmc_ui'
 
 
 
@@ -105,7 +105,7 @@ function run_example1()
 
 	local offsetX, offsetY = 70, 100
 
-	local s1 = Widgets.newButtonStyle{
+	local s1 = dUI.newButtonStyle{
 		debugOn=false,
 		width=100,
 		height=50,
@@ -120,6 +120,7 @@ function run_example1()
 				-- height=200,
 				type='rounded',
 				view={
+				fillColor={1,0,0},
 					-- width=200,
 					-- height=200
 				}
@@ -127,12 +128,15 @@ function run_example1()
 		}
 	}
 
-	local bn1 = Widgets.newButton()
+	local bn1 = dUI.newButton()
 	bn1.style = s1
 
-	local bn2 = Widgets.newPushButton()
-	local bn3 = Widgets.newRadioButton()
-	local bn4 = Widgets.newToggleButton()
+	local bn2 = dUI.newPushButton()
+	bn2.style=nil
+	bn2.style=nil
+
+	local bn3 = dUI.newRadioButton()
+	local bn4 = dUI.newToggleButton()
 
 	bn1.x, bn1.y = H_CENTER-offsetX, V_CENTER-offsetY
 	bn2.x, bn2.y = H_CENTER+offsetX, V_CENTER-offsetY
@@ -159,7 +163,7 @@ function run_example2()
 	local btn1
 
 
-	btn1 = Widgets.newPushButton{
+	btn1 = dUI.newPushButton{
 		-- button info
 		x=100,
 		y=50,
@@ -294,7 +298,7 @@ function run_example3()
 
 	local st1, bw1
 
-	st1 = Widgets.newButtonStyle{
+	st1 = dUI.newButtonStyle{
 		debugOn=false,
 		width=100,
 		height=50,
@@ -355,7 +359,7 @@ function run_example3()
 		},
 	}
 
-	bw1 = Widgets.newButton{
+	bw1 = dUI.newButton{
 		id="hello-world",
 		data=43,
 		-- style=st1,
@@ -367,7 +371,7 @@ function run_example3()
 
 	bw1.x, bw1.y = H_CENTER-70, V_CENTER-50
 
-	bw2 = Widgets.newButton{
+	bw2 = dUI.newButton{
 		id="hello-world",
 		data=43,
 		style=st1,
@@ -439,7 +443,7 @@ end
 -- 	* simple label
 -- 	* more complex 'active' view (alignment, color)
 -- --]]
--- o = Widgets.newButton{
+-- o = dUI.newButton{
 -- 	-- button info
 -- 	id='button-top',
 -- 	type='push',
@@ -480,7 +484,7 @@ end
 -- 	* more complex 'active' view (label change)
 -- 	* bigger hit area
 -- --]]
--- o = Widgets.newButton{
+-- o = dUI.newButton{
 -- 	-- button info
 -- 	id='button-middle',
 -- 	type='push',
@@ -532,7 +536,7 @@ end
 -- 	* bigger hit area
 -- --]]
 
--- o = Widgets.newButton{
+-- o = dUI.newButton{
 -- 	-- button info
 -- 	id='button-bottom',
 -- 	type='push',

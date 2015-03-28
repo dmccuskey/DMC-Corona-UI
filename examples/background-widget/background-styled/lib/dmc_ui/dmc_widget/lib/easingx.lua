@@ -8,8 +8,17 @@ local easeIn, easeOut, easeInOut, easeOutIn
 local easeInBack, easeOutBack, easeInOutBack, easeOutInBack
 local easeInElastic, easeOutElastic, easeInOutElastic, easeOutInElastic
 local easeInBounce, easeOutBounce, easeInOutBounce, easeOutInBounce
+local easeOutQuad, easeOutQuart
 
 -- module exports
+
+
+function M.easeOutQuad(t, tMax, start, delta)
+    return start + (-delta * easeOutQuad(t / tMax))
+end
+function M.easeOutQuart(t, tMax, start, delta)
+    return start + (-delta/2 * easeOutQuart(t / tMax))
+end
 
 function M.easeIn(t, tMax, start, delta)
     return start + (delta * easeIn(t / tMax))
@@ -162,6 +171,16 @@ easeOut = function(ratio)
     local invRatio = ratio - 1.0
     return (invRatio * invRatio * invRatio) + 1.0
 end
+
+easeOutQuad = function(ratio)
+    return ratio * (ratio-2)
+end
+
+easeOutQuart = function(ratio)
+    ratio = ratio - 1
+    return ( ratio * ratio * ratio * ratio - 1 )
+end
+
 
 easeInOut = function(ratio)
     if (ratio < 0.5) then

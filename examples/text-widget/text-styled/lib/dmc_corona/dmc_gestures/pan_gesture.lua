@@ -227,7 +227,7 @@ function PanGesture.__getters:threshold()
 	return self._threshold
 end
 function PanGesture.__setters:threshold( value )
-	assert( type(value)=='number' and value>0 and value<256 )
+	assert( type(value)=='number' and value>=0 and value<256 )
 	--==--
 	self._threshold = value
 end
@@ -366,6 +366,10 @@ function PanGesture:touch( event )
 		if is_touch_ok then
 			self:_addMultitouchToQueue( Continuous.BEGAN )
 			self:_startPanTimer()
+
+			if threshold==0 then
+				self:gotoState( Continuous.STATE_BEGAN, event )
+			end
 		elseif touch_count>t_max then
 			self:gotoState( PanGesture.STATE_FAILED )
 		end

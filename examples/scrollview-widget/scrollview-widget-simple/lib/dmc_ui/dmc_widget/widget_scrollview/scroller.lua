@@ -112,6 +112,7 @@ function Scroller:__init__( params )
 	self._y_offset = params.y_offset
 
 	self._rectBg = nil
+	self._dgMain = nil
 
 end
 
@@ -130,6 +131,10 @@ function Scroller:__createView__()
 	o:setFillColor( 1,1,0,0.2 )
 	self:insert( o )
 	self._rectBg = o
+
+	dg = display.newGroup()
+	self:insert( dg )
+	self._dgMain = dg
 
 end
 
@@ -159,7 +164,7 @@ function Scroller.__getters:height()
 	return self._height
 end
 function Scroller.__setters:height( value )
-	-- print( "Scroller.__setters:height" )
+	-- print( "Scroller.__setters:height", value )
 	self._height = value
 	self._rectBg.height=value
 end
@@ -195,6 +200,16 @@ end
 function Scroller.__getters:y_offset()
 	-- print( "Scroller.__getters:y_offset" )
 	return self._y_offset
+end
+
+
+function Scroller:insertItem( item )
+	-- print( "Scroller:insertItem" )
+	return self._dgMain:insert( item )
+end
+
+function Scroller:removeItem( item )
+	-- print( "Scroller:removeItem" )
 end
 
 
