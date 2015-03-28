@@ -398,7 +398,7 @@ function Widget.loadScrollViewSupport( params )
 end
 
 function Widget.newScrollView( options )
-	-- print( "Widget.newText" )
+	-- print( "Widget.newScrollView" )
 	if not Widget.ScrollView then Widget.loadScrollViewSupport() end
 	return Widget.ScrollView:new( options )
 end
