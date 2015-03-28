@@ -59,6 +59,9 @@ local ui_find = dmc_ui_func.find
 --====================================================================--
 
 
+--- rowItemRecord
+-- @field data reference to data given by insert
+-- @table rowItemRecord
 
 --====================================================================--
 --== Imports
@@ -85,6 +88,55 @@ local tremove = table.remove
 
 --== To be set in initialize()
 local dUI = nil
+
+
+
+--====================================================================--
+--== Support Function
+
+
+-- create records
+-- tail-call
+--
+local function createRecords( list, idx, count, tinsert )
+	-- print( "createRecords" )
+	if idx<=count then
+		local rec = {
+			yMin=0,
+			yMax=0,
+			height=0,
+			index=0,
+			view=nil,
+			user={}
+		}
+		tinsert( list, idx, rec )
+		return createRecords( list, idx+1, count, tinsert )
+	end
+end
+
+local function removeRecords( list, idx, count, tremove )
+	-- print( "removeRecords", idx, count )
+	if idx<=count then
+		tremove( list, idx )
+		return removeRecords( list, idx+1, count, tremove )
+	end
+end
+
+
+
+local function indexItems( list, idx, yMin, height )
+	-- print( "indexItems" )
+	local yMax = yMin+height
+	if idx<=#list then
+		local rec = list[idx]
+		rec.yMin=yMin
+		rec.yMax=yMax
+		rec.height=height
+		rec.index=idx
+		return indexItems( list, idx+1, yMax, height )
+	end
+end
+
 
 
 
@@ -312,48 +364,61 @@ function TableView.__setters:renderMargin( value )
 end
 
 
-function TableView:reloadData()
-	-- print( "TableView:reloadData" )
-
-	if not self._dataSource or not self._delegate then
-		error( "need more config")
-	end
-
-	local del = self._delegate
-	local num = del:numberOfRows()
+function TableView:insertRowAt( pos )
+	-- print( "TableView:insertRowAt", pos )
+	assert( type(pos)=='number', "TableView:insertRowAt arg must be a number" )
+	--==--
+	local records = self._rowItemRecords
+	local rec = records[pos]
+	local yMin = rec and rec.yMin or 0
 	local eRH = self._estimatedRowHeight
 
-	self.scrollHeight = num*eRH
-	self._rowItemRecords = self:_createRecords( num, eRH )
+	self.scrollHeight = self.scrollHeight + eRH
+	createRecords( records, pos, pos, tinsert )
+	indexItems( records, pos, yMin, eRH )
+	self:_renderDisplay{ clearAll=true }
+end
 
-	self:_renderDisplay()
+function TableView:removeRowAt( pos )
+	-- print( "TableView:removeRowAt", pos )
+	assert( type(pos)=='number', "TableView:removeRowAt arg must be a number" )
+	--==--
+	local records = self._rowItemRecords
+	local rec = records[pos]
+	local yMin = rec and rec.yMin or 0
+	local eRH = self._estimatedRowHeight
+
+	self.scrollHeight = self.scrollHeight - eRH
+	local removed = self:_unrenderTableCell( rec )
+	removeRecords( records, pos, pos, tremove )
+	indexItems( records, pos, yMin, eRH )
+	if removed then
+		self:_renderDisplay{ clearAll=true }
+	end
+end
+
+
+function TableView:reloadData()
+	-- print( "TableView:reloadData" )
+	assert( self._dataSource and self._delegate, "TableView:reloadData missing data source or delegate" )
+	--==--
+	local eRH = self._estimatedRowHeight
+	local num = self._delegate:numberOfRows()
+	local records = {}
+	local yMin = 0
+
+	self.scrollHeight = num*eRH
+	createRecords( records, 1, num, tinsert )
+	indexItems( records, 1, yMin, eRH )
+	self._rowItemRecords = records
+
+	self:_renderDisplay{ clearAll=true }
 end
 
 
 
 --====================================================================--
 --== Private Methods
-
-
-function TableView:_createRecords( number, height )
-	-- print( "TableView:_createRecords", number, height )
-	local records = {}
-	local yMin, yMax = 0, 0
-	for i=1,number do
-		yMax = yMin+height
-		local rec = {
-			yMin=yMin,
-			yMax=yMax,
-			height=height,
-			index=i
-		}
-		-- print( rec.yMin, rec.yMax )
-		tinsert( records, rec )
-		yMin=yMax
-	end
-	return records
-end
-
 
 
 -- _viewportBounds()
@@ -503,13 +568,12 @@ function TableView:_unrenderUpFromBottom( bounds )
 	local isBounded_f = self._isWithinBounds
 	local unrenderCell_f = self._unrenderTableCell
 	local renderedCells = self._renderedTableCells
-
-	local index, record, isBounded
+	local index, record, isBounded, bType
 
 	index = #renderedCells
 	record = renderedCells[ index ]
 	while record do
-		isBounded = isBounded_f( self, bounds, record )
+		isBounded, bType = isBounded_f( self, bounds, record )
 		if isBounded then
 			break
 		else
@@ -530,13 +594,12 @@ function TableView:_unrenderDownFromTop( bounds )
 	local isBounded_f = self._isWithinBounds
 	local unrenderCell_f = self._unrenderTableCell
 	local renderedCells = self._renderedTableCells
-
-	local record, isBounded
+	local record, isBounded, bType
 
 	-- the index never changes
 	record = renderedCells[ 1 ]
 	while record do
-		isBounded = isBounded_f( self, bounds, record )
+		isBounded, bType = isBounded_f( self, bounds, record )
 		if isBounded then
 			break
 		else
@@ -548,11 +611,18 @@ function TableView:_unrenderDownFromTop( bounds )
 end
 
 
-function TableView:_renderDisplay()
+function TableView:_renderDisplay( params )
 	-- print( "TableView:_renderDisplay" )
+	params = params or {}
+	if params.clearAll==nil then params.clearAll=false end
+	--==--
 
 	local records = self._rowItemRecords
 	if #records == 0 then return end
+
+	if params.clearAll then
+		self:_unrenderAllItems( self._renderedTableCells )
+	end
 
 	local isBounded_f = self._isWithinBounds
 	local full = TableView._BOUND_FULL
@@ -651,11 +721,10 @@ function TableView:_renderTableCell( record, options )
 		name=TableView.EVENT,
 		type=TableView.ROW_RENDER,
 
-		parent=self,
-		target=record,
+		target=self,
 		view=view,
 		index=record.index,
-		data=record.data,
+		data=record.user,
 	}
 	delegate:onRowRender( e )
 
@@ -680,7 +749,7 @@ function TableView:_unrenderTableCell( record, options )
 	options = options or {}
 	options.index=options.index
 	--==--
-	if not record.view then return end
+	if not record.view then return false end
 
 	local delegate = self._delegate
 	local renderedCells = self._renderedTableCells
@@ -707,12 +776,10 @@ function TableView:_unrenderTableCell( record, options )
 		name = TableView.EVENT,
 		type = TableView.ROW_UNRENDER,
 
-		parent = self,
-		target = record,
-		row = item_info,
-		view = view,
-		data = record.data,
-		index = index,
+		target=self,
+		view=view,
+		data=record.user,
+		index=record.index,
 	}
 	delegate:onRowUnrender( e )
 
@@ -722,31 +789,18 @@ function TableView:_unrenderTableCell( record, options )
 	view:removeSelf()
 	record.view = nil
 
+	return true
 end
 
-
-
-
--- calculate location of table cell
---
-function TableView:_reindexItems( index, record )
-	-- print( "TableView:_reindexItems", index, record )
-
-	local items = self._item_data_recs
-	local item_data, view, h
-	h = record.height
-
-	for i=index,#items do
-		-- print(i)
-		item_data = items[ i ]
-		item_data.yMin = item_data.yMin - h
-		item_data.yMax = item_data.yMax - h
-		item_data.index = i
-		view = item_data.view
-		if view then view.x, view.y = item_data.xMin, item_data.yMin end
+function TableView:_unrenderAllItems( rendered )
+	-- print( "TableView:_unrenderAllItems", #rendered )
+	local unrenderCell_f = TableView._unrenderTableCell
+	for i=#rendered, 1, -1 do
+		local record = tremove( rendered, i )
+		unrenderCell_f( self, record, {index=i} )
 	end
-
 end
+
 
 
 function TableView:_updateBackground()
