@@ -95,15 +95,14 @@ local dUI = nil
 
 local TableView = newClass( ScrollView, {name="TableView"} )
 
+--== Class Constants
 
-TableView.BOUND_CUT = 'cut'
-TableView.BOUND_FULL = 'full'
-TableView.BOUND_EXTEND = 'extend'
-
---== State Constants
+TableView._BOUND_CUT = 'cut'
+TableView._BOUND_FULL = 'full'
+TableView._BOUND_EXTEND = 'extend'
 
 -- pixel amount to edges in which rows are de-/rendered
-TableView.DEFAULT_RENDER_MARGIN = 100
+TableView._DEFAULT_RENDER_MARGIN = 100
 
 --== Style/Theme Constants
 
@@ -134,7 +133,7 @@ function TableView:__init__( params )
 	-- params.dataSource=params.dataSource
 	-- params.delegate=params.delegate
 	if params.estimatedRowHeight==nil then params.estimatedRowHeight=20 end
-	if params.renderMargin==nil then params.renderMargin=TableView.DEFAULT_RENDER_MARGIN end
+	if params.renderMargin==nil then params.renderMargin=TableView._DEFAULT_RENDER_MARGIN end
 
 	self:superCall( '__init__', params )
 	--==--
@@ -447,8 +446,6 @@ function TableView:_findVisibleItem( records, min, max )
 end
 
 
-
-
 -- renders table cells.
 -- adds cells starting at Top, moving Up
 --
@@ -459,7 +456,7 @@ function TableView:_renderUp( records, index, bounds )
 
 	local isBounded_f = self._isWithinBounds
 	local renderCell_f = self._renderTableCell
-	local cut = TableView.BOUND_CUT
+	local cut = TableView._BOUND_CUT
 	local record, isBounded, bType
 
 	repeat
@@ -487,7 +484,7 @@ function TableView:_renderDown( records, index, bounds )
 
 	local isBounded_f = self._isWithinBounds
 	local renderCell_f = self._renderTableCell
-	local cut = TableView.BOUND_CUT
+	local cut = TableView._BOUND_CUT
 	local record, isBounded, bType
 
 	repeat
@@ -560,8 +557,6 @@ function TableView:_unrenderDownFromTop( bounds )
 end
 
 
-
-
 function TableView:_renderDisplay()
 	-- print( "TableView:_renderDisplay" )
 
@@ -569,7 +564,7 @@ function TableView:_renderDisplay()
 	if #records == 0 then return end
 
 	local isBounded_f = self._isWithinBounds
-	local full = TableView.BOUND_FULL
+	local full = TableView._BOUND_FULL
 	local renderedCells = self._renderedTableCells
 
 	local bounds = self:_viewportBounds()
@@ -622,7 +617,6 @@ function TableView:_renderDisplay()
 	end
 
 end
-
 
 
 -- setup creation of new Table Cell
