@@ -17,7 +17,10 @@ module_config = {
 			"dmc_ui/ui_utils.lua",
 
 			"dmc_ui/dmc_control.lua",
-			"dmc_ui/dmc_control/control_navigation.lua",
+			"dmc_ui/dmc_control/core/presentation_control.lua",
+			"dmc_ui/dmc_control/core/view_control.lua",
+			"dmc_ui/dmc_control/navigation_control.lua",
+			"dmc_ui/dmc_control/popover_control.lua",
 
 			"dmc_ui/dmc_style.lua",
 			"dmc_ui/dmc_style/background_style.lua",
