@@ -312,7 +312,6 @@ end
 function ScrollView.initialize( manager, params )
 	-- print( "ScrollView.initialize" )
 	dUI = manager
-	local Widget = nil
 
 	local Style = dUI.Style
 	ScrollView.STYLE_CLASS = Style.ScrollView
