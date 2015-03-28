@@ -12,6 +12,7 @@ module_config = {
 		"dir": "lib",
 		"files": [
 			"dmc_ui.lua",
+			"dmc_ui/core/view.lua",
 			"dmc_ui/ui_constants.lua",
 			"dmc_ui/ui_utils.lua",
 
@@ -29,8 +30,10 @@ module_config = {
 			"dmc_ui/dmc_style/button_style.lua",
 			"dmc_ui/dmc_style/navbar_style.lua",
 			"dmc_ui/dmc_style/navitem_style.lua",
+			"dmc_ui/dmc_style/scrollview_style.lua",
 			"dmc_ui/dmc_style/style_manager.lua",
 			"dmc_ui/dmc_style/style_mix.lua",
+			"dmc_ui/dmc_style/tableview_style.lua",
 			"dmc_ui/dmc_style/text_style.lua",
 			"dmc_ui/dmc_style/textfield_style.lua",
 
@@ -51,9 +54,9 @@ module_config = {
 			"dmc_ui/dmc_widget/widget_button/view_shape.lua",
 			"dmc_ui/dmc_widget/widget_navbar.lua",
 			"dmc_ui/dmc_widget/widget_navitem.lua",
-			"dmc_ui/dmc_widget/widget_popover.lua",
-			"dmc_ui/dmc_widget/widget_popover/popover_mix.lua",
-			"dmc_ui/dmc_widget/widget_popover/popover_view.lua",
+			"dmc_ui/dmc_widget/widget_scrollview.lua",
+			"dmc_ui/dmc_widget/widget_scrollview/axis_motion.lua",
+			"dmc_ui/dmc_widget/widget_scrollview/scroller.lua",
 			"dmc_ui/dmc_widget/widget_slideview.lua",
 			"dmc_ui/dmc_widget/widget_tableview.lua",
 			"dmc_ui/dmc_widget/widget_text.lua",
@@ -180,6 +183,16 @@ module_config = {
 				}
 			},
 			{
+				"exp_dir": "scrollview-widget/scrollview-widget-simple",
+				"requires": [],
+				"mod_dir_map": {
+					"default_dir": "",
+					"libs": {
+						"dmc-corona-boot":""
+					}
+				}
+			},
+			{
 				"exp_dir": "slide_view-simple",
 				"requires": [],
 				"mod_dir_map": {
@@ -190,7 +203,7 @@ module_config = {
 				}
 			},
 			{
-				"exp_dir": "table_view-simple",
+				"exp_dir": "tableview-widget/tableview-simple",
 				"requires": [],
 				"mod_dir_map": {
 					"default_dir": "",
