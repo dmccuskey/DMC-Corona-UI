@@ -120,9 +120,9 @@ TableView.STYLE_TYPE = uiConst.TABLEVIEW
 
 TableView.EVENT = 'tableview-event'
 
--- for scroll items
 TableView.ROW_RENDER = 'row-render-event'
 TableView.ROW_UNRENDER = 'row-unrender-event'
+
 
 --======================================================--
 -- Start: Setup DMC Objects
@@ -217,10 +217,9 @@ function TableView:__undoInitComplete__()
 	self:superCall( '__undoInitComplete__' )
 end
 
-
-
 -- END: Setup DMC Objects
 --======================================================--
+
 
 
 --====================================================================--
@@ -263,7 +262,6 @@ function TableView.__setters:scrollWidth( value )
 end
 
 
-
 --== .delegate
 
 function TableView.__getters:delegate()
@@ -299,13 +297,6 @@ function TableView.__setters:estimatedRowHeight( value )
 	assert( type(value)=='number' and value > 0 )
 	self._estimatedRowHeight = value
 end
-
-
--- function TableView.__setters:scroll_time( value )
--- 	-- print( "TableView.__setters:scroll_time" )
--- 	if not value or not type( value ) == 'number' then return end
--- 	self._scroll_transition_time = value
--- end
 
 
 --== .renderMargin
