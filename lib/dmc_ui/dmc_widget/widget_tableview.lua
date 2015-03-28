@@ -418,11 +418,11 @@ function TableView:_isWithinBounds( bounds, item )
 end
 
 
-
-
-
--- binary search
--- @param record can be an array, or single record
+-- search for an item which should be visible.
+-- usually used when there are no visible table cells
+-- uses binary search
+-- @table records array of data items
+--
 function TableView:_findVisibleItem( records, min, max )
 	-- print( "TableView:_findVisibleItem", min, max  )
 
