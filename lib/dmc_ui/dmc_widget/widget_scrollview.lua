@@ -135,6 +135,12 @@ function ScrollView:__init__( params )
 	params = params or {}
 	if params.scrollWidth==nil then params.scrollWidth=dUI.WIDTH end
 	if params.scrollHeight==nil then params.scrollHeight=dUI.HEIGHT end
+	if params.horizontalScrollEnabled==nil then params.horizontalScrollEnabled=true end
+	if params.verticalScrollEnabled==nil then params.verticalScrollEnabled=true end
+	if params.upperHorizontalOffset==nil then params.upperHorizontalOffset = 0 end
+	if params.lowerHorizontalOffset==nil then params.lowerHorizontalOffset = 0 end
+	if params.upperVerticalOffset==nil then params.upperVerticalOffset = 0 end
+	if params.lowerVerticalOffset==nil then params.lowerVerticalOffset = 0 end
 
 	self:superCall( '__init__', params )
 	--==--
@@ -171,12 +177,19 @@ function ScrollView:__init__( params )
 	self._alwaysBounceVertically = false
 	self._alwaysBounceHorizontally = false
 
-	self._scrollHorizontalEnabled = true
-	self._scrollVerticalEnabled = true
+	self._canScrollH = params.horizontalScrollEnabled
+	self._canScrollV = params.verticalScrollEnabled
 	self._isDirectionalLockEnabled = false
 
 	self._showHorizontalScrollIndicator = false
 	self._showVerticalScrollIndicator = false
+
+	self._upperHorizontalOffset = params.upperHorizontalOffset
+	self._lowerHorizontalOffset = params.lowerHorizontalOffset
+	self._upperVerticalOffset = params.upperVerticalOffset
+	self._lowerVerticalOffset = params.lowerVerticalOffset
+
+	self._stopMotion = false
 
 	--== Display Groups ==--
 
@@ -188,6 +201,7 @@ function ScrollView:__init__( params )
 
 	self._axis_x = nil -- y-axis motion
 	self._axis_y = nil -- x-axis motion
+	self._axis_f = nil -- x-axis handler
 
 	self._gesture = nil -- pan gesture
 	self._gesture_f = nil -- callback
@@ -254,24 +268,15 @@ function ScrollView:__initComplete__()
 	local o, f
 
 	f = self:createCallback( self._gestureEvent_handler )
-	o = Gesture.newPanGesture( self._rectBg, { touches=1, threshold=3 } )
+	o = Gesture.newPanGesture( self._rectBg, { touches=1, threshold=0 } )
 	o:addEventListener( o.EVENT, f )
 	self._gesture = o
 	self._gesture_f = f
 
-	f = self:createCallback( self._axisEvent_handler )
-	self._axis_x = AxisMotion:new{
-		id='x',
-		length=self._width,
-		scrollLength=self._scrollWidth,
-		callback=f
-	}
-	self._axis_y = AxisMotion:new{
-		id='y',
-		length=self._height,
-		scrollLength=self._scrollHeight,
-		callback=f
-	}
+	self._axis_f = self:createCallback( self._axisEvent_handler )
+	--== Use Setters
+	self.horizontalScrollEnabled = self._canScrollH
+	self.verticalScrollEnabled = self._canScrollV
 
 	self._isRendered = true
 
@@ -283,11 +288,8 @@ function ScrollView:__undoInitComplete__()
 
 	self._isRendered = false
 
-	self._axis_y:removeSelf()
-	self._axis_y = nil
-
-	self._axis_x:removeSelf()
-	self._axis_x = nil
+	self:_removeAxisMotionX()
+	self:_removeAxisMotionY()
 
 	o = self._gesture
 	o:removeEventListener( o.EVENT, self._gesture_f )
@@ -350,15 +352,41 @@ function ScrollView.__setters:isDirectionalLockEnabled( value )
 end
 
 
---== .isScrollEnabled
+--== .horizontalScrollEnabled
 
-function ScrollView.__getters:isScrollEnabled()
-	-- print( "ScrollView.__getters:isScrollEnabled" )
-	return self._scrollHorizontalEnabled
+function ScrollView.__getters:horizontalScrollEnabled()
+	-- print( "ScrollView.__getters:horizontalScrollEnabled" )
+	return self._canScrollH
 end
-function ScrollView.__setters:isScrollEnabled( value )
-	-- print( "ScrollView.__setters:isScrollEnabled", value )
-	self._scrollHorizontalEnabled = value
+function ScrollView.__setters:horizontalScrollEnabled( value )
+	-- print( "ScrollView.__setters:horizontalScrollEnabled", value )
+	assert( type(value)=='boolean' )
+	--==--
+	self._canScrollH = value
+	if value then
+		self:_createAxisMotionX()
+	else
+		self:_removeAxisMotionX()
+	end
+end
+
+
+--== .verticalScrollEnabled
+
+function ScrollView.__getters:verticalScrollEnabled()
+	-- print( "ScrollView.__getters:verticalScrollEnabled" )
+	return self._canScrollV
+end
+function ScrollView.__setters:verticalScrollEnabled( value )
+	-- print( "ScrollView.__setters:verticalScrollEnabled", value )
+	assert( type(value)=='boolean' )
+	--==--
+	self._canScrollV = value
+	if value then
+		self:_createAxisMotionY()
+	else
+		self:_removeAxisMotionY()
+	end
 end
 
 
@@ -426,6 +454,53 @@ end
 --== Private Methods
 
 
+
+function ScrollView:_removeAxisMotionX()
+	-- print( "ScrollView:_removeAxisMotionX" )
+	local o = self._axis_x
+	if not o then return end
+	o:removeSelf()
+	self._axis_x = nil
+end
+
+function ScrollView:_createAxisMotionX()
+	-- print( "ScrollView:_createAxisMotionX" )
+	self:_removeAxisMotionX()
+	local o = AxisMotion:new{
+		id='x',
+		length=self._width,
+		scrollLength=self._scrollWidth,
+		upperOffset=self._upperHorizontalOffset,
+		lowerOffset=self._lowerHorizontalOffset,
+		callback=self._axis_f
+	}
+	self._axis_x = o
+end
+
+
+function ScrollView:_removeAxisMotionY()
+	-- print( "ScrollView:_removeAxisMotionY" )
+	local o = self._axis_y
+	if not o then return end
+	o:removeSelf()
+	self._axis_y = nil
+end
+
+function ScrollView:_createAxisMotionY()
+	-- print( "ScrollView:_createAxisMotionY" )
+	self:_removeAxisMotionY()
+	local o = AxisMotion:new{
+		id='y',
+		length=self._height,
+		scrollLength=self._scrollHeight,
+		upperOffset=self._upperVerticalOffset,
+		lowerOffset=self._lowerVerticalOffset,
+		callback=self._axis_f
+	}
+	self._axis_y = o
+end
+
+
 function ScrollView:_removeScroller()
 	-- print( "ScrollView:_removeScroller" )
 	local o = self._scroller
@@ -489,11 +564,19 @@ function ScrollView:__commitProperties__()
 	end
 
 	if self._scrollWidth_dirty then
-		scr.width = self._scrollWidth
+		local value = self._scrollWidth
+		scr.width = value
+		if self._axis_x then
+			self._axis_x.scrollLength = value
+		end
 		self._scrollWidth_dirty=false
 	end
 	if self._scrollHeight_dirty then
-		scr.height = self._scrollHeight
+		local value = self._scrollHeight
+		scr.height = value
+		if self._axis_y then
+			self._axis_y.scrollLength = value
+		end
 		self._scrollHeight_dirty=false
 	end
 
@@ -552,11 +635,11 @@ function ScrollView:__commitProperties__()
 		self._y_dirty = false
 	end
 
-	if self._contentPosition_dirty then
-		scr.x = self._contentPosition.x
-		scr.y = self._contentPosition.y
-		self._contentPosition_dirty=false
-	end
+	-- if self._contentPosition_dirty then
+	-- 	scr.x = self._contentPosition.x
+	-- 	scr.y = self._contentPosition.y
+	-- 	self._contentPosition_dirty=false
+	-- end
 
 	--== non-position sensitive
 
@@ -723,18 +806,15 @@ function ScrollView:_gestureEvent_handler( event )
 end
 
 
-
 function ScrollView:_axisEvent_handler( event )
 	-- print( "ScrollView:_axisEvent_handler", event.state )
 	local state = event.state
 	-- local velocity = event.velocity
 	if event.id=='x' then
-		self._contentPosition.x = event.value
+		self._scroller.x = event.value
 	else
-		self._contentPosition.y = event.value
+		self._scroller.y = event.value
 	end
-	self._contentPosition_dirty=true
-	self:__invalidateProperties__()
 end
 
 

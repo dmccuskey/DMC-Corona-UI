@@ -99,12 +99,14 @@ StatesMixModule.patch( AxisMotion )
 
 --== Class Constants
 
--- max number of items to use for velocity calculation
+-- max number of items for velocity calculation
 AxisMotion.VELOCITY_STACK_LENGTH = 4
+-- speed limit
+AxisMotion.VELOCITY_LIMIT = 1
 
-AxisMotion.DECELERATE_TRANS_TIME = 1000 -- test 1000 / def 1000
+AxisMotion.DECELERATE_TRANS_TIME = 3000 -- test 1000 / def 1000
 AxisMotion.RESTORE_TRANS_TIME = 400 -- test 1000 / def 400
-AxisMotion.RESTRAINT_TRANS_TIME = 100  -- test 1000 / def 100
+AxisMotion.RESTRAINT_TRANS_TIME = 350  -- test 1000 / def 100
 
 AxisMotion.SCROLLBACK_FACTOR = 1/3
 
@@ -134,6 +136,7 @@ function AxisMotion:__init__( params )
 	params = params or {}
 	if params.length==nil then params.length = 0 end
 	if params.scrollLength==nil then params.scrollLength = 0 end
+	if params.activeBounce==nil then params.activeBounce = true end
 	if params.upperOffset==nil then params.upperOffset = 0 end
 	if params.lowerOffset==nil then params.lowerOffset = 0 end
 	if params.scrollbackFactor==nil then params.scrollbackFactor = AxisMotion.SCROLLBACK_FACTOR end
@@ -173,7 +176,7 @@ function AxisMotion:__init__( params )
 
 	self._enterFrameIterator = nil
 
-	self._bounceIsActive = true
+	self._bounceIsActive = params.activeBounce
 	self._alwaysBounce = false
 	self._scrollEnabled = true
 
@@ -208,19 +211,27 @@ end
 --======================================================--
 
 
+
 --====================================================================--
 --== Public Methods
 
+
+function AxisMotion.__getters:length()
+	return self._length
+end
 function AxisMotion.__setters:length( value )
 	self._length = value
 	self:_setScrollbackLimit()
 end
 
+function AxisMotion.__getters:lowerOffset()
+	return self._lowerOffset
+end
 function AxisMotion.__setters:lowerOffset( value )
 	self._lowerOffset = value
 end
 
--- fraction (1/3)
+-- decimal fraction (1/3)
 function AxisMotion.__setters:scrollbackFactor( value )
 	self._scrollbackFactor = value
 	self:_setScrollbackLimit()
@@ -230,8 +241,16 @@ function AxisMotion.__setters:scrollLength( value )
 	self._scrollLength = value
 end
 
+function AxisMotion.__getters:upperOffset()
+	return self._upperOffset
+end
 function AxisMotion.__setters:upperOffset( value )
 	self._upperOffset = value
+end
+
+
+function AxisMotion.__getters:value()
+	return self._value
 end
 
 
@@ -240,20 +259,23 @@ end
 --== Private Methods
 
 
+-- set how far table can be scrolled against a boundary limit
+--
 function AxisMotion:_setScrollbackLimit()
 	self._scrollbackLimit = self._length * self._scrollbackFactor
 end
 
 
---== _checkScrollBounds()
-
+-- check if position is at a limit
+--
 function AxisMotion:_checkScrollBounds( value )
 	-- print( "AxisMotion:_checkScrollBounds", value )
 	local calcs = { min=0, max=0 }
 
 	if self._scrollEnabled and value then
-		local upper = 0 - self._upperOffset
+		local upper = 0 + self._upperOffset
 		local lower = (self._length-self._scrollLength) - self._lowerOffset
+
 		calcs.min=upper
 		calcs.max=lower
 
@@ -270,32 +292,40 @@ function AxisMotion:_checkScrollBounds( value )
 end
 
 
+-- ensure position stays within boundaries
+--
 function AxisMotion:_constrainPosition( value, delta )
 	-- print( "AxisMotion:_constrainPosition", value, delta )
 	local isBounceActive = self._bounceIsActive
-	local newVal = value + delta
 	local LIMIT = self._scrollbackLimit
-	local calcs = self:_checkScrollBounds( newVal )
-	local scrollLimit = self._scrollLimit
+	local scrollLimit, newVal, calcs, s, factor
+
+	newVal = value + delta
+	calcs = self:_checkScrollBounds( newVal )
+	scrollLimit = self._scrollLimit -- after check bounds
 
 	if scrollLimit==AxisMotion.HIT_UPPER_LIMIT then
 		if not isBounceActive then
 			newVal=calcs.min
 		else
-			factor = 1 - (newVal/LIMIT)
+			s = newVal-self._upperOffset
+			factor = 1 - (s/LIMIT)
 			if factor < 0 then factor = 0 end
 			newVal = value + ( delta * factor )
-			local calcs = self:_checkScrollBounds( newVal )
+			-- check bounds again
+			self:_checkScrollBounds( newVal )
 		end
 
 	elseif scrollLimit==AxisMotion.HIT_LOWER_LIMIT then
 		if not isBounceActive then
 			newVal=calcs.max
 		else
-			local s = (self._length - self._scrollLength) - newVal
+			s = (self._length - self._scrollLength) - newVal - self._lowerOffset
 			factor = 1 - (s/LIMIT)
 			if factor < 0 then factor = 0 end
 			newVal = value + ( delta * factor )
+			-- check bounds again
+			self:_checkScrollBounds( newVal )
 		end
 
 	end
@@ -304,13 +334,22 @@ function AxisMotion:_constrainPosition( value, delta )
 end
 
 
+-- clamp max velocity, calculate average velocity
+--
 function AxisMotion:_updateVelocity( value )
 	-- print( "AxisMotion:_updateVelocity", value )
 	local VEL_STACK_LENGTH = AxisMotion.VELOCITY_STACK_LENGTH
+	local LIMIT = AxisMotion.VELOCITY_LIMIT
 	local _mabs = mabs
 	local velStack = self._velocityStack
 	local vel = self._velocity
-	local aveVel = 0
+	local vector, aveVel = 0,0
+
+	if _mabs(value) > LIMIT then
+		-- clamp velocity
+		vector = (value>=0) and 1 or -1
+		value = LIMIT*vector
+	end
 
 	tinsert( velStack, 1, value )
 
@@ -326,10 +365,8 @@ function AxisMotion:_updateVelocity( value )
 	aveVel = aveVel / #velStack
 
 	vel.value = _mabs( aveVel )
-	if aveVel < 0 then
-		vel.vector = -1
-	elseif aveVel > 0 then
-		vel.vector = 1
+	if aveVel~=0 then
+		vel.vector = (aveVel>0) and -1 or 1
 	else
 		vel.vector = 0
 	end
@@ -388,6 +425,7 @@ function AxisMotion:touch( event )
 	if not self._scrollEnabled then return end
 
 	local evt = {
+		-- make a "copy" of the event
 		time=event.time,
 		start=event.start,
 		value=event.value
@@ -408,26 +446,25 @@ function AxisMotion:touch( event )
 
 		self:gotoState( AxisMotion.STATE_TOUCH )
 
-
 	elseif phase == 'moved' then
 
-		local velStack = self._velocityStack
 		local tmpTouchEvt = self._tmpTouchEvt
 		local constrain = AxisMotion._constrainPosition
 
 		local deltaVal = event.value - tmpTouchEvt.value
 		local deltaT = event.time - tmpTouchEvt.time
+		local oldVal, newVal
 
 		self._isMoving = true
 
-		self:_updateVelocity( (deltaVal/deltaT) )
+		--== Calculate new position/velocity
 
-		--== Calculate new position
+		oldVal = self._value
+		newVal = constrain( self, oldVal, deltaVal )
+		self:_updateVelocity( (oldVal-newVal)/deltaT )
 
-		self._value = constrain( self, self._value, deltaVal )
-
+		self._value = newVal
 		self._tmpTouchEvt = evt
-
 
 	elseif phase=='ended' or phase=='cancelled' then
 
@@ -452,23 +489,25 @@ function AxisMotion:_getNextState( params )
 	--==--
 	local scrollLimit = self._scrollLimit
 	local velocity = self._velocity
-
+	local isBounceActive = self._bounceIsActive
 	local s, p -- state, params
-	-- print( "GNS>>", velocity.value, scrollLimit )
-	if velocity.value <= 0 and not scrollLimit then
-		s = AxisMotion.STATE_AT_REST
-		p = { event=params.event }
 
-	elseif velocity.value > 0 and not scrollLimit then
+	-- print( "gNS>>", velocity.value, scrollLimit, isBounceActive )
+
+	if velocity.value > 0 and not scrollLimit then
 		s = AxisMotion.STATE_DECELERATE
 		p = { event=params.event }
 
-	elseif velocity.value <= 0 and scrollLimit then
+	elseif velocity.value <= 0 and scrollLimit and isBounceActive then
 		s = AxisMotion.STATE_RESTORE
 		p = { event=params.event }
 
-	elseif velocity.value > 0 and scrollLimit then
+	elseif velocity.value > 0 and scrollLimit and isBounceActive then
 		s = AxisMotion.STATE_RESTRAINT
+		p = { event=params.event }
+
+	else
+		s = AxisMotion.STATE_AT_REST
 		p = { event=params.event }
 
 	end
@@ -532,11 +571,14 @@ function AxisMotion:do_state_touch( params )
 		self:_updateVelocity( 0 )
 	end
 
+	-- start animation
+
 	if self._enterFrameIterator == nil then
 		Runtime:addEventListener( 'enterFrame', self )
 	end
 	self._enterFrameIterator = enterFrameFunc1
 
+	-- set current state
 	self:setState( AxisMotion.STATE_TOUCH )
 end
 
@@ -565,18 +607,16 @@ end
 --== State Decelerate
 
 function AxisMotion:do_state_decelerate( params )
-	-- print( "AxisMotion:do_state_decelerate" )
+	-- print( "\n\nAxisMotion:do_state_decelerate\n\n" )
 	params = params or {}
 	--==--
 	local TIME = AxisMotion.DECELERATE_TRANS_TIME
-	local ease_f = easingx.easeOut
+	local constrain = AxisMotion._constrainPosition
+	local ease_f = easingx.easeOutQuad
 	local _mabs = mabs
 
 	local startEvt = params.event
-	local constrain = AxisMotion._constrainPosition
-
 	local vel = self._velocity
-
 	local velocity = vel.value
 	local deltaVel = -velocity
 
@@ -590,7 +630,7 @@ function AxisMotion:do_state_decelerate( params )
 
 		local deltaStart = e.time - startEvt.time
 		local deltaFrame = e.time - frameEvt.time
-		local deltaVal
+		local deltaVal, oldVal, newVal
 
 		--== Calculation
 
@@ -599,18 +639,20 @@ function AxisMotion:do_state_decelerate( params )
 
 		--== Action
 
+		oldVal = self._value
+		newVal = constrain( self, oldVal, deltaVal )
+		self._value = newVal
+
 		if vel.value > 0 and scrollLimit then
-			-- we hit edge while moving
+			-- hit edge while moving
 			self:gotoState( AxisMotion.STATE_RESTRAINT, { event=e } )
 
-		elseif deltaStart < TIME and _mabs(deltaVal) >= 0.15 then
-			self._value = constrain( self, self._value, deltaVal )
-
-		else
-			-- movement is too small to see (pixel)
+		elseif deltaStart >= TIME or _mabs( newVal-oldVal ) < 1 then
+			-- over time or movement too small to see (pixel)
 			self:gotoState( AxisMotion.STATE_AT_REST )
 
 		end
+
 	end
 
 	-- start animation
@@ -622,6 +664,7 @@ function AxisMotion:do_state_decelerate( params )
 
 	-- set current state
 	self:setState( AxisMotion.STATE_DECELERATE )
+
 end
 
 function AxisMotion:state_decelerate( next_state, params )
@@ -649,30 +692,23 @@ function AxisMotion:do_state_restore( params )
 	-- print( "AxisMotion:do_state_restore" )
 	params = params or {}
 	--==--
-	local startEvt = params.event
-
 	local TIME = AxisMotion.RESTORE_TRANS_TIME
+	local constrain = AxisMotion._constrainPosition
 	local ease_f = easingx.easeOut
 
+	local startEvt = params.event
 	local val = self._value
 	local vel = self._velocity
-	local scrollLimit = self._scrollLimit
-	local constrain = AxisMotion._constrainPosition
 
-	self._isMoving = true
-
-	local delta
+	local delta, offset
 
 	-- calculate restore distance
-
-	if scrollLimit == AxisMotion.HIT_UPPER_LIMIT then
-		delta = val - self._upperOffset
+	if self._scrollLimit == AxisMotion.HIT_UPPER_LIMIT then
+		offset = self._upperOffset
 	else
-		delta = val - (self._length - self._scrollLength - self._lowerOffset)
+		offset = (self._length - self._scrollLength - self._lowerOffset)
 	end
-
-	-- take negative, return in other direction
-	delta = -delta
+	delta = offset-val
 
 	self._isMoving = true
 
@@ -684,14 +720,12 @@ function AxisMotion:do_state_restore( params )
 		local deltaT = e.time - startEvt.time
 		local deltaV = ease_f( deltaT, TIME, val, delta )
 
-		-- print( "restore", delta, deltaV, deltaT, e.time, startEvt.time )
-
 		--== Action
 
 		if deltaT < TIME then
 			self._value = deltaV
 		else
-			self._value = constrain( self, val, delta )
+			self._value = offset
 			self:gotoState( AxisMotion.STATE_AT_REST )
 		end
 	end
@@ -733,16 +767,15 @@ function AxisMotion:do_state_restraint( params )
 	params = params or {}
 	--==--
 	local TIME = AxisMotion.RESTRAINT_TRANS_TIME
+	local constrain = AxisMotion._constrainPosition
 	local ease_f = easingx.easeOut
 	local _mabs = mabs
 
 	-- startEvt could be Touch or enterFrame event
-	-- we just need the 'time'
+	-- of importance is the 'time' param
 	local startEvt = params.event
-	local constrain = AxisMotion._constrainPosition
 
 	local vel = self._velocity
-
 	local velocity = vel.value * vel.vector
 	local deltaVel = -velocity
 
@@ -755,7 +788,7 @@ function AxisMotion:do_state_restraint( params )
 
 		local deltaStart = e.time - startEvt.time -- total
 		local deltaFrame = e.time - frameEvt.time
-		local deltaVal
+		local deltaVal, oldVal, newVal
 
 		--== Calculation
 
@@ -764,16 +797,16 @@ function AxisMotion:do_state_restraint( params )
 
 		--== Action
 
-		-- print( vel.value, deltaStart, deltaFrame, deltaVal )
-		if deltaStart < TIME and _mabs(deltaVal) >= 1 then
-			self._value = constrain( self, self._value, deltaVal )
-			-- self._value =self._value + deltaVal
+		oldVal = self._value
+		newVal = constrain( self, oldVal, deltaVal )
+		self._value = newVal
 
-		else
+		if deltaStart >= TIME or _mabs( newVal-oldVal ) < 1 then
 			vel.value, vel.vector = 0, 0
 			self:gotoState( AxisMotion.STATE_RESTORE, { event=e } )
 
 		end
+
 	end
 
 	-- start animation
@@ -794,8 +827,6 @@ function AxisMotion:state_restraint( next_state, params )
 		self:do_state_touch( params )
 
 	elseif next_state == self.STATE_RESTORE then
-		-- TEST
-		-- self._enterFrameIterator = nil
 		self:do_state_restore( params )
 
 	else

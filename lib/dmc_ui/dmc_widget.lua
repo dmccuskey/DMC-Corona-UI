@@ -417,10 +417,34 @@ end
 --======================================================--
 -- newTableView Support
 
+function Widget.loadTableViewSupport( params )
+	-- print( "Widget.loadTableViewSupport" )
+	if Widget.TableView then return end
+	params = params or {}
+	if params.mode==nil then params.mode=uiConst.RUN_MODE end
+	--==--
+
+	--== Dependencies
+
+	Style.loadTableViewStyleSupport( params )
+
+	Widget.loadScrollViewSupport( params )
+
+	--== Components
+
+	local TableView = require( ui_find( 'dmc_widget.widget_tableview' ) )
+
+	Widget.TableView=TableView
+
+	initKolors( function()
+		TableView.initialize( dUI, params )
+	end)
+end
+
 function Widget.newTableView( options )
-	local theme = nil
-	local _library = require( PATH .. '.' .. 'widget_tableview' )
-	return _library:new( options, theme )
+	-- print( "Widget.newTableView" )
+	if not Widget.TableView then Widget.loadTableViewSupport() end
+	return Widget.TableView:new( options )
 end
 
 
