@@ -173,6 +173,12 @@ function View:__init__( params )
 
 	self._parentView = params.parentView
 
+	if params.autoMask == true then
+		self:_setView( display.newContainer( self._width, self._height ) )
+		self.view.anchorChildren = false
+		self.view.anchorX, self.view.anchorY = 0, 0
+	end
+
 end
 
 function View:__undoInit__()
