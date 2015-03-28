@@ -125,6 +125,7 @@ Constant.BUTTON_STATE = 'Button-State'
 Constant.NAVITEM = 'NavItem'
 Constant.NAVBAR = 'NavBar'
 Constant.SCROLLVIEW = 'ScrollView'
+Constant.TABLEVIEW = 'TableView'
 Constant.TEXT = 'Text'
 Constant.TEXTFIELD = 'TextField'
 

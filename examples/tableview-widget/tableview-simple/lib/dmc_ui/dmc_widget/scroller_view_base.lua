@@ -199,7 +199,7 @@ StatesMixModule.patch( ScrollerBase )
 --== Class Constants
 
 -- pixel amount to edges of ScrollerBase in which rows are de-/rendered
-ScrollerBase.DEFAULT_RENDER_MARGIN = 100
+ScrollerBase.DEFAULT_RENDER_MARGIN = 0
 
 ScrollerBase.DEFAULT_BG_COLOR = {1,1,1,1}
 

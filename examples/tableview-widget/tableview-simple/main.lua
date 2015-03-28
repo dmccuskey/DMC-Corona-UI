@@ -1,11 +1,11 @@
 --====================================================================--
--- Table View Simple
+-- TableView Simple
 --
--- Shows simple use of the DMC Widget: Table View
+-- Shows basic use of the DMC TableView widget
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
--- Copyright (C) 2014=2015 David McCuskey. All Rights Reserved.
+-- Copyright (C) 2014-2015 David McCuskey. All Rights Reserved.
 --====================================================================--
 
 
@@ -18,13 +18,18 @@ print( "\n\n#########################################################\n\n" )
 --== Imports
 
 
-local Widgets = require 'lib.dmc_widgets'
+local dUI = require 'lib.dmc_ui'
 
 
 
 --===================================================================--
 --== Setup, Constants
 
+
+local W, H = dUI.WIDTH, dUI.HEIGHT
+local H_CENTER, V_CENTER = W*0.5, H*0.5
+
+local tinsert = table.insert
 
 local OFFSET = 100
 local DIMS = {w=200,h=100} -- dimensions of a row item
@@ -93,39 +98,83 @@ local function onEvent( event )
 end
 
 
+local function getData()
+	local list = {}
+
+	for i = 1, 50 do
+		local row_template = {
+			index=i,
+			type='row-data'
+		}
+
+		tinsert( list, row_template )
+	end
+
+	return list
+end
+
+-- -- create rows
+
+
 
 --===================================================================--
 --== Main
 --===================================================================--
 
 
+local data = getData()
+
+
+-- setup tableview delegate/helper
+
+local delegate = {
+
+	numberOfRows=function( self, section )
+		-- print( "numberOfRows" )
+		return #data
+	end,
+
+	onRowRender=function( self, event )
+		-- print( "rowOnRender", event )
+		local group = event.view
+		local index = event.index
+		local o, f, p  -- object, function, params
+
+		o = display.newText( "row : "..index, 0, 0, native.systemFont, 16 )
+		o.anchorX, o.anchorY = 0,0
+		o.x, o.y = 0,0
+		o:setFillColor( 1,1,1 )
+
+		group:insert( o )
+		group._txt = o
+	end,
+
+	onRowUnrender=function( self, event )
+		-- print( "rowOnUnrender", event )
+		local group = event.view
+		group._txt:removeSelf( )
+		group._txt=nil
+	end
+
+}
+
+
 -- create Table View
 
-local o = Widgets.newTableView{
+local tV = dUI.newTableView{
 	width=DIMS.w,
-	height=DIMS.h*SHOW,
-	automask=true
+	height=DIMS.h*3,
+	delegate=delegate,
+	dataSource=data,
+	rowHeight=30,
+	estimatedRowHeight=30
 }
-o.x, o.y = OFFSET*0.5, OFFSET*0.5
+tV.x, tV.y = OFFSET*0.5, OFFSET*0.5+50
 
-o:addEventListener( o.EVENT, onEvent )
+tV:addEventListener( tV.EVENT, onEvent )
+
+tV:reloadData()
 
 
--- create rows
 
-for i = 1, 5 do
-
-	local row_template = {
-		isCategory = false,
-		height = DIMS.h,
-		onItemRender=onRender,
-		onItemUnrender=onUnrender,
-		onItemEvent=onEvent,
-		bgColor={0.5,0,1},
-		data = i
-	}
-
-	o:insertRow( row_template )
-
-end
 
