@@ -368,6 +368,18 @@ function TableView.__setters:renderMargin( value )
 	self._lowerHorizontalOffset = value
 	self._upperVerticalOffset = value
 	self._lowerVerticalOffset = value
+
+
+--- returns the row view reference.
+-- the row view or nil if not visible
+--
+-- @returns row view or nil if the row is not visible
+--
+function TableView:getRowAt( idx )
+	-- print( "TableView:getRowAt", pos )
+	local records = self._rowItemRecords
+	local rec = records[idx]
+	return rec and rec.view
 end
 
 
