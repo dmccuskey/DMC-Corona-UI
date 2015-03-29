@@ -364,34 +364,34 @@ function TableView.__setters:renderMargin( value )
 end
 
 
-function TableView:insertRowAt( pos )
-	-- print( "TableView:insertRowAt", pos )
-	assert( type(pos)=='number', "TableView:insertRowAt arg must be a number" )
+function TableView:insertRowAt( idx )
+	-- print( "TableView:insertRowAt", idx )
+	assert( type(idx)=='number', "TableView:insertRowAt arg must be a number" )
 	--==--
 	local records = self._rowItemRecords
-	local rec = records[pos]
+	local rec = records[idx]
 	local yMin = rec and rec.yMin or 0
 	local eRH = self._estimatedRowHeight
 
 	self.scrollHeight = self.scrollHeight + eRH
-	createRecords( records, pos, pos, tinsert )
-	indexItems( records, pos, yMin, eRH )
+	createRecords( records, idx, idx, tinsert )
+	indexItems( records, idx, yMin, eRH )
 	self:_renderDisplay{ clearAll=true }
 end
 
-function TableView:removeRowAt( pos )
-	-- print( "TableView:removeRowAt", pos )
-	assert( type(pos)=='number', "TableView:removeRowAt arg must be a number" )
+function TableView:removeRowAt( idx )
+	-- print( "TableView:removeRowAt", idx )
+	assert( type(idx)=='number', "TableView:removeRowAt arg must be a number" )
 	--==--
 	local records = self._rowItemRecords
-	local rec = records[pos]
+	local rec = records[idx]
 	local yMin = rec and rec.yMin or 0
 	local eRH = self._estimatedRowHeight
 
 	self.scrollHeight = self.scrollHeight - eRH
 	local removed = self:_unrenderTableCell( rec )
-	removeRecords( records, pos, pos, tremove )
-	indexItems( records, pos, yMin, eRH )
+	removeRecords( records, idx, idx, tremove )
+	indexItems( records, idx, yMin, eRH )
 	if removed then
 		self:_renderDisplay{ clearAll=true }
 	end
