@@ -943,13 +943,8 @@ end
 
 
 function TableView:_axisEvent_handler( event )
-	-- print( "TableView:_axisEvent_handler", event.state )
-	local state = event.state
-	-- local velocity = event.velocity
-	if event.id=='x' then
-		self._scroller.x = event.value
-	else
-		-- print("TV AXIS Pos >>> ", event.value)
+	-- print( "TableView:_axisEvent_handler" )
+	if event.id=='y' then
 		self._scroller.y = event.value
 	end
 	self:_renderDisplay()
