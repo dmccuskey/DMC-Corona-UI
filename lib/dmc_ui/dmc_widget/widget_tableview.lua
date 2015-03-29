@@ -314,6 +314,13 @@ function TableView.__setters:scrollWidth( value )
 end
 
 
+--== .contentPosition
+
+function TableView.__getters:contentPosition()
+	-- print( "TableView.__getters:contentPosition" )
+	return self._scroller.y
+end
+
 --== .delegate
 
 function TableView.__getters:delegate()
