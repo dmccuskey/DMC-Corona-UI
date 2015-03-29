@@ -166,7 +166,6 @@ local tV = dUI.newTableView{
 	height=DIMS.h*3,
 	delegate=delegate,
 	dataSource=data,
-	rowHeight=30,
 	estimatedRowHeight=30
 }
 tV.x, tV.y = OFFSET*0.5, OFFSET*0.5+50
