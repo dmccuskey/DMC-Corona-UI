@@ -314,6 +314,13 @@ function TableView.__setters:scrollWidth( value )
 end
 
 
+--== .contentPosition
+
+function TableView.__getters:contentPosition()
+	-- print( "TableView.__getters:contentPosition" )
+	return self._scroller.y
+end
+
 --== .delegate
 
 function TableView.__getters:delegate()
@@ -357,41 +364,54 @@ function TableView.__setters:renderMargin( value )
 	-- print( "TableView.__setters:renderMargin", value )
 	-- TODO, use setters
 	self._renderMargin = value
-	self._upperHorizontalOffset = value
-	self._lowerHorizontalOffset = value
-	self._upperVerticalOffset = value
-	self._lowerVerticalOffset = value
+	-- self._upperHorizontalOffset = value
+	-- self._lowerHorizontalOffset = value
+	-- self._upperVerticalOffset = value
+	-- self._lowerVerticalOffset = value
 end
 
 
-function TableView:insertRowAt( pos )
-	-- print( "TableView:insertRowAt", pos )
-	assert( type(pos)=='number', "TableView:insertRowAt arg must be a number" )
+--- returns the row view reference.
+-- the row view or nil if not visible
+--
+-- @returns row view or nil if the row is not visible
+--
+function TableView:getRowAt( idx )
+	-- print( "TableView:getRowAt", pos )
+	local records = self._rowItemRecords
+	local rec = records[idx]
+	return rec and rec.view
+end
+
+
+function TableView:insertRowAt( idx )
+	-- print( "TableView:insertRowAt", idx )
+	assert( type(idx)=='number', "TableView:insertRowAt arg must be a number" )
 	--==--
 	local records = self._rowItemRecords
-	local rec = records[pos]
+	local rec = records[idx]
 	local yMin = rec and rec.yMin or 0
 	local eRH = self._estimatedRowHeight
 
 	self.scrollHeight = self.scrollHeight + eRH
-	createRecords( records, pos, pos, tinsert )
-	indexItems( records, pos, yMin, eRH )
+	createRecords( records, idx, idx, tinsert )
+	indexItems( records, idx, yMin, eRH )
 	self:_renderDisplay{ clearAll=true }
 end
 
-function TableView:removeRowAt( pos )
-	-- print( "TableView:removeRowAt", pos )
-	assert( type(pos)=='number', "TableView:removeRowAt arg must be a number" )
+function TableView:removeRowAt( idx )
+	-- print( "TableView:removeRowAt", idx )
+	assert( type(idx)=='number', "TableView:removeRowAt arg must be a number" )
 	--==--
 	local records = self._rowItemRecords
-	local rec = records[pos]
+	local rec = records[idx]
 	local yMin = rec and rec.yMin or 0
 	local eRH = self._estimatedRowHeight
 
 	self.scrollHeight = self.scrollHeight - eRH
 	local removed = self:_unrenderTableCell( rec )
-	removeRecords( records, pos, pos, tremove )
-	indexItems( records, pos, yMin, eRH )
+	removeRecords( records, idx, idx, tremove )
+	indexItems( records, idx, yMin, eRH )
 	if removed then
 		self:_renderDisplay{ clearAll=true }
 	end
@@ -413,6 +433,32 @@ function TableView:reloadData()
 	self._rowItemRecords = records
 
 	self:_renderDisplay{ clearAll=true }
+end
+
+
+
+function TableView:scrollToRowAt( idx, params )
+	-- print( "TableView:scrollToRowAt" )
+	assert( type(idx)=='number' )
+	params = params or {}
+	if params.time==nil then params.time=0 end
+	if params.position==nil then params.position='none' end
+	if params.limitIsActive==nil then params.limitIsActive=false end
+	--==--
+	local record = self._rowItemRecords[ idx ]
+	assert( record )
+
+	local pos = self:_calculateScrollPosition( record, params.position )
+
+	if params.time then
+		-- set scroll in motion
+		self._axis_y:scrollToPosition( pos, params )
+	else
+		self:_unrenderAllTableCells()
+		self._axis_y:scrollToPosition( pos, params )
+		self:_renderDisplay{ clearAll=false }
+	end
+
 end
 
 
@@ -621,7 +667,7 @@ function TableView:_renderDisplay( params )
 	if #records == 0 then return end
 
 	if params.clearAll then
-		self:_unrenderAllItems( self._renderedTableCells )
+		self:_unrenderAllTableCells( self._renderedTableCells )
 	end
 
 	local isBounded_f = self._isWithinBounds
@@ -792,8 +838,8 @@ function TableView:_unrenderTableCell( record, options )
 	return true
 end
 
-function TableView:_unrenderAllItems( rendered )
-	-- print( "TableView:_unrenderAllItems", #rendered )
+function TableView:_unrenderAllTableCells( rendered )
+	-- print( "TableView:_unrenderAllTableCells", #rendered )
 	local unrenderCell_f = TableView._unrenderTableCell
 	for i=#rendered, 1, -1 do
 		local record = tremove( rendered, i )
@@ -880,19 +926,38 @@ function TableView:_updateDimensions( item_info, item_data )
 end
 
 
+
+function TableView:_calculateScrollPosition( record, position )
+	-- print( "TableView:_calculateScrollPosition", record, position )
+	local value = 0
+	local offset = 0
+
+	if position=='top' then
+		offset = 0+self._upperVerticalOffset
+		value = offset-record.yMin
+	elseif position=='middle' then
+		offset = self._height/2
+		value = offset-record.yMin
+	elseif position=='bottom' then
+		offset = self._height-self._lowerVerticalOffset
+		value = offset-(record.yMin+record.height)
+	else
+		offset = self._height/2
+		value = offset-record.yMin
+	end
+
+	return value
+end
+
+
+
 --====================================================================--
 --== Event Handlers
 
 
-
 function TableView:_axisEvent_handler( event )
-	-- print( "TableView:_axisEvent_handler", event.state )
-	local state = event.state
-	-- local velocity = event.velocity
-	if event.id=='x' then
-		self._scroller.x = event.value
-	else
-		-- print("TV AXIS Pos >>> ", event.value)
+	-- print( "TableView:_axisEvent_handler" )
+	if event.id=='y' then
 		self._scroller.y = event.value
 	end
 	self:_renderDisplay()
