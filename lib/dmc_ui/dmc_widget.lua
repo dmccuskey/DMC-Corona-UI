@@ -133,6 +133,7 @@ function Widget.initialize( manager, params )
 	dUI.newScrollView = Widget.newScrollView
 	dUI.newSlideView = Widget.newSlideView
 	dUI.newTableView = Widget.newTableView
+	dUI.newTableViewCell = Widget.newTableViewCell
 	dUI.newText = Widget.newText
 	dUI.newTextField = Widget.newTextField
 
@@ -445,6 +446,38 @@ function Widget.newTableView( options )
 	-- print( "Widget.newTableView" )
 	if not Widget.TableView then Widget.loadTableViewSupport() end
 	return Widget.TableView:new( options )
+end
+
+
+--======================================================--
+-- newTableViewCell Support
+
+function Widget.loadTableViewCellSupport( params )
+	-- print( "Widget.loadTableViewCellSupport" )
+	if Widget.TableViewCell then return end
+	params = params or {}
+	if params.mode==nil then params.mode=uiConst.RUN_MODE end
+	--==--
+
+	--== Dependencies
+
+	Style.loadTableViewCellStyleSupport( params )
+
+	--== Components
+
+	local TableViewCell = require( ui_find( 'dmc_widget.widget_tableviewcell' ) )
+
+	Widget.TableViewCell=TableViewCell
+
+	initKolors( function()
+		TableViewCell.initialize( dUI, params )
+	end)
+end
+
+function Widget.newTableViewCell( options )
+	-- print( "Widget.newTableViewCell" )
+	if not Widget.TableViewCell then Widget.loadTableViewCellSupport() end
+	return Widget.TableViewCell:new( options )
 end
 
 

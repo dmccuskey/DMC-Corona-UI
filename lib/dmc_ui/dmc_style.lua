@@ -389,7 +389,6 @@ function Style.newScrollView( style_info, params )
 end
 
 
-
 --======================================================--
 -- newTableView Support
 
@@ -430,6 +429,49 @@ function Style.newTableView( style_info, params )
 	params.data = style_info
 	if not Style.TableView then Style.loadTableViewStyleSupport() end
 	return Style.TableView:createStyleFrom( params )
+end
+
+
+--======================================================--
+-- newTableViewCell Support
+
+function Style.loadTableViewCellStyleSupport( params )
+	-- print( "Style.loadTableViewCellStyleSupport" )
+	if Style.TableViewCell then return end
+	params = params or {}
+	if params.mode==nil then params.mode=uiConst.RUN_MODE end
+	--==--
+	local kmode
+	if params.mode==uiConst.TEST_MODE then
+		kmode = Kolor.hRGBA
+	end
+
+	--== Dependencies
+
+	Style.loadBaseStyleSupport( params )
+
+	--== Components
+
+	local TableViewCellStyle = require( ui_find( 'dmc_style.tableviewcell_style' ) )
+
+	Style.TableViewCell=TableViewCellStyle
+
+	initKolors(
+		function()
+			TableViewCellStyle.initialize( Style, params )
+		end,
+		kmode
+	)
+end
+
+function Style.newTableViewCell( style_info, params )
+	-- print( "Style.newTableViewCell" )
+	style_info = style_info or {}
+	params = params or {}
+	--==--
+	params.data = style_info
+	if not Style.TableViewCell then Style.loadTableViewCellStyleSupport() end
+	return Style.TableViewCell:createStyleFrom( params )
 end
 
 

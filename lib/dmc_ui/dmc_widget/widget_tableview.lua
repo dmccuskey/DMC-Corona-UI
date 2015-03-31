@@ -68,6 +68,7 @@ local ui_find = dmc_ui_func.find
 
 
 local Objects = require 'dmc_objects'
+local TouchMgr = require 'dmc_touchmanager'
 local Utils = require 'dmc_utils'
 
 local uiConst = require( ui_find( 'ui_constants' ) )
@@ -82,9 +83,12 @@ local ScrollView = require( ui_find( 'dmc_widget.widget_scrollview' ) )
 
 local newClass = Objects.newClass
 
+local mabs = math.abs
 local mfloor = math.floor
 local tinsert = table.insert
 local tremove = table.remove
+local tcancel = timer.cancel
+local tdelay = timer.performWithDelay
 
 --== To be set in initialize()
 local dUI = nil
@@ -172,8 +176,13 @@ TableView.STYLE_TYPE = uiConst.TABLEVIEW
 
 TableView.EVENT = 'tableview-event'
 
-TableView.ROW_RENDER = 'row-render-event'
-TableView.ROW_UNRENDER = 'row-unrender-event'
+TableView.RENDER_ROW = 'row-render-event'
+TableView.UNRENDER_ROW = 'row-unrender-event'
+TableView.SHOULD_HIGHLIGHT_ROW = 'row-should-highlight-event'
+TableView.HIGHLIGHT_ROW = 'row-highlight-event'
+TableView.UNHIGHLIGHT_ROW = 'row-unhighlight-event'
+TableView.WILL_SELECT_ROW = 'row-will-select-event'
+TableView.SELECTED_ROW = 'row-selected-event'
 
 
 --======================================================--
@@ -219,6 +228,9 @@ function TableView:__init__( params )
 
 	--== Object References ==--
 
+	self._tableCellHighlight_timer = nil
+	self._tableCellTouch_f = nil
+
 	self._delegate = params.delegate
 	self._dataSource = params.dataSource
 
@@ -243,6 +255,8 @@ function TableView:__initComplete__()
 
 	self._rowItemRecords = {}
 	self._renderedTableCells = {}
+
+	self._tableCellTouch_f = self:createCallback( TableView._tableCellTouch_handler )
 
 	--== Use Setters
 	self.dataSource = self._dataSource
@@ -364,10 +378,11 @@ function TableView.__setters:renderMargin( value )
 	-- print( "TableView.__setters:renderMargin", value )
 	-- TODO, use setters
 	self._renderMargin = value
-	self._upperHorizontalOffset = value
-	self._lowerHorizontalOffset = value
-	self._upperVerticalOffset = value
-	self._lowerVerticalOffset = value
+	-- self._upperHorizontalOffset = value
+	-- self._lowerHorizontalOffset = value
+	-- self._upperVerticalOffset = value
+	-- self._lowerVerticalOffset = value
+end
 
 
 --- returns the row view reference.
@@ -725,6 +740,57 @@ function TableView:_renderDisplay( params )
 end
 
 
+
+
+function TableView:_startHighlightTimer( record )
+	-- print( "TableView:_startHighlightTimer", record )
+	local f = function(e)
+		self:_dispatchHighlightRow( record )
+		self._tableCellHighlight_timer=nil
+	end
+	self._tableCellHighlight_timer = tdelay( 10, f )
+
+end
+function TableView:_stopHighlightTimer()
+	-- print( "TableView:_startHighlightTimer" )
+	local t = self._tableCellHighlight_timer
+	if not t then return end
+	tcancel( t )
+	self._tableCellHighlight_timer = nil
+end
+
+
+
+function TableView:_tableCellTouch_handler( event )
+	-- print( "TableView:_tableCellTouch_handler", event.phase )
+	local phase = event.phase
+	local target = event.target -- hit area
+	local record = target.__rec
+
+	if event.phase == 'began' then
+		TouchMgr.setFocus( target, event.id )
+		self:_startHighlightTimer( record )
+
+	elseif phase == 'moved' then
+		local deltaY = mabs( event.yStart - event.y )
+		if deltaY > 10 then
+			self:_stopHighlightTimer( record )
+			self:_dispatchUnhighlightRow( record )
+			self:takeFocus( event )
+		end
+
+	elseif phase == 'ended' then
+		TouchMgr.unsetFocus( target, event.id )
+		self:_stopHighlightTimer( record )
+		self:_dispatchUnhighlightRow( record )
+		self:_dispatchSelectedRow( record )
+	end
+
+	return true
+end
+
+
+
 -- setup creation of new Table Cell
 -- creates visual holder for User's TableCell
 --
@@ -757,14 +823,17 @@ function TableView:_renderTableCell( record, options )
 	hit:setFillColor( 0,0,1,0.3 )
 	hit.isHitTestable = true
 
+	TouchMgr.register( hit, self._tableCellTouch_f )
+
 	view:insert( hit )
-	view._hit = hit
+	view.__hit = hit
+	hit.__rec = record
 
 	--== Render View
 
 	local e = {
 		name=TableView.EVENT,
-		type=TableView.ROW_RENDER,
+		type=TableView.RENDER_ROW,
 
 		target=self,
 		view=view,
@@ -800,7 +869,7 @@ function TableView:_unrenderTableCell( record, options )
 	local renderedCells = self._renderedTableCells
 	local scr = self._scroller
 	local index = options.index
-	local view
+	local view, hit
 
 	if index==nil then
 		-- find the index
@@ -819,7 +888,7 @@ function TableView:_unrenderTableCell( record, options )
 
 	local e ={
 		name = TableView.EVENT,
-		type = TableView.ROW_UNRENDER,
+		type = TableView.UNRENDER_ROW,
 
 		target=self,
 		view=view,
@@ -828,8 +897,10 @@ function TableView:_unrenderTableCell( record, options )
 	}
 	delegate:onRowUnrender( e )
 
-	view._hit:removeSelf()
-	view._hit=nil
+	hit = view.__hit
+	TouchMgr.unregister( hit, self._tableCellTouch_f )
+	hit:removeSelf()
+	view.__hit=nil
 
 	view:removeSelf()
 	record.view = nil
@@ -946,6 +1017,102 @@ function TableView:_calculateScrollPosition( record, position )
 	end
 
 	return value
+end
+
+
+--======================================================--
+-- Event Dispatch
+
+function TableView:_dispatchHighlightRow( record )
+	-- print( "TableView:_dispatchHighlightRow" )
+	local delegate = self._delegate
+	local cell = record.view.cell
+	local f, evt
+
+	evt = {
+		name=TableView.EVENT,
+		type=TableView.SHOULD_HIGHLIGHT_ROW,
+
+		target=self,
+		index=record.index,
+		view=record.view,
+		data=record.user
+	}
+
+	f = delegate and delegate.shouldHighlightRow
+	if f then
+		if not f( delegate, evt ) then return end
+	end
+
+	cell.highlight=true
+
+	f = delegate and delegate.didHighlightRow
+	evt.type = TableView.HIGHLIGHT_ROW
+	if f then f( delegate, evt ) end
+
+end
+
+function TableView:_dispatchUnhighlightRow( record )
+	-- print( "TableView:_dispatchUnhighlightRow" )
+	-- if highlight then tell
+	local delegate = self._delegate
+	local cell = record.view.cell
+	local f, evt
+
+	if not cell.highlight then return end
+
+	cell.highlight=false
+
+	evt = {
+		name=TableView.EVENT,
+		type=TableView.UNHIGHLIGHT_ROW,
+
+		target=self,
+		index=record.index,
+		view=record.view,
+		data=record.user
+	}
+	f = delegate and delegate.didUnhighlightRow
+	if f then f( delegate, evt ) end
+
+end
+
+
+function TableView:_dispatchSelectedRow( record )
+	-- print( "TableView:_dispatchSelectedRow" )
+	-- if highlight then tell
+	local delegate = self._delegate
+	local f, evt
+	local rowIdx = record.index
+
+	evt = {
+		name=TableView.EVENT,
+		type=TableView.WILL_SELECT_ROW,
+
+		target=self,
+		index=record.index,
+		view=record.view,
+		data=record.user
+	}
+
+	f = delegate and delegate.willSelectRow
+	if f then
+		rowIdx = f( delegate, evt )
+		if rowIdx==nil then return end
+	end
+	if rowIdx~=record.index then
+		-- get alternate record
+		record = self._rowItemRecords[ rowIdx ]
+		if not record then return end
+		evt.index=record.index
+		evt.view=record.view
+		evt.data=record.user
+	end
+
+	evt.type=TableView.SELECTED_ROW
+	f = delegate and delegate.didSelectRow
+	if f then f( delegate, evt ) end
+
 end
 
 

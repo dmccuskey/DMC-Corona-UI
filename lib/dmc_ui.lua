@@ -50,8 +50,16 @@ local VERSION = "1.1.0"
 --====================================================================--
 
 
+local ssub = string.sub
+local tinsert = table.insert
+local tremove = table.remove
+local tconcat = table.concat
+
 local args = { ... }
 local PATH = args[1]
+local DPATH = nil
+local SEP = nil
+local split = nil
 
 local dmc_ui_data, dmc_ui_func
 
@@ -65,10 +73,18 @@ if _G.__dmc_ui == nil then
 	dmc_ui_func.find = function( name )
 		local loc = ''
 		if PATH then loc = PATH end
-		if loc ~= '' and string.sub( loc, -1 ) ~= '.' then
+		if loc ~= '' and ssub( loc, -1 ) ~= '.' then
 			loc = loc .. '.'
 		end
 		return loc .. name
+	end
+	dmc_ui_func.file = function( name )
+		local path = {}
+		if DPATH then tinsert( path, DPATH ) end
+		local parts = split( name, '\\/')
+		if parts[1] =='.' then tremove(parts, 1) end
+		tinsert( path, tconcat( parts, SEP ) )
+		return tconcat( path, SEP )
 	end
 
 end
@@ -97,7 +113,7 @@ end
 
 local uiConst = require( PATH .. '.' .. 'ui_constants' )
 local UIUtils = require( PATH .. '.' .. 'ui_utils' )
-
+local Utils = require 'dmc_utils'
 
 
 --===================================================================--
@@ -107,8 +123,12 @@ local UIUtils = require( PATH .. '.' .. 'ui_utils' )
 local WIDTH, HEIGHT = display.contentWidth, display.contentHeight
 
 local sfmt = string.format
-
+local sgsub = string.gsub
 local LOCAL_DEBUG = false
+
+SEP = uiConst.getSystemSeparator()
+DPATH = sgsub( PATH, '%.', SEP )
+split = Utils.split
 
 local UI = {}
 

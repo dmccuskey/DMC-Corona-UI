@@ -89,7 +89,7 @@ Constant.IOS_8x = "8.0.0"
 
 Constant.WINDOWS = 'WinPhone'
 
-Constant.IS_IOS = ( PLATFORM=='iPhone OS' )
+Constant.IS_IOS = ( PLATFORM=='iPhone OS' or PLATFORM=='Mac OS X' )
 Constant.IS_ANDROID = ( PLATFORM=='Android' )
 Constant.IS_WINDOWS = ( PLATFORM=='WinPhone' )
 Constant.IS_SIMULATOR = ( PLATFORM=='Mac OS X' or PLATFORM=='Win' )
@@ -105,6 +105,13 @@ function Constant.getKeyboardHeight()
 	end
 end
 
+function Constant.getSystemSeparator()
+	if Constant.IS_IOS then
+		return '/'
+	else
+		return '\\'
+	end
+end
 
 
 --====================================================================--
@@ -126,6 +133,7 @@ Constant.NAVITEM = 'NavItem'
 Constant.NAVBAR = 'NavBar'
 Constant.SCROLLVIEW = 'ScrollView'
 Constant.TABLEVIEW = 'TableView'
+Constant.TABLEVIEWCELL = 'TableViewCell'
 Constant.TEXT = 'Text'
 Constant.TEXTFIELD = 'TextField'
 
