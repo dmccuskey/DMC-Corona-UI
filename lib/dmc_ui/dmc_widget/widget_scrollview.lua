@@ -67,6 +67,7 @@ local ui_find = dmc_ui_func.find
 local AxisMotion = require( ui_find( 'dmc_widget.widget_scrollview.axis_motion' ) )
 local Gesture = require 'dmc_gestures'
 local Objects = require 'dmc_objects'
+local TouchMgr = require 'dmc_touchmanager'
 local Utils = require 'dmc_utils'
 
 local uiConst = require( ui_find( 'ui_constants' ) )
@@ -156,7 +157,6 @@ function ScrollView:__init__( params )
 
 	self._hasMoved = false
 	self._isMoving = false
-	self._isRendered = false
 
 	self._scrollWidth = params.scrollWidth
 	self._scrollWidth_dirty=true
@@ -193,10 +193,6 @@ function ScrollView:__init__( params )
 
 	--== Display Groups ==--
 
-	self._dgBg = nil
-	self._dgViews = nil
-	self._dgUI = nil
-
 	--== Object References ==--
 
 	self._axis_x = nil -- y-axis motion
@@ -227,7 +223,7 @@ function ScrollView:__createView__()
 	-- print( "ScrollView:__createView__" )
 	self:superCall( '__createView__' )
 	--==--
-	local dg, o
+	local o
 
 	-- local background, gesture hit area
 
@@ -241,19 +237,8 @@ end
 
 function ScrollView:__undoCreateView__()
 	-- print( "ScrollView:__undoCreateView__" )
-	local o
-
-	self._axis_x:removeSelf()
-	self._axis_x = nil
-
-	self._axis_y:removeSelf()
-	self._axis_y = nil
-
 	self._rectBg:removeSelf()
 	self._rectBg=nil
-
-	self._dgBg:removeSelf()
-	self._dgBg=nil
 	--==--
 	self:superCall( '__undoCreateView__' )
 end
@@ -278,15 +263,11 @@ function ScrollView:__initComplete__()
 	self.horizontalScrollEnabled = self._canScrollH
 	self.verticalScrollEnabled = self._canScrollV
 
-	self._isRendered = true
-
 end
 
 function ScrollView:__undoInitComplete__()
 	--print( "ScrollView:__undoInitComplete__" )
 	local o, f
-
-	self._isRendered = false
 
 	self:_removeAxisMotionX()
 	self:_removeAxisMotionY()
@@ -441,11 +422,11 @@ function ScrollView:scrollToPosition( pos, params )
 end
 
 
-function ScrollView:takeFocus( event, params )
-	params = params or {}
-	params.returnFocus=params.returnFocus
-	--==--
-	-- TODO: start animation
+function ScrollView:takeFocus( event )
+	-- TouchMgr.setFocus( self._rectBg, event.id )
+	TouchMgr.setFocus( self._rectBg, event.id )
+	event.phase='began'
+	self._rectBg:dispatchEvent( event )
 end
 
 
