@@ -138,6 +138,7 @@ function Style.initialize( manager, params )
 	dUI.newNavItemStyle = Style.newNavItemStyle
 	dUI.newRectangleBackgroundStyle = Style.newRectangleBackgroundStyle
 	dUI.newRoundedBackgroundStyle = Style.newRoundedBackgroundStyle
+	dUI.newTableViewStyle = Style.newTableViewStyle
 	dUI.newTextFieldStyle = Style.newTextFieldStyle
 	dUI.newTextStyle = Style.newTextStyle
 
@@ -410,6 +411,7 @@ function Style.loadTableViewStyleSupport( params )
 	--== Components
 
 	local TableViewStyle = require( ui_find( 'dmc_style.tableview_style' ) )
+	local TableViewStyle = require( ui_find( 'dmc_style.tableview_style' ) )
 
 	Style.TableView=TableViewStyle
 
@@ -449,15 +451,21 @@ function Style.loadTableViewCellStyleSupport( params )
 	--== Dependencies
 
 	Style.loadBaseStyleSupport( params )
+	Style._loadBackgroundStyleSupport( params )
+	Style._loadTextStyleSupport( params )
 
 	--== Components
 
 	local TableViewCellStyle = require( ui_find( 'dmc_style.tableviewcell_style' ) )
+	local TableViewCellStateStyle = require( ui_find( 'dmc_style.tableviewcell_style.tableviewcell_state' ) )
 
 	Style.TableViewCell=TableViewCellStyle
+	Style.TableViewCellState=TableViewCellStateStyle
 
 	initKolors(
 		function()
+			-- reverse order
+			TableViewCellStateStyle.initialize( Style, params )
 			TableViewCellStyle.initialize( Style, params )
 		end,
 		kmode
@@ -473,9 +481,6 @@ function Style.newTableViewCell( style_info, params )
 	if not Style.TableViewCell then Style.loadTableViewCellStyleSupport() end
 	return Style.TableViewCell:createStyleFrom( params )
 end
-
-
-
 
 
 --======================================================--
@@ -571,6 +576,8 @@ end
 --== Private Functions
 
 
+-- none
+
 
 
 --====================================================================--
@@ -578,6 +585,7 @@ end
 
 
 -- none
+
 
 
 

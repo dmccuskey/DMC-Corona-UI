@@ -143,13 +143,6 @@ TableViewCell.STYLE_TYPE = uiConst.TABLEVIEWCELL
 TableViewCell.EVENT = 'tableviewcell-widget-event'
 
 
---[[
-
-marginX = separatorInsert
-indentLevel
-indentWidth
---]]
-
 --======================================================--
 -- Start: Setup DMC Objects
 
@@ -160,7 +153,8 @@ function TableViewCell:__init__( params )
 	params = params or {}
 	if params.x==nil then params.x=0 end
 	if params.y==nil then params.y=0 end
-	if params.text==nil then params.text="" end
+	if params.labelText==nil then params.labelText="" end
+	if params.detailText==nil then params.detailText="" end
 
 	self:superCall( '__init__', params )
 	--==--
@@ -174,48 +168,46 @@ function TableViewCell:__init__( params )
 	self._y = params.y
 	self._y_dirty = true
 
-	self._highlight = false --
-
-	self._textLabel = params.text
+	self._textLabel = params.labelText
 	self._textLabel_dirty=true
-	self._textDetail = params.text
+	self._textDetail = params.detailText
 	self._textDetail_dirty=true
+
+	self._activeStateStyle = nil
+
+	self._accessoryObject = nil
+	self._highlightIsActive = false
+	self._highlightIsActive_dirty=true
 
 	-- properties from style
 
-	self._accessory = nil
-	self._accessoryObject = nil
-	self._accessory_dirty=true
-
-	self._width_dirty=true
+	-- self._width_dirty=true
 	self._height_dirty=true
-	-- virtual
-	self._rectBgWidth_dirty=true
-	self._rectBgHeight_dirty=true
-	self._displayWidth_dirty=true
-	self._displayHeight_dirty=true
 
-	self._align_dirty=true
 	self._anchorX_dirty=true
 	self._anchorY_dirty=true
-	self._fillColor_dirty = true
-	self._font_dirty=true
-	self._fontSize_dirty=true
-	self._marginX_dirty=true
-	self._marginY_dirty=true
-	self._strokeColor_dirty=true
-	self._strokeWidth_dirty=true
+	self._cellMargin_dirty=true
 
-	self._textColor_dirty=true
-	-- virtual
-	self._textLabelX_dirty=true
-	self._textLabelWidth_dirty=true
-	self._textLabelY_dirty=true
+	self._detailY_dirty=true
+	self._labelY_dirty=true
 
-	self._cellLayout = TableViewCell.SUBTITLE
+	self._accessory_dirty=true
 	self._cellLayout_dirty = true
+	self._contentMargin_dirty=true
 
+	-- virtual
+
+	self._accessoryX_dirty=true
+	self._imageView_dirty=true
+	self._imageViewX_dirty=true
+
+	self._textLabelX_dirty=true
+	self._textLabelY_dirty=true
+	self._textLabelWidth_dirty=true
+
+	self._textDetailX_dirty=true
 	self._textDetailY_dirty=true
+	self._textDetailWidth_dirty=true
 
 	--== Object References ==--
 
@@ -228,6 +220,8 @@ function TableViewCell:__init__( params )
 	self._wgtTextDetail = nil -- text widget (for both hint and value display)
 	self._wgtTextDetail_f = nil -- widget handler
 	self._wgtTextDetail_dirty=true
+
+	-- @TODO: add background object
 
 	self._rectBg = nil -- our background object
 
@@ -388,31 +382,31 @@ end
 
 
 function TableViewCell.__getters:highlight()
-	return self._highlight
+	return self._highlightIsActive
 end
 function TableViewCell.__setters:highlight( value )
 	-- print( "TableViewCell.__setters:highlight", value )
 	assert( type(value)=='boolean' )
 	--==--
-	if self._highlight == value then return end
-	self._highlight = value
-	self._highlight_dirty=true
+	if self._highlightIsActive == value then return end
+	self._highlightIsActive = value
+	self._highlightIsActive_dirty=true
 	self:__invalidateProperties__()
 end
 
 
-function TableViewCell.__getters:cellLayout()
-	return self._cellLayout
-end
-function TableViewCell.__setters:cellLayout( value )
-	-- print( "TableViewCell.__setters:cellLayout", value )
-	assert( type(value)=='string' )
-	--==--
-	if self._cellLayout == value then return end
-	self._cellLayout = value
-	self._cellLayout_dirty=true
-	self:__invalidateProperties__()
-end
+-- function TableViewCell.__getters:cellLayout()
+-- 	return self._cellLayout
+-- end
+-- function TableViewCell.__setters:cellLayout( value )
+-- 	-- print( "TableViewCell.__setters:cellLayout", value )
+-- 	assert( type(value)=='string' )
+-- 	--==--
+-- 	if self._cellLayout == value then return end
+-- 	self._cellLayout = value
+-- 	self._cellLayout_dirty=true
+-- 	self:__invalidateProperties__()
+-- end
 
 
 
@@ -421,19 +415,20 @@ function TableViewCell.__getters:imageView()
 end
 function TableViewCell.__setters:imageView( value )
 	self._imageView = value
+	if value then value.isVisible=false end
 	self._imageView_dirty=true
 	self:__invalidateProperties__()
 end
 
-function TableViewCell.__getters:accessory()
-	return self._accessory
-end
-function TableViewCell.__setters:accessory( value )
-	assert( value )
-	self._accessory = value
-	self._accessory_dirty=true
-	self:__invalidateProperties__()
-end
+-- function TableViewCell.__getters:accessory()
+-- 	return self._accessory
+-- end
+-- function TableViewCell.__setters:accessory( value )
+-- 	assert( value )
+-- 	self._accessory = value
+-- 	self._accessory_dirty=true
+-- 	self:__invalidateProperties__()
+-- end
 
 
 
@@ -449,29 +444,17 @@ end
 --- set margin of table view cell.
 -- this sets left and right side
 -- @integer value
--- @usage cell.marginX=10
+-- @usage cell.cellMargin=10
 --
-function TableViewCell.__setters:marginX( value )
-	-- print( 'TableViewCell.__setters:marginX', value )
+function TableViewCell.__setters:cellMargin( value )
+	-- print( 'TableViewCell.__setters:cellMargin', value )
 	assert( type(value)=='number' )
 	--==--
-	if self._marginX == value then return end
-	self._marginX = value
-	self._marginX_dirty=true
+	if self._cellMargin == value then return end
+	self._cellMargin = value
+	self._cellMargin_dirty=true
 	self:__invalidateProperties__()
 end
-
-
-function TableViewCell.__setters:contentMargin( value )
-	-- print( 'TableViewCell.__setters:contentMargin', value )
-	assert( type(value)=='number' )
-	--==--
-	if self._contentMargin == value then return end
-	self._contentMargin = value
-	self._contentMargin_dirty=true
-	self:__invalidateProperties__()
-end
-
 
 
 
@@ -561,9 +544,6 @@ end
 
 function TableViewCell:__commitProperties__()
 	-- print( 'TableViewCell:__commitProperties__' )
-	local style = self.curr_style
-	-- local metric = FontMgr:getFontMetric( style.font, style.fontSize )
-	metric={offsetX=0,offsetY=0}
 
 	local view = self.view
 	local bg = self._rectBg
@@ -571,20 +551,50 @@ function TableViewCell:__commitProperties__()
 	local textLabel = self._wgtTextLabel
 	local textDetail = self._wgtTextDetail
 
-	local marginX = self._marginX
-	local contentMargin = self._contentMargin
 	local height = self._height
-	local layout = self._cellLayout
 	local width = self._width
 
 	--== position sensitive
 
+	if self._highlightIsActive_dirty then
+		local cellStyle = self.curr_style
+		local style
+		if self._highlightIsActive then
+			style=cellStyle.active
+		else
+			style=cellStyle.inactive
+		end
+		textLabel:setActiveStyle( style.label, {copy=false} )
+		textDetail:setActiveStyle( style.detail, {copy=false} )
+		-- bg:setActiveStyle( style.background, {copy=false} )
+		self._activeStateStyle = style
+		self._highlightIsActive_dirty=false
 
-	if self._marginX_dirty then
-		self._marginX_dirty=false
-
+		self._accessory_dirty=true
 		self._textLabelX_dirty=true
+		self._textLabelY_dirty=true
+		self._textLabelWidth_dirty=true
+		self._textDetailX_dirty=true
+		self._textDetailY_dirty=true
+		self._textDetailWidth_dirty=true
 	end
+
+	local style = self._activeStateStyle
+	local contentMargin = style.contentMargin
+	local cellLayout = style.cellLayout
+	local cellMargin = style.cellMargin
+
+	-- x/y
+
+	if self._x_dirty then
+		view.x = self._x
+		self._x_dirty = false
+	end
+	if self._y_dirty then
+		view.y = self._y
+		self._y_dirty = false
+	end
+
 	if self._width_dirty then
 		bg.width = self._width
 		self._width_dirty=false
@@ -601,24 +611,41 @@ function TableViewCell:__commitProperties__()
 		self._rectBgHeight_dirty=true
 	end
 
-	if self._marginX_dirty then
-		self._marginX_dirty=false
+	-- anchorX/anchorY
+
+	if self._anchorX_dirty then
+		bg.anchorX = style.anchorX
+		self._anchorX_dirty=false
+
+		self._x_dirty=true
+		self._textLabelX_dirty=true
+	end
+	if self._anchorY_dirty then
+		bg.anchorY = style.anchorY
+		self._anchorY_dirty=false
+
+		self._y_dirty=true
+		self._textLabelY_dirty=true
+	end
+
+	-- Virtual
+
+	if self._cellMargin_dirty then
+		self._cellMargin_dirty=false
 
 		self._textLabelX_dirty=true
 		self._textLabelWidth_dirty=true
 		self._textDetailX_dirty=true
 		self._textDetailWidth_dirty=true
 	end
-	if self._marginY_dirty then
-		-- reminder, we don't set text height
-		self._marginY_dirty=false
 
-		self._rectBgHeight_dirty=true
-		self._textLabelY_dirty=true
-		self._displayHeight_dirty=true
+	if self._imageView_dirty then
+		self._imageView_dirty=false
+
+		self._imageViewX_dirty=true
+		self._textLabelX_dirty=true
+		self._textDetailX_dirty=true
 	end
-
-	-- virtual
 
 	if self._contentMargin_dirty then
 		self._contentMargin_dirty=true
@@ -638,9 +665,10 @@ function TableViewCell:__commitProperties__()
 		self._rectBgHeight_dirty=false
 	end
 
+	-- accessory / accessoryX
 
 	if self._accessory_dirty then
-		local accessory = self._accessory
+		local accessory = style.accessory
 		local accessObj = self._accessoryObject
 
 		if type(accessory)=='string' then
@@ -668,79 +696,36 @@ function TableViewCell:__commitProperties__()
 		self._textDetailWidth_dirty=true
 	end
 
-	if self._accessoryX_dirty then
+	if self._accessoryX_dirty and self._accessoryObject then
 		local accessObj = self._accessoryObject
-		if not accessObj then return end
-		local margin = self._marginX
 		accessObj.anchorX, accessObj.anchorY = 1, 0.5
-		accessObj.x, accessObj.y = width-margin, height*0.5
+		accessObj.x, accessObj.y = width-cellMargin, height*0.5
 		self._accessoryX_dirty=false
 	end
 
-	-- anchorX/anchorY
+	-- imageViewX
 
-	if self._anchorX_dirty then
-		bg.anchorX = style.anchorX
-		self._anchorX_dirty=false
-
-		self._x_dirty=true
-		self._textLabelX_dirty=true
-	end
-	if self._anchorY_dirty then
-		bg.anchorY = style.anchorY
-		self._anchorY_dirty=false
-
-		self._y_dirty=true
-		self._textLabelY_dirty=true
-	end
-
-	-- x/y
-
-	if self._x_dirty then
-		view.x = self._x
-		self._x_dirty = false
-
-		self._textLabelX_dirty=true
-	end
-	if self._y_dirty then
-		view.y = self._y
-		self._y_dirty = false
-
-		self._textLabelY_dirty=true
-	end
-
-	if self._imageView_dirty then
-		self._imageView_dirty=false
-
-		self._imageViewX_dirty=true
-		self._textLabelX_dirty=true
-		self._textDetailX_dirty=true
-	end
-
-	if self._imageViewX_dirty then
-		if not imageView then return end
-		local margin = self._marginX
+	if self._imageViewX_dirty and imageView then
 		local height = self._height -- use getter
 		local offset = height/2
-		imageView.x = margin
+		imageView.x = cellMargin
 		imageView.y = offset
 		imageView.height=30
 		self._dgViews:insert( imageView )
+		imageView.isVisible=true
 		imageView.anchorX, imageView.anchorY = 0, 0.5
 		self._imageViewX_dirty=false
 	end
 
-
-	-- text align x/y
+	-- textLabel/textDetail X/Width
 
 	if self._textLabelX_dirty or self._textDetailX_dirty then
-		local margin = marginX
+		local margin = cellMargin
 		if imageView then
 			margin = margin + imageView.width
 		end
-		if contentMargin then
-			margin = margin + contentMargin
-		end
+		margin = margin + contentMargin
+
 		textLabel.x = margin
 		textDetail.x = margin
 		self._textDetailX_dirty=false
@@ -749,9 +734,12 @@ function TableViewCell:__commitProperties__()
 
 	if self._textLabelWidth_dirty or self._textDetailWidth_dirty then
 		local accessObj = self._accessoryObject
-		local margin = 2*marginX + 2*contentMargin
+		local margin = 2*cellMargin + 2*contentMargin
 		if accessObj then
 			margin = margin + accessObj.width
+		end
+		if imageView then
+			margin = margin + imageView.width
 		end
 		textLabel.width = width-margin
 		textDetail.width = width-margin
@@ -759,29 +747,27 @@ function TableViewCell:__commitProperties__()
 		self._textLabelWidth_dirty=false
 	end
 
-	if self._textLabelY_dirty then
+	if self._cellLayout_dirty then
 		local offset
-		if layout==TableViewCell.SUBTITLE then
-			offset = height/3
+		if cellLayout==TableViewCell.SUBTITLE then
+			textDetail.isVisible=true
+			textLabel.isVisible=true
 		else
-			offset = height/2
+			textDetail.isVisible=false
+			textLabel.isVisible=true
 		end
-		textLabel.anchorY = 0.5
-		textLabel.y=offset
+		self._cellLayout_dirty=false
+	end
+
+	if self._textLabelY_dirty then
+		textLabel.anchorY=0.5
+		textLabel.y=style.labelY
 		self._textLabelY_dirty=false
 	end
 
 	if self._textDetailY_dirty then
-		local offset
-		if layout==TableViewCell.SUBTITLE then
-			textDetail.isVisible=true
-			offset = height-height/3
-		else
-			textDetail.isVisible=false
-			offset = 0
-		end
-		textDetail.anchorY = 0.5
-		textDetail.y=offset
+		textDetail.anchorY=0.5
+		textDetail.y=style.detailY
 		self._textDetailY_dirty=false
 	end
 
@@ -789,22 +775,14 @@ function TableViewCell:__commitProperties__()
 
 	-- textColor/fillColor
 
-	if self._fillColor_dirty or self._debugOn_dirty then
+	if self._debugOn_dirty then
 		if style.debugOn==true then
-			bg:setFillColor( 1,1,0,0.2 )
+			bg:setFillColor( 1,0,0,0.2 )
 		else
-			bg:setFillColor( unpack( style.fillColor ))
+			bg:setFillColor( 0,0,0,0 )
 		end
 		self._fillColor_dirty=false
 		self._debugOn_dirty=false
-	end
-	if self._strokeColor_dirty then
-		bg:setStrokeColor( unpack( style.strokeColor ))
-		self._strokeColor_dirty=false
-	end
-	if self._strokeWidth_dirty then
-		bg.strokeWidth = style.strokeWidth
-		self._strokeWidth_dirty=false
 	end
 
 end
@@ -832,17 +810,12 @@ function TableViewCell:stylePropertyChangeHandler( event )
 		self._anchorX_dirty=true
 		self._anchorY_dirty=true
 
-		self._align_dirty=true
-		self._fillColor_dirty = true
-		self._font_dirty=true
-		self._fontSize_dirty=true
-		self._marginX_dirty=true
-		self._marginY_dirty=true
-		self._strokeColor_dirty=true
-		self._strokeWidth_dirty=true
-
-		self._text_dirty=true
-		self._textColor_dirty=true
+		self._accessory_dirty = true
+		self._cellLayout_dirty=true
+		self._cellMargin_dirty=true
+		self._contentMargin_dirty=true
+		self._detailY_dirty=true
+		self._labelY_dirty=true
 
 		property = etype
 
@@ -858,26 +831,18 @@ function TableViewCell:stylePropertyChangeHandler( event )
 			elseif property=='anchorY' then
 				self._anchorY_dirty=true
 
-		elseif property=='align' then
-			self._align_dirty=true
-		elseif property=='fillColor' then
-			self._fillColor_dirty=true
-		elseif property=='font' then
-			self._font_dirty=true
-		elseif property=='fontSize' then
-			self._fontSize_dirty=true
-		elseif property=='marginX' then
-			self._marginX_dirty=true
-		elseif property=='marginY' then
-			self._marginY_dirty=true
-		elseif property=='strokeColor' then
-			self._strokeColor_dirty=true
-		elseif property=='strokeWidth' then
-			self._strokeWidth_dirty=true
-		elseif property=='text' then
-			self._text_dirty=true
-		elseif property=='textColor' then
-			self._textColor_dirty=true
+		elseif property=='accessory' then
+			self._accessory_dirty=true
+		elseif property=='cellLayout' then
+			self._cellLayout_dirty=true
+		elseif property=='cellMargin' then
+			self._cellMargin_dirty=true
+		elseif property=='contentMargin' then
+			self._contentMargin_dirty=true
+		elseif property=='detailY' then
+			self._detailY_dirty=true
+		elseif property=='labelY' then
+			self._labelY_dirty=true
 		end
 
 	end

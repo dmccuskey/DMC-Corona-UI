@@ -134,6 +134,7 @@ Constant.NAVBAR = 'NavBar'
 Constant.SCROLLVIEW = 'ScrollView'
 Constant.TABLEVIEW = 'TableView'
 Constant.TABLEVIEWCELL = 'TableViewCell'
+Constant.TABLEVIEWCELL_STATE = 'TableViewCell-State'
 Constant.TEXT = 'Text'
 Constant.TEXTFIELD = 'TextField'
 

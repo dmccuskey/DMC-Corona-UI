@@ -100,6 +100,11 @@ TableViewCell.TYPE = uiConst.TABLEVIEWCELL
 
 TableViewCell.__base_style__ = nil
 
+TableViewCell._CHILDREN = {
+	inactive=true,
+	active=true
+}
+
 TableViewCell._VALID_PROPERTIES = {
 	debugOn=true,
 	width=true,
@@ -107,37 +112,102 @@ TableViewCell._VALID_PROPERTIES = {
 	anchorX=true,
 	anchorY=true,
 
-	align=true,
-	fillColor=true,
-	font=true,
-	fontSize=true,
-	marginX=true,
-	marginY=true,
-	textColor=true,
-
-	strokeColor=true,
-	strokeWidth=true,
+	accessory=true,
+	cellLayout=true,
+	cellMargin=true,
+	contentMargin=true,
 }
 
-TableViewCell._EXCLUDE_PROPERTY_CHECK = {}
+TableViewCell._EXCLUDE_PROPERTY_CHECK = nil
 
 TableViewCell._STYLE_DEFAULTS = {
-	debugOn=true,
-	width=200,
+	name='tableviewcell-default-style',
+	debugOn=false,
+	width=100,
 	height=30,
-	anchorX=0.5,
-	anchorY=0.5,
+	anchorX=0,
+	anchorY=1,
 
-	align='center',
-	fillColor={0,0,0,0},
-	font=native.systemFont,
-	fontSize=16,
-	marginX=0,
-	marginY=0,
-	textColor={0,0,0,1},
+	accessory='disclosure-indicator-accessory',
+	cellLayout='subtitle-layout',
+	cellMargin=5,
+	contentMargin=5,
 
-	strokeColor={0,0,0,0},
-	strokeWidth=0,
+	inactive={ -- << this is a TableViewCell State Style State
+		--[[
+		Can be copied from TableViewCell
+		* debugOn
+		* width
+		* height
+		* anchorX/anchorY
+		* accessory
+		* cellLayout
+		* cellMargin/marginY
+		* contentMargin
+		--]]
+		labelY=10,
+		detailY=22,
+
+		label={
+			-- anchorY=0.5,
+			align='left',
+			textColor={0,0,0,1},
+			font=native.systemFontBold,
+			fontSize=11
+		},
+		detail={
+			-- anchorY=0.5,
+			align='left',
+			textColor={0.5,0.5,0.5,1},
+			font=native.systemFont,
+			fontSize=9
+		},
+		background={
+			type='rectangle',
+			view={
+				fillColor={1,1,1,1},
+				strokeWidth=1,
+				strokeColor={0,0,0,1},
+			}
+		}
+	},
+
+	active={ -- << this is a TableViewCell State Style State
+		--[[
+		Can be copied from TableViewCell
+		* debugOn
+		* width
+		* height
+		* anchorX/anchorY
+		* accessory
+		* cellLayout
+		* cellMargin/marginY
+		* contentMargin
+		--]]
+		labelY=10,
+		detailY=22,
+		label={
+			align='left',
+			textColor={0.1,0.1,0.1,1},
+			font=native.systemFontBold,
+			fontSize=11
+		},
+		detail={
+			align='left',
+			textColor={0.6,0.6,0.6,1},
+			font=native.systemFont,
+			fontSize=9
+		},
+		background={
+			type='rectangle',
+			view={
+				fillColor={1,1,1,1},
+				strokeWidth=1,
+				strokeColor={0,0,0,1},
+			}
+		}
+	},
+
 }
 
 TableViewCell._TEST_DEFAULTS = {
@@ -151,7 +221,7 @@ TableViewCell._TEST_DEFAULTS = {
 	fillColor={101,102,103,104},
 	font=native.systemFont,
 	fontSize=101,
-	marginX=102,
+	cellMargin=102,
 	marginY=103,
 	textColor={111,112,113,114},
 
@@ -190,15 +260,6 @@ function TableViewCell:__init__( params )
 	-- self._anchorX
 	-- self._anchorY
 
-	self._align = nil
-	self._fillColor = nil
-	self._font = nil
-	self._fontSize = nil
-	self._marginX = nil
-	self._marginY = nil
-	self._strokeColor = nil
-	self._strokeWidth = nil
-	self._textColor = nil
 end
 
 -- END: Setup DMC Objects
@@ -227,6 +288,18 @@ function TableViewCell.initialize( manager, params )
 end
 
 
+function TableViewCell.createStyleStructure( src )
+	-- print( "TableViewCell.createStyleStructure", src )
+	src = src or {}
+	--==--
+	local StyleClass = Style.TableViewCellState
+	return {
+		inactive=StyleClass.createStyleStructure( src.inactive ),
+		active=StyleClass.createStyleStructure( src.active ),
+	}
+end
+
+
 function TableViewCell.addMissingDestProperties( dest, src )
 	-- print( "TableViewCell.addMissingDestProperties", dest, src )
 	assert( dest )
@@ -239,17 +312,43 @@ function TableViewCell.addMissingDestProperties( dest, src )
 	for i=1,#srcs do
 		local src = srcs[i]
 
-		if dest.align==nil then dest.align=src.align end
-		if dest.fillColor==nil then dest.fillColor=src.fillColor end
-		if dest.font==nil then dest.font=src.font end
-		if dest.fontSize==nil then dest.fontSize=src.fontSize end
-		if dest.marginX==nil then dest.marginX=src.marginX end
-		if dest.marginY==nil then dest.marginY=src.marginY end
-		if dest.strokeColor==nil then dest.strokeColor=src.strokeColor end
-		if dest.strokeWidth==nil then dest.strokeWidth=src.strokeWidth end
-		if dest.textColor==nil then dest.textColor=src.textColor end
+		--== Additional properties to be handed down to children
+
+		if dest.anchorX==nil then dest.anchorX=src.anchorX end
+		if dest.anchorY==nil then dest.anchorY=src.anchorY end
+
+		if dest.accessory==nil then dest.accessory=src.accessory end
+		if dest.cellLayout==nil then dest.cellLayout=src.cellLayout end
+		if dest.contentMargin==nil then dest.contentMargin=src.contentMargin end
+		if dest.cellMargin==nil then dest.cellMargin=src.cellMargin end
 
 	end
+
+	dest = TableViewCell._addMissingChildProperties( dest, src )
+
+	return dest
+end
+
+
+-- _addMissingChildProperties()
+-- copy properties to sub-styles
+--
+function TableViewCell._addMissingChildProperties( dest, src )
+	-- print( "TableViewCell._addMissingChildProperties", dest, src )
+	assert( dest )
+	src = dest
+	--==--
+	local eStr = "ERROR: Style missing property '%s'"
+	local StyleClass = Style.TableViewCellState
+	local child
+
+	child = dest.inactive
+	assert( child, sfmt( eStr, 'inactive' ) )
+	dest.inactive = StyleClass.addMissingDestProperties( child, src )
+
+	child = dest.active
+	assert( child, sfmt( eStr, 'active' ) )
+	dest.active = StyleClass.addMissingDestProperties( child, src )
 
 	return dest
 end
@@ -268,34 +367,6 @@ function TableViewCell.copyExistingSrcProperties( dest, src, params )
 
 	BaseStyle.copyExistingSrcProperties( dest, src, params )
 
-	if (src.align~=nil and dest.align==nil) or force then
-		dest.align=src.align
-	end
-	if (src.fillColor~=nil and dest.fillColor==nil) or force then
-		dest.fillColor=src.fillColor
-	end
-	if (src.font~=nil and dest.font==nil) or force then
-		dest.font=src.font
-	end
-	if (src.fontSize~=nil and dest.fontSize==nil) or force then
-		dest.fontSize=src.fontSize
-	end
-	if (src.marginX~=nil and dest.marginX==nil) or force then
-		dest.marginX=src.marginX
-	end
-	if (src.marginY~=nil and dest.marginY==nil) or force then
-		dest.marginY=src.marginY
-	end
-	if (src.strokeColor~=nil and dest.strokeColor==nil) or force then
-		dest.strokeColor=src.strokeColor
-	end
-	if (src.strokeWidth~=nil and dest.strokeWidth==nil) or force then
-		dest.strokeWidth=src.strokeWidth
-	end
-	if (src.textColor~=nil and dest.textColor==nil) or force then
-		dest.textColor=src.textColor
-	end
-
 	return dest
 end
 
@@ -309,32 +380,27 @@ function TableViewCell._verifyStyleProperties( src )
 	-- exclude width/height because nil is valid value
 	local is_valid = BaseStyle._verifyStyleProperties( src, {width=true, height=true} )
 
-	if not src.align then
-		print(sfmt(emsg,'align')) ; is_valid=false
+	local StyleClass = Style.TableViewCellState
+	local child
+
+	child = src.inactive
+	if not child then
+		print( "ButtonStyle child test skipped for 'inactive'" )
+		is_valid=false
+	else
+		if not StyleClass._verifyStyleProperties( child, exclude ) then
+			is_valid=false
+		end
 	end
-	if not src.fillColor then
-		print(sfmt(emsg,'fillColor')) ; is_valid=false
-	end
-	if not src.font then
-		print(sfmt(emsg,'font')) ; is_valid=false
-	end
-	if not src.fontSize then
-		print(sfmt(emsg,'fontSize')) ; is_valid=false
-	end
-	if not src.marginX then
-		print(sfmt(emsg,'marginX')) ; is_valid=false
-	end
-	if not src.marginY then
-		print(sfmt(emsg,'marginY')) ; is_valid=false
-	end
-	if not src.strokeColor then
-		print(sfmt(emsg,'strokeColor')) ; is_valid=false
-	end
-	if not src.strokeWidth then
-		print(sfmt(emsg,'strokeWidth')) ; is_valid=false
-	end
-	if not src.textColor then
-		print(sfmt(emsg,'textColor')) ; is_valid=false
+
+	child = src.active
+	if not child then
+		print( "ButtonStyle child test skipped for 'active'" )
+		is_valid=false
+	else
+		if not StyleClass._verifyStyleProperties( child, exclude ) then
+			is_valid=false
+		end
 	end
 
 	return is_valid
@@ -344,6 +410,49 @@ end
 
 --====================================================================--
 --== Public Methods
+
+--======================================================--
+-- Access to sub-styles
+
+--== .active
+
+function TableViewCell.__getters:active()
+	-- print( "TableViewCell.__getters:active", self._active )
+	return self._active
+end
+function TableViewCell.__setters:active( data )
+	-- print( "TableViewCell.__setters:active", data )
+	assert( data==nil or type(data)=='string' or type( data )=='table' )
+	--==--
+	local StyleClass = Style.TableViewCellState
+	local inherit = self._inherit and self._inherit._active
+
+	self._active = StyleClass:createStyleFrom{
+		inherit=inherit,
+		parent=self,
+		data=data
+	}
+end
+
+--== .inactive
+
+function TableViewCell.__getters:inactive()
+	-- print( "TableViewCell.__getters:inactive", self._inactive )
+	return self._inactive
+end
+function TableViewCell.__setters:inactive( data )
+	-- print( "TableViewCell.__setters:inactive", data )
+	assert( data==nil or type(data)=='string' or type( data )=='table' )
+	--==--
+	local StyleClass = Style.TableViewCellState
+	local inherit = self._inherit and self._inherit._inactive
+
+	self._inactive = StyleClass:createStyleFrom{
+		inherit=inherit,
+		parent=self,
+		data=data
+	}
+end
 
 
 --== verifyProperties
@@ -359,8 +468,83 @@ end
 --== Private Methods
 
 
--- none
+function TableViewCell:_doChildrenInherit( value )
+	-- print( "TableViewCell:_doChildrenInherit", value, self )
+	if not self._isInitialized then return end
 
+	self._inactive.inherit = value and value.inactive or value
+	self._active.inherit = value and value.active or value
+end
+
+
+function TableViewCell:_clearChildrenProperties( style, params )
+	-- print( "TableViewCell:_clearChildrenProperties", style, self )
+	assert( style==nil or type(style)=='table' )
+	if style and type(style.isa)=='function' then
+		assert( style:isa(TableViewCell) )
+	end
+	--==--
+	local substyle
+
+	substyle = style and style.active
+	self._inactive:_clearProperties( substyle, params )
+
+	substyle = style and style.inactive
+	self._active:_clearProperties( substyle, params )
+
+end
+
+function TableViewCell:_destroyChildren()
+	-- print( 'TableViewCell:_destroyChildren', self )
+
+	self._active:removeSelf()
+	self._active=nil
+
+	self._inactive:removeSelf()
+	self._inactive=nil
+end
+
+
+
+-- we could have nil, Lua structure, or Instance
+--
+-- TODO: more work when inheriting, etc (Background Style)
+function TableViewCell:_prepareData( data, dataSrc, params )
+	-- print("TableViewCell:_prepareData", data, self )
+	params = params or {}
+	--==--
+	-- local inherit = params.inherit
+	local StyleClass
+	local src, dest, tmp
+
+	if not data then
+		data = TableViewCell.createStyleStructure( dataSrc )
+	end
+
+	src, dest = data, nil
+
+	--== make sure we have structure for children
+
+	StyleClass = Style.TableViewCellState
+	if not src.active then
+		tmp = dataSrc and dataSrc.active
+		src.active = StyleClass.createStyleStructure( tmp )
+	end
+	if not src.inactive then
+		tmp = dataSrc and dataSrc.inactive
+		src.inactive = StyleClass.createStyleStructure( tmp )
+	end
+
+	--== process children
+
+	dest = src.active
+	src.active = StyleClass.copyExistingSrcProperties( dest, src )
+
+	dest = src.inactive
+	src.inactive = StyleClass.copyExistingSrcProperties( dest, src )
+
+	return data
+end
 
 
 --====================================================================--
