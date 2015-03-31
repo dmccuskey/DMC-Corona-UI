@@ -206,7 +206,37 @@ module_config = {
 				}
 			},
 			{
+				"exp_dir": "tableview-widget/tableview-modify",
+				"requires": [],
+				"mod_dir_map": {
+					"default_dir": "",
+					"libs": {
+						"dmc-corona-boot":""
+					}
+				}
+			},
+			{
+				"exp_dir": "tableview-widget/tableview-scroll",
+				"requires": [],
+				"mod_dir_map": {
+					"default_dir": "",
+					"libs": {
+						"dmc-corona-boot":""
+					}
+				}
+			},
+			{
 				"exp_dir": "tableview-widget/tableview-simple",
+				"requires": [],
+				"mod_dir_map": {
+					"default_dir": "",
+					"libs": {
+						"dmc-corona-boot":""
+					}
+				}
+			},
+			{
+				"exp_dir": "tableview-widget/tableview-tableviewcell",
 				"requires": [],
 				"mod_dir_map": {
 					"default_dir": "",
