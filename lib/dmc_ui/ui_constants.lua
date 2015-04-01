@@ -154,6 +154,8 @@ Constant.RECTANGLE = 'rectangle'
 Constant.NAVBAR_TRANSITION_TIME = 400
 Constant.PRESENT_CONTROL_TRANSITION_TIME = 100
 
+Constant.TABLEVIEW_TOUCH_THRESHOLD = 10
+
 -- Modal Types
 
 Constant.POPOVER = 'popover'

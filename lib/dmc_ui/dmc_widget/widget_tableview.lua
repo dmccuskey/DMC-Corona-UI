@@ -224,9 +224,14 @@ function TableView:__init__( params )
 	--]]
 	self._renderedTableCells = nil
 
+	-- saved Touch Event, usually 'began'
+	-- to enable motion "from beginning"
+	self._tmpTouchEvt = nil
+
 	--== Display Groups ==--
 
 	--== Object References ==--
+
 
 	self._tableCellHighlight_timer = nil
 	self._tableCellTouch_f = nil
@@ -760,6 +765,16 @@ function TableView:_stopHighlightTimer()
 end
 
 
+--- create callback function for returnFocus
+-- this is how ScrollView will communicate
+--
+function TableView:_getReturnFocusCallback( method )
+	-- print( "TableView:_getReturnFocusCallback" )
+	return function( event )
+		event.focusBack = true
+		method( self, event )
+	end
+end
 
 function TableView:_tableCellTouch_handler( event )
 	-- print( "TableView:_tableCellTouch_handler", event.phase )
@@ -767,16 +782,35 @@ function TableView:_tableCellTouch_handler( event )
 	local target = event.target -- hit area
 	local record = target.__rec
 
-	if event.phase == 'began' then
+	if event.phase == 'began' and not event.focusBack then
+		-- this is initial pass through Touch Handler
+		-- give Touch Event to ScrollView right away (takeFocus)
+		--
+		event.returnFocus = self:_getReturnFocusCallback( self._tableCellTouch_handler )
+		event.returnTarget = target
+		self:takeFocus( event )
+
+	elseif event.phase == 'began' then
+		-- this is second pass through Touch Handler
+		-- being here means ScrollView didn't use
+		-- Touch Event, so gave it back (returnFocus)
+		--
 		TouchMgr.setFocus( target, event.id )
 		self:_startHighlightTimer( record )
+		-- save initial 'began' Event in case we need to
+		-- give back again. this enables better looking motion
+		self._tmpTouchEvt = event
 
 	elseif phase == 'moved' then
-		local deltaY = mabs( event.yStart - event.y )
-		if deltaY > 10 then
+		local threshold = uiConst.TABLEVIEW_TOUCH_THRESHOLD
+		local hasScrolled = (mabs( event.yStart - event.y ) > threshold)
+		if hasScrolled then
+			-- movement has surpassed threshold
+			-- give Touch Event back to ScrollView
 			self:_stopHighlightTimer( record )
 			self:_dispatchUnhighlightRow( record )
-			self:takeFocus( event )
+			self:takeFocus( self._tmpTouchEvt )
+			self._tmpTouchEvt = nil
 		end
 
 	elseif phase == 'ended' then
@@ -784,6 +818,7 @@ function TableView:_tableCellTouch_handler( event )
 		self:_stopHighlightTimer( record )
 		self:_dispatchUnhighlightRow( record )
 		self:_dispatchSelectedRow( record )
+		self._tmpTouchEvt = nil
 	end
 
 	return true

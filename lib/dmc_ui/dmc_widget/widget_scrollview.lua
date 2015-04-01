@@ -91,7 +91,8 @@ local newClass = Objects.newClass
 -- local tinsert = table.insert
 -- local tremove = table.remove
 -- local tstr = tostring
-
+local tcancel = timer.cancel
+local tdelay = timer.performWithDelay
 
 
 --====================================================================--
@@ -422,11 +423,96 @@ function ScrollView:scrollToPosition( pos, params )
 end
 
 
-function ScrollView:takeFocus( event )
-	-- TouchMgr.setFocus( self._rectBg, event.id )
-	TouchMgr.setFocus( self._rectBg, event.id )
-	event.phase='began'
+--- completes giving up focus.
+-- the main point it to terminate any touch action on ScrollView
+--
+function ScrollView:relinquishFocus( event )
+	-- print( "ScrollView:relinquishFocus" )
+	event.phase='cancelled'
 	self._rectBg:dispatchEvent( event )
+end
+
+
+
+function ScrollView:takeFocus( event )
+	TouchMgr.setFocus( self._rectBg, event.id )
+
+	-- stop existing returnFocus timer, if any
+	if self._returnFocusCancel then self._returnFocusCancel() end
+
+	self._tmpTouchEvt = event
+
+	if event.returnFocus then
+		-- we have returnFocus request, so do setup for it
+
+		local rFCallback = event.returnFocus
+		local rFTarget = event.returnTarget
+		assert( rFTarget and rFCallback )
+
+		local returnFocus_f, cancelFocus_f
+
+		--- returns focus back to initiator
+		-- this is set on timer, either it gets cancelled
+		-- or the timer goes off and initiates returnFocus
+		--
+		returnFocus_f = function( state )
+			-- print( "ScrollView: returnFocus" )
+
+			cancelFocus_f()
+
+			local e = self._tmpTouchEvt
+
+			local evt = {
+				name=e.name,
+				id=e.id,
+				time=e.time,
+				x=e.x,
+				y=e.y,
+				xStart=e.xStart,
+				yStart=e.yStart,
+			}
+
+			if state then
+				-- coming from end touch
+				-- make event 'ended'
+				evt.phase = state
+			else
+				-- coming from timer
+				-- terminate current touch action
+				-- then send 'began' event
+				self:relinquishFocus( e )
+				evt.phase = 'began'
+			end
+
+			evt.target = rFTarget
+			rFCallback( evt )
+		end
+
+		cancelFocus_f = function()
+			-- print( 'ScrollerBase: cancelFocus' )
+
+			if self._returnFocus_t then
+				tcancel( self._returnFocus_t )
+				self._returnFocus_t = nil
+			end
+
+			self._returnFocus = nil
+			self._returnFocusCancel = nil
+		end
+
+		self._returnFocus = returnFocus_f
+		self._returnFocusCancel = cancelFocus_f
+		self._returnFocus_t = tdelay( 100, function(e) returnFocus_f() end )
+
+	end
+
+	-- remove previous focus, if any
+
+	TouchMgr.unsetFocus( event.target, event.id )
+	-- send new event through touch area
+	event.phase='began'
+	event.target=self._rectBg
+	event.target:dispatchEvent( event )
 end
 
 
@@ -693,10 +779,10 @@ function ScrollView:stylePropertyChangeHandler( event )
 			self._width_dirty=true
 		elseif property=='height' then
 			self._height_dirty=true
-			elseif property=='anchorX' then
-				self._anchorX_dirty=true
-			elseif property=='anchorY' then
-				self._anchorY_dirty=true
+		elseif property=='anchorX' then
+			self._anchorX_dirty=true
+		elseif property=='anchorY' then
+			self._anchorY_dirty=true
 
 		elseif property=='align' then
 			self._align_dirty=true
@@ -735,6 +821,7 @@ function ScrollView:_gestureEvent_handler( event )
 	local etype = event.type
 	local phase = event.phase
 	local gesture = event.target
+	local f = self._returnFocusCancel
 
 	-- Utils.print( event )
 	local evt = {
@@ -759,6 +846,10 @@ function ScrollView:_gestureEvent_handler( event )
 				self._axis_y:touch( evt )
 			end
 		elseif phase=='changed' then
+			-- if changed, then already know movement was enough
+			-- because Pan Gesture will filter movement
+			f = self._returnFocusCancel
+			if f then f() end
 			evt.phase = 'moved'
 			if self._axis_x then
 				evt.value = event.x
@@ -782,6 +873,10 @@ function ScrollView:_gestureEvent_handler( event )
 				evt.start = event.yStart
 				self._axis_y:touch( evt )
 			end
+			-- if ended (quickly), like a tap
+			-- then give back to the initiator
+			f = self._returnFocus
+			if f then f( 'ended' ) end
 		end
 	end
 end
