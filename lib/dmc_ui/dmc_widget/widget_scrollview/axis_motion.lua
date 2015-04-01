@@ -664,7 +664,7 @@ end
 --== State Decelerate
 
 function AxisMotion:do_state_decelerate( params )
-	-- print( "\n\nAxisMotion:do_state_decelerate\n\n" )
+	-- print( "AxisMotion:do_state_decelerate" )
 	params = params or {}
 	--==--
 	local TIME = AxisMotion.DECELERATE_TRANS_TIME
