@@ -263,8 +263,15 @@ end
 --== Public Methods
 
 
---== X
+--== .X
 
+--- set/get x position.
+--
+-- @within Inherited
+-- @function .x
+-- @usage widget.x = 5
+-- @usage print( widget.x )
+--
 function View.__getters:x()
 	return self._x
 end
@@ -278,8 +285,15 @@ function View.__setters:x( value )
 	self:__invalidateProperties__()
 end
 
---== Y
+--== .Y
 
+--- set/get y position.
+--
+-- @within Inherited
+-- @function .y
+-- @usage widget.y = 5
+-- @usage print( widget.y )
+--
 function View.__getters:y()
 	return self._y
 end
