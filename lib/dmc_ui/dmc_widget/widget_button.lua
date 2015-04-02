@@ -70,15 +70,13 @@ local ui_find = dmc_ui_func.find
 --== Imports
 
 
-local LifecycleMixModule = require 'dmc_lifecycle_mix'
 local Objects = require 'dmc_objects'
 local StatesMixModule = require 'dmc_states_mix'
-local StyleMixModule = require( ui_find( 'dmc_style.style_mix' ) )
-local uiConst = require( ui_find( 'ui_constants' ) )
 local Utils = require 'dmc_utils'
 
---== To be set in initialize()
-local dUI = nil
+local uiConst = require( ui_find( 'ui_constants' ) )
+
+local Base = require( ui_find( 'core.widget' ) )
 
 
 
@@ -87,11 +85,9 @@ local dUI = nil
 
 
 local newClass = Objects.newClass
-local ComponentBase = Objects.ComponentBase
 
-local LifecycleMix = LifecycleMixModule.LifecycleMix
-local StatesMix = StatesMixModule.StatesMix
-local StyleMix = StyleMixModule.StyleMix
+--== To be set in initialize()
+local dUI = nil
 
 
 
@@ -106,16 +102,13 @@ local StyleMix = StyleMixModule.StyleMix
 --====================================================================--
 
 
--- ! put StyleMix first !
-
 --- Button Widget Class.
 --
 -- @type Button
 --
-local ButtonBase = newClass(
-	{ StyleMix, ComponentBase, StatesMix, LifecycleMix },
-	{name="Button Base"}
-)
+local ButtonBase = newClass( Base, { name="Button Base" } )
+
+StatesMixModule.patch( ButtonBase )
 
 --== Class Constants
 
@@ -158,10 +151,7 @@ function ButtonBase:__init__( params )
 	if params.id==nil then params.id="" end
 	if params.labelText==nil then params.labelText="OK" end
 
-	self:superCall( LifecycleMix, '__init__', params )
-	self:superCall( StatesMix, '__init__', params )
-	self:superCall( ComponentBase, '__init__', params )
-	self:superCall( StyleMix, '__init__', params )
+	self:superCall( '__init__', params )
 	--==--
 
 	--== Create Properties ==--
@@ -243,21 +233,20 @@ function ButtonBase:__init__( params )
 
 end
 
+--[[
 function ButtonBase:__undoInit__()
 	-- print( "ButtonBase:__undoInit__" )
 	--==--
-	self:superCall( StyleMix, '__undoInit__' )
-	self:superCall( ComponentBase, '__undoInit__' )
-	self:superCall( StatesMix, '__undoInit__' )
-	self:superCall( LifecycleMix, '__undoInit__' )
+	self:superCall( '__undoInit__' )
 end
+--]]
 
 
 --== createView
 
 function ButtonBase:__createView__()
 	-- print( "ButtonBase:__createView__" )
-	self:superCall( ComponentBase, '__createView__' )
+	self:superCall( '__createView__' )
 	--==--
 	local o = display.newRect( 0,0,0,0 )
 	o.anchorX, o.anchorY = 0.5,0.5
@@ -271,7 +260,7 @@ function ButtonBase:__undoCreateView__()
 	self._rctHit:removeSelf()
 	self._rctHit=nil
 	--==--
-	self:superCall( ComponentBase, '__undoCreateView__' )
+	self:superCall( '__undoCreateView__' )
 end
 
 
@@ -279,16 +268,13 @@ end
 
 function ButtonBase:__initComplete__()
 	-- print( "ButtonBase:__initComplete__" )
-	self:superCall( StyleMix, '__initComplete__' )
-	self:superCall( ComponentBase, '__initComplete__' )
+	self:superCall( '__initComplete__' )
 	--==--
 	self._rctHit_f = self:createCallback( self._hitAreaTouch_handler )
 	self._rctHit:addEventListener( 'touch', self._rctHit_f )
 
 	-- self._textStyle_f = self:createCallback( self.textStyleChange_handler )
 	-- self._wgtText_f = self:createCallback( self._wgtTextWidgetUpdate_handler )
-
-	self.style = self._tmp_style
 
 	if self.isActive then
 		self:gotoState( ButtonBase.STATE_ACTIVE )
@@ -302,13 +288,10 @@ function ButtonBase:__undoInitComplete__()
 	self:_removeBackground()
 	self:_removeText()
 
-	self.style = nil
-
 	self._rctHit:removeEventListener( 'touch', self._rctHit_f )
 	self._rctHit_f = nil
 	--==--
-	self:superCall( ComponentBase, '__undoInitComplete__' )
-	self:superCall( StyleMix, '__undoInitComplete__' )
+	self:superCall( '__undoInitComplete__' )
 end
 
 -- END: Setup DMC Objects
@@ -319,37 +302,42 @@ end
 --====================================================================--
 --== Public Methods
 
+--[[
+Inherited
+--]]
+
+--- set/get x position.
+--
+-- @within Properties
+-- @function .x
+-- @usage widget.x = 5
+-- @usage print( widget.x )
+
+--- set/get y position.
+--
+-- @within Properties
+-- @function .y
+-- @usage widget.y = 5
+-- @usage print( widget.y )
+
+
 
 --======================================================--
 -- Local Properties
 
--- .X
---
-function ButtonBase.__getters:x()
-	return self._x
-end
-function ButtonBase.__setters:x( value )
-	-- print( 'ButtonBase.__setters:x', value )
-	assert( type(value)=='number' )
-	--==--
-	self._x = value
-	self._x_dirty=true
-	self:__invalidateProperties__()
-end
 
--- .Y
---
-function ButtonBase.__getters:y()
-	return self._y
-end
-function ButtonBase.__setters:y( value )
-	-- print( 'ButtonBase.__setters:y', value )
-	assert( type(value)=='number' )
-	--==--
-	self._y = value
-	self._y_dirty=true
-	self:__invalidateProperties__()
-end
+--[[
+Local
+--]]
+
+--- set/get hit margin, x-axis.
+-- increases hit area for button. useful for small target areas. value must be greater or equal to 0.
+-- @within Properties
+-- @function .hitMarginX
+-- @usage widget.hitMarginX = 5
+-- @usage print( widget.y )
+
+
 
 -- .labelText
 --
@@ -493,6 +481,21 @@ end
 --======================================================--
 -- Button Methods
 
+
+function ButtonBase.__getters:id()
+	return self._id
+end
+function ButtonBase.__setters:id( value )
+	assert( type(value)=='string' or type(value)=='nil', "expected string or nil for button id")
+	self._id = value
+end
+
+
+function ButtonBase.__getters:isActive()
+	return ( self:getState() == self.STATE_ACTIVE )
+end
+
+
 function ButtonBase.__getters:isEnabled()
 	return ( self:getState() ~= ButtonBase.STATE_DISABLED )
 end
@@ -508,19 +511,6 @@ function ButtonBase.__setters:isEnabled( value )
 	else
 		self:gotoState( ButtonBase.STATE_DISABLED, { isEnabled=value } )
 	end
-end
-
-function ButtonBase.__getters:isActive()
-	return ( self:getState() == self.STATE_ACTIVE )
-end
-
-
-function ButtonBase.__getters:id()
-	return self._id
-end
-function ButtonBase.__setters:id( value )
-	assert( type(value)=='string' or type(value)=='nil', "expected string or nil for button id")
-	self._id = value
 end
 
 
