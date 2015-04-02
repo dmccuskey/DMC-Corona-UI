@@ -84,7 +84,7 @@ Continuous.TYPE = nil -- override this
 
 Continuous.STATE_BEGAN = 'state_began'
 Continuous.STATE_CHANGED = 'state_changed'
-Continuous.STATE_CANCELLED = 'state_cancelled'
+Continuous.STATE_CANCELED = 'state_cancelled'
 
 --== Event Constants
 
@@ -324,12 +324,6 @@ function Continuous:state_began( next_state, params )
 	elseif next_state == Continuous.STATE_RECOGNIZED then
 		self:do_state_recognized( params )
 
-	elseif next_state == Continuous.STATE_CANCELLED then
-		self:do_state_cancelled( params )
-
-	elseif next_state == Continuous.STATE_FAILED then
-		self:do_state_failed( params )
-
 	else
 		print( "WARNING :: Continuous:state_began " .. tstr( next_state ) )
 	end
@@ -354,7 +348,7 @@ function Continuous:state_changed( next_state, params )
 	if next_state == Continuous.STATE_CHANGED then
 		self:do_state_changed( params )
 
-	elseif next_state == Continuous.STATE_CANCELLED then
+	elseif next_state == Continuous.STATE_CANCELED then
 		self:do_state_cancelled( params )
 
 	elseif next_state == Continuous.STATE_RECOGNIZED then
@@ -386,10 +380,10 @@ function Continuous:do_state_cancelled( params )
 	params = params or {}
 	if params.notify==nil then params.notify=true end
 	--==--
-	self:setState( Continuous.STATE_CANCELLED )
+	self:_stopAllTimers()
+	self:setState( Continuous.STATE_CANCELED )
+	self:_endMultitouchEvent()
 	self:_dispatchStateNotification( params.notify )
-	self:_dispatchRecognizedEvent()
-
 end
 
 function Continuous:state_cancelled( next_state, params )

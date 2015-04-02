@@ -379,7 +379,7 @@ function GestureMgr:gesture( event )
 
 	elseif etype==target.STATE then
 		local state = event.state
-		if state==target.STATE_FAILED or state==target.STATE_CANCELLED then
+		if state==target.STATE_FAILED then
 			-- Gesture Failed recognition
 			self:_removeActiveGesture( target )
 		elseif state==target.STATE_RECOGNIZED then
@@ -391,8 +391,8 @@ function GestureMgr:gesture( event )
 end
 
 
---- touch event handler.
--- Touch Events coming from Touch Manager
+-- touch()
+-- Touch Event handler, touches coming from Touch Manager
 --
 function GestureMgr:touch( event )
 	-- print( "GestureMgr:touch", event.phase )
