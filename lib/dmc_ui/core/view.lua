@@ -148,8 +148,9 @@ function View:__init__( params )
 	self._anchorX_dirty=true
 	self._anchorY_dirty=true
 
-	self._autoMask_dirty=true
+	self._autoResizeSubViews = params.autoResizeSubViews
 	self._autoResizeSubViews_dirty=true
+
 	self._layoutMargins_dirty=true
 
 
@@ -157,7 +158,6 @@ function View:__init__( params )
 	references to main View/Control objects, not their property 'view'
 	--]]
 	self._subViews = {}
-	self._autoResizeSubViews = params.autoResizeSubViews
 
 	--[[
 	{width=0,height=0}
