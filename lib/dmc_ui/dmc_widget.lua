@@ -175,11 +175,11 @@ function Widget.loadViewSupport( params )
 
 	--== Components
 
-	local View = require( ui_find( 'core.view' ) )
+	local Base = require( ui_find( 'core.widget' ) )
 
-	Widget.View=View
+	Widget.Base=Base
 
-	View.initialize( dUI, params )
+	Base.initialize( dUI, params )
 end
 
 
@@ -234,6 +234,8 @@ function Widget._loadBackgroundSupport( params )
 
 	Style._loadBackgroundStyleSupport( params )
 
+	Widget.loadViewSupport( params )
+
 	--== Components
 
 	local Background = require( ui_find( 'dmc_widget.widget_background' ) )
@@ -270,7 +272,7 @@ end
 function Widget.newRectangleBackground( options )
 	if not Widget.Background then Widget._loadBackgroundSupport() end
 	options = options or {}
-	options.defaultViewType=uiConst.RECTANGLE
+	options.viewType=uiConst.RECTANGLE
 	return Widget.Background:new( options )
 end
 
@@ -284,7 +286,7 @@ end
 function Widget.newRoundedBackground( options )
 	if not Widget.Background then Widget._loadBackgroundSupport() end
 	options = options or {}
-	options.defaultViewType=uiConst.ROUNDED
+	options.viewType=uiConst.ROUNDED
 	return Widget.Background:new( options )
 end
 

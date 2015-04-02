@@ -71,24 +71,22 @@ local ui_find = dmc_ui_func.find
 
 
 local Objects = require 'dmc_objects'
-local LifecycleMixModule = require 'dmc_lifecycle_mix'
-local StyleMixModule = require( ui_find( 'dmc_style.style_mix' ) )
+
 local uiConst = require( ui_find( 'ui_constants' ) )
 
---== To be set in initialize()
-local dUI = nil
-local ViewFactory = nil
+local Base = require( ui_find( 'core.widget' ) )
+
 
 
 --====================================================================--
 --== Setup, Constants
 
 
-local newClass = Objects.newClass
-local ComponentBase = Objects.ComponentBase
+--== To be set in initialize()
+local dUI = nil
+local ViewFactory = nil
 
-local LifecycleMix = LifecycleMixModule.LifecycleMix
-local StyleMix = StyleMixModule.StyleMix
+local newClass = Objects.newClass
 
 
 
@@ -103,10 +101,7 @@ local StyleMix = StyleMixModule.StyleMix
 --
 -- @type Background
 --
-local Background = newClass(
-	{ StyleMix, ComponentBase, LifecycleMix },
-	{name="Background Widget"}
-)
+local Background = newClass( Base, { name="Background Widget" } )
 
 --- Class Constants
 --
@@ -138,31 +133,16 @@ function Background:__init__( params )
 	params = params or {}
 	if params.x==nil then params.x=0 end
 	if params.y==nil then params.y=0 end
-	if params.defaultViewType==nil then params.defaultViewType=Background._DEFAULT_VIEWTYPE end
+	if params.viewType==nil then params.viewType=Background._DEFAULT_VIEWTYPE end
 
-	self:superCall( LifecycleMix, '__init__', params )
-	self:superCall( ComponentBase, '__init__', params )
-	self:superCall( StyleMix, '__init__', params )
+	self:superCall( '__init__', params )
 	--==--
 
 	--== Create Properties ==--
 
 	-- properties stored in Class
 
-	self._x = params.x
-	self._x_dirty=true
-	self._y = params.y
-	self._y_dirty=true
-
-	self._defType = params.defaultViewType -- default style type
-
-	-- properties stored in Style
-
-	self._debugOn_dirty=true
-	self._width_dirty=true
-	self._height_dirty=true
-	self._anchorX_dirty=true
-	self._anchorY_dirty=true
+	self._viewType = params.viewType -- default style type
 
 	-- "Virtual" properties
 
@@ -170,20 +150,18 @@ function Background:__init__( params )
 
 	--== Object References ==--
 
-	self._tmp_style = params.style -- save later
-
 	self._wgtView = nil -- background view
 	self._wgtView_dirty=true
 
 end
 
+--[[
 function Background:__undoInit__()
 	-- print( "Background:__undoInit__" )
 	--==--
-	self:superCall( StyleMix, '__undoInit__' )
-	self:superCall( ComponentBase, '__undoInit__' )
-	self:superCall( LifecycleMix, '__undoInit__' )
+	self:superCall( '__undoInit__' )
 end
+--]]
 
 
 --[[
@@ -194,7 +172,6 @@ function Background:__createView__()
 	self:superCall( ComponentBase, '__createView__' )
 	--==--
 end
-
 function Background:__undoCreateView__()
 	-- print( "Background:__undoCreateView__" )
 	--==--
@@ -205,21 +182,19 @@ end
 
 --== initComplete
 
+--[[
 function Background:__initComplete__()
 	-- print( "Background:__initComplete__" )
-	self:superCall( StyleMix, '__initComplete__' )
-	self:superCall( ComponentBase, '__initComplete__' )
+	self:superCall( '__initComplete__' )
 	--==--
-	self.style = self._tmp_style
 end
+--]]
 
 function Background:__undoInitComplete__()
 	--print( "Background:__undoInitComplete__" )
 	self:_removeBackground()
-	self.style = nil
 	--==--
-	self:superCall( ComponentBase, '__undoInitComplete__' )
-	self:superCall( StyleMix, '__undoInitComplete__' )
+	self:superCall( '__undoInitComplete__' )
 end
 
 -- END: Setup DMC Objects
@@ -259,48 +234,6 @@ end
 
 --======================================================--
 -- Local Properties
-
---== .X
-
---- set/get x position.
---
--- @within Getters-Setters
--- @function .x
--- @usage widget.x = 5
--- @usage print( widget.x )
---
-function Background.__getters:x()
-	return self._x
-end
-function Background.__setters:x( value )
-	-- print( "Background.__setters:x", value )
-	assert( type(value)=='number' )
-	--==--
-	self._x = value
-	self._x_dirty=true
-	self:__invalidateProperties__()
-end
-
---== .Y
-
---- set/get y position.
---
--- @within Getters-Setters
--- @function .y
--- @usage widget.y = 5
--- @usage print( widget.y )
---
-function Background.__getters:y()
-	return self._y
-end
-function Background.__setters:y( value )
-	-- print( "Background.__setters:y", value )
-	assert( type(value)=='number' )
-	--==--
-	self._y = value
-	self._y_dirty=true
-	self:__invalidateProperties__()
-end
 
 
 
@@ -442,7 +375,7 @@ end
 function Background:_createDefaultStyleParams()
 	return {
 		name=nil,
-		data={type=self._defType}
+		data={type=self._viewType}
 	}
 end
 
