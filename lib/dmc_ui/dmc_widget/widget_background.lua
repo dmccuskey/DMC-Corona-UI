@@ -30,6 +30,12 @@ SOFTWARE.
 
 --]]
 
+--- Background Widget Module
+-- @module Widget.Background
+-- @usage
+-- local dUI = require 'dmc_ui'
+-- local widget = dUI.newBackground()
+
 
 
 --====================================================================--
@@ -93,10 +99,18 @@ local StyleMix = StyleMixModule.StyleMix
 
 -- ! put StyleMix first !
 
+--- Background Widget Class.
+--
+-- @type Background
+--
 local Background = newClass(
 	{ StyleMix, ComponentBase, LifecycleMix },
 	{name="Background Widget"}
 )
+
+--- Class Constants
+--
+-- @section class-constants
 
 --== Style/Theme Constants
 
@@ -112,12 +126,6 @@ Background._DEFAULT_VIEWTYPE = uiConst.ROUNDED
 -- 	Background.DEFAULT,
 -- }
 
---== Event Constants
-
-Background.EVENT = 'background-widget-event'
-
-Background.PRESSED = 'touch-press-event'
-Background.RELEASED = 'touch-release-event'
 
 
 --======================================================--
@@ -240,11 +248,26 @@ end
 --====================================================================--
 --== Public Methods
 
+--- Getters-Setters
+--
+-- @section class-getters-setters
+
+--- Methods
+--
+-- @section class-public-methods
+
 
 --======================================================--
 -- Local Properties
 
--- .X
+--== .X
+
+--- set/get x position.
+--
+-- @within Getters-Setters
+-- @function .x
+-- @usage widget.x = 5
+-- @usage print( widget.x )
 --
 function Background.__getters:x()
 	return self._x
@@ -258,7 +281,14 @@ function Background.__setters:x( value )
 	self:__invalidateProperties__()
 end
 
--- .Y
+--== .Y
+
+--- set/get y position.
+--
+-- @within Getters-Setters
+-- @function .y
+-- @usage widget.y = 5
+-- @usage print( widget.y )
 --
 function Background.__getters:y()
 	return self._y
@@ -273,11 +303,60 @@ function Background.__setters:y( value )
 end
 
 
+
 --======================================================--
 -- View Style Properties
 
---== cornerRadius
+--== .width
 
+--- set/get width.
+--
+-- @within Getters-Setters
+-- @function .width
+-- @usage widget.width = 5
+-- @usage print( widget.width )
+--
+
+--== .height
+
+--- set/get height.
+--
+-- @within Getters-Setters
+-- @function .height
+-- @usage widget.height = 5
+-- @usage print( widget.height )
+--
+
+--== .anchorX
+
+--- set/get anchorX.
+--
+-- @within Getters-Setters
+-- @function .anchorX
+-- @usage widget.anchorX = 5
+-- @usage print( widget.anchorX )
+--
+
+--== .anchorY
+
+--- set/get anchorY.
+--
+-- @within Getters-Setters
+-- @function .anchorY
+-- @usage widget.anchorY = 5
+-- @usage print( widget.anchorY )
+--
+
+--== .cornerRadius
+
+--- set/get cornerRadius for shape.
+-- only applies to Rounded Rectangles
+--
+-- @within Getters-Setters
+-- @function .cornerRadius
+-- @usage widget.cornerRadius = 5
+-- @usage print( widget.cornerRadius )
+--
 function Background.__getters:cornerRadius()
 	return self.curr_style.view.cornerRadius
 end
@@ -286,8 +365,16 @@ function Background.__setters:cornerRadius( value )
 	self.curr_style.view.cornerRadius = value
 end
 
---== viewStrokeWidth
+--== .viewStrokeWidth
 
+--- set/get viewStrokeWidth for shape.
+-- does not apply to image or 9-slice backgrounds
+--
+-- @within Getters-Setters
+-- @function .viewStrokeWidth
+-- @usage widget.viewStrokeWidth = 5
+-- @usage print( widget.viewStrokeWidth )
+--
 function Background.__getters:viewStrokeWidth()
 	return self.curr_style.view.strokeWidth
 end
@@ -298,6 +385,19 @@ end
 
 --== setViewFillColor
 
+--- set the fill color for shape.
+-- does not apply to image or 9-slice backgrounds
+--
+-- @within Methods
+-- @function setViewFillColor
+-- @param colors list of color attributes, 0-1
+-- @usage
+-- widget:setViewFillColor( gray )
+-- widget:setViewFillColor( gray, alpha )
+-- widget:setViewFillColor( red, green, blue )
+-- widget:setViewFillColor( red, green, blue, alpha )
+-- widget:setViewFillColor( gradient )
+--
 function Background:setViewFillColor( ... )
 	-- print( "Background:setViewFillColor" )
 	self.curr_style.view.fillColor = {...}
@@ -305,6 +405,19 @@ end
 
 --== setViewStrokeColor
 
+--- set the fill color for shape.
+-- does not apply to image or 9-slice backgrounds
+--
+-- @within Methods
+-- @function setViewStrokeColor
+-- @param colors list of color attributes, 0-1
+-- @usage
+-- widget:setViewStrokeColor( gray )
+-- widget:setViewStrokeColor( gray, alpha )
+-- widget:setViewStrokeColor( red, green, blue )
+-- widget:setViewStrokeColor( red, green, blue, alpha )
+-- widget:setViewStrokeColor( gradient )
+--
 function Background:setViewStrokeColor( ... )
 	-- print( "Background:setViewStrokeColor" )
 	self.curr_style.view.strokeColor = {...}
@@ -320,13 +433,11 @@ function Background:afterAddStyle()
 	self:__invalidateProperties__()
 end
 
-
 function Background:beforeRemoveStyle()
 	-- print( "Background:beforeRemoveStyle" )
 	self._wgtViewStyle_dirty=true
 	self:__invalidateProperties__()
 end
-
 
 function Background:_createDefaultStyleParams()
 	return {

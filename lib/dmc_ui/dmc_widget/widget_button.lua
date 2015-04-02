@@ -30,6 +30,12 @@ SOFTWARE.
 
 --]]
 
+--- Button Widget Module
+-- @module Widget.Button
+-- @usage
+-- local dUI = require 'dmc_ui'
+-- local uiBtn = dUI.newButton()
+
 
 
 --====================================================================--
@@ -102,6 +108,10 @@ local StyleMix = StyleMixModule.StyleMix
 
 -- ! put StyleMix first !
 
+--- Button Widget Class.
+--
+-- @type Button
+--
 local ButtonBase = newClass(
 	{ StyleMix, ComponentBase, StatesMix, LifecycleMix },
 	{name="Button Base"}
@@ -1012,6 +1022,10 @@ end
 --===================================================================--
 
 
+--- Push Button Widget Class.
+--
+-- @type PushButton
+--
 local PushButton = newClass( ButtonBase, {name="Push Button"} )
 
 PushButton.TYPE = 'push'
@@ -1096,6 +1110,10 @@ end
 --===================================================================--
 
 
+--- Toggle Button Widget Class.
+--
+-- @type ToggleButton
+--
 local ToggleButton = newClass( ButtonBase, {name="Toggle Button"}  )
 
 ToggleButton.TYPE = 'toggle'
@@ -1190,6 +1208,10 @@ end
 --===================================================================--
 
 
+--- Radio Button Widget Class.
+--
+-- @type RadioButton
+--
 local RadioButton = newClass( ToggleButton, {name="Radio Button"} )
 
 RadioButton.TYPE = 'radio'
