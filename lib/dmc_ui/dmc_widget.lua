@@ -356,7 +356,7 @@ end
 function Widget.newRadioButton( options )
 	if not Widget.ButtonFactory then Widget._loadButtonSupport() end
 	options = options or {}
-	options.action = Widget.Button.RadioButton.TYPE
+	options.action = Widget.ButtonFactory.RadioButton.TYPE
 	--==--
 	return Widget.ButtonFactory.create( options )
 end
