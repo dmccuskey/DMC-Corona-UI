@@ -262,16 +262,28 @@ end
 --====================================================================--
 --== Public Methods
 
-
---== .X
+--[[
+Inherited Methods
+--]]
 
 --- set/get x position.
 --
--- @within Inherited
+-- @within Properties
 -- @function .x
 -- @usage widget.x = 5
 -- @usage print( widget.x )
+
+
+--- set/get y position.
 --
+-- @within Properties
+-- @function .y
+-- @usage widget.y = 5
+-- @usage print( widget.y )
+
+
+--== .X
+
 function View.__getters:x()
 	return self._x
 end
@@ -287,13 +299,6 @@ end
 
 --== .Y
 
---- set/get y position.
---
--- @within Inherited
--- @function .y
--- @usage widget.y = 5
--- @usage print( widget.y )
---
 function View.__getters:y()
 	return self._y
 end

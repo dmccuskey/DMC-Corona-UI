@@ -82,11 +82,11 @@ local Base = require( ui_find( 'core.widget' ) )
 --== Setup, Constants
 
 
+local newClass = Objects.newClass
+
 --== To be set in initialize()
 local dUI = nil
 local ViewFactory = nil
-
-local newClass = Objects.newClass
 
 
 
@@ -94,8 +94,6 @@ local newClass = Objects.newClass
 --== Background Widget Class
 --====================================================================--
 
-
--- ! put StyleMix first !
 
 --- Background Widget Class.
 --
@@ -223,13 +221,70 @@ end
 --====================================================================--
 --== Public Methods
 
---- Getters-Setters
---
--- @section class-getters-setters
+--[[
+Inherited
+--]]
 
---- Methods
+--- set/get x position.
 --
--- @section class-public-methods
+-- @within Properties
+-- @function .x
+-- @usage widget.x = 5
+-- @usage print( widget.x )
+
+--- set/get y position.
+--
+-- @within Properties
+-- @function .y
+-- @usage widget.y = 5
+-- @usage print( widget.y )
+
+--- set/get width.
+--
+-- @within Properties
+-- @function .width
+-- @usage widget.width = 5
+-- @usage print( widget.width )
+
+--- set/get height.
+--
+-- @within Properties
+-- @function .height
+-- @usage widget.height = 5
+-- @usage print( widget.height )
+
+--- set/get anchorX.
+--
+-- @within Properties
+-- @function .anchorX
+-- @usage widget.anchorX = 5
+-- @usage print( widget.anchorX )
+
+--- set/get anchorY.
+--
+-- @within Properties
+-- @function .anchorY
+-- @usage widget.anchorY = 5
+-- @usage print( widget.anchorY )
+
+--- set/get widget style.
+-- style can be a style name or a Style Object.
+-- Style Object must be appropriate style for Widget, eg style for Background widget comes from dUI.newBackgroundStyle().
+-- @within Properties
+-- @function .style
+-- @usage widget.style = 'widget-home-page'
+-- @usage
+-- local wStyle = dUI.newBackgroundStyle()
+-- widget.style = wStyle
+
+
+--- clear any local properties on style.
+-- convenience method, calls clearProperties() on active style.
+--
+-- @within Methods
+-- @function clearStyle
+-- @usage widget:clearStyle()
+
 
 
 --======================================================--
@@ -240,52 +295,13 @@ end
 --======================================================--
 -- View Style Properties
 
---== .width
-
---- set/get width.
---
--- @within Getters-Setters
--- @function .width
--- @usage widget.width = 5
--- @usage print( widget.width )
---
-
---== .height
-
---- set/get height.
---
--- @within Getters-Setters
--- @function .height
--- @usage widget.height = 5
--- @usage print( widget.height )
---
-
---== .anchorX
-
---- set/get anchorX.
---
--- @within Getters-Setters
--- @function .anchorX
--- @usage widget.anchorX = 5
--- @usage print( widget.anchorX )
---
-
---== .anchorY
-
---- set/get anchorY.
---
--- @within Getters-Setters
--- @function .anchorY
--- @usage widget.anchorY = 5
--- @usage print( widget.anchorY )
---
 
 --== .cornerRadius
 
 --- set/get cornerRadius for shape.
 -- only applies to Rounded Rectangles
 --
--- @within Getters-Setters
+-- @within Properties
 -- @function .cornerRadius
 -- @usage widget.cornerRadius = 5
 -- @usage print( widget.cornerRadius )
@@ -303,7 +319,7 @@ end
 --- set/get viewStrokeWidth for shape.
 -- does not apply to image or 9-slice backgrounds
 --
--- @within Getters-Setters
+-- @within Properties
 -- @function .viewStrokeWidth
 -- @usage widget.viewStrokeWidth = 5
 -- @usage print( widget.viewStrokeWidth )
