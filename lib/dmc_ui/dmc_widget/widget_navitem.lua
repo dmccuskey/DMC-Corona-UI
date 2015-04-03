@@ -1,5 +1,5 @@
 --====================================================================--
--- dmc_widget/widget_navitem.lua
+-- dmc_ui/dmc_widget/widget_navitem.lua
 --
 -- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
@@ -33,7 +33,7 @@ SOFTWARE.
 
 
 --====================================================================--
---== DMC Corona UI : Widget Nav Item
+--== DMC Corona UI : NavItem Widget
 --====================================================================--
 
 
@@ -70,16 +70,12 @@ local LifecycleMixModule = require 'dmc_lifecycle_mix'
 local StyleMixModule = require( ui_find( 'dmc_style.style_mix' ) )
 local uiConst = require( ui_find( 'ui_constants' ) )
 
---== To be set in initialize()
-local dUI = nil
-local Widget = nil
 
 
 --====================================================================--
 --== Setup, Constants
 
 
--- setup some aliases to make code cleaner
 local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
 
@@ -89,12 +85,23 @@ local StyleMix = StyleMixModule.StyleMix
 local tinsert = table.insert
 local tremove = table.remove
 
+--== To be set in initialize()
+local dUI = nil
+local Widget = nil
+
 
 
 --====================================================================--
 --== Nav Item Widget Class
 --====================================================================--
 
+--- Nav Item Module.
+-- a navigation component used with a NavBar widget. this is essentially a container of items to show in a NavBar.
+--
+-- @classmod Widget.NavItem
+-- @usage
+-- local dUI = require 'dmc_ui'
+-- local widget = dUI.newNavItem()
 
 local NavItem = newClass(
 	{ StyleMix, ObjectBase, LifecycleMix }, {name="Nav Item"}
@@ -243,6 +250,36 @@ end
 
 --====================================================================--
 --== Public Methods
+
+
+--- get backButton object.
+--
+-- @within Properties
+-- @function .backButton
+-- @usage print( widget.backButton )
+
+--- set/get leftButton object.
+--
+-- @within Properties
+-- @function .leftButton
+-- @usage widget.leftButton = <DMC PushButton>
+-- @usage print( widget.leftButton )
+
+--- set/get rightButton object.
+--
+-- @within Properties
+-- @function .rightButton
+-- @usage widget.rightButton = <DMC PushButton>
+-- @usage print( widget.rightButton )
+
+--- set/get title of Nav Item.
+-- value should be string
+--
+-- @within Properties
+-- @function .title
+-- @usage widget.title = "My Title"
+-- @usage print( widget.title )
+
 
 
 -- getter, back button

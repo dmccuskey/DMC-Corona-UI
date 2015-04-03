@@ -1,5 +1,5 @@
 --====================================================================--
--- dmc_widget/widget_navbar.lua
+-- dmc_ui/dmc_widget/widget_navbar.lua
 --
 -- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
@@ -92,8 +92,8 @@ local Widget = nil
 --====================================================================--
 
 
---- Nav Bar Widget Module.
--- a widget used for navigation.
+--- Nav Bar Widget.
+-- a widget used for navigation between pages.
 --
 -- @classmod Widget.NavBar
 -- @usage
@@ -102,6 +102,9 @@ local Widget = nil
 
 local NavBar = newClass( WidgetBase, {name="Nav Bar Widget"}
 )
+
+--- Class Constants.
+-- @section
 
 --== Class Constants
 
@@ -116,7 +119,24 @@ NavBar.STYLE_TYPE = uiConst.NAVBAR
 
 --== Event Constants
 
+--- NavBar event constant.
+-- used when setting up event listeners
+--
+-- @usage
+-- widget:addEventListener( widget.EVENT, listener )
 NavBar.EVENT = 'navbar-event'
+
+--- NavBar event constant for press on Back Button.
+-- used inside of event handler
+--
+-- @usage
+-- local function listener( event )
+--   local target = event.target -- the NavBar
+--   if event.type == target.BACK_BUTTON then
+--    -- handle event here
+--   end
+-- end
+-- widget:addEventListener( widget.EVENT, listener )
 NavBar.BACK_BUTTON = 'back-button-released-event'
 
 
@@ -128,8 +148,6 @@ NavBar.BACK_BUTTON = 'back-button-released-event'
 function NavBar:__init__( params )
 	-- print( "NavBar:__init__" )
 	params = params or {}
-	if params.x==nil then params.x=0 end
-	if params.y==nil then params.y=0 end
 	if params.transitionTime==nil then params.transitionTime=NavBar.TRANSITION_TIME end
 
 	self:superCall( '__init__', params )
@@ -317,16 +335,16 @@ Inherited - copied from dmc_widget.core.widget
 -- push a new Nav Item, furthering the navigation stack. this typically will animate the new view on the screen.
 --
 -- @within Methods
--- @function pushNavItem
--- @tparams @{Widget.NavItem}
+-- @function :pushNavItem
+-- @param navItem @{Widget.NavItem}
 -- @tab params optional parameters
--- @usage widget:pushNavItem( item, params )
+-- @usage widget:pushNavItem( navItem, params )
 
---- add Nav Item to navigation stack.
--- pop a Nav Item from the stack. this typically will animate the previous view on the screen.
+--- pop Nav Item from navigation stack.
+-- removes top-level Nav Item from navigation stack, animating the previous view on the screen.
 --
 -- @within Methods
--- @function popNavItemAnimated
+-- @function :popNavItemAnimated
 -- @usage widget:popNavItemAnimated()
 
 
