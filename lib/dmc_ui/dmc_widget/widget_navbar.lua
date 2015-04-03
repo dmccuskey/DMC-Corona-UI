@@ -64,10 +64,11 @@ local ui_find = dmc_ui_func.find
 --== Imports
 
 
-local LifecycleMixModule = require 'dmc_lifecycle_mix'
 local Objects = require 'dmc_objects'
-local StyleMixModule = require( ui_find( 'dmc_style.style_mix' ) )
+
 local uiConst = require( ui_find( 'ui_constants' ) )
+
+local WidgetBase = require( ui_find( 'core.widget' ) )
 
 
 
@@ -76,10 +77,6 @@ local uiConst = require( ui_find( 'ui_constants' ) )
 
 
 local newClass = Objects.newClass
-local ComponentBase = Objects.ComponentBase
-
-local LifecycleMix = LifecycleMixModule.LifecycleMix
-local StyleMix = StyleMixModule.StyleMix
 
 local tinsert = table.insert
 local tremove = table.remove
@@ -95,11 +92,17 @@ local Widget = nil
 --====================================================================--
 
 
--- ! put StyleMix first !
+--- Nav Bar Widget Module.
+-- a widget used for navigation.
+--
+-- @classmod Widget.NavBar
+-- @usage
+-- local dUI = require 'dmc_ui'
+-- local widget = dUI.newNavBar()
 
-local NavBar = newClass(
-	{ StyleMix, ComponentBase, LifecycleMix }, {name="Nav Bar Widget"}
+local NavBar = newClass( WidgetBase, {name="Nav Bar Widget"}
 )
+
 --== Class Constants
 
 NavBar.FORWARD = 'forward-trans'
@@ -129,19 +132,12 @@ function NavBar:__init__( params )
 	if params.y==nil then params.y=0 end
 	if params.transitionTime==nil then params.transitionTime=NavBar.TRANSITION_TIME end
 
-	self:superCall( LifecycleMix, '__init__', params )
-	self:superCall( ComponentBase, '__init__', params )
-	self:superCall( StyleMix, '__init__', params )
+	self:superCall( '__init__', params )
 	--==--
 
 	--== Create Properties ==--
 
 	-- properties stored in Class
-
-	self._x = params.x
-	self._x_dirty=true
-	self._y = params.y
-	self._y_dirty=true
 
 	self._trans_time = params.transitionTime
 	self._items = {} -- stack of nav items
@@ -153,12 +149,6 @@ function NavBar:__init__( params )
 
 	-- properties stored in Style
 
-	self._debugOn_dirty=true
-	self._width_dirty=true
-	self._height_dirty=true
-	self._anchorX_dirty=true
-	self._anchorY_dirty=true
-
 	-- "Virtual" properties
 
 	self._widgetStyle_dirty=true
@@ -166,12 +156,7 @@ function NavBar:__init__( params )
 
 	--== Object References ==--
 
-	self._tmp_style = params.style -- save
-
 	self._delegate = params.delegate
-
-	self._dgBg = nil -- main group, for background
-	self._dgMain = nil -- main group, for buttons, etc
 
 	-- references to Nav Items
 	self._root_item = nil
@@ -193,9 +178,7 @@ function NavBar:__undoInit__()
 	self._top_item = nil
 	self._new_item = nil
 	--==--
-	self:superCall( StyleMix, '__undoInit__' )
-	self:superCall( ComponentBase, '__undoInit__' )
-	self:superCall( LifecycleMix, '__undoInit__' )
+	self:superCall( '__undoInit__' )
 end
 
 
@@ -210,15 +193,6 @@ function NavBar:__createView__()
 	o.anchorX, o.anchorY = 0.5,0.5
 	self.view:insert( o ) -- using view because of override
 	self._rctHit = o
-
-	o = display.newGroup()
-	self.view:insert( o ) -- using view because of override
-	self._dgBg = o
-
-	o = display.newGroup()
-	self.view:insert( o ) -- using view because of override
-	self._dgMain = o
-
 end
 
 function NavBar:__undoCreateView__()
@@ -234,10 +208,8 @@ end
 
 function NavBar:__initComplete__()
 	-- print( "NavBar:__initComplete__" )
-	self:superCall( StyleMix, '__initComplete__' )
-	self:superCall( ComponentBase, '__initComplete__' )
+	self:superCall( '__initComplete__' )
 	--==--
-	self.style = self._tmp_style
 	self:setTouchBlock( self._rctHit )
 
 	self._back_f = self:createCallback( self._backButtonEvent_handler )
@@ -246,11 +218,11 @@ end
 
 function NavBar:__undoInitComplete__()
 	-- print( "NavBar:__undoInitComplete__" )
+	self._back_f = nil
+
 	self:unsetTouchBlock( self._rctHit )
-	self.style = nil
 	--==--
-	self:superCall( ComponentBase, '__undoInitComplete__' )
-	self:superCall( StyleMix, '__undoInitComplete__' )
+	self:superCall( '__undoInitComplete__' )
 end
 
 -- END: Setup DMC Objects
@@ -282,35 +254,80 @@ end
 --======================================================--
 -- Local Properties
 
---== .X
 
-function NavBar.__getters:x()
-	return self._x
-end
-function NavBar.__setters:x( value )
-	-- print( "NavBar.__setters:x", value )
-	assert( type(value)=='number' )
-	--==--
-	if self._x == value then return end
-	self._x = value
-	self._x_dirty=true
-	self:__invalidateProperties__()
-end
+--[[
+Inherited - copied from dmc_widget.core.widget
+--]]
 
---== .Y
+--- set/get x position.
+--
+-- @within Properties
+-- @function .x
+-- @usage widget.x = 5
+-- @usage print( widget.x )
 
-function NavBar.__getters:y()
-	return self._y
-end
-function NavBar.__setters:y( value )
-	-- print( "NavBar.__setters:y", value )
-	assert( type(value)=='number' )
-	--==--
-	if self._y == value then return end
-	self._y = value
-	self._y_dirty=true
-	self:__invalidateProperties__()
-end
+--- set/get y position.
+--
+-- @within Properties
+-- @function .y
+-- @usage widget.y = 5
+-- @usage print( widget.y )
+
+--- set/get width.
+--
+-- @within Properties
+-- @function .width
+-- @usage widget.width = 5
+-- @usage print( widget.width )
+
+--- set/get height.
+--
+-- @within Properties
+-- @function .height
+-- @usage widget.height = 5
+-- @usage print( widget.height )
+
+--- set/get anchorX.
+--
+-- @within Properties
+-- @function .anchorX
+-- @usage widget.anchorX = 5
+-- @usage print( widget.anchorX )
+
+--- set/get anchorY.
+--
+-- @within Properties
+-- @function .anchorY
+-- @usage widget.anchorY = 5
+-- @usage print( widget.anchorY )
+
+
+--======================================================--
+-- Local Properties
+
+--- set delegate.
+-- set delegate to control functionality.
+--
+-- @within Properties
+-- @function .delegate
+-- @usage widget.delegate = <delegate object>
+
+
+--- add Nav Item to navigation stack.
+-- push a new Nav Item, furthering the navigation stack. this typically will animate the new view on the screen.
+--
+-- @within Methods
+-- @function pushNavItem
+-- @tparams @{Widget.NavItem}
+-- @tab params optional parameters
+-- @usage widget:pushNavItem( item, params )
+
+--- add Nav Item to navigation stack.
+-- pop a Nav Item from the stack. this typically will animate the previous view on the screen.
+--
+-- @within Methods
+-- @function popNavItemAnimated
+-- @usage widget:popNavItemAnimated()
 
 
 --======================================================--
@@ -343,7 +360,8 @@ function NavBar:popNavItemAnimated()
 end
 
 
---== methods used by dUI.NavigationControl
+--======================================================--
+-- methods used by dUI.NavigationControl
 
 function NavBar:pushNavItemGetTransition( item, params )
 	self:_setNextItem( item, params )
@@ -353,7 +371,6 @@ end
 function NavBar:popNavItemGetTransition()
 	return self:_getPrevTrans()
 end
-
 
 
 --======================================================--
@@ -418,7 +435,7 @@ end
 
 function NavBar:_addItemToNavBar( item )
 	-- print( "NavBar:_addItemToNavBar", item )
-	local dg = self._dgMain
+	local dg = self._dgViews
 	local o
 
 	o = item.title
