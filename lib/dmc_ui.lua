@@ -36,7 +36,7 @@ SOFTWARE.
 --- A Lua module which creates UI widgets for the Corona SDK.
 -- @module dmc-ui
 -- @usage local dUI = require 'dmc_ui'
--- local g = dUI.newTableView( view )
+-- local widget = dUI.newPushButton()
 
 
 --====================================================================--
@@ -256,7 +256,7 @@ Documentation items should be copied in manually
 -- @function newBackground
 -- @tab[opt] options params @{newBackgroundParams}
 -- @treturn object @{Widget.Background}
--- @usage local uiBg = dUI.newBackground()
+-- @usage local widget = dUI.newBackground()
 --
 
 --- Optional parameters for newBackground()
@@ -272,7 +272,7 @@ Documentation items should be copied in manually
 -- @function newRectangleBackground
 -- @tab[opt] options parameters used to create Background
 -- @treturn object @{Widget.Background}
--- @usage local uiBg = dUI.newRectangleBackground()
+-- @usage local widget = dUI.newRectangleBackground()
 --
 
 --- convenience function for Rounded Background widgets.
@@ -280,17 +280,18 @@ Documentation items should be copied in manually
 -- @function newRoundedBackground
 -- @tab[opt] options parameters used to create Background
 -- @treturn object @{Widget.Background}
--- @usage local uiBg = dUI.newRoundedBackground()
+-- @usage local widget = dUI.newRoundedBackground()
 --
 
 --== Button
 
 --- constructor for Button widgets.
+-- the default button type is a Push Button widget.
 --
 -- @function newButton
--- @tab[opt] options parameters used to create Background
+-- @tab[opt] options parameters used to create Button widget
 -- @treturn object @{Widget.Button}
--- @usage local uiBg = dUI.newButton()
+-- @usage local widget = dUI.newButton()
 --
 
 --- convenience function for Push Buttons.
@@ -298,14 +299,14 @@ Documentation items should be copied in manually
 -- @function newPushButton
 -- @tab[opt] options parameters used to create Button
 -- @treturn object @{Widget.Button}
--- @usage local uiBg = dUI.newPushButton()
+-- @usage local widget = dUI.newPushButton()
 
 --- convenience function for Radio Buttons.
 --
 -- @function newRadioButton
 -- @tab[opt] options parameters used to create Button
 -- @treturn object @{Widget.Button}
--- @usage local uiBg = dUI.newRadioButton()
+-- @usage local widget = dUI.newRadioButton()
 --
 
 --- convenience function for Toggle Buttons.
@@ -313,7 +314,7 @@ Documentation items should be copied in manually
 -- @function newToggleButton
 -- @tab[opt] options parameters used to create Button
 -- @treturn object @{Widget.Button}
--- @usage local uiBg = dUI.newToggleButton()
+-- @usage local widget = dUI.newToggleButton()
 --
 
 --== Button Group
@@ -327,7 +328,7 @@ Documentation items should be copied in manually
 -- @function newFormatter
 -- @tab[opt] options parameters used to create a data Formatter
 -- @treturn object @{Widget.Formatter}
--- @usage local uiBg = dUI.newFormatter()
+-- @usage local widget = dUI.newFormatter()
 --
 
 --== Nav Bar
@@ -337,7 +338,7 @@ Documentation items should be copied in manually
 -- @function newNavBar
 -- @tab[opt] options parameters used to create a Nav Bar
 -- @treturn object @{Widget.NavBar}
--- @usage local uiBg = dUI.newNavBar()
+-- @usage local widget = dUI.newNavBar()
 --
 
 --- constructor for Nav Bar Item.
@@ -345,7 +346,7 @@ Documentation items should be copied in manually
 -- @function newNavItem
 -- @tab[opt] options parameters used to create a Nav Item
 -- @treturn object @{Widget.NavItem}
--- @usage local uiBg = dUI.newNavItem()
+-- @usage local widget = dUI.newNavItem()
 --
 
 --== Scroll View
@@ -355,7 +356,7 @@ Documentation items should be copied in manually
 -- @function newScrollView
 -- @tab[opt] options parameters used to create a Scroll View
 -- @treturn object @{Widget.ScrollView}
--- @usage local uiBg = dUI.newScrollView()
+-- @usage local widget = dUI.newScrollView()
 --
 
 --== Table View / Cell
@@ -365,7 +366,7 @@ Documentation items should be copied in manually
 -- @function newTableView
 -- @tab[opt] options parameters used to create a Table View
 -- @treturn object @{Widget.TableView}
--- @usage local uiBg = dUI.newTableView()
+-- @usage local widget = dUI.newTableView()
 --
 
 --- constructor for a Table View Cell widget.
@@ -373,7 +374,7 @@ Documentation items should be copied in manually
 -- @function newTableViewCell
 -- @tab[opt] options parameters used to create a Table View Cell
 -- @treturn object @{Widget.TableViewCell}
--- @usage local uiBg = dUI.newTableViewCell()
+-- @usage local widget = dUI.newTableViewCell()
 --
 
 --== Text / Text Field
@@ -383,7 +384,7 @@ Documentation items should be copied in manually
 -- @function newText
 -- @tab[opt] options parameters used to create a Text widget
 -- @treturn object @{Widget.Text}
--- @usage local uiBg = dUI.newText()
+-- @usage local widget = dUI.newText()
 --
 
 --- constructor for a Text Field widget.
@@ -391,7 +392,7 @@ Documentation items should be copied in manually
 -- @function newTextField
 -- @tab[opt] options parameters used to create a Text Field widget
 -- @treturn object @{Widget.TextField}
--- @usage local uiBg = dUI.newTextField()
+-- @usage local widget = dUI.newTextField()
 --
 
 
