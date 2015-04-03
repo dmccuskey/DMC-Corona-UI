@@ -121,8 +121,6 @@ NavItem.STYLE_TYPE = uiConst.NAVITEM
 function NavItem:__init__( params )
 	-- print( "NavItem:__init__" )
 	params = params or {}
-	if params.x==nil then params.x=0 end
-	if params.y==nil then params.y=0 end
 	if params.title==nil then params.title="" end
 
 	self:superCall( LifecycleMix, '__init__', params )
@@ -133,11 +131,6 @@ function NavItem:__init__( params )
 	--== Create Properties ==--
 
 	-- properties stored in Class
-
-	self._x = params.x
-	self._x_dirty=true
-	self._y = params.y
-	self._y_dirty=true
 
 	self._title = params.title
 
@@ -198,6 +191,8 @@ function NavItem:__initComplete__()
 
 	self:_createText()
 	self:_createBackButton()
+
+	self.title = self._title
 
 end
 
