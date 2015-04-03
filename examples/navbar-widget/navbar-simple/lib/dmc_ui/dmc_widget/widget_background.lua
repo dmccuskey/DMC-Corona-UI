@@ -65,13 +65,11 @@ local ui_find = dmc_ui_func.find
 
 
 local Objects = require 'dmc_objects'
-local LifecycleMixModule = require 'dmc_lifecycle_mix'
-local StyleMixModule = require( ui_find( 'dmc_style.style_mix' ) )
+
 local uiConst = require( ui_find( 'ui_constants' ) )
 
---== To be set in initialize()
-local dUI = nil
-local ViewFactory = nil
+local WidgetBase = require( ui_find( 'core.widget' ) )
+
 
 
 --====================================================================--
@@ -79,10 +77,10 @@ local ViewFactory = nil
 
 
 local newClass = Objects.newClass
-local ComponentBase = Objects.ComponentBase
 
-local LifecycleMix = LifecycleMixModule.LifecycleMix
-local StyleMix = StyleMixModule.StyleMix
+--== To be set in initialize()
+local dUI = nil
+local ViewFactory = nil
 
 
 
@@ -91,12 +89,19 @@ local StyleMix = StyleMixModule.StyleMix
 --====================================================================--
 
 
--- ! put StyleMix first !
+--- Background Widget Module.
+-- a background widget is a graphical element, normally used as a background. the background graphics can be from a Shape, Image, 9-Slice.
+--
+-- @classmod Widget.Background
+-- @usage
+-- local dUI = require 'dmc_ui'
+-- local widget = dUI.newBackground()
 
-local Background = newClass(
-	{ StyleMix, ComponentBase, LifecycleMix },
-	{name="Background Widget"}
-)
+local Background = newClass( WidgetBase, { name="Background Widget" } )
+
+--- Class Constants
+--
+-- @section class-constants
 
 --== Style/Theme Constants
 
@@ -112,12 +117,6 @@ Background._DEFAULT_VIEWTYPE = uiConst.ROUNDED
 -- 	Background.DEFAULT,
 -- }
 
---== Event Constants
-
-Background.EVENT = 'background-widget-event'
-
-Background.PRESSED = 'touch-press-event'
-Background.RELEASED = 'touch-release-event'
 
 
 --======================================================--
@@ -130,31 +129,16 @@ function Background:__init__( params )
 	params = params or {}
 	if params.x==nil then params.x=0 end
 	if params.y==nil then params.y=0 end
-	if params.defaultViewType==nil then params.defaultViewType=Background._DEFAULT_VIEWTYPE end
+	if params.viewType==nil then params.viewType=Background._DEFAULT_VIEWTYPE end
 
-	self:superCall( LifecycleMix, '__init__', params )
-	self:superCall( ComponentBase, '__init__', params )
-	self:superCall( StyleMix, '__init__', params )
+	self:superCall( '__init__', params )
 	--==--
 
 	--== Create Properties ==--
 
 	-- properties stored in Class
 
-	self._x = params.x
-	self._x_dirty=true
-	self._y = params.y
-	self._y_dirty=true
-
-	self._defType = params.defaultViewType -- default style type
-
-	-- properties stored in Style
-
-	self._debugOn_dirty=true
-	self._width_dirty=true
-	self._height_dirty=true
-	self._anchorX_dirty=true
-	self._anchorY_dirty=true
+	self._viewType = params.viewType -- default style type
 
 	-- "Virtual" properties
 
@@ -162,20 +146,18 @@ function Background:__init__( params )
 
 	--== Object References ==--
 
-	self._tmp_style = params.style -- save later
-
 	self._wgtView = nil -- background view
 	self._wgtView_dirty=true
 
 end
 
+--[[
 function Background:__undoInit__()
 	-- print( "Background:__undoInit__" )
 	--==--
-	self:superCall( StyleMix, '__undoInit__' )
-	self:superCall( ComponentBase, '__undoInit__' )
-	self:superCall( LifecycleMix, '__undoInit__' )
+	self:superCall( '__undoInit__' )
 end
+--]]
 
 
 --[[
@@ -186,7 +168,6 @@ function Background:__createView__()
 	self:superCall( ComponentBase, '__createView__' )
 	--==--
 end
-
 function Background:__undoCreateView__()
 	-- print( "Background:__undoCreateView__" )
 	--==--
@@ -197,21 +178,19 @@ end
 
 --== initComplete
 
+--[[
 function Background:__initComplete__()
 	-- print( "Background:__initComplete__" )
-	self:superCall( StyleMix, '__initComplete__' )
-	self:superCall( ComponentBase, '__initComplete__' )
+	self:superCall( '__initComplete__' )
 	--==--
-	self.style = self._tmp_style
 end
+--]]
 
 function Background:__undoInitComplete__()
 	--print( "Background:__undoInitComplete__" )
 	self:_removeBackground()
-	self.style = nil
 	--==--
-	self:superCall( ComponentBase, '__undoInitComplete__' )
-	self:superCall( StyleMix, '__undoInitComplete__' )
+	self:superCall( '__undoInitComplete__' )
 end
 
 -- END: Setup DMC Objects
@@ -240,44 +219,91 @@ end
 --====================================================================--
 --== Public Methods
 
+--[[
+Inherited
+--]]
+
+--- set/get x position.
+--
+-- @within Properties
+-- @function .x
+-- @usage widget.x = 5
+-- @usage print( widget.x )
+
+--- set/get y position.
+--
+-- @within Properties
+-- @function .y
+-- @usage widget.y = 5
+-- @usage print( widget.y )
+
+--- set/get width.
+--
+-- @within Properties
+-- @function .width
+-- @usage widget.width = 5
+-- @usage print( widget.width )
+
+--- set/get height.
+--
+-- @within Properties
+-- @function .height
+-- @usage widget.height = 5
+-- @usage print( widget.height )
+
+--- set/get anchorX.
+--
+-- @within Properties
+-- @function .anchorX
+-- @usage widget.anchorX = 5
+-- @usage print( widget.anchorX )
+
+--- set/get anchorY.
+--
+-- @within Properties
+-- @function .anchorY
+-- @usage widget.anchorY = 5
+-- @usage print( widget.anchorY )
+
+--- set/get widget style.
+-- style can be a style name or a Style Object.
+-- Style Object must be appropriate style for Widget, eg style for Background widget comes from dUI.newBackgroundStyle().
+-- @within Properties
+-- @function .style
+-- @usage widget.style = 'widget-home-page'
+-- @usage
+-- local wStyle = dUI.newBackgroundStyle()
+-- widget.style = wStyle
+
+
+--- clear any local properties on style.
+-- convenience method, calls clearProperties() on active style.
+--
+-- @within Methods
+-- @function clearStyle
+-- @usage widget:clearStyle()
+
+
 
 --======================================================--
 -- Local Properties
 
--- .X
---
-function Background.__getters:x()
-	return self._x
-end
-function Background.__setters:x( value )
-	-- print( "Background.__setters:x", value )
-	assert( type(value)=='number' )
-	--==--
-	self._x = value
-	self._x_dirty=true
-	self:__invalidateProperties__()
-end
-
--- .Y
---
-function Background.__getters:y()
-	return self._y
-end
-function Background.__setters:y( value )
-	-- print( "Background.__setters:y", value )
-	assert( type(value)=='number' )
-	--==--
-	self._y = value
-	self._y_dirty=true
-	self:__invalidateProperties__()
-end
 
 
 --======================================================--
 -- View Style Properties
 
---== cornerRadius
 
+--== .cornerRadius
+
+--- set/get cornerRadius for shape.
+-- only applies to Rounded Rectangles
+--
+-- @within Properties
+-- @function .cornerRadius
+-- @usage widget.cornerRadius = 5
+-- @usage print( widget.cornerRadius )
+--
 function Background.__getters:cornerRadius()
 	return self.curr_style.view.cornerRadius
 end
@@ -286,8 +312,16 @@ function Background.__setters:cornerRadius( value )
 	self.curr_style.view.cornerRadius = value
 end
 
---== viewStrokeWidth
+--== .viewStrokeWidth
 
+--- set/get viewStrokeWidth for shape.
+-- does not apply to image or 9-slice backgrounds
+--
+-- @within Properties
+-- @function .viewStrokeWidth
+-- @usage widget.viewStrokeWidth = 5
+-- @usage print( widget.viewStrokeWidth )
+--
 function Background.__getters:viewStrokeWidth()
 	return self.curr_style.view.strokeWidth
 end
@@ -298,6 +332,19 @@ end
 
 --== setViewFillColor
 
+--- set the fill color for shape.
+-- does not apply to image or 9-slice backgrounds
+--
+-- @within Methods
+-- @function setViewFillColor
+-- @param colors list of color attributes, 0-1
+-- @usage
+-- widget:setViewFillColor( gray )
+-- widget:setViewFillColor( gray, alpha )
+-- widget:setViewFillColor( red, green, blue )
+-- widget:setViewFillColor( red, green, blue, alpha )
+-- widget:setViewFillColor( gradient )
+--
 function Background:setViewFillColor( ... )
 	-- print( "Background:setViewFillColor" )
 	self.curr_style.view.fillColor = {...}
@@ -305,6 +352,19 @@ end
 
 --== setViewStrokeColor
 
+--- set the fill color for shape.
+-- does not apply to image or 9-slice backgrounds
+--
+-- @within Methods
+-- @function setViewStrokeColor
+-- @param colors list of color attributes, 0-1
+-- @usage
+-- widget:setViewStrokeColor( gray )
+-- widget:setViewStrokeColor( gray, alpha )
+-- widget:setViewStrokeColor( red, green, blue )
+-- widget:setViewStrokeColor( red, green, blue, alpha )
+-- widget:setViewStrokeColor( gradient )
+--
 function Background:setViewStrokeColor( ... )
 	-- print( "Background:setViewStrokeColor" )
 	self.curr_style.view.strokeColor = {...}
@@ -320,18 +380,16 @@ function Background:afterAddStyle()
 	self:__invalidateProperties__()
 end
 
-
 function Background:beforeRemoveStyle()
 	-- print( "Background:beforeRemoveStyle" )
 	self._wgtViewStyle_dirty=true
 	self:__invalidateProperties__()
 end
 
-
 function Background:_createDefaultStyleParams()
 	return {
 		name=nil,
-		data={type=self._defType}
+		data={type=self._viewType}
 	}
 end
 

@@ -81,6 +81,7 @@ local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
 
 local mabs = math.abs
+local mfloor = math.floor
 local sfmt = string.format
 local tinsert = table.insert
 local tremove = table.remove
@@ -251,6 +252,62 @@ end
 
 function AxisMotion.__getters:value()
 	return self._value
+end
+
+
+function AxisMotion:scrollToPosition( pos, params )
+	-- print( "AxisMotion:scrollToPosition", pos )
+	params = params or {}
+	params.position=params.position
+	params.time=params.time
+	if params.limitIsActive==nil then params.limitIsActive=false end
+	--==--
+	local eFI
+
+	if params.time==0 then
+
+		eFI = function()
+			self._value = pos
+			self._isMoving=false
+			self._hasMoved=true
+			self._enterFrameIterator=nil
+		end
+
+	else
+		local time = params.time
+		local ease_f = easingx.easeOut
+		local val = self._value
+		local startEvt = {
+			time=system.getTimer()
+		}
+		self._isMoving = true
+		local delta = self._value + pos
+		if params.limitIsActive then
+			local velocity = mabs( delta/time )
+			if velocity > AxisMotion.VELOCITY_LIMIT then
+				time = mfloor( mabs(delta/AxisMotion.VELOCITY_LIMIT) )
+			end
+		end
+
+		eFI = function( e )
+			local deltaT = e.time - startEvt.time
+			local deltaV = ease_f( deltaT, time, val, delta )
+
+			if deltaT < time then
+				self._value = deltaV
+			else
+				self._isMoving = false
+				self._hasMoved = true
+				self._value = delta
+				self._enterFrameIterator=nil
+			end
+		end
+
+	end
+
+	self._enterFrameIterator = eFI
+	Runtime:addEventListener( 'enterFrame', self )
+
 end
 
 
@@ -607,7 +664,7 @@ end
 --== State Decelerate
 
 function AxisMotion:do_state_decelerate( params )
-	-- print( "\n\nAxisMotion:do_state_decelerate\n\n" )
+	-- print( "AxisMotion:do_state_decelerate" )
 	params = params or {}
 	--==--
 	local TIME = AxisMotion.DECELERATE_TRANS_TIME

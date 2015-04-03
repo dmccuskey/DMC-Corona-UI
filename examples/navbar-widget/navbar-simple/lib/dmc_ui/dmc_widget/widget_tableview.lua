@@ -59,12 +59,16 @@ local ui_find = dmc_ui_func.find
 --====================================================================--
 
 
+--- rowItemRecord
+-- @field data reference to data given by insert
+-- @table rowItemRecord
 
 --====================================================================--
 --== Imports
 
 
 local Objects = require 'dmc_objects'
+local TouchMgr = require 'dmc_touchmanager'
 local Utils = require 'dmc_utils'
 
 local uiConst = require( ui_find( 'ui_constants' ) )
@@ -79,12 +83,64 @@ local ScrollView = require( ui_find( 'dmc_widget.widget_scrollview' ) )
 
 local newClass = Objects.newClass
 
+local mabs = math.abs
 local mfloor = math.floor
 local tinsert = table.insert
 local tremove = table.remove
+local tcancel = timer.cancel
+local tdelay = timer.performWithDelay
 
 --== To be set in initialize()
 local dUI = nil
+
+
+
+--====================================================================--
+--== Support Function
+
+
+-- create records
+-- tail-call
+--
+local function createRecords( list, idx, count, tinsert )
+	-- print( "createRecords" )
+	if idx<=count then
+		local rec = {
+			yMin=0,
+			yMax=0,
+			height=0,
+			index=0,
+			view=nil,
+			user={}
+		}
+		tinsert( list, idx, rec )
+		return createRecords( list, idx+1, count, tinsert )
+	end
+end
+
+local function removeRecords( list, idx, count, tremove )
+	-- print( "removeRecords", idx, count )
+	if idx<=count then
+		tremove( list, idx )
+		return removeRecords( list, idx+1, count, tremove )
+	end
+end
+
+
+
+local function indexItems( list, idx, yMin, height )
+	-- print( "indexItems" )
+	local yMax = yMin+height
+	if idx<=#list then
+		local rec = list[idx]
+		rec.yMin=yMin
+		rec.yMax=yMax
+		rec.height=height
+		rec.index=idx
+		return indexItems( list, idx+1, yMax, height )
+	end
+end
+
 
 
 
@@ -95,15 +151,14 @@ local dUI = nil
 
 local TableView = newClass( ScrollView, {name="TableView"} )
 
+--== Class Constants
 
-TableView.BOUND_CUT = 'cut'
-TableView.BOUND_FULL = 'full'
-TableView.BOUND_EXTEND = 'extend'
-
---== State Constants
+TableView._BOUND_CUT = 'cut'
+TableView._BOUND_FULL = 'full'
+TableView._BOUND_EXTEND = 'extend'
 
 -- pixel amount to edges in which rows are de-/rendered
-TableView.DEFAULT_RENDER_MARGIN = 100
+TableView._DEFAULT_RENDER_MARGIN = 100
 
 --== Style/Theme Constants
 
@@ -121,9 +176,14 @@ TableView.STYLE_TYPE = uiConst.TABLEVIEW
 
 TableView.EVENT = 'tableview-event'
 
--- for scroll items
-TableView.ROW_RENDER = 'row-render-event'
-TableView.ROW_UNRENDER = 'row-unrender-event'
+TableView.RENDER_ROW = 'row-render-event'
+TableView.UNRENDER_ROW = 'row-unrender-event'
+TableView.SHOULD_HIGHLIGHT_ROW = 'row-should-highlight-event'
+TableView.HIGHLIGHT_ROW = 'row-highlight-event'
+TableView.UNHIGHLIGHT_ROW = 'row-unhighlight-event'
+TableView.WILL_SELECT_ROW = 'row-will-select-event'
+TableView.SELECTED_ROW = 'row-selected-event'
+
 
 --======================================================--
 -- Start: Setup DMC Objects
@@ -134,7 +194,7 @@ function TableView:__init__( params )
 	-- params.dataSource=params.dataSource
 	-- params.delegate=params.delegate
 	if params.estimatedRowHeight==nil then params.estimatedRowHeight=20 end
-	if params.renderMargin==nil then params.renderMargin=TableView.DEFAULT_RENDER_MARGIN end
+	if params.renderMargin==nil then params.renderMargin=TableView._DEFAULT_RENDER_MARGIN end
 
 	self:superCall( '__init__', params )
 	--==--
@@ -164,9 +224,17 @@ function TableView:__init__( params )
 	--]]
 	self._renderedTableCells = nil
 
+	-- saved Touch Event, usually 'began'
+	-- to enable motion "from beginning"
+	self._tmpTouchEvt = nil
+
 	--== Display Groups ==--
 
 	--== Object References ==--
+
+
+	self._tableCellHighlight_timer = nil
+	self._tableCellTouch_f = nil
 
 	self._delegate = params.delegate
 	self._dataSource = params.dataSource
@@ -193,6 +261,8 @@ function TableView:__initComplete__()
 	self._rowItemRecords = {}
 	self._renderedTableCells = {}
 
+	self._tableCellTouch_f = self:createCallback( TableView._tableCellTouch_handler )
+
 	--== Use Setters
 	self.dataSource = self._dataSource
 	self.delegate = self._delegate
@@ -218,10 +288,9 @@ function TableView:__undoInitComplete__()
 	self:superCall( '__undoInitComplete__' )
 end
 
-
-
 -- END: Setup DMC Objects
 --======================================================--
+
 
 
 --====================================================================--
@@ -264,6 +333,12 @@ function TableView.__setters:scrollWidth( value )
 end
 
 
+--== .contentPosition
+
+function TableView.__getters:contentPosition()
+	-- print( "TableView.__getters:contentPosition" )
+	return self._scroller.y
+end
 
 --== .delegate
 
@@ -302,68 +377,113 @@ function TableView.__setters:estimatedRowHeight( value )
 end
 
 
--- function TableView.__setters:scroll_time( value )
--- 	-- print( "TableView.__setters:scroll_time" )
--- 	if not value or not type( value ) == 'number' then return end
--- 	self._scroll_transition_time = value
--- end
-
-
 --== .renderMargin
 
 function TableView.__setters:renderMargin( value )
 	-- print( "TableView.__setters:renderMargin", value )
 	-- TODO, use setters
 	self._renderMargin = value
-	self._upperHorizontalOffset = value
-	self._lowerHorizontalOffset = value
-	self._upperVerticalOffset = value
-	self._lowerVerticalOffset = value
+	-- self._upperHorizontalOffset = value
+	-- self._lowerHorizontalOffset = value
+	-- self._upperVerticalOffset = value
+	-- self._lowerVerticalOffset = value
+end
+
+
+--- returns the row view reference.
+-- the row view or nil if not visible
+--
+-- @returns row view or nil if the row is not visible
+--
+function TableView:getRowAt( idx )
+	-- print( "TableView:getRowAt", pos )
+	local records = self._rowItemRecords
+	local rec = records[idx]
+	return rec and rec.view
+end
+
+
+function TableView:insertRowAt( idx )
+	-- print( "TableView:insertRowAt", idx )
+	assert( type(idx)=='number', "TableView:insertRowAt arg must be a number" )
+	--==--
+	local records = self._rowItemRecords
+	local rec = records[idx]
+	local yMin = rec and rec.yMin or 0
+	local eRH = self._estimatedRowHeight
+
+	self.scrollHeight = self.scrollHeight + eRH
+	createRecords( records, idx, idx, tinsert )
+	indexItems( records, idx, yMin, eRH )
+	self:_renderDisplay{ clearAll=true }
+end
+
+function TableView:removeRowAt( idx )
+	-- print( "TableView:removeRowAt", idx )
+	assert( type(idx)=='number', "TableView:removeRowAt arg must be a number" )
+	--==--
+	local records = self._rowItemRecords
+	local rec = records[idx]
+	local yMin = rec and rec.yMin or 0
+	local eRH = self._estimatedRowHeight
+
+	self.scrollHeight = self.scrollHeight - eRH
+	local removed = self:_unrenderTableCell( rec )
+	removeRecords( records, idx, idx, tremove )
+	indexItems( records, idx, yMin, eRH )
+	if removed then
+		self:_renderDisplay{ clearAll=true }
+	end
 end
 
 
 function TableView:reloadData()
 	-- print( "TableView:reloadData" )
-
-	if not self._dataSource or not self._delegate then
-		error( "need more config")
-	end
-
-	local del = self._delegate
-	local num = del:numberOfRows()
+	assert( self._dataSource and self._delegate, "TableView:reloadData missing data source or delegate" )
+	--==--
 	local eRH = self._estimatedRowHeight
+	local num = self._delegate:numberOfRows()
+	local records = {}
+	local yMin = 0
 
 	self.scrollHeight = num*eRH
-	self._rowItemRecords = self:_createRecords( num, eRH )
+	createRecords( records, 1, num, tinsert )
+	indexItems( records, 1, yMin, eRH )
+	self._rowItemRecords = records
 
-	self:_renderDisplay()
+	self:_renderDisplay{ clearAll=true }
+end
+
+
+
+function TableView:scrollToRowAt( idx, params )
+	-- print( "TableView:scrollToRowAt" )
+	assert( type(idx)=='number' )
+	params = params or {}
+	if params.time==nil then params.time=0 end
+	if params.position==nil then params.position='none' end
+	if params.limitIsActive==nil then params.limitIsActive=false end
+	--==--
+	local record = self._rowItemRecords[ idx ]
+	assert( record )
+
+	local pos = self:_calculateScrollPosition( record, params.position )
+
+	if params.time then
+		-- set scroll in motion
+		self._axis_y:scrollToPosition( pos, params )
+	else
+		self:_unrenderAllTableCells()
+		self._axis_y:scrollToPosition( pos, params )
+		self:_renderDisplay{ clearAll=false }
+	end
+
 end
 
 
 
 --====================================================================--
 --== Private Methods
-
-
-function TableView:_createRecords( number, height )
-	-- print( "TableView:_createRecords", number, height )
-	local records = {}
-	local yMin, yMax = 0, 0
-	for i=1,number do
-		yMax = yMin+height
-		local rec = {
-			yMin=yMin,
-			yMax=yMax,
-			height=height,
-			index=i
-		}
-		-- print( rec.yMin, rec.yMax )
-		tinsert( records, rec )
-		yMin=yMax
-	end
-	return records
-end
-
 
 
 -- _viewportBounds()
@@ -419,11 +539,11 @@ function TableView:_isWithinBounds( bounds, item )
 end
 
 
-
-
-
--- binary search
--- @param record can be an array, or single record
+-- search for an item which should be visible.
+-- usually used when there are no visible table cells
+-- uses binary search
+-- @table records array of data items
+--
 function TableView:_findVisibleItem( records, min, max )
 	-- print( "TableView:_findVisibleItem", min, max  )
 
@@ -447,8 +567,6 @@ function TableView:_findVisibleItem( records, min, max )
 end
 
 
-
-
 -- renders table cells.
 -- adds cells starting at Top, moving Up
 --
@@ -459,7 +577,7 @@ function TableView:_renderUp( records, index, bounds )
 
 	local isBounded_f = self._isWithinBounds
 	local renderCell_f = self._renderTableCell
-	local cut = TableView.BOUND_CUT
+	local cut = TableView._BOUND_CUT
 	local record, isBounded, bType
 
 	repeat
@@ -487,7 +605,7 @@ function TableView:_renderDown( records, index, bounds )
 
 	local isBounded_f = self._isWithinBounds
 	local renderCell_f = self._renderTableCell
-	local cut = TableView.BOUND_CUT
+	local cut = TableView._BOUND_CUT
 	local record, isBounded, bType
 
 	repeat
@@ -515,13 +633,12 @@ function TableView:_unrenderUpFromBottom( bounds )
 	local isBounded_f = self._isWithinBounds
 	local unrenderCell_f = self._unrenderTableCell
 	local renderedCells = self._renderedTableCells
-
-	local index, record, isBounded
+	local index, record, isBounded, bType
 
 	index = #renderedCells
 	record = renderedCells[ index ]
 	while record do
-		isBounded = isBounded_f( self, bounds, record )
+		isBounded, bType = isBounded_f( self, bounds, record )
 		if isBounded then
 			break
 		else
@@ -542,13 +659,12 @@ function TableView:_unrenderDownFromTop( bounds )
 	local isBounded_f = self._isWithinBounds
 	local unrenderCell_f = self._unrenderTableCell
 	local renderedCells = self._renderedTableCells
-
-	local record, isBounded
+	local record, isBounded, bType
 
 	-- the index never changes
 	record = renderedCells[ 1 ]
 	while record do
-		isBounded = isBounded_f( self, bounds, record )
+		isBounded, bType = isBounded_f( self, bounds, record )
 		if isBounded then
 			break
 		else
@@ -560,16 +676,21 @@ function TableView:_unrenderDownFromTop( bounds )
 end
 
 
-
-
-function TableView:_renderDisplay()
+function TableView:_renderDisplay( params )
 	-- print( "TableView:_renderDisplay" )
+	params = params or {}
+	if params.clearAll==nil then params.clearAll=false end
+	--==--
 
 	local records = self._rowItemRecords
 	if #records == 0 then return end
 
+	if params.clearAll then
+		self:_unrenderAllTableCells( self._renderedTableCells )
+	end
+
 	local isBounded_f = self._isWithinBounds
-	local full = TableView.BOUND_FULL
+	local full = TableView._BOUND_FULL
 	local renderedCells = self._renderedTableCells
 
 	local bounds = self:_viewportBounds()
@@ -625,6 +746,86 @@ end
 
 
 
+
+function TableView:_startHighlightTimer( record )
+	-- print( "TableView:_startHighlightTimer", record )
+	local f = function(e)
+		self:_dispatchHighlightRow( record )
+		self._tableCellHighlight_timer=nil
+	end
+	self._tableCellHighlight_timer = tdelay( 10, f )
+
+end
+function TableView:_stopHighlightTimer()
+	-- print( "TableView:_startHighlightTimer" )
+	local t = self._tableCellHighlight_timer
+	if not t then return end
+	tcancel( t )
+	self._tableCellHighlight_timer = nil
+end
+
+
+--- create callback function for returnFocus
+-- this is how ScrollView will communicate
+--
+function TableView:_getReturnFocusCallback( method )
+	-- print( "TableView:_getReturnFocusCallback" )
+	return function( event )
+		event.focusBack = true
+		method( self, event )
+	end
+end
+
+function TableView:_tableCellTouch_handler( event )
+	-- print( "TableView:_tableCellTouch_handler", event.phase )
+	local phase = event.phase
+	local target = event.target -- hit area
+	local record = target.__rec
+
+	if event.phase == 'began' and not event.focusBack then
+		-- this is initial pass through Touch Handler
+		-- give Touch Event to ScrollView right away (takeFocus)
+		--
+		event.returnFocus = self:_getReturnFocusCallback( self._tableCellTouch_handler )
+		event.returnTarget = target
+		self:takeFocus( event )
+
+	elseif event.phase == 'began' then
+		-- this is second pass through Touch Handler
+		-- being here means ScrollView didn't use
+		-- Touch Event, so gave it back (returnFocus)
+		--
+		TouchMgr.setFocus( target, event.id )
+		self:_startHighlightTimer( record )
+		-- save initial 'began' Event in case we need to
+		-- give back again. this enables better looking motion
+		self._tmpTouchEvt = event
+
+	elseif phase == 'moved' then
+		local threshold = uiConst.TABLEVIEW_TOUCH_THRESHOLD
+		local hasScrolled = (mabs( event.yStart - event.y ) > threshold)
+		if hasScrolled then
+			-- movement has surpassed threshold
+			-- give Touch Event back to ScrollView
+			self:_stopHighlightTimer( record )
+			self:_dispatchUnhighlightRow( record )
+			self:takeFocus( self._tmpTouchEvt )
+			self._tmpTouchEvt = nil
+		end
+
+	elseif phase == 'ended' then
+		TouchMgr.unsetFocus( target, event.id )
+		self:_stopHighlightTimer( record )
+		self:_dispatchUnhighlightRow( record )
+		self:_dispatchSelectedRow( record )
+		self._tmpTouchEvt = nil
+	end
+
+	return true
+end
+
+
+
 -- setup creation of new Table Cell
 -- creates visual holder for User's TableCell
 --
@@ -657,20 +858,22 @@ function TableView:_renderTableCell( record, options )
 	hit:setFillColor( 0,0,1,0.3 )
 	hit.isHitTestable = true
 
+	TouchMgr.register( hit, self._tableCellTouch_f )
+
 	view:insert( hit )
-	view._hit = hit
+	view.__hit = hit
+	hit.__rec = record
 
 	--== Render View
 
 	local e = {
 		name=TableView.EVENT,
-		type=TableView.ROW_RENDER,
+		type=TableView.RENDER_ROW,
 
-		parent=self,
-		target=record,
+		target=self,
 		view=view,
 		index=record.index,
-		data=record.data,
+		data=record.user,
 	}
 	delegate:onRowRender( e )
 
@@ -695,13 +898,13 @@ function TableView:_unrenderTableCell( record, options )
 	options = options or {}
 	options.index=options.index
 	--==--
-	if not record.view then return end
+	if not record.view then return false end
 
 	local delegate = self._delegate
 	local renderedCells = self._renderedTableCells
 	local scr = self._scroller
 	local index = options.index
-	local view
+	local view, hit
 
 	if index==nil then
 		-- find the index
@@ -720,48 +923,35 @@ function TableView:_unrenderTableCell( record, options )
 
 	local e ={
 		name = TableView.EVENT,
-		type = TableView.ROW_UNRENDER,
+		type = TableView.UNRENDER_ROW,
 
-		parent = self,
-		target = record,
-		row = item_info,
-		view = view,
-		data = record.data,
-		index = index,
+		target=self,
+		view=view,
+		data=record.user,
+		index=record.index,
 	}
 	delegate:onRowUnrender( e )
 
-	view._hit:removeSelf()
-	view._hit=nil
+	hit = view.__hit
+	TouchMgr.unregister( hit, self._tableCellTouch_f )
+	hit:removeSelf()
+	view.__hit=nil
 
 	view:removeSelf()
 	record.view = nil
 
+	return true
 end
 
-
-
-
--- calculate location of table cell
---
-function TableView:_reindexItems( index, record )
-	-- print( "TableView:_reindexItems", index, record )
-
-	local items = self._item_data_recs
-	local item_data, view, h
-	h = record.height
-
-	for i=index,#items do
-		-- print(i)
-		item_data = items[ i ]
-		item_data.yMin = item_data.yMin - h
-		item_data.yMax = item_data.yMax - h
-		item_data.index = i
-		view = item_data.view
-		if view then view.x, view.y = item_data.xMin, item_data.yMin end
+function TableView:_unrenderAllTableCells( rendered )
+	-- print( "TableView:_unrenderAllTableCells", #rendered )
+	local unrenderCell_f = TableView._unrenderTableCell
+	for i=#rendered, 1, -1 do
+		local record = tremove( rendered, i )
+		unrenderCell_f( self, record, {index=i} )
 	end
-
 end
+
 
 
 function TableView:_updateBackground()
@@ -841,19 +1031,134 @@ function TableView:_updateDimensions( item_info, item_data )
 end
 
 
+
+function TableView:_calculateScrollPosition( record, position )
+	-- print( "TableView:_calculateScrollPosition", record, position )
+	local value = 0
+	local offset = 0
+
+	if position=='top' then
+		offset = 0+self._upperVerticalOffset
+		value = offset-record.yMin
+	elseif position=='middle' then
+		offset = self._height/2
+		value = offset-record.yMin
+	elseif position=='bottom' then
+		offset = self._height-self._lowerVerticalOffset
+		value = offset-(record.yMin+record.height)
+	else
+		offset = self._height/2
+		value = offset-record.yMin
+	end
+
+	return value
+end
+
+
+--======================================================--
+-- Event Dispatch
+
+function TableView:_dispatchHighlightRow( record )
+	-- print( "TableView:_dispatchHighlightRow" )
+	local delegate = self._delegate
+	local cell = record.view.cell
+	local f, evt
+
+	evt = {
+		name=TableView.EVENT,
+		type=TableView.SHOULD_HIGHLIGHT_ROW,
+
+		target=self,
+		index=record.index,
+		view=record.view,
+		data=record.user
+	}
+
+	f = delegate and delegate.shouldHighlightRow
+	if f then
+		if not f( delegate, evt ) then return end
+	end
+
+	cell.highlight=true
+
+	f = delegate and delegate.didHighlightRow
+	evt.type = TableView.HIGHLIGHT_ROW
+	if f then f( delegate, evt ) end
+
+end
+
+function TableView:_dispatchUnhighlightRow( record )
+	-- print( "TableView:_dispatchUnhighlightRow" )
+	-- if highlight then tell
+	local delegate = self._delegate
+	local cell = record.view.cell
+	local f, evt
+
+	if not cell.highlight then return end
+
+	cell.highlight=false
+
+	evt = {
+		name=TableView.EVENT,
+		type=TableView.UNHIGHLIGHT_ROW,
+
+		target=self,
+		index=record.index,
+		view=record.view,
+		data=record.user
+	}
+	f = delegate and delegate.didUnhighlightRow
+	if f then f( delegate, evt ) end
+
+end
+
+
+function TableView:_dispatchSelectedRow( record )
+	-- print( "TableView:_dispatchSelectedRow" )
+	-- if highlight then tell
+	local delegate = self._delegate
+	local f, evt
+	local rowIdx = record.index
+
+	evt = {
+		name=TableView.EVENT,
+		type=TableView.WILL_SELECT_ROW,
+
+		target=self,
+		index=record.index,
+		view=record.view,
+		data=record.user
+	}
+
+	f = delegate and delegate.willSelectRow
+	if f then
+		rowIdx = f( delegate, evt )
+		if rowIdx==nil then return end
+	end
+	if rowIdx~=record.index then
+		-- get alternate record
+		record = self._rowItemRecords[ rowIdx ]
+		if not record then return end
+		evt.index=record.index
+		evt.view=record.view
+		evt.data=record.user
+	end
+
+	evt.type=TableView.SELECTED_ROW
+	f = delegate and delegate.didSelectRow
+	if f then f( delegate, evt ) end
+
+end
+
+
+
 --====================================================================--
 --== Event Handlers
 
 
-
 function TableView:_axisEvent_handler( event )
-	-- print( "TableView:_axisEvent_handler", event.state )
-	local state = event.state
-	-- local velocity = event.velocity
-	if event.id=='x' then
-		self._scroller.x = event.value
-	else
-		-- print("TV AXIS Pos >>> ", event.value)
+	-- print( "TableView:_axisEvent_handler" )
+	if event.id=='y' then
 		self._scroller.y = event.value
 	end
 	self:_renderDisplay()

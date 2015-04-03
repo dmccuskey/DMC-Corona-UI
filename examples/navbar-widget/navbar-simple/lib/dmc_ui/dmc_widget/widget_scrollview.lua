@@ -67,11 +67,12 @@ local ui_find = dmc_ui_func.find
 local AxisMotion = require( ui_find( 'dmc_widget.widget_scrollview.axis_motion' ) )
 local Gesture = require 'dmc_gestures'
 local Objects = require 'dmc_objects'
+local TouchMgr = require 'dmc_touchmanager'
 local Utils = require 'dmc_utils'
 
 local uiConst = require( ui_find( 'ui_constants' ) )
 
-local View = require( ui_find( 'core.view' ) )
+local Base = require( ui_find( 'core.widget' ) )
 local Scroller = require( ui_find( 'dmc_widget.widget_scrollview.scroller' ) )
 
 
@@ -90,7 +91,8 @@ local newClass = Objects.newClass
 -- local tinsert = table.insert
 -- local tremove = table.remove
 -- local tstr = tostring
-
+local tcancel = timer.cancel
+local tdelay = timer.performWithDelay
 
 
 --====================================================================--
@@ -98,7 +100,7 @@ local newClass = Objects.newClass
 --====================================================================--
 
 
-local ScrollView = newClass( View, { name = "ScrollView" } )
+local ScrollView = newClass( Base, { name="ScrollView" } )
 
 --== Class Constants
 
@@ -156,7 +158,6 @@ function ScrollView:__init__( params )
 
 	self._hasMoved = false
 	self._isMoving = false
-	self._isRendered = false
 
 	self._scrollWidth = params.scrollWidth
 	self._scrollWidth_dirty=true
@@ -193,10 +194,6 @@ function ScrollView:__init__( params )
 
 	--== Display Groups ==--
 
-	self._dgBg = nil
-	self._dgViews = nil
-	self._dgUI = nil
-
 	--== Object References ==--
 
 	self._axis_x = nil -- y-axis motion
@@ -227,7 +224,7 @@ function ScrollView:__createView__()
 	-- print( "ScrollView:__createView__" )
 	self:superCall( '__createView__' )
 	--==--
-	local dg, o
+	local o
 
 	-- local background, gesture hit area
 
@@ -241,19 +238,8 @@ end
 
 function ScrollView:__undoCreateView__()
 	-- print( "ScrollView:__undoCreateView__" )
-	local o
-
-	self._axis_x:removeSelf()
-	self._axis_x = nil
-
-	self._axis_y:removeSelf()
-	self._axis_y = nil
-
 	self._rectBg:removeSelf()
 	self._rectBg=nil
-
-	self._dgBg:removeSelf()
-	self._dgBg=nil
 	--==--
 	self:superCall( '__undoCreateView__' )
 end
@@ -278,15 +264,11 @@ function ScrollView:__initComplete__()
 	self.horizontalScrollEnabled = self._canScrollH
 	self.verticalScrollEnabled = self._canScrollV
 
-	self._isRendered = true
-
 end
 
 function ScrollView:__undoInitComplete__()
 	--print( "ScrollView:__undoInitComplete__" )
 	local o, f
-
-	self._isRendered = false
 
 	self:_removeAxisMotionX()
 	self:_removeAxisMotionY()
@@ -441,11 +423,96 @@ function ScrollView:scrollToPosition( pos, params )
 end
 
 
-function ScrollView:takeFocus( event, params )
-	params = params or {}
-	params.returnFocus=params.returnFocus
-	--==--
-	-- TODO: start animation
+--- completes giving up focus.
+-- the main point it to terminate any touch action on ScrollView
+--
+function ScrollView:relinquishFocus( event )
+	-- print( "ScrollView:relinquishFocus" )
+	event.phase='cancelled'
+	self._rectBg:dispatchEvent( event )
+end
+
+
+
+function ScrollView:takeFocus( event )
+	TouchMgr.setFocus( self._rectBg, event.id )
+
+	-- stop existing returnFocus timer, if any
+	if self._returnFocusCancel then self._returnFocusCancel() end
+
+	self._tmpTouchEvt = event
+
+	if event.returnFocus then
+		-- we have returnFocus request, so do setup for it
+
+		local rFCallback = event.returnFocus
+		local rFTarget = event.returnTarget
+		assert( rFTarget and rFCallback )
+
+		local returnFocus_f, cancelFocus_f
+
+		--- returns focus back to initiator
+		-- this is set on timer, either it gets cancelled
+		-- or the timer goes off and initiates returnFocus
+		--
+		returnFocus_f = function( state )
+			-- print( "ScrollView: returnFocus" )
+
+			cancelFocus_f()
+
+			local e = self._tmpTouchEvt
+
+			local evt = {
+				name=e.name,
+				id=e.id,
+				time=e.time,
+				x=e.x,
+				y=e.y,
+				xStart=e.xStart,
+				yStart=e.yStart,
+			}
+
+			if state then
+				-- coming from end touch
+				-- make event 'ended'
+				evt.phase = state
+			else
+				-- coming from timer
+				-- terminate current touch action
+				-- then send 'began' event
+				self:relinquishFocus( e )
+				evt.phase = 'began'
+			end
+
+			evt.target = rFTarget
+			rFCallback( evt )
+		end
+
+		cancelFocus_f = function()
+			-- print( 'ScrollerBase: cancelFocus' )
+
+			if self._returnFocus_t then
+				tcancel( self._returnFocus_t )
+				self._returnFocus_t = nil
+			end
+
+			self._returnFocus = nil
+			self._returnFocusCancel = nil
+		end
+
+		self._returnFocus = returnFocus_f
+		self._returnFocusCancel = cancelFocus_f
+		self._returnFocus_t = tdelay( 100, function(e) returnFocus_f() end )
+
+	end
+
+	-- remove previous focus, if any
+
+	TouchMgr.unsetFocus( event.target, event.id )
+	-- send new event through touch area
+	event.phase='began'
+	event.target=self._rectBg
+	event.target:dispatchEvent( event )
 end
 
 
@@ -712,10 +779,10 @@ function ScrollView:stylePropertyChangeHandler( event )
 			self._width_dirty=true
 		elseif property=='height' then
 			self._height_dirty=true
-			elseif property=='anchorX' then
-				self._anchorX_dirty=true
-			elseif property=='anchorY' then
-				self._anchorY_dirty=true
+		elseif property=='anchorX' then
+			self._anchorX_dirty=true
+		elseif property=='anchorY' then
+			self._anchorY_dirty=true
 
 		elseif property=='align' then
 			self._align_dirty=true
@@ -754,6 +821,7 @@ function ScrollView:_gestureEvent_handler( event )
 	local etype = event.type
 	local phase = event.phase
 	local gesture = event.target
+	local f = self._returnFocusCancel
 
 	-- Utils.print( event )
 	local evt = {
@@ -778,6 +846,10 @@ function ScrollView:_gestureEvent_handler( event )
 				self._axis_y:touch( evt )
 			end
 		elseif phase=='changed' then
+			-- if changed, then already know movement was enough
+			-- because Pan Gesture will filter movement
+			f = self._returnFocusCancel
+			if f then f() end
 			evt.phase = 'moved'
 			if self._axis_x then
 				evt.value = event.x
@@ -801,6 +873,10 @@ function ScrollView:_gestureEvent_handler( event )
 				evt.start = event.yStart
 				self._axis_y:touch( evt )
 			end
+			-- if ended (quickly), like a tap
+			-- then give back to the initiator
+			f = self._returnFocus
+			if f then f( 'ended' ) end
 		end
 	end
 end

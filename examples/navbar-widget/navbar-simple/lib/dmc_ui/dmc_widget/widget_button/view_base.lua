@@ -46,9 +46,9 @@ local VERSION = "1.0.0"
 --== DMC Widgets Setup
 --====================================================================--
 
--- local dmc_widget_data, dmc_widget_func
--- dmc_widget_data = _G.__dmc_widget
--- dmc_widget_func = dmc_widget_data.func
+-- local dmc_ui_data = _G.__dmc_ui
+-- local dmc_ui_func = dmc_ui_data.func
+-- local ui_find = dmc_ui_func.find
 
 
 
