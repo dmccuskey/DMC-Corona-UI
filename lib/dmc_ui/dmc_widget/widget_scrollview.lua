@@ -338,13 +338,13 @@ end
 
 
 --- description of parameters for method :setContentPosition().
--- this is the complete list of properties for the :setContentPosition() parameter table.
+-- this is the complete list of properties for the :setContentPosition() parameter table. Though x or y are optional, at least one of them must be specified.
 --
 -- @within Parameters
 -- @tfield[opt] number x The x position to scroll to.
 -- @tfield[opt] number y The y position to scroll to.
 -- @tfield[opt=500] number Time duration for scroll animation, in milliseconds. set to 0 for immediate transition.
--- @tfield[opt] func onComplete a callback when the animation is complete
+-- @tfield[opt] func onComplete a function to call when the animation is complete
 -- @table .setContentPositionParams
 
 
@@ -594,23 +594,24 @@ end
 --- Returns the x and y coordinates of the ScrollView content.
 --
 -- @within Methods
--- @function :getContentPosition()
+-- @function :getContentPosition
 -- @treturn number x
 -- @treturn number y
 -- @usage local x, y = widget:getContentPosition()
---
+
 function ScrollView:getContentPosition()
 	-- print( "ScrollView.__getters:contentPosition" )
 	return self._axis_x.value, self._axis_y.value
 end
 
---- Makes a ScrollView scroll to a specific x or y position.
+--- Scroll to a specific x and/or y position.
+-- Moves content position to x/y over a certain time duration.
 --
 -- @within Methods
--- @function :setContentPosition()
+-- @function :setContentPosition
 -- @tab params table of coordinates, see @{setContentPositionParams}
 -- @usage widget:setContentPosition( { x=-20, y=-35 } )
---
+
 function ScrollView:setContentPosition( params )
 	-- print( "ScrollView:setContentPosition", params )
 	assert( type(params)=='table' )
