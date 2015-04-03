@@ -141,6 +141,7 @@ function View:__init__( params )
 
 	-- properties from style
 
+	self._debugOn_dirty=true
 	self._width=params.width
 	self._width_dirty=true
 	self._height=params.height
