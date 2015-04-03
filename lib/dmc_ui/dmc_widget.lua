@@ -328,6 +328,9 @@ end
 --
 function Widget.newButton( options )
 	if not Widget.ButtonFactory then Widget._loadButtonSupport() end
+	options = options or {}
+	if options.action==nil then options.action = Widget.ButtonFactory.PushButton.TYPE end
+	--==--
 	return Widget.ButtonFactory.create( options )
 end
 
