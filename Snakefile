@@ -37,6 +37,8 @@ module_config = {
 			"dmc_ui/dmc_style/style_manager.lua",
 			"dmc_ui/dmc_style/style_mix.lua",
 			"dmc_ui/dmc_style/tableview_style.lua",
+			"dmc_ui/dmc_style/tableviewcell_style.lua",
+			"dmc_ui/dmc_style/tableviewcell_style/tableviewcell_state.lua",
 			"dmc_ui/dmc_style/text_style.lua",
 			"dmc_ui/dmc_style/textfield_style.lua",
 
@@ -65,6 +67,10 @@ module_config = {
 			"dmc_ui/dmc_widget/widget_scrollview/scroller.lua",
 			"dmc_ui/dmc_widget/widget_slideview.lua",
 			"dmc_ui/dmc_widget/widget_tableview.lua",
+			"dmc_ui/dmc_widget/widget_tableviewcell.lua",
+			"dmc_ui/dmc_widget/assets/tableviewcell/accessory-checkmark.png",
+			"dmc_ui/dmc_widget/assets/tableviewcell/accessory-detail-button.png",
+			"dmc_ui/dmc_widget/assets/tableviewcell/accessory-disclose-indicator.png",
 			"dmc_ui/dmc_widget/widget_text.lua",
 			"dmc_ui/dmc_widget/widget_textfield.lua",
 			"dmc_ui/dmc_widget/widget_viewpager.lua"
