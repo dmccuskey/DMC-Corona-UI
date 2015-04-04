@@ -175,11 +175,11 @@ function Widget.loadViewSupport( params )
 
 	--== Components
 
-	local Base = require( ui_find( 'core.widget' ) )
+	local WidgetBase = require( ui_find( 'core.widget' ) )
 
-	Widget.Base=Base
+	Widget.Base=WidgetBase
 
-	Base.initialize( dUI, params )
+	WidgetBase.initialize( dUI, params )
 end
 
 
