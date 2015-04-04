@@ -320,7 +320,6 @@ function TableView.__setters:horizontalScrollEnabled( value )
 	assert( type(value)=='boolean' )
 	--==--
 	self._canScrollH = false
-	self:_removeAxisMotionX()
 end
 
 -- block width
