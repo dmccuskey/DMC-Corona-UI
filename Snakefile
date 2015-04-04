@@ -61,6 +61,7 @@ module_config = {
 			"dmc_ui/dmc_widget/widget_button/view_image.lua",
 			"dmc_ui/dmc_widget/widget_button/view_shape.lua",
 			"dmc_ui/dmc_widget/widget_navbar.lua",
+			"dmc_ui/dmc_widget/widget_navbar/delegate_navbar.lua",
 			"dmc_ui/dmc_widget/widget_navitem.lua",
 			"dmc_ui/dmc_widget/widget_scrollview.lua",
 			"dmc_ui/dmc_widget/widget_scrollview/axis_motion.lua",
@@ -81,6 +82,7 @@ module_config = {
 			"DMC-Corona-Library"
 		]
 	},
+
 	"examples": {
 		"base_dir": "examples",
 		"apps": [
