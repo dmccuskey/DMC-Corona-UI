@@ -65,6 +65,7 @@ local Gesture = require 'dmc_gestures.core.gesture'
 local newClass = Objects.newClass
 
 local tinsert = table.insert
+local tstr = tostring
 
 
 
@@ -83,7 +84,7 @@ Continuous.TYPE = nil -- override this
 
 Continuous.STATE_BEGAN = 'state_began'
 Continuous.STATE_CHANGED = 'state_changed'
-Continuous.STATE_CANCELED = 'state_cancelled'
+Continuous.STATE_CANCELLED = 'state_cancelled'
 
 --== Event Constants
 
@@ -295,7 +296,7 @@ function Continuous:state_possible( next_state, params )
 		self:do_state_possible( params )
 
 	else
-		print( "WARNING :: Continuous:state_possible " .. tostring( next_state ) )
+		print( "WARNING :: Continuous:state_possible " .. tstr( next_state ) )
 	end
 end
 
@@ -307,6 +308,7 @@ function Continuous:do_state_began( params )
 	params = params or {}
 	if params.notify==nil then params.notify=true end
 	--==--
+	self:_stopAllTimers()
 	self:setState( Continuous.STATE_BEGAN )
 	self:_dispatchGestureNotification( params.notify )
 	self:_dispatchStateNotification( params.notify )
@@ -322,8 +324,14 @@ function Continuous:state_began( next_state, params )
 	elseif next_state == Continuous.STATE_RECOGNIZED then
 		self:do_state_recognized( params )
 
+	elseif next_state == Continuous.STATE_CANCELLED then
+		self:do_state_cancelled( params )
+
+	elseif next_state == Continuous.STATE_FAILED then
+		self:do_state_failed( params )
+
 	else
-		print( "WARNING :: Continuous:state_began " .. tostring( next_state ) )
+		print( "WARNING :: Continuous:state_began " .. tstr( next_state ) )
 	end
 end
 
@@ -346,14 +354,14 @@ function Continuous:state_changed( next_state, params )
 	if next_state == Continuous.STATE_CHANGED then
 		self:do_state_changed( params )
 
-	elseif next_state == Continuous.STATE_CANCELED then
+	elseif next_state == Continuous.STATE_CANCELLED then
 		self:do_state_cancelled( params )
 
 	elseif next_state == Continuous.STATE_RECOGNIZED then
 		self:do_state_recognized( params )
 
 	else
-		print( "WARNING :: Continuous:state_changed " .. tostring( next_state ) )
+		print( "WARNING :: Continuous:state_changed " .. tstr( next_state ) )
 	end
 end
 
@@ -378,9 +386,10 @@ function Continuous:do_state_cancelled( params )
 	params = params or {}
 	if params.notify==nil then params.notify=true end
 	--==--
-	self:setState( Continuous.STATE_CANCELED )
-	self:_endMultitouchEvent()
+	self:setState( Continuous.STATE_CANCELLED )
 	self:_dispatchStateNotification( params.notify )
+	self:_dispatchRecognizedEvent()
+
 end
 
 function Continuous:state_cancelled( next_state, params )
@@ -390,7 +399,7 @@ function Continuous:state_cancelled( next_state, params )
 		self:do_state_possible( params )
 
 	else
-		print( "WARNING :: Continuous:state_cancelled " .. tostring( next_state ) )
+		print( "WARNING :: Continuous:state_cancelled " .. tstr( next_state ) )
 	end
 end
 

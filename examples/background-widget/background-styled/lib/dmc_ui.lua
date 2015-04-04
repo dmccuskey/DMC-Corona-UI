@@ -33,6 +33,11 @@ SOFTWARE.
 --]]
 
 
+--- A Lua module which creates UI widgets for the Corona SDK.
+-- @module dmc-ui
+-- @usage local dUI = require 'dmc_ui'
+-- local widget = dUI.newPushButton()
+
 
 --====================================================================--
 --== DMC UI
@@ -50,8 +55,16 @@ local VERSION = "1.1.0"
 --====================================================================--
 
 
+local ssub = string.sub
+local tinsert = table.insert
+local tremove = table.remove
+local tconcat = table.concat
+
 local args = { ... }
 local PATH = args[1]
+local DPATH = nil
+local SEP = nil
+local split = nil
 
 local dmc_ui_data, dmc_ui_func
 
@@ -65,10 +78,18 @@ if _G.__dmc_ui == nil then
 	dmc_ui_func.find = function( name )
 		local loc = ''
 		if PATH then loc = PATH end
-		if loc ~= '' and string.sub( loc, -1 ) ~= '.' then
+		if loc ~= '' and ssub( loc, -1 ) ~= '.' then
 			loc = loc .. '.'
 		end
 		return loc .. name
+	end
+	dmc_ui_func.file = function( name )
+		local path = {}
+		if DPATH then tinsert( path, DPATH ) end
+		local parts = split( name, '\\/')
+		if parts[1] =='.' then tremove(parts, 1) end
+		tinsert( path, tconcat( parts, SEP ) )
+		return tconcat( path, SEP )
 	end
 
 end
@@ -97,7 +118,7 @@ end
 
 local uiConst = require( PATH .. '.' .. 'ui_constants' )
 local UIUtils = require( PATH .. '.' .. 'ui_utils' )
-
+local Utils = require 'dmc_utils'
 
 
 --===================================================================--
@@ -107,8 +128,12 @@ local UIUtils = require( PATH .. '.' .. 'ui_utils' )
 local WIDTH, HEIGHT = display.contentWidth, display.contentHeight
 
 local sfmt = string.format
-
+local sgsub = string.gsub
 local LOCAL_DEBUG = false
+
+SEP = uiConst.getSystemSeparator()
+DPATH = sgsub( PATH, '%.', SEP )
+split = Utils.split
 
 local UI = {}
 
@@ -209,14 +234,192 @@ UI.RECTANGLE = uiConst.RECTANGLE
 UI.POPOVER = uiConst.POPOVER
 
 
+
 --===================================================================--
 --== Interface Functions
 
 --[[
 Each of the sections (Style, Widget, Control) add their
 functions to this UI object
-All methods are available with easier maintenance
+All methods are available with easier maintenance.
+Documentation items should be copied in manually
 --]]
+
+
+--- Widget Constructors
+-- @section Widgets
+
+--== Background
+
+--- contructor for Background widgets.
+--
+-- @function newBackground
+-- @tab[opt] options params @{newBackgroundParams}
+-- @treturn object @{Widget.Background}
+-- @usage local widget = dUI.newBackground()
+--
+
+--- Optional parameters for newBackground()
+-- @int x minimum number of taps, default 1
+-- @int y maximum number of taps, default 1
+-- @string type a name for the gesture, available in events
+-- @object style a delegate object to control this gesture
+-- @table newBackgroundParams
+
+
+--- contructor for Rectangle Background widgets.
+--
+-- @function newRectangleBackground
+-- @tab[opt] options parameters used to create Background
+-- @treturn object @{Widget.Background}
+-- @usage local widget = dUI.newRectangleBackground()
+--
+
+--- convenience function for Rounded Background widgets.
+--
+-- @function newRoundedBackground
+-- @tab[opt] options parameters used to create Background
+-- @treturn object @{Widget.Background}
+-- @usage local widget = dUI.newRoundedBackground()
+--
+
+--== Button
+
+--- constructor for Button widgets.
+-- the default button type is a Push Button widget.
+--
+-- @function newButton
+-- @tab[opt] options parameters used to create Button widget
+-- @treturn object @{Widget.Button}
+-- @usage local widget = dUI.newButton()
+--
+
+--- convenience function for Push Buttons.
+--
+-- @function newPushButton
+-- @tab[opt] options parameters used to create Button
+-- @treturn object @{Widget.Button}
+-- @usage local widget = dUI.newPushButton()
+
+--- convenience function for Radio Buttons.
+--
+-- @function newRadioButton
+-- @tab[opt] options parameters used to create Button
+-- @treturn object @{Widget.Button}
+-- @usage local widget = dUI.newRadioButton()
+--
+
+--- convenience function for Toggle Buttons.
+--
+-- @function newToggleButton
+-- @tab[opt] options parameters used to create Button
+-- @treturn object @{Widget.Button}
+-- @usage local widget = dUI.newToggleButton()
+--
+
+--== Button Group
+
+
+--== Formatter
+
+--- constructor for Field Formatter delegates.
+-- formatting delegates for use with Text Field
+--
+-- @function newFormatter
+-- @tab[opt] options parameters used to create a data Formatter
+-- @treturn object @{Widget.Formatter}
+-- @usage local widget = dUI.newFormatter()
+--
+
+--== Nav Bar
+
+--- constructor for Nav Bar widgets.
+--
+-- @function newNavBar
+-- @tab[opt] options parameters used to create a Nav Bar
+-- @treturn object @{Widget.NavBar}
+-- @usage local widget = dUI.newNavBar()
+--
+
+--- constructor for Nav Bar Item.
+--
+-- @function newNavItem
+-- @tab[opt] options parameters used to create a Nav Item
+-- @treturn object @{Widget.NavItem}
+-- @usage local widget = dUI.newNavItem()
+--
+
+--== Scroll View
+
+--- constructor for a Scroll View widget.
+--
+-- @function newScrollView
+-- @tab[opt] options parameters used to create a Scroll View
+-- @treturn object @{Widget.ScrollView}
+-- @usage local widget = dUI.newScrollView()
+--
+
+--== Table View / Cell
+
+--- constructor for a Table View widget.
+--
+-- @function newTableView
+-- @tab[opt] options parameters used to create a Table View
+-- @treturn object @{Widget.TableView}
+-- @usage local widget = dUI.newTableView()
+--
+
+--- constructor for a Table View Cell widget.
+--
+-- @function newTableViewCell
+-- @tab[opt] options parameters used to create a Table View Cell
+-- @treturn object @{Widget.TableViewCell}
+-- @usage local widget = dUI.newTableViewCell()
+--
+
+--== Text / Text Field
+
+--- constructor for a Text widget.
+--
+-- @function newText
+-- @tab[opt] options parameters used to create a Text widget
+-- @treturn object @{Widget.Text}
+-- @usage local widget = dUI.newText()
+--
+
+--- constructor for a Text Field widget.
+--
+-- @function newTextField
+-- @tab[opt] options parameters used to create a Text Field widget
+-- @treturn object @{Widget.TextField}
+-- @usage local widget = dUI.newTextField()
+--
+
+
+--== Nav Bar
+
+
+--- Style Constructors
+-- @section Styles
+
+
+--- the gesture's delegate (object/table)
+--
+-- @function newBackgroundStyle
+-- @usage print( gesture.delegate )
+-- @usage gesture.delegate = DisplayObject
+--
+
+
+--- Control Constructors
+-- @section Controls
+
+--- the gesture's delegate (object/table)
+--
+-- @function newTableViewControl
+-- @usage print( gesture.delegate )
+-- @usage gesture.delegate = DisplayObject
+--
 
 
 

@@ -137,8 +137,11 @@ function View:__init__( params )
 	self._y = params.y
 	self._y_dirty = true
 
+	self._isRendered = false
+
 	-- properties from style
 
+	self._debugOn_dirty=true
 	self._width=params.width
 	self._width_dirty=true
 	self._height=params.height
@@ -146,8 +149,9 @@ function View:__init__( params )
 	self._anchorX_dirty=true
 	self._anchorY_dirty=true
 
-	self._autoMask_dirty=true
+	self._autoResizeSubViews = params.autoResizeSubViews
 	self._autoResizeSubViews_dirty=true
+
 	self._layoutMargins_dirty=true
 
 
@@ -155,7 +159,6 @@ function View:__init__( params )
 	references to main View/Control objects, not their property 'view'
 	--]]
 	self._subViews = {}
-	self._autoResizeSubViews = params.autoResizeSubViews
 
 	--[[
 	{width=0,height=0}
@@ -225,6 +228,8 @@ function View:__initComplete__()
 	self:superCall( StyleMix, '__initComplete__' )
 	self:superCall( ComponentBase, '__initComplete__' )
 	--==--
+	self._isRendered = true
+
 	self.style = self._tmp_style
 
 	self:_loadViews()
@@ -233,6 +238,7 @@ end
 function View:__undoInitComplete__()
 	-- print( "View:__undoInitComplete__" )
 	self.style = nil
+	self._isRendered = false
 	--==--
 	self:superCall( ComponentBase, '__undoInitComplete__' )
 	self:superCall( StyleMix, '__undoInitComplete__' )
@@ -257,8 +263,27 @@ end
 --====================================================================--
 --== Public Methods
 
+--[[
+Inherited Methods
+--]]
 
---== X
+--- set/get x position.
+--
+-- @within Properties
+-- @function .x
+-- @usage widget.x = 5
+-- @usage print( widget.x )
+
+
+--- set/get y position.
+--
+-- @within Properties
+-- @function .y
+-- @usage widget.y = 5
+-- @usage print( widget.y )
+
+
+--== .X
 
 function View.__getters:x()
 	return self._x
@@ -273,7 +298,7 @@ function View.__setters:x( value )
 	self:__invalidateProperties__()
 end
 
---== Y
+--== .Y
 
 function View.__getters:y()
 	return self._y
