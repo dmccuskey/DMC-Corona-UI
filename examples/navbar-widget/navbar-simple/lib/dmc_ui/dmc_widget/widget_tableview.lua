@@ -33,7 +33,7 @@ SOFTWARE.
 
 
 --====================================================================--
---== DMC Corona UI : ScrollView Widget
+--== DMC Corona UI : TableView Widget
 --====================================================================--
 
 
@@ -118,6 +118,7 @@ local function createRecords( list, idx, count, tinsert )
 	end
 end
 
+
 local function removeRecords( list, idx, count, tremove )
 	-- print( "removeRecords", idx, count )
 	if idx<=count then
@@ -125,7 +126,6 @@ local function removeRecords( list, idx, count, tremove )
 		return removeRecords( list, idx+1, count, tremove )
 	end
 end
-
 
 
 local function indexItems( list, idx, yMin, height )
@@ -140,7 +140,6 @@ local function indexItems( list, idx, yMin, height )
 		return indexItems( list, idx+1, yMax, height )
 	end
 end
-
 
 
 
@@ -320,7 +319,6 @@ function TableView.__setters:horizontalScrollEnabled( value )
 	assert( type(value)=='boolean' )
 	--==--
 	self._canScrollH = false
-	self:_removeAxisMotionX()
 end
 
 -- block width
@@ -746,7 +744,6 @@ end
 
 
 
-
 function TableView:_startHighlightTimer( record )
 	-- print( "TableView:_startHighlightTimer", record )
 	local f = function(e)
@@ -974,7 +971,6 @@ function TableView:_updateBackground()
 
 	self._total_item_dimension = total_dim
 
-
 	-- set background height, make at least height of window
 
 	if total_dim < self._height then
@@ -995,10 +991,8 @@ function TableView:_updateDimensions( item_info, item_data )
 	-- print( "TableView:_updateDimensions", item_info )
 
 	local total_dim = self._total_item_dimension
-
 	local o
 	local x, y
-
 
 	-- configure item data of new item element
 
@@ -1006,7 +1000,7 @@ function TableView:_updateDimensions( item_info, item_data )
 	item_data.yMin = self._total_item_dimension
 	item_data.yMax = item_data.yMin + item_data.height
 
-	table.insert( self._item_data_recs, item_data )
+	tinsert( self._item_data_recs, item_data )
 	item_data.index = #self._item_data_recs
 
 	-- print( 'item insert', item_data.yMin, item_data.yMax )
@@ -1031,7 +1025,6 @@ function TableView:_updateDimensions( item_info, item_data )
 end
 
 
-
 function TableView:_calculateScrollPosition( record, position )
 	-- print( "TableView:_calculateScrollPosition", record, position )
 	local value = 0
@@ -1053,6 +1046,7 @@ function TableView:_calculateScrollPosition( record, position )
 
 	return value
 end
+
 
 
 --======================================================--
@@ -1079,13 +1073,16 @@ function TableView:_dispatchHighlightRow( record )
 		if not f( delegate, evt ) then return end
 	end
 
-	cell.highlight=true
+	if cell then
+		cell.highlight=true
+	end
 
 	f = delegate and delegate.didHighlightRow
 	evt.type = TableView.HIGHLIGHT_ROW
 	if f then f( delegate, evt ) end
 
 end
+
 
 function TableView:_dispatchUnhighlightRow( record )
 	-- print( "TableView:_dispatchUnhighlightRow" )
@@ -1094,9 +1091,9 @@ function TableView:_dispatchUnhighlightRow( record )
 	local cell = record.view.cell
 	local f, evt
 
-	if not cell.highlight then return end
-
-	cell.highlight=false
+	if cell then
+		cell.highlight=false
+	end
 
 	evt = {
 		name=TableView.EVENT,
@@ -1117,8 +1114,8 @@ function TableView:_dispatchSelectedRow( record )
 	-- print( "TableView:_dispatchSelectedRow" )
 	-- if highlight then tell
 	local delegate = self._delegate
-	local f, evt
 	local rowIdx = record.index
+	local f, evt
 
 	evt = {
 		name=TableView.EVENT,
@@ -1163,8 +1160,6 @@ function TableView:_axisEvent_handler( event )
 	end
 	self:_renderDisplay()
 end
-
-
 
 
 

@@ -49,18 +49,27 @@ local VERSION = "0.1.0"
 -- local dUI = require 'dmc_ui'
 -- local widget = dUI.newNavBar()
 -- widget.delegate = <delgate object>
+-- @usage
+-- local dUI = require 'dmc_ui'
+-- local widget = dUI.newNavBar{
+--   delegate=<delegate object>
+-- }
 
 
---- whether Nav Item should be popped off stack.
--- asks the delegate whether the current Nav Item should be popped off the navigation stack.
+--- (optional) asks delegate if Nav Item should be popped off stack.
+-- call to the delegate to see whether the current Nav Item should be popped off the navigation stack. return boolean value.
+--
 -- @within Methods
--- @function shouldPopItem
--- @tparam @{Widget.NavBar} the Nav Bar
--- @tparam @{Widget.NavBar} the Nav Item to be popped
+-- @function :shouldPopItem
+-- @param navBar the @{Widget.NavBar} object
+-- @param navItem the @{Widget.NavItem} object to be popped
+-- @treturn bool
 
---- whether Nav Item should be popped off stack.
--- asks the delegate whether the current Nav Item should be popped off the navigation stack.
+--- (optional) informs delegate that Nav Item was popped off stack.
+-- tells delegate that this Nav Item was popped off of the navigation stack. the delegate can respond appropriately.
+--
 -- @within Methods
--- @function didPopItem
--- @tparam @{Widget.NavBar} the Nav Bar
--- @tparam @{Widget.NavBar} the Nav Item which was popped
+-- @function :didPopItem
+-- @param navBar the @{Widget.NavBar} object
+-- @param navItem the @{Widget.NavItem} object which was popped
+

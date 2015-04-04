@@ -70,7 +70,7 @@ local Utils = require 'dmc_utils'
 
 local uiConst = require( ui_find( 'ui_constants' ) )
 
-local View = require( ui_find( 'core.view' ) )
+local WidgetBase = require( ui_find( 'core.widget' ) )
 
 
 
@@ -79,7 +79,6 @@ local View = require( ui_find( 'core.view' ) )
 
 
 local newClass = Objects.newClass
-
 
 -- these are set later
 local dUI = nil
@@ -93,7 +92,7 @@ local FontMgr = nil
 --====================================================================--
 
 
-local TableViewCell = newClass( View, { name="TableViewCell" } )
+local TableViewCell = newClass( WidgetBase, { name="TableViewCell" } )
 
 --== Class Constants
 
