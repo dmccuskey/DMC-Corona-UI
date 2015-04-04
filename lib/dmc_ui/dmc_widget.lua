@@ -590,6 +590,8 @@ function Widget.loadTableViewCellSupport( params )
 
 	Style.loadTableViewCellStyleSupport( params )
 
+	Widget.loadViewSupport( params )
+
 	--== Components
 
 	local TableViewCell = require( ui_find( 'dmc_widget.widget_tableviewcell' ) )
@@ -628,6 +630,8 @@ function Widget._loadTextSupport( params )
 	--== Dependencies
 
 	Style._loadTextStyleSupport( params )
+
+	Widget.loadViewSupport( params )
 
 	--== Components
 
@@ -668,6 +672,7 @@ function Widget._loadTextFieldSupport( params )
 
 	Style._loadTextFieldStyleSupport( params )
 
+	Widget.loadViewSupport( params )
 	Widget._loadBackgroundSupport( params )
 	Widget._loadTextSupport( params )
 
