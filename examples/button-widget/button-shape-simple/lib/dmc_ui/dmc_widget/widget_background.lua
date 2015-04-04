@@ -30,12 +30,6 @@ SOFTWARE.
 
 --]]
 
---- Background Widget Module
--- @module Widget.Background
--- @usage
--- local dUI = require 'dmc_ui'
--- local widget = dUI.newBackground()
-
 
 
 --====================================================================--
@@ -74,7 +68,7 @@ local Objects = require 'dmc_objects'
 
 local uiConst = require( ui_find( 'ui_constants' ) )
 
-local Base = require( ui_find( 'core.widget' ) )
+local WidgetBase = require( ui_find( 'core.widget' ) )
 
 
 
@@ -95,11 +89,15 @@ local ViewFactory = nil
 --====================================================================--
 
 
---- Background Widget Class.
+--- Background Widget Module.
+-- a background widget is a graphical element, normally used as a background. the background graphics can be from a Shape, Image, 9-Slice.
 --
--- @type Background
---
-local Background = newClass( Base, { name="Background Widget" } )
+-- @classmod Widget.Background
+-- @usage
+-- local dUI = require 'dmc_ui'
+-- local widget = dUI.newBackground()
+
+local Background = newClass( WidgetBase, { name="Background Widget" } )
 
 --- Class Constants
 --
