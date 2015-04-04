@@ -1078,7 +1078,9 @@ function TableView:_dispatchHighlightRow( record )
 		if not f( delegate, evt ) then return end
 	end
 
-	cell.highlight=true
+	if cell then
+		cell.highlight=true
+	end
 
 	f = delegate and delegate.didHighlightRow
 	evt.type = TableView.HIGHLIGHT_ROW
@@ -1093,9 +1095,9 @@ function TableView:_dispatchUnhighlightRow( record )
 	local cell = record.view.cell
 	local f, evt
 
-	if not cell.highlight then return end
-
-	cell.highlight=false
+	if cell then
+		cell.highlight=false
+	end
 
 	evt = {
 		name=TableView.EVENT,
