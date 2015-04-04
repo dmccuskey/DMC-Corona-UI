@@ -68,6 +68,8 @@ module_config = {
 			"dmc_ui/dmc_widget/widget_scrollview/scroller.lua",
 			"dmc_ui/dmc_widget/widget_slideview.lua",
 			"dmc_ui/dmc_widget/widget_tableview.lua",
+			"dmc_ui/dmc_widget/widget_tableview/datasource_tableview.lua",
+			"dmc_ui/dmc_widget/widget_tableview/delegate_tableview.lua",
 			"dmc_ui/dmc_widget/widget_tableviewcell.lua",
 			"dmc_ui/dmc_widget/assets/tableviewcell/accessory-checkmark.png",
 			"dmc_ui/dmc_widget/assets/tableviewcell/accessory-detail-button.png",
