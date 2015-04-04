@@ -520,6 +520,8 @@ function ScrollView.__getters:scrollWidth()
 end
 function ScrollView.__setters:scrollWidth( value )
 	-- print( "ScrollView.__setters:scrollWidth", value )
+	local w = self._width
+	if value < w then value=w end
 	if self._scrollWidth==value then return end
 	self._scrollWidth = value
 	self._scrollWidth_dirty=true
@@ -542,6 +544,8 @@ function ScrollView.__getters:scrollHeight()
 end
 function ScrollView.__setters:scrollHeight( value )
 	-- print( "ScrollView.__setters:scrollHeight", value )
+	local h = self._height
+	if value < h then value=h end
 	if self._scrollHeight==value then return end
 	self._scrollHeight = value
 	self._scrollHeight_dirty=true
