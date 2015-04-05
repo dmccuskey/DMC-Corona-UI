@@ -156,7 +156,7 @@ end
 -- local dUI = require 'dmc_ui'
 -- local widget = dUI.newTableView()
 
-local TableView = newClass( ScrollView, {name="TableView"} )
+local TableView = newClass( ScrollView, {name="TableView Widget"} )
 
 --- Class Constants.
 -- @section
@@ -257,10 +257,10 @@ function TableView:__init__( params )
 
 end
 
--- function TableView:_undoInit()
--- 	-- print( "TableView:_undoInit" )
+-- function TableView:__undoInit__()
+-- 	-- print( "TableView:__undoInit__" )
 -- 	--==--
--- 	self:superCall( "_undoInit" )
+-- 	self:superCall( '__undoInit__' )
 -- end
 
 
