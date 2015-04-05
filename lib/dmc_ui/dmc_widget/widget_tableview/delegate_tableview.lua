@@ -42,7 +42,7 @@ local VERSION = "0.1.0"
 
 
 --- TableView Delegate Interface.
--- the interface for controlling a TableView via a delegate.
+-- the interface for controlling a TableView via a delegate. currently all are optional, so it's only necessary to implement those which are needed.
 --
 -- @classmod Delegate.TableView
 -- @usage
@@ -50,14 +50,11 @@ local VERSION = "0.1.0"
 --
 -- -- setup delegate object
 -- local delegate = {
---   numberOfRows=function(self, tableview, section)
---     -- return row data here
+--   shouldHighlightRow=function(self, event)
+--     return true
 --   end,
---   onRowRender=function(self, event)
---     -- create row view
---   end,
---   onRowUnrender=function(self, event)
---     -- destroy row view
+--   willSelectRow=function(self, event)
+--     return event.index
 --   end,
 -- }
 -- @usage
@@ -70,102 +67,61 @@ local VERSION = "0.1.0"
 -- }
 
 
---- description of parameters for method :onRowRender().
--- this is the complete list of properties for the :onRowRender() parameter table.
---
--- @within Parameters
--- @tfield string name the event name (TableView.EVENT)
--- @tfield string type event type (TableView.RENDER_ROW)
--- @tfield object target the TableView
--- @tfield object view the view (Display Group) to populate with items
--- @tfield number index the index of the row inside of the TableView.
--- @tfield table data a table for general data storage for the row.
--- @table .shouldHighlightRowEvent
 
-
---- description of parameters for method :onRowRender().
--- this is the complete list of properties for the :onRowRender() parameter table.
---
--- @within Parameters
--- @tfield string name the event name (TableView.EVENT)
--- @tfield string type event type (TableView.RENDER_ROW)
--- @tfield object target the TableView
--- @tfield object view the view (Display Group) to populate with items
--- @tfield number index the index of the row inside of the TableView.
--- @tfield table data a table for general data storage for the row.
--- @table .didHighlightRowEvent
-
-
---- description of parameters for method :onRowRender().
--- this is the complete list of properties for the :onRowRender() parameter table.
---
--- @within Parameters
--- @tfield string name the event name (TableView.EVENT)
--- @tfield string type event type (TableView.RENDER_ROW)
--- @tfield object target the TableView
--- @tfield object view the view (Display Group) to populate with items
--- @tfield number index the index of the row inside of the TableView.
--- @tfield table data a table for general data storage for the row.
--- @table .didUnhighlightRowEvent
-
-
---- description of parameters for method :onRowRender().
--- this is the complete list of properties for the :onRowRender() parameter table.
---
--- @within Parameters
--- @tfield string name the event name (TableView.EVENT)
--- @tfield string type event type (TableView.RENDER_ROW)
--- @tfield object target the TableView
--- @tfield object view the view (Display Group) to populate with items
--- @tfield number index the index of the row inside of the TableView.
--- @tfield table data a table for general data storage for the row.
--- @table .willSelectRowEvent
-
-
---- description of parameters for method :onRowRender().
--- this is the complete list of properties for the :onRowRender() parameter table.
---
--- @within Parameters
--- @tfield string name the event name (TableView.EVENT)
--- @tfield string type event type (TableView.RENDER_ROW)
--- @tfield object target the TableView
--- @tfield object view the view (Display Group) to populate with items
--- @tfield number index the index of the row inside of the TableView.
--- @tfield table data a table for general data storage for the row.
--- @table .didSelectRowEvent
-
-
-
---- (optional) asks delegate if row should be highlighted.
--- return boolean value.
+--- (optional) asks delegate if specified row should be highlighted.
+-- return true if row should be highlighted otherwise return false if not. if this method is not implemented, the default return value is true.
 --
 -- @within Methods
 -- @function :shouldHighlightRow
--- @param event the @{shouldHighlightRowEvent} object
+-- @param event the event table
+-- @tparam string event.name the event name (`TableView.EVENT`)
+-- @tparam string event.type the event type (`TableView.SHOULD_HIGHLIGHT_ROW`)
+-- @object event.target the TableView
+-- @tparam number event.index the index of the row inside of the TableView
+-- @object event.view the row's Display Group, for visual items
+-- @tab event.data a table for general data storage for the row.
+-- @treturn bool true if row should be highlighted.
 
 
---- (optional) informs delegate that Nav Item was popped off stack.
--- tells delegate that this Nav Item was popped off of the navigation stack. the delegate can respond appropriately.
+--- (optional) informs delegate that row was highlighted.
 --
 -- @within Methods
 -- @function :didHighlightRow
--- @param event the @{didHighlightRowEvent} object
+-- @param event the event table
+-- @tparam string event.name the event name (`TableView.EVENT`)
+-- @tparam string event.type the event type (`TableView.HIGHLIGHT_ROW`)
+-- @object event.target the TableView
+-- @tparam number event.index the index of the row inside of the TableView
+-- @object event.view the row's Display Group, for visual items
+-- @tab event.data a table for general data storage for the row.
 
 
---- (optional) informs delegate that Nav Item was popped off stack.
--- tells delegate that this Nav Item was popped off of the navigation stack. the delegate can respond appropriately.
+--- (optional) informs delegate that row has been unhighlighted.
 --
 -- @within Methods
 -- @function :didUnhighlightRow
--- @param event the @{didUnhighlightRowEvent} object
+-- @param event the event table
+-- @tparam string event.name the event name (`TableView.EVENT`)
+-- @tparam string event.type the event type (`TableView.UNHIGHLIGHT_ROW`)
+-- @object event.target the TableView
+-- @tparam number event.index the index of the row inside of the TableView
+-- @object event.view the row's Display Group, for visual items
+-- @tab event.data a table for general data storage for the row.
 
 
---- (optional) informs delegate that Nav Item was popped off stack.
--- tells delegate that this Nav Item was popped off of the navigation stack. the delegate can respond appropriately.
+--- (optional) asks delegate if specified row should be selected.
+-- this method must either return the `index` given (to select that row), an alternate `index` (to select another row) or `nil` to not select anything. if this method is not implemented, the default return value is the index passed in.
 --
 -- @within Methods
 -- @function :willSelectRow
--- @param event the @{willSelectRowEvent} object
+-- @param event the event table
+-- @tparam string event.name the event name (`TableView.EVENT`)
+-- @tparam string event.type the event type (`TableView.WILL_SELECT_ROW`)
+-- @object event.target the TableView
+-- @tparam number event.index the index of the row inside of the TableView
+-- @object event.view the row's Display Group, for visual items
+-- @tab event.data a table for general data storage for the row.
+-- @return index passed in, a different index, or nil
 
 
 --- (optional) informs delegate that Nav Item was popped off stack.
@@ -173,5 +129,11 @@ local VERSION = "0.1.0"
 --
 -- @within Methods
 -- @function :didSelectRow
--- @param event the @{didSelectRowEvent} object
+-- @param event the event table
+-- @tparam string event.name the event name (`TableView.EVENT`)
+-- @tparam string event.type the event type (`TableView.SELECTED_ROW`)
+-- @object event.target the TableView
+-- @tparam number event.index the index of the row inside of the TableView
+-- @object event.view the row's Display Group, for visual items
+-- @tab event.data a table for general data storage for the row.
 
