@@ -90,7 +90,7 @@ local FontMgr = nil
 
 
 --- Text Widget Module.
--- at the core, the DMC Text Widget wraps a Corona Text widget to provide its functionality. It does this to make behavior more consistent.
+-- at the core, the DMC Text Widget wraps a Corona Text widget to provide its functionality. this gives us more consistent behavior! (w00t!)
 --
 -- @classmod Widget.Text
 -- @usage
@@ -298,6 +298,79 @@ Inherited Methods
 -- @usage widget:clearStyle()
 
 
+--- set/get align.
+-- values are 'left', 'center', 'right'
+--
+-- @within Properties
+-- @function .align
+-- @usage widget.align = 'center'
+-- @usage print( widget.align )
+
+--- set/get font.
+-- can either be Corona font (eg, native.systemFont) or one installed in system (eg, 'Helvetica-Grande')
+--
+-- @within Properties
+-- @function .font
+-- @usage widget.font = native.systemFont
+-- @usage print( widget.font )
+
+--- set/get fontSize.
+-- set the font size of the text.
+--
+-- @within Properties
+-- @function .fontSize
+-- @usage widget.fontSize = 18
+-- @usage print( widget.fontSize )
+
+--- set/get marginX.
+-- set the margin inset of the widget. this value is *subtracted* from the widget width.
+--
+-- @within Properties
+-- @function .marginX
+-- @usage widget.marginX = 18
+-- @usage print( widget.marginX )
+
+
+--- set/get strokeWidth.
+-- set stroke width for the simple background.
+--
+-- @within Properties
+-- @function .strokeWidth
+-- @usage widget.strokeWidth = 18
+-- @usage print( widget.strokeWidth )
+
+
+--- set the fill color of the simple background.
+--
+-- @within Methods
+-- @function :setFillColor
+-- @usage
+-- widget:setFillColor( grey )
+-- widget:setFillColor( grey, a )
+-- widget:setFillColor( r, g, b, a )
+-- widget:setFillColor( gradient )
+
+--- set stroke color of the simple background.
+--
+-- @within Methods
+-- @function :setStrokeColor
+-- @usage
+-- widget:setStrokeColor( grey )
+-- widget:setStrokeColor( grey, a )
+-- widget:setStrokeColor( r, g, b, a )
+-- widget:setStrokeColor( gradient )
+
+--- set color of text.
+--
+-- @within Methods
+-- @function :setTextColor
+-- @usage
+-- widget:setTextColor( grey )
+-- widget:setTextColor( grey, a )
+-- widget:setTextColor( r, g, b, a )
+-- widget:setTextColor( gradient )
+
+
 
 
 --[[
@@ -446,7 +519,7 @@ function Text:__commitProperties__()
 	-- print( 'Text:__commitProperties__' )
 	local style = self.curr_style
 	-- local metric = FontMgr:getFontMetric( style.font, style.fontSize )
-	metric={offsetX=0,offsetY=0}
+	-- metric={offsetX=0,offsetY=0}
 
 	-- create new text if necessary
 	if self._align_dirty or self._font_dirty or self._fontSize_dirty then
