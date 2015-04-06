@@ -670,6 +670,26 @@ end
 --======================================================--
 -- Delegate
 
+
+--== :shouldBeginEditing()
+
+-- this is so TextField can answer Delegate questions
+-- without assigned delegate
+--
+function TextField:shouldChangeCharacters()
+	return self._isWidgetEnabled
+end
+
+-- on tap
+function TextField:_delegateShouldChangeCharacters()
+	local delegate = self._delegate
+	if not delegate or not delegate.shouldChangeCharacters then
+		delegate = self
+	end
+	return delegate:shouldChangeCharacters()
+end
+
+
 --== :shouldBeginEditing()
 
 -- this is so TextField can answer Delegate questions
@@ -681,7 +701,7 @@ end
 
 -- on tap
 function TextField:_delegateShouldBeginEditing()
-	local delegate = self._delegate or self
+	local delegate = self._delegate
 	if not delegate or not delegate.shouldBeginEditing then
 		delegate = self
 	end
@@ -695,16 +715,16 @@ end
 -- without assigned delegate
 --
 function TextField:shouldEndEditing( event )
-	return self.__isValid
+	return true
 end
 
 -- after end/submit
 function TextField:_delegateShouldEndEditing()
-	local delegate = self._delegate or self
+	local delegate = self._delegate
 	if not delegate or not delegate.shouldEndEditing then
 		delegate = self
 	end
-	return delegate:shouldEndEditing()
+	return delegate:shouldEndEditing( self )
 end
 
 
@@ -1319,7 +1339,7 @@ function TextField:_hitAreaTouch_handler( e )
 		display.getCurrentStage():setFocus( nil )
 		self._has_focus = false
 
-		if isWithinBounds then
+		if isWithinBounds and self:_delegateShouldBeginEditing() then
 			self:_startEdit()
 		end
 	end
