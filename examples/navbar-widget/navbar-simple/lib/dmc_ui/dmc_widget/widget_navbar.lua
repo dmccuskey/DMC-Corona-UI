@@ -92,7 +92,7 @@ local Widget = nil
 --====================================================================--
 
 
---- Nav Bar Widget.
+--- NavBar Widget.
 -- a widget used for navigation between pages.
 --
 -- @classmod Widget.NavBar
@@ -124,6 +124,7 @@ NavBar.STYLE_TYPE = uiConst.NAVBAR
 --
 -- @usage
 -- widget:addEventListener( widget.EVENT, listener )
+
 NavBar.EVENT = 'navbar-event'
 
 --- NavBar event constant for press on Back Button.
@@ -137,6 +138,7 @@ NavBar.EVENT = 'navbar-event'
 --   end
 -- end
 -- widget:addEventListener( widget.EVENT, listener )
+
 NavBar.BACK_BUTTON = 'back-button-released-event'
 
 
