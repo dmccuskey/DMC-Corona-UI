@@ -298,8 +298,6 @@ function TextField:__initComplete__()
 	self._textStyle_f = self:createCallback( self.textStyleChange_handler )
 	self._wgtText_f = self:createCallback( self._wgtTextWidgetUpdate_handler )
 
-	self.formatter = self._formatter -- use setter
-
 	self:_stopEdit(false)
 end
 
@@ -663,22 +661,30 @@ end
 -- Delegate
 
 
---== :shouldBeginEditing()
+--== :shouldChangeCharacters()
 
 -- this is so TextField can answer Delegate questions
 -- without assigned delegate
 --
-function TextField:shouldChangeCharacters()
-	return self._isWidgetEnabled
+function TextField:shouldChangeCharacters( event )
+	return true
 end
 
 -- on tap
-function TextField:_delegateShouldChangeCharacters()
+function TextField:_delegateShouldChangeCharacters( event )
+	-- print("TextField:_delegateShouldChangeCharacters")
 	local delegate = self._delegate
 	if not delegate or not delegate.shouldChangeCharacters then
 		delegate = self
 	end
-	return delegate:shouldChangeCharacters()
+	local evt = {
+		target = self,
+		startPosition=event.startPosition,
+		newCharacters=event.newCharacters,
+		numDeleted=event.numDeleted,
+		text=event.text,
+	}
+	return delegate:shouldChangeCharacters( evt )
 end
 
 
@@ -697,7 +703,7 @@ function TextField:_delegateShouldBeginEditing()
 	if not delegate or not delegate.shouldBeginEditing then
 		delegate = self
 	end
-	return delegate:shouldBeginEditing()
+	return delegate:shouldBeginEditing( self )
 end
 
 
@@ -735,51 +741,9 @@ function TextField:_delegateShouldClearTextField()
 	if not delegate or not delegate.shouldClearTextField then
 		delegate = self
 	end
-	return delegate:shouldClearTextField()
+	return delegate:shouldClearTextField( self )
 end
 
-
---======================================================--
--- Formatter
-
--- .formatter
---
-function TextField.__setters:formatter( value )
-	-- print( 'TextField.__setters:formatter', value )
-	assert( value==nil or type(value)=='table' )
-	--==--
-	self._formatter = value
-end
-
--- areCharactersValid()
---
-function TextField:areCharactersValid( chars, text )
-	return true
-end
-
--- _formatterAreCharactersValid()
---
-function TextField:_formatterAreCharactersValid( chars, text )
-	local formatter = self._formatter or self
-	if not formatter or not formatter.areCharactersValid then
-		delegate = self
-	end
-	return formatter:areCharactersValid( chars, text )
-end
-
-
-function TextField:isTextValid( text )
-	return true
-end
-
-function TextField:_formatterIsTextValid( text )
-	-- print( "_formatterIsTextValid", text)
-	local formatter = self._formatter or self
-	if not formatter or not formatter.isTextValid then
-		delegate = self
-	end
-	return formatter:isTextValid( text )
-end
 
 
 --======================================================--
@@ -805,17 +769,6 @@ end
 
 --====================================================================--
 --== Private Methods
-
-
-function TextField.__setters:_isValid( value )
-	-- print( "TextField.__setters:isValid", value )
-	assert( type(value)=='boolean' )
-	--==--
-	if value == self.__isValid then return end
-	self.__isValid = value
-	self._isValid_dirty=true
-	self:__invalidateProperties__()
-end
 
 
 function TextField:_makeTextSecure( text )
@@ -1346,40 +1299,33 @@ end
 function TextField:_textFieldEvent_handler( event )
 	-- print( "TextField:_textFieldEvent_handler", event.phase )
 	local phase = event.phase
-	local textfield = event.target
+	local textfield = event.target -- Corona TextField
 
 	-- Utils.print( event )
 
-	if phase==self.BEGAN then
+	if phase==TextField.BEGAN then
 		-- print( "text", event.text )
 		self:_dispatchStateBegan( event )
 
-	elseif phase==self.ENDED or phase==self.SUBMITTED then
-		local text = textfield.text
-
-		self._isValid = self:_formatterIsTextValid( text )
-		if self:_delegateShouldEndEditing( event ) then
-			-- this delegate call needs checking
-			self.text = textfield.text -- << Use Setter
-			self:_dispatchStateEnded( event )
-		else
-			self:setKeyboardFocus()
-		end
-
-	elseif phase==self.EDITING then
-
+	elseif phase==TextField.EDITING then
 		--[[
 		print( "start", event.startPosition )
 		print( "delete", event.numDeleted )
 		print( "new", event.newCharacters )
 		print( "text", event.text )
 		--]]
-		local del = (event.numDeleted>0)
-		if del or self:_formatterAreCharactersValid( event.newCharacters, event.text ) then
-			self._isValid = self:_formatterIsTextValid( event.text )
+		if self:_delegateShouldChangeCharacters( event ) then
 			self:_dispatchStateEditing( event )
 		else
 			textfield.text = self._tmp_text
+		end
+
+	elseif phase==TextField.ENDED or phase==TextField.SUBMITTED then
+		if self:_delegateShouldEndEditing( event ) then
+			self.text = textfield.text -- << Use Setter
+			self:_dispatchStateEnded( event )
+		else
+			self:setKeyboardFocus()
 		end
 
 	end
