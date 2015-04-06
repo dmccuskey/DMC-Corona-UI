@@ -218,8 +218,6 @@ function ScrollView:__init__( params )
 	self._axis_y = nil -- x-axis motion
 	self._axis_f = nil -- axis event handler (both)
 
-	self._delegate = nil
-
 	self._gesture = nil -- pan gesture
 	self._gesture_f = nil -- callback
 
@@ -234,7 +232,6 @@ end
 --]]
 function ScrollView:__undoInit__()
 	-- print( "ScrollView:__undoInit__" )
-	self._delegate = nil
 	--==--
 	self:superCall( '__undoInit__' )
 end
@@ -285,8 +282,6 @@ function ScrollView:__initComplete__()
 	-- before axis creation
 	self.scrollWidth = tmp.scrollWidth
 	self.scrollHeight = tmp.scrollHeight
-
-	self.delegate = tmp.delegate
 
 	self._axis_f = self:createCallback( self._axisEvent_handler )
 	self:_createAxisMotionX()
@@ -429,15 +424,6 @@ end
 -- @function .delegate
 -- @usage widget.delegate = <delegate object>
 -- @usage print( widget.delegate )
-
-function ScrollView.__getters:delegate()
-	-- print( "ScrollView.__getters:delegate" )
-	return self._delegate
-end
-function ScrollView.__setters:delegate( value )
-	-- print( "ScrollView.__setters:delegate", value )
-	self._delegate = value
-end
 
 --== .lowerHorizontalOffset
 

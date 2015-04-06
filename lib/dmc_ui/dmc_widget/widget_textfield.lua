@@ -194,9 +194,6 @@ function TextField:__init__( params )
 	self._isEditActive = { state=false, set_focus=nil }
 	self._isEditActive_dirty = true
 
-	self.__isValid = true
-	self._isValid_dirty = true
-
 	self._clearOnBeginEdit = false
 	self._adjustFontToFit = false
 	self._clearButtonMode = 'never'
@@ -241,11 +238,6 @@ function TextField:__init__( params )
 	self._inputFieldTextColor_dirty=true
 
 	--== Object References ==--
-
-	self._tmp_style = params.style -- save
-
-	self._delegate = nil -- delegate
-	self._formatter = params.formatter -- data formatter
 
 	self._rctHit = nil -- our rectangle hit area
 	self._rctHit_f = nil
