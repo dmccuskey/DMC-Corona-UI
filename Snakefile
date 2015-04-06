@@ -44,7 +44,6 @@ module_config = {
 
 			"dmc_ui/dmc_widget.lua",
 			"dmc_ui/dmc_widget/button_group.lua",
-			"dmc_ui/dmc_widget/data_formatters.lua",
 			"dmc_ui/dmc_widget/font_manager.lua",
 			"dmc_ui/dmc_widget/lib/easingx.lua",
 			"dmc_ui/dmc_widget/widget_background.lua",
