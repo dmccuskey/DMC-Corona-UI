@@ -76,6 +76,7 @@ module_config = {
 			"dmc_ui/dmc_widget/assets/tableviewcell/accessory-disclose-indicator.png",
 			"dmc_ui/dmc_widget/widget_text.lua",
 			"dmc_ui/dmc_widget/widget_textfield.lua",
+			"dmc_ui/dmc_widget/widget_textfield/delegate_textfield.lua",
 			"dmc_ui/dmc_widget/widget_viewpager.lua"
 		],
 		"requires": [
