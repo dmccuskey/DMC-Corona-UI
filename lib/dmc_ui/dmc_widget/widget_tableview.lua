@@ -96,6 +96,18 @@ local dUI = nil
 --== Support Function
 
 
+local function setRowBackgroundColor( row, ... )
+	local bg = row and row._view and row._view.__bg
+	if not bg then return end
+	bg:setFillColor( ... )
+end
+
+local function setRowLineColor( row, ... )
+	local line = row and row._view and row._view.__line
+	if not line then return end
+	line:setFillColor( ... )
+end
+
 -- create records for TableView
 -- these are records for each row, hold user data, position, etc. it can create multiple records at a time. uses tail-call
 --
@@ -103,12 +115,14 @@ local function createRecords( list, idx, count, tinsert )
 	-- print( "createRecords" )
 	if idx<=count then
 		local rec = {
-			yMin=0,
-			yMax=0,
-			height=0,
-			index=0,
-			view=nil,
-			user={}
+			_yMin=0,
+			_yMax=0,
+			_height=0,
+			_index=0,
+			_view=nil,
+			_user={},
+			setBackgroundColor=setRowBackgroundColor,
+			setLineColor=setRowLineColor
 		}
 		tinsert( list, idx, rec )
 		return createRecords( list, idx+1, count, tinsert )
@@ -133,10 +147,10 @@ local function indexItems( list, idx, yMin, height )
 	local yMax = yMin+height
 	if idx<=#list then
 		local rec = list[idx]
-		rec.yMin=yMin
-		rec.yMax=yMax
-		rec.height=height
-		rec.index=idx
+		rec._yMin=yMin
+		rec._yMax=yMax
+		rec._height=height
+		rec._index=idx
 		return indexItems( list, idx+1, yMax, height )
 	end
 end
@@ -606,7 +620,7 @@ function TableView:getRowAt( idx )
 	-- print( "TableView:getRowAt", pos )
 	local records = self._rowItemRecords
 	local rec = records[idx]
-	return rec and rec.view
+	return rec and rec._view
 end
 
 --== :insertRowAt
@@ -625,7 +639,7 @@ function TableView:insertRowAt( idx )
 	--==--
 	local records = self._rowItemRecords
 	local rec = records[idx]
-	local yMin = rec and rec.yMin or 0
+	local yMin = rec and rec._yMin or 0
 	local eRH = self._estimatedRowHeight
 
 	self.scrollHeight = self.scrollHeight + eRH
@@ -678,7 +692,7 @@ function TableView:removeRowAt( idx )
 		print("WARNING: TableView:removeRowAt no row at that index")
 		return
 	end
-	local yMin = rec and rec.yMin or 0
+	local yMin = rec and rec._yMin or 0
 	local eRH = self._estimatedRowHeight
 
 	self.scrollHeight = self.scrollHeight - eRH
@@ -755,26 +769,26 @@ end
 
 -- determine if record is inside of Table View bounds
 --
-function TableView:_isWithinBounds( bounds, item )
-	-- print( "TableView:_isWithinBounds", bounds, item.index )
+function TableView:_isWithinBounds( bounds, record )
+	-- print( "TableView:_isWithinBounds", bounds, record.index )
 
 	local result = false
 	local bType = 'none'
 
-	if item.yMin < bounds.yMin and bounds.yMin <= item.yMax then
-		-- item cut on top
+	if record._yMin < bounds.yMin and bounds.yMin <= record._yMax then
+		-- view cut on top
 		bType = 'cut'
 		result = true
-	elseif item.yMin <= bounds.yMax and bounds.yMax < item.yMax then
-		-- item cut on bottom
+	elseif record._yMin <= bounds.yMax and bounds.yMax < record._yMax then
+		-- view cut on bottom
 		bType = 'cut'
 		result = true
-	elseif item.yMin >= bounds.yMin and item.yMax <= bounds.yMax  then
-		-- item fully in view
+	elseif record._yMin >= bounds.yMin and record._yMax <= bounds.yMax  then
+		-- view fully in View Port
 		bType = 'full'
 		result = true
-	elseif item.yMin < bounds.yMin and bounds.yMax < item.yMax then
-		-- item extends over view
+	elseif record._yMin < bounds.yMin and bounds.yMax < record._yMax then
+		-- view extends over View Port
 		bType = 'extend'
 		result = true
 	end
@@ -798,9 +812,9 @@ function TableView:_findVisibleItem( records, min, max )
 
 	while( low <= high ) do
 		mid = _mfloor( low + ( (high-low)*0.5 ) )
-		if records[mid].yMin > max then
+		if records[mid]._yMin > max then
 			high = mid - 1
-		elseif records[mid].yMin < min then
+		elseif records[mid]._yMin < min then
 			low = mid + 1
 		else
 			return mid  -- found
@@ -828,7 +842,7 @@ function TableView:_renderUp( records, index, bounds )
 		record = records[ index ]
 		if not record then break end
 		isBounded, bType = isBounded_f( self, bounds, record )
-		-- print( "rU", index, bType, record, record.yMin, isBounded )
+		-- print( "rU", index, bType, record, record._yMin, isBounded )
 		if not isBounded or bType==cut then
 			break
 		else
@@ -856,7 +870,7 @@ function TableView:_renderDown( records, index, bounds )
 		record = records[ index ]
 		if not record then break end
 		isBounded, bType = isBounded_f( self, bounds, record )
-		-- print( "rD", index, bType, record, record.yMax, isBounded )
+		-- print( "rD", index, bType, record, record._yMax, isBounded )
 		if not isBounded or bType==cut then
 			break
 		else
@@ -945,8 +959,8 @@ function TableView:_renderDisplay( params )
 		if idx then
 			local rec = recs[ idx ]
 			self:_renderTableCell( rec )
-			self:_renderUp( recs, rec.index-1, bnds )
-			self:_renderDown( recs, rec.index+1, bnds )
+			self:_renderUp( recs, rec._index-1, bnds )
+			self:_renderDown( recs, rec._index+1, bnds )
 		end
 	end
 
@@ -961,7 +975,7 @@ function TableView:_renderDisplay( params )
 			-- this item scrolled off screen so check others below
 			self:_unrenderDownFromTop( bounds )
 		elseif bType==full then
-			self:_renderUp( records, record.index-1, bounds )
+			self:_renderUp( records, record._index-1, bounds )
 		end
 	end
 
@@ -976,7 +990,7 @@ function TableView:_renderDisplay( params )
 			-- this item scrolled off screen so check others above
 			self:_unrenderUpFromBottom( bounds )
 		elseif bType==full then
-			self:_renderDown( records, record.index+1, bounds )
+			self:_renderDown( records, record._index+1, bounds )
 		end
 	end
 
@@ -1075,37 +1089,59 @@ end
 -- @param record an record for a row item
 --
 function TableView:_renderTableCell( record, options )
-	-- print( "TableView:_renderTableCell", record, record.index )
+	-- print( "TableView:_renderTableCell", record, record._index )
 	options = options or {}
 	if options.putAtHead==nil then options.putAtHead=true end
 	--==--
 
-	if record.view then --[[ print("already rendered") ; --]] return end
+	if record._view then --[[ print("already rendered") ; --]] return end
 
 	local width = self._width
 	local dataSource = self._dataSource
 	local renderedCells = self._renderedTableCells
 	local scr = self._scroller
 	local view, hit
+	local bg, line, o
 
 	--== Create View Items
 
 	-- create view for this item
 	view = display.newGroup()
-	record.view = view
+	record._view = view
 
 	-- create hit background
-	hit = display.newRect( 0, 0, width, record.height )
-	hit.anchorX, hit.anchorY = 0,0
-	hit.isVisible = true
-	hit:setFillColor( 0,0,1,0.3 )
-	hit.isHitTestable = true
+	o = display.newRect( 0, 0, width, record._height )
+	o.anchorX, o.anchorY = 0,0
+	o.isVisible = true
+	o:setFillColor( 0,0,0,0 )
+	o.isHitTestable = true
 
-	TouchMgr.register( hit, self._tableCellTouch_f )
+	o.__rec = record
+	view:insert( o )
+	view.__hit = o
 
-	view:insert( hit )
-	view.__hit = hit
-	hit.__rec = record
+	TouchMgr.register( o, self._tableCellTouch_f )
+
+	-- create background
+	o = display.newRect( 0, 0, width, record._height )
+	o.anchorX, o.anchorY = 0,0
+	o.isVisible = true
+	o:setFillColor( 1,1,1,1 )
+	o.isHitTestable = false
+
+	view:insert( o )
+	view.__bg = o
+
+	-- create line
+	o = display.newRect( 0, 0, width, 1 )
+	o.anchorX, o.anchorY = 0,1
+	o.y=record._height
+	o.isVisible = true
+	o:setFillColor( 0,0,0,0 )
+	o.isHitTestable = false
+
+	view:insert( o )
+	view.__line = o
 
 	--== Render View
 
@@ -1114,14 +1150,15 @@ function TableView:_renderTableCell( record, options )
 		type=TableView.RENDER_ROW,
 
 		target=self,
+		row=record,
 		view=view,
-		index=record.index,
-		data=record.user,
+		index=record._index,
+		data=record._user,
 	}
 	dataSource:onRowRender( e )
 
 	scr:insertItem( view )
-	view.x, view.y = 0, record.yMin
+	view.x, view.y = 0, record._yMin
 
 	-- save rendered record
 	local idx = #renderedCells+1
@@ -1137,17 +1174,18 @@ end
 -- @param record an record for a row item
 --
 function TableView:_unrenderTableCell( record, options )
-	-- print( "TableView:_unrenderTableCell", record, record.index )
+	-- print( "TableView:_unrenderTableCell", record, record._index )
 	options = options or {}
 	options.index=options.index
 	--==--
-	if not record.view then return false end
+	if not record._view then return false end
 
 	local dataSource = self._dataSource
 	local renderedCells = self._renderedTableCells
 	local scr = self._scroller
 	local index = options.index
 	local view, hit
+	local o
 
 	if index==nil then
 		-- find the index
@@ -1158,7 +1196,7 @@ function TableView:_unrenderTableCell( record, options )
 
 	--== Remove Rendered Item
 
-	view = record.view
+	view = record._view
 
 	tremove( renderedCells, index )
 
@@ -1170,10 +1208,16 @@ function TableView:_unrenderTableCell( record, options )
 
 		target=self,
 		view=view,
-		data=record.user,
-		index=record.index,
+		data=record._user,
+		index=record._index,
 	}
 	dataSource:onRowUnrender( e )
+
+	view.__bg:removeSelf()
+	view.__bg= nil
+
+	view.__line:removeSelf()
+	view.__line= nil
 
 	hit = view.__hit
 	TouchMgr.unregister( hit, self._tableCellTouch_f )
@@ -1181,7 +1225,7 @@ function TableView:_unrenderTableCell( record, options )
 	view.__hit=nil
 
 	view:removeSelf()
-	record.view = nil
+	record._view = nil
 
 	return true
 end
@@ -1197,6 +1241,7 @@ end
 
 
 
+--[[
 function TableView:_updateBackground()
 	-- print( "TableView:_updateBackground" )
 
@@ -1229,10 +1274,12 @@ function TableView:_updateBackground()
 	o.x, o.y = x, y
 
 end
+--]]
 
 
 -- calculate vertical direction
 --
+--[[
 function TableView:_updateDimensions( item_info, item_data )
 	-- print( "TableView:_updateDimensions", item_info )
 
@@ -1269,6 +1316,7 @@ function TableView:_updateDimensions( item_info, item_data )
 	o.x, o.y = x, y
 
 end
+--]]
 
 
 function TableView:_calculateScrollPosition( record, position )
@@ -1278,16 +1326,16 @@ function TableView:_calculateScrollPosition( record, position )
 
 	if position=='top' then
 		offset = 0+self.upperVerticalOffset
-		value = offset-record.yMin
+		value = offset-record._yMin
 	elseif position=='middle' then
 		offset = self._height/2
-		value = offset-record.yMin
+		value = offset-record._yMin
 	elseif position=='bottom' then
 		offset = self._height-self.lowerVerticalOffset
-		value = offset-(record.yMin+record.height)
+		value = offset-(record._yMin+record._height)
 	else
 		offset = self._height/2
-		value = offset-record.yMin
+		value = offset-record._yMin
 	end
 
 	return value
@@ -1301,7 +1349,7 @@ end
 function TableView:_dispatchHighlightRow( record )
 	-- print( "TableView:_dispatchHighlightRow" )
 	local delegate = self._delegate
-	local cell = record.view.cell
+	local cell = record._view.cell
 	local f, evt
 
 	evt = {
@@ -1309,9 +1357,9 @@ function TableView:_dispatchHighlightRow( record )
 		type=TableView.SHOULD_HIGHLIGHT_ROW,
 
 		target=self,
-		index=record.index,
-		view=record.view,
-		data=record.user
+		index=record._index,
+		view=record._view,
+		data=record._user
 	}
 
 	f = delegate and delegate.shouldHighlightRow
@@ -1334,7 +1382,7 @@ function TableView:_dispatchUnhighlightRow( record )
 	-- print( "TableView:_dispatchUnhighlightRow" )
 	-- if highlight then tell
 	local delegate = self._delegate
-	local cell = record.view.cell
+	local cell = record._view.cell
 	local f, evt
 
 	if cell then
@@ -1346,9 +1394,9 @@ function TableView:_dispatchUnhighlightRow( record )
 		type=TableView.UNHIGHLIGHT_ROW,
 
 		target=self,
-		index=record.index,
-		view=record.view,
-		data=record.user
+		index=record._index,
+		view=record._view,
+		data=record._user
 	}
 	f = delegate and delegate.didUnhighlightRow
 	if f then f( delegate, evt ) end
@@ -1360,7 +1408,7 @@ function TableView:_dispatchSelectedRow( record )
 	-- print( "TableView:_dispatchSelectedRow" )
 	-- if highlight then tell
 	local delegate = self._delegate
-	local rowIdx = record.index
+	local rowIdx = record._index
 	local f, evt
 
 	evt = {
@@ -1368,9 +1416,9 @@ function TableView:_dispatchSelectedRow( record )
 		type=TableView.WILL_SELECT_ROW,
 
 		target=self,
-		index=record.index,
-		view=record.view,
-		data=record.user
+		index=record._index,
+		view=record._view,
+		data=record._user
 	}
 
 	f = delegate and delegate.willSelectRow
@@ -1378,13 +1426,13 @@ function TableView:_dispatchSelectedRow( record )
 		rowIdx = f( delegate, evt )
 		if rowIdx==nil then return end
 	end
-	if rowIdx~=record.index then
+	if rowIdx~=record._index then
 		-- get alternate record
 		record = self._rowItemRecords[ rowIdx ]
 		if not record then return end
-		evt.index=record.index
-		evt.view=record.view
-		evt.data=record.user
+		evt.index=record._index
+		evt.view=record._view
+		evt.data=record._user
 	end
 
 	evt.type=TableView.SELECTED_ROW
