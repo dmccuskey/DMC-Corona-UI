@@ -1277,13 +1277,13 @@ function TableView:_calculateScrollPosition( record, position )
 	local offset = 0
 
 	if position=='top' then
-		offset = 0+self._upperVerticalOffset
+		offset = 0+self.upperVerticalOffset
 		value = offset-record.yMin
 	elseif position=='middle' then
 		offset = self._height/2
 		value = offset-record.yMin
 	elseif position=='bottom' then
-		offset = self._height-self._lowerVerticalOffset
+		offset = self._height-self.lowerVerticalOffset
 		value = offset-(record.yMin+record.height)
 	else
 		offset = self._height/2
