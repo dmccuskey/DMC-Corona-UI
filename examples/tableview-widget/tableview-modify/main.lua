@@ -34,9 +34,9 @@ local tremove = table.remove
 
 local OFFSET = 100
 local DIMS = {w=200,h=30} -- dimensions of a row item
-local SHOW = 10 -- how many items to display (for masking)
+local SHOW = 6 -- how many items to display (for masking)
 
-local tabledata = nil -- later
+local tableData = nil -- later
 
 
 
@@ -49,7 +49,6 @@ local tabledata = nil -- later
 local function createRowTemplate( idx )
 	return {
 		index=idx,
-		type='row-data', -- this is our template type
 		data=system.getTimer()
 	}
 end
@@ -59,7 +58,7 @@ end
 --
 local function createDataArray()
 	local list = {}
-	for i = 1, 20 do
+	for i = 1, 12 do
 		local row_template = createRowTemplate( i )
 		tinsert( list, row_template )
 	end
@@ -75,7 +74,7 @@ end
 --
 local function getRows( self, section )
 	-- print( "numberOfRows" )
-	return #tabledata
+	return #tableData
 end
 
 -- onRender()
@@ -83,19 +82,23 @@ end
 --
 local function onRender( self, event )
 		-- print( "rowOnRender", event )
-		local group = event.view
+		local row = event.row
+		local view = event.view
 		local index = event.index
 		local data = event.data
 		local o, f, p  -- object, function, params
-		local d = tabledata[index].data
+		local d = tableData[index].data
 
-		o = display.newText( "row : "..d, 0, 0, native.systemFont, 16 )
-		o.anchorX, o.anchorY = 0,0
-		o.x, o.y = 0,0
+		o = display.newText( "ROW : "..index.." "..d, 0, 0, native.systemFont, 16 )
+		o.anchorX, o.anchorY = 0,0.5
+		o.x, o.y = 10, view.height/2
 		o:setFillColor( 1,1,1 )
 
-		group:insert( o )
-		group._txt = o
+		row:setBackgroundColor( 0.4,0.4,0.4 )
+		row:setLineColor( 1,0,0,0.5 )
+
+		view:insert( o )
+		view._txt = o
 	end
 
 -- onUnrender()
@@ -103,10 +106,10 @@ local function onRender( self, event )
 --
 local function onUnrender( self, event )
 	-- print( "rowOnUnrender", event )
-	local group = event.view
+	local view = event.view
 
-	group._txt:removeSelf()
-	group._txt=nil
+	view._txt:removeSelf()
+	view._txt=nil
 end
 
 
@@ -118,11 +121,14 @@ end
 
 -- get our table view data
 
-tabledata = createDataArray()
+tableData = createDataArray()
 
 -- setup tableview delegate/helper
 
 local delegate = {
+}
+
+local dataSource = {
 	numberOfRows=getRows,
 	onRowRender=onRender,
 	onRowUnrender=onUnrender
@@ -134,7 +140,7 @@ local tV = dUI.newTableView{
 	width=DIMS.w,
 	height=DIMS.h*SHOW,
 	delegate=delegate,
-	dataSource=tabledata,
+	dataSource=dataSource,
 	estimatedRowHeight=DIMS.h
 }
 tV.x, tV.y = OFFSET*0.5, OFFSET*0.5+50
@@ -144,15 +150,16 @@ tV:reloadData()
 timer.performWithDelay( 1000, function()
 	-- add table row
 	local pos = 5
-	tinsert( tabledata, pos, createRowTemplate( pos ) )
+	tinsert( tableData, pos, createRowTemplate( pos ) )
 	tV:insertRowAt( pos )
 end)
 
 timer.performWithDelay( 2000, function()
 	-- delete table row
 	local pos = 5
-	tremove( tabledata, pos )
+	tremove( tableData, pos )
 	tV:removeRowAt( pos )
 end)
+
 
 

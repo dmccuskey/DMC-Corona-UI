@@ -108,6 +108,7 @@ AxisMotion.VELOCITY_LIMIT = 1
 AxisMotion.DECELERATE_TRANS_TIME = 3000 -- test 1000 / def 1000
 AxisMotion.RESTORE_TRANS_TIME = 400 -- test 1000 / def 400
 AxisMotion.RESTRAINT_TRANS_TIME = 350  -- test 1000 / def 100
+AxisMotion.SCROLLTO_TRANS_TIME = 500  -- test 1000 / def 100
 
 AxisMotion.SCROLLBACK_FACTOR = 1/3
 
@@ -135,12 +136,13 @@ AxisMotion.SCROLLED = 'scrolled'
 function AxisMotion:__init__( params )
 	-- print( "AxisMotion:__init__" )
 	params = params or {}
+	if params.bounceIsActive==nil then params.bounceIsActive = true end
 	if params.length==nil then params.length = 0 end
-	if params.scrollLength==nil then params.scrollLength = 0 end
-	if params.activeBounce==nil then params.activeBounce = true end
-	if params.upperOffset==nil then params.upperOffset = 0 end
 	if params.lowerOffset==nil then params.lowerOffset = 0 end
 	if params.scrollbackFactor==nil then params.scrollbackFactor = AxisMotion.SCROLLBACK_FACTOR end
+	if params.scrollIsEnabled==nil then params.scrollIsEnabled = true end
+	if params.scrollLength==nil then params.scrollLength = 0 end
+	if params.upperOffset==nil then params.upperOffset = 0 end
 
 	self:superCall( '__init__', params )
 	--==--
@@ -160,6 +162,8 @@ function AxisMotion:__init__( params )
 	self._id = params.id
 	self._callback = params.callback
 
+	self._didBegin = false
+
 	--== Internal Properties
 
 	-- eg, HIT_UPPER_LIMIT, HIT_LOWER_LIMIT
@@ -177,10 +181,9 @@ function AxisMotion:__init__( params )
 
 	self._enterFrameIterator = nil
 
-	self._bounceIsActive = params.activeBounce
+	self._bounceIsActive = params.bounceIsActive
 	self._alwaysBounce = false
-	self._scrollEnabled = true
-
+	self._scrollEnabled = params.scrollIsEnabled
 
 	self:setState( AxisMotion.STATE_CREATE )
 end
@@ -193,8 +196,10 @@ function AxisMotion:__initComplete__()
 	--==--
 
 	--== Use Setters
+	self.bounceIsActive = self._bounceIsActive
 	self.length = self._length
 	self.lowerOffset = self._lowerOffset
+	self.scrollIsEnabled = self._scrollEnabled
 	self.scrollLength = self._scrollLength
 	self.scrollbackFactor = self._scrollbackFactor
 	self.upperOffset = self._upperOffset
@@ -217,20 +222,38 @@ end
 --== Public Methods
 
 
+-- whether to bounce on constraint
+function AxisMotion.__getters:bounceIsActive()
+	return self._bounceIsActive
+end
+function AxisMotion.__setters:bounceIsActive( value )
+	assert( type(value)=='boolean' )
+	--==--
+	self._bounceIsActive = value
+end
+
+
+-- this is the length of the view port
 function AxisMotion.__getters:length()
 	return self._length
 end
 function AxisMotion.__setters:length( value )
+	assert( type(value)=='number' and value > 0 )
+	--==--
 	self._length = value
 	self:_setScrollbackLimit()
 end
+
 
 function AxisMotion.__getters:lowerOffset()
 	return self._lowerOffset
 end
 function AxisMotion.__setters:lowerOffset( value )
+	assert( type(value)=='number' )
+	--==--
 	self._lowerOffset = value
 end
+
 
 -- decimal fraction (1/3)
 function AxisMotion.__setters:scrollbackFactor( value )
@@ -238,18 +261,39 @@ function AxisMotion.__setters:scrollbackFactor( value )
 	self:_setScrollbackLimit()
 end
 
+
+function AxisMotion.__getters:scrollIsEnabled()
+	return self._scrollEnabled
+end
+function AxisMotion.__setters:scrollIsEnabled( value )
+	assert( type(value)=='boolean' )
+	--==--
+	self._scrollEnabled = value
+end
+
+
+-- this is the maximum dimension of the scroller
+function AxisMotion.__getters:scrollLength()
+	return self._scrollLength
+end
 function AxisMotion.__setters:scrollLength( value )
+	assert( type(value)=='number' and value > 0 )
+	--==--
 	self._scrollLength = value
 end
+
 
 function AxisMotion.__getters:upperOffset()
 	return self._upperOffset
 end
 function AxisMotion.__setters:upperOffset( value )
+	assert( type(value)=='number' )
+	--==--
 	self._upperOffset = value
 end
 
 
+-- current position/location
 function AxisMotion.__getters:value()
 	return self._value
 end
@@ -258,8 +302,8 @@ end
 function AxisMotion:scrollToPosition( pos, params )
 	-- print( "AxisMotion:scrollToPosition", pos )
 	params = params or {}
-	params.position=params.position
-	params.time=params.time
+	-- params.onComplete=params.onComplete
+	if params.time==nil then params.time=AxisMotion.SCROLLTO_TRANS_TIME end
 	if params.limitIsActive==nil then params.limitIsActive=false end
 	--==--
 	local eFI
@@ -271,6 +315,7 @@ function AxisMotion:scrollToPosition( pos, params )
 			self._isMoving=false
 			self._hasMoved=true
 			self._enterFrameIterator=nil
+			if params.onComplete then params.onComplete() end
 		end
 
 	else
@@ -300,6 +345,7 @@ function AxisMotion:scrollToPosition( pos, params )
 				self._hasMoved = true
 				self._value = delta
 				self._enterFrameIterator=nil
+				if params.onComplete then params.onComplete() end
 			end
 		end
 
@@ -500,10 +546,14 @@ function AxisMotion:touch( event )
 		end
 
 		self._tmpTouchEvt = evt
-
+		self._didBegin = true
 		self:gotoState( AxisMotion.STATE_TOUCH )
 
-	elseif phase == 'moved' then
+	end
+
+	if not self._didBegin then return end
+
+	if phase == 'moved' then
 
 		local tmpTouchEvt = self._tmpTouchEvt
 		local constrain = AxisMotion._constrainPosition
@@ -526,6 +576,7 @@ function AxisMotion:touch( event )
 	elseif phase=='ended' or phase=='cancelled' then
 
 		self._tmpTouchEvt = evt
+		self._didBegin = false
 
 		local next_state, next_params = self:_getNextState{ event=event }
 		self:gotoState( next_state, next_params )
@@ -664,7 +715,7 @@ end
 --== State Decelerate
 
 function AxisMotion:do_state_decelerate( params )
-	-- print( "\n\nAxisMotion:do_state_decelerate\n\n" )
+	-- print( "AxisMotion:do_state_decelerate" )
 	params = params or {}
 	--==--
 	local TIME = AxisMotion.DECELERATE_TRANS_TIME

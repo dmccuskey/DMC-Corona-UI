@@ -77,7 +77,6 @@ local BaseStyle = require( ui_find( 'dmc_style.base_style' ) )
 
 
 local newClass = Objects.newClass
-local ObjectBase = Objects.ObjectBase
 
 local sfmt = string.format
 local tinsert = table.insert
