@@ -1,7 +1,7 @@
 --====================================================================--
 -- dmc_corona/dmc_gesture/gesture_manager.lua
 --
--- Documentation:
+-- Documentation: http://docs.davidmccuskey.com/dmc-gestures
 --====================================================================--
 
 --[[
@@ -379,7 +379,7 @@ function GestureMgr:gesture( event )
 
 	elseif etype==target.STATE then
 		local state = event.state
-		if state==target.STATE_FAILED then
+		if state==target.STATE_FAILED or state==target.STATE_CANCELLED then
 			-- Gesture Failed recognition
 			self:_removeActiveGesture( target )
 		elseif state==target.STATE_RECOGNIZED then
@@ -391,8 +391,8 @@ function GestureMgr:gesture( event )
 end
 
 
--- touch()
--- Touch Event handler, touches coming from Touch Manager
+--- touch event handler.
+-- Touch Events coming from Touch Manager
 --
 function GestureMgr:touch( event )
 	-- print( "GestureMgr:touch", event.phase )

@@ -128,6 +128,9 @@ function View:__init__( params )
 	self:superCall( StyleMix, '__init__', params )
 	--==--
 
+	-- save params for later
+	self._wc_tmp_params = params -- tmp
+
 	--== Create Properties ==--
 
 	-- properties stored in Class
@@ -141,6 +144,7 @@ function View:__init__( params )
 
 	-- properties from style
 
+	self._debugOn_dirty=true
 	self._width=params.width
 	self._width_dirty=true
 	self._height=params.height
@@ -171,7 +175,7 @@ function View:__init__( params )
 
 	--== Object References ==--
 
-	self._tmp_style = params.style -- save
+	self._delegate = nil
 
 	self._parentView = params.parentView
 
@@ -227,15 +231,19 @@ function View:__initComplete__()
 	self:superCall( StyleMix, '__initComplete__' )
 	self:superCall( ComponentBase, '__initComplete__' )
 	--==--
+	local tmp = self._wc_tmp_params
+
 	self._isRendered = true
 
-	self.style = self._tmp_style
+	self.delegate = tmp.delegate
+	self.style = tmp.style
 
 	self:_loadViews()
 end
 
 function View:__undoInitComplete__()
 	-- print( "View:__undoInitComplete__" )
+	self.delegate = nil
 	self.style = nil
 	self._isRendered = false
 	--==--
@@ -262,8 +270,27 @@ end
 --====================================================================--
 --== Public Methods
 
+--[[
+Inherited Methods
+--]]
 
---== X
+--- set/get x position.
+--
+-- @within Properties
+-- @function .x
+-- @usage widget.x = 5
+-- @usage print( widget.x )
+
+
+--- set/get y position.
+--
+-- @within Properties
+-- @function .y
+-- @usage widget.y = 5
+-- @usage print( widget.y )
+
+
+--== .X
 
 function View.__getters:x()
 	return self._x
@@ -278,7 +305,7 @@ function View.__setters:x( value )
 	self:__invalidateProperties__()
 end
 
---== Y
+--== .Y
 
 function View.__getters:y()
 	return self._y
@@ -293,6 +320,23 @@ function View.__setters:y( value )
 	self:__invalidateProperties__()
 end
 
+--== .delegate
+
+--- set/get delegate for item.
+--
+-- @within Properties
+-- @function .delegate
+-- @usage widget.delegate = <delegate object>
+-- @usage print( widget.delegate )
+
+function View.__getters:delegate()
+	-- print( "View.__getters:delegate" )
+	return self._delegate
+end
+function View.__setters:delegate( value )
+	-- print( "View.__setters:delegate", value )
+	self._delegate = value
+end
 
 --== .width
 
