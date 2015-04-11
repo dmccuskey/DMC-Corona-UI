@@ -214,9 +214,9 @@ function ScrollView:__init__( params )
 
 	--== Object References ==--
 
-	self._axis_x = nil -- y-axis motion
-	self._axis_y = nil -- x-axis motion
 	self._axis_f = nil -- axis event handler (both)
+	self._axisX = nil -- y-axis motion
+	self._axisY = nil -- x-axis motion
 
 	self._gesture = nil -- pan gesture
 	self._gesture_f = nil -- callback
@@ -368,12 +368,12 @@ end
 
 function ScrollView.__getters:alwaysBounceHorizontally()
 	-- print( "ScrollView.__getters:bounceIsActive" )
-	return ( self._axis_x.alwaysBounceHorizontally and self._axis_y.alwaysBounceHorizontally )
+	return ( self._axisX.alwaysBounceHorizontally and self._axisY.alwaysBounceHorizontally )
 end
 function ScrollView.__setters:alwaysBounceHorizontally( value )
 	-- print( "ScrollView.__setters:alwaysBounceHorizontally", value )
-	self._axis_x.alwaysBounceHorizontally = value
-	self._axis_y.alwaysBounceHorizontally = value
+	self._axisX.alwaysBounceHorizontally = value
+	self._axisY.alwaysBounceHorizontally = value
 end
 
 --== .alwaysBounceVertically
@@ -388,12 +388,12 @@ end
 
 function ScrollView.__getters:alwaysBounceVertically()
 	-- print( "ScrollView.__getters:bounceIsActive" )
-	return ( self._axis_x.alwaysBounceVertically and self._axis_y.alwaysBounceVertically )
+	return ( self._axisX.alwaysBounceVertically and self._axisY.alwaysBounceVertically )
 end
 function ScrollView.__setters:alwaysBounceVertically( value )
 	-- print( "ScrollView.__setters:alwaysBounceVertically", value )
-	self._axis_x.alwaysBounceVertically = value
-	self._axis_y.alwaysBounceVertically = value
+	self._axisX.alwaysBounceVertically = value
+	self._axisY.alwaysBounceVertically = value
 end
 
 --== .bounceIsActive
@@ -408,12 +408,12 @@ end
 
 function ScrollView.__getters:bounceIsActive()
 	-- print( "ScrollView.__getters:bounceIsActive" )
-	return ( self._axis_x.bounceIsActive and self._axis_y.bounceIsActive )
+	return ( self._axisX.bounceIsActive and self._axisY.bounceIsActive )
 end
 function ScrollView.__setters:bounceIsActive( value )
 	-- print( "ScrollView.__setters:bounceIsActive", value )
-	self._axis_x.bounceIsActive = value
-	self._axis_y.bounceIsActive = value
+	self._axisX.bounceIsActive = value
+	self._axisY.bounceIsActive = value
 end
 
 --== .delegate
@@ -437,11 +437,11 @@ end
 
 function ScrollView.__getters:lowerHorizontalOffset()
 	-- print( "ScrollView.__getters:lowerHorizontalOffset" )
-	return self._axis_x.lowerOffset
+	return self._axisX.lowerOffset
 end
 function ScrollView.__setters:lowerHorizontalOffset( value )
 	-- print( "ScrollView.__setters:lowerHorizontalOffset", value )
-	self._axis_x.lowerOffset = value
+	self._axisX.lowerOffset = value
 end
 
 --== .lowerVerticalOffset
@@ -456,11 +456,11 @@ end
 
 function ScrollView.__getters:lowerVerticalOffset()
 	-- print( "ScrollView.__getters:lowerVerticalOffset" )
-	return self._axis_y.lowerOffset
+	return self._axisY.lowerOffset
 end
 function ScrollView.__setters:lowerVerticalOffset( value )
 	-- print( "ScrollView.__setters:lowerVerticalOffset", value )
-	self._axis_y.lowerOffset = value
+	self._axisY.lowerOffset = value
 end
 
 --== .isDirectionalLockEnabled
@@ -493,11 +493,12 @@ end
 
 function ScrollView.__getters:horizontalScrollEnabled()
 	-- print( "ScrollView.__getters:horizontalScrollEnabled" )
-	return self._axis_x.scrollIsEnabled
+	return self._axisX.scrollIsEnabled
 end
 function ScrollView.__setters:horizontalScrollEnabled( value )
 	-- print( "ScrollView.__setters:horizontalScrollEnabled", value )
-	self._axis_x.scrollIsEnabled = value
+	self._axisX.scrollIsEnabled = value
+end
 end
 
 --== .verticalScrollEnabled
@@ -512,11 +513,11 @@ end
 
 function ScrollView.__getters:verticalScrollEnabled()
 	-- print( "ScrollView.__getters:verticalScrollEnabled" )
-	return self._axis_y.scrollIsEnabled
+	return self._axisY.scrollIsEnabled
 end
 function ScrollView.__setters:verticalScrollEnabled( value )
 	-- print( "ScrollView.__setters:verticalScrollEnabled", value )
-	self._axis_y.scrollIsEnabled = value
+	self._axisY.scrollIsEnabled = value
 end
 
 --== .scrollWidth
@@ -589,11 +590,11 @@ end
 
 function ScrollView.__getters:upperHorizontalOffset()
 	-- print( "ScrollView.__getters:upperHorizontalOffset" )
-	return self._axis_x.upperOffset
+	return self._axisX.upperOffset
 end
 function ScrollView.__setters:upperHorizontalOffset( value )
 	-- print( "ScrollView.__setters:upperHorizontalOffset", value )
-	self._axis_x.upperOffset = value
+	self._axisX.upperOffset = value
 end
 
 --== .upperVerticalOffset
@@ -608,11 +609,11 @@ end
 
 function ScrollView.__getters:upperVerticalOffset()
 	-- print( "ScrollView.__getters:upperVerticalOffset" )
-	return self._axis_y.upperOffset
+	return self._axisY.upperOffset
 end
 function ScrollView.__setters:upperVerticalOffset( value )
 	-- print( "ScrollView.__setters:upperVerticalOffset", value )
-	self._axis_y.upperOffset = value
+	self._axisY.upperOffset = value
 end
 
 
@@ -631,7 +632,7 @@ end
 
 function ScrollView:getContentPosition()
 	-- print( "ScrollView.__getters:contentPosition" )
-	return self._axis_x.value, self._axis_y.value
+	return self._axisX.value, self._axisY.value
 end
 
 --- Scroll to a specific x and/or y position.
@@ -660,12 +661,12 @@ function ScrollView:setContentPosition( params )
 		end
 	end
 	if xIsNum then
-		self._axis_x:scrollToPosition( params.x, {
+		self._axisX:scrollToPosition( params.x, {
 			onComplete=tcf, time=params.time
 		})
 	end
 	if yIsNum then
-		self._axis_y:scrollToPosition( params.y, {
+		self._axisY:scrollToPosition( params.y, {
 			onComplete=tcf, time=params.time
 		})
 	end
@@ -779,10 +780,10 @@ end
 
 function ScrollView:_removeAxisMotionX()
 	-- print( "ScrollView:_removeAxisMotionX" )
-	local o = self._axis_x
+	local o = self._axisX
 	if not o then return end
 	o:removeSelf()
-	self._axis_x = nil
+	self._axisX = nil
 end
 
 function ScrollView:_createAxisMotionX()
@@ -794,16 +795,16 @@ function ScrollView:_createAxisMotionX()
 		scrollLength=self._actualScrollW,
 		callback=self._axis_f
 	}
-	self._axis_x = o
+	self._axisX = o
 end
 
 
 function ScrollView:_removeAxisMotionY()
 	-- print( "ScrollView:_removeAxisMotionY" )
-	local o = self._axis_y
+	local o = self._axisY
 	if not o then return end
 	o:removeSelf()
-	self._axis_y = nil
+	self._axisY = nil
 end
 
 function ScrollView:_createAxisMotionY()
@@ -815,7 +816,7 @@ function ScrollView:_createAxisMotionY()
 		scrollLength=self._actualScrollH,
 		callback=self._axis_f
 	}
-	self._axis_y = o
+	self._axisY = o
 end
 
 
@@ -884,16 +885,16 @@ function ScrollView:__commitProperties__()
 	if self._scrollWidth_dirty then
 		local value = self._actualScrollW
 		scr.width = value
-		if self._axis_x then
-			self._axis_x.scrollLength = value
+		if self._axisX then
+			self._axisX.scrollLength = value
 		end
 		self._scrollWidth_dirty=false
 	end
 	if self._scrollHeight_dirty then
 		local value = self._actualScrollH
 		scr.height = value
-		if self._axis_y then
-			self._axis_y.scrollLength = value
+		if self._axisY then
+			self._axisY.scrollLength = value
 		end
 		self._scrollHeight_dirty=false
 	end
@@ -1086,15 +1087,15 @@ function ScrollView:_gestureEvent_handler( event )
 	if etype == gesture.GESTURE then
 		if phase=='began' then
 			evt.phase = 'began'
-			if self._axis_x then
+			if self._axisX then
 				evt.value = event.x
 				evt.start = event.xStart
-				self._axis_x:touch( evt )
+				self._axisX:touch( evt )
 			end
-			if self._axis_y then
+			if self._axisY then
 				evt.value = event.y
 				evt.start = event.yStart
-				self._axis_y:touch( evt )
+				self._axisY:touch( evt )
 			end
 		elseif phase=='changed' then
 			-- if changed, then already know movement was enough
@@ -1102,27 +1103,27 @@ function ScrollView:_gestureEvent_handler( event )
 			f = self._returnFocusCancel
 			if f then f() end
 			evt.phase = 'moved'
-			if self._axis_x then
+			if self._axisX then
 				evt.value = event.x
 				evt.start = event.xStart
-				self._axis_x:touch( evt )
+				self._axisX:touch( evt )
 			end
-			if self._axis_y then
+			if self._axisY then
 				evt.value = event.y
 				evt.start = event.yStart
-				self._axis_y:touch( evt )
+				self._axisY:touch( evt )
 			end
 		else
 			evt.phase = 'ended'
-			if self._axis_x then
+			if self._axisX then
 				evt.value = event.x
 				evt.start = event.xStart
-				self._axis_x:touch( evt )
+				self._axisX:touch( evt )
 			end
-			if self._axis_y then
+			if self._axisY then
 				evt.value = event.y
 				evt.start = event.yStart
-				self._axis_y:touch( evt )
+				self._axisY:touch( evt )
 			end
 			-- if ended (quickly), like a tap
 			-- then give back to the initiator
