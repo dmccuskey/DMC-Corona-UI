@@ -635,7 +635,7 @@ function ScrollView:getContentPosition()
 end
 
 --- Scroll to a specific x and/or y position.
--- Moves content position to x/y over a certain time duration.
+-- Moves content position to x/y over a certain time duration. negative values are up and left, positive values are down and right.
 --
 -- @within Methods
 -- @function :setContentPosition
