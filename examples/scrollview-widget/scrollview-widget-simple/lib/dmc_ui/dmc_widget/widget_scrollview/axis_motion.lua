@@ -706,7 +706,7 @@ function AxisMotion:state_touch( next_state, params )
 		self:do_state_decelerate( params )
 
 	else
-		pwarn( sfmt( "AxisMotion:state_touch unknown trans '%s'", tstr( next_state )))
+		print( sfmt( "AxisMotion:state_touch unknown trans '%s'", tstr( next_state )))
 	end
 
 end
