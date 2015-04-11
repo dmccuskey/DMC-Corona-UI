@@ -1,5 +1,5 @@
 --====================================================================--
--- dmc_widget/widget_background.lua
+-- dmc_ui/dmc_widget/widget_background.lua
 --
 -- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
@@ -33,7 +33,7 @@ SOFTWARE.
 
 
 --====================================================================--
---== DMC Corona UI : Widget Background
+--== DMC Corona UI : Background Widget
 --====================================================================--
 
 

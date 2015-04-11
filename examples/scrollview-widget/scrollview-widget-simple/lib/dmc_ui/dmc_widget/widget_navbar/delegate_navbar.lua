@@ -1,5 +1,5 @@
 --====================================================================--
--- dmc_widget/widget_button.lua
+-- dmc_ui/dmc_widget/widget_navbar/delegate_navbar.lua
 --
 -- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--

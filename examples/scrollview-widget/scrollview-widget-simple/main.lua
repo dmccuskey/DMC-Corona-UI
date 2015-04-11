@@ -32,13 +32,14 @@ local H_CENTER, V_CENTER = W*0.5, H*0.5
 local tdelay = timer.performWithDelay
 
 
+
 --===================================================================--
 --== Main
 --===================================================================--
 
 
 local function callback()
-	print( "here in callback" )
+	print( "here in motion callback" )
 end
 
 local widget = dUI.newScrollView{

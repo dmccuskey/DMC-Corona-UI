@@ -167,6 +167,9 @@ function ScrollView:__init__( params )
 	self:superCall( '__init__', params )
 	--==--
 
+	-- save params for later
+	self._sv_tmp_params = params -- tmp
+
 	--== Create Properties ==--
 
 	-- properties in this class
@@ -179,10 +182,13 @@ function ScrollView:__init__( params )
 	self._hasMoved = false
 	self._isMoving = false
 
-	self._scrollWidth = params.scrollWidth
+	self._scrollWidth = -1
 	self._scrollWidth_dirty=true
-	self._scrollHeight = params.scrollHeight
+	self._scrollHeight = -1
 	self._scrollHeight_dirty=true
+
+	self._actualScrollH = -1
+	self._actualScrollW = -1
 
 	-- controlled by Directional Lock Enabled
 	self._scrollBlockedH = false
@@ -204,9 +210,6 @@ function ScrollView:__init__( params )
 
 	self._stopMotion = false
 
-	-- save params for axis controllers
-	self._tmp_params = params -- tmp
-
 	--== Display Groups ==--
 
 	--== Object References ==--
@@ -226,12 +229,12 @@ function ScrollView:__init__( params )
 end
 
 --[[
+--]]
 function ScrollView:__undoInit__()
 	-- print( "ScrollView:__undoInit__" )
 	--==--
 	self:superCall( '__undoInit__' )
 end
---]]
 
 --== createView
 
@@ -266,7 +269,9 @@ function ScrollView:__initComplete__()
 	-- print( "ScrollView:__initComplete__" )
 	self:superCall( '__initComplete__' )
 	--==--
-	local o, f, tmp
+	local tmp = self._sv_tmp_params
+	local o, f
+
 
 	f = self:createCallback( self._gestureEvent_handler )
 	o = Gesture.newPanGesture( self._rectBg, { touches=1, threshold=0 } )
@@ -274,12 +279,15 @@ function ScrollView:__initComplete__()
 	self._gesture = o
 	self._gesture_f = f
 
+	-- before axis creation
+	self.scrollWidth = tmp.scrollWidth
+	self.scrollHeight = tmp.scrollHeight
+
 	self._axis_f = self:createCallback( self._axisEvent_handler )
 	self:_createAxisMotionX()
 	self:_createAxisMotionY()
 
 	--== Use Setters, after axis motion objects are created
-	tmp = self._tmp_params
 
 	self.bounceIsActive = tmp.bounceIsActive
 
@@ -291,7 +299,7 @@ function ScrollView:__initComplete__()
 	self.upperVerticalOffset = tmp.upperVerticalOffset
 	self.lowerVerticalOffset = tmp.lowerVerticalOffset
 
-	self._tmp_params = nil
+	self._sv_tmp_params = nil
 end
 
 function ScrollView:__undoInitComplete__()
@@ -388,7 +396,6 @@ function ScrollView.__setters:alwaysBounceVertically( value )
 	self._axis_y.alwaysBounceVertically = value
 end
 
-
 --== .bounceIsActive
 
 --- set/get activate rebound action when hitting a scroll-limit.
@@ -408,6 +415,15 @@ function ScrollView.__setters:bounceIsActive( value )
 	self._axis_x.bounceIsActive = value
 	self._axis_y.bounceIsActive = value
 end
+
+--== .delegate
+
+--- set/get delegate for item.
+--
+-- @within Properties
+-- @function .delegate
+-- @usage widget.delegate = <delegate object>
+-- @usage print( widget.delegate )
 
 --== .lowerHorizontalOffset
 
@@ -520,9 +536,16 @@ function ScrollView.__getters:scrollWidth()
 end
 function ScrollView.__setters:scrollWidth( value )
 	-- print( "ScrollView.__setters:scrollWidth", value )
+	assert( type(value)=='number' and value>=0 )
+	--==--
 	if self._scrollWidth==value then return end
 	self._scrollWidth = value
 	self._scrollWidth_dirty=true
+
+	local aSW = value
+	local width = self._width
+	if value < width then aSW=width end
+	self._actualScrollW = aSW
 end
 
 --== .scrollHeight
@@ -542,9 +565,16 @@ function ScrollView.__getters:scrollHeight()
 end
 function ScrollView.__setters:scrollHeight( value )
 	-- print( "ScrollView.__setters:scrollHeight", value )
+	assert( type(value)=='number' and value>=0 )
+	--==--
 	if self._scrollHeight==value then return end
 	self._scrollHeight = value
 	self._scrollHeight_dirty=true
+
+	local aSH = value
+	local height = self._height
+	if value < height then aSH=height end
+	self._actualScrollH = aSH
 end
 
 --== .upperHorizontalOffset
@@ -605,7 +635,7 @@ function ScrollView:getContentPosition()
 end
 
 --- Scroll to a specific x and/or y position.
--- Moves content position to x/y over a certain time duration.
+-- Moves content position to x/y over a certain time duration. negative values are up and left, positive values are down and right.
 --
 -- @within Methods
 -- @function :setContentPosition
@@ -761,7 +791,7 @@ function ScrollView:_createAxisMotionX()
 	local o = AxisMotion:new{
 		id='x',
 		length=self._width,
-		scrollLength=self._scrollWidth,
+		scrollLength=self._actualScrollW,
 		callback=self._axis_f
 	}
 	self._axis_x = o
@@ -782,7 +812,7 @@ function ScrollView:_createAxisMotionY()
 	local o = AxisMotion:new{
 		id='y',
 		length=self._height,
-		scrollLength=self._scrollHeight,
+		scrollLength=self._actualScrollH,
 		callback=self._axis_f
 	}
 	self._axis_y = o
@@ -803,8 +833,8 @@ function ScrollView:_createScroller()
 	self:_removeScroller()
 
 	local o = Scroller:new{
-		width=self._scrollWidth,
-		height=self._scrollHeight
+		width=self._actualScrollW,
+		height=self._actualScrollH
 	}
 	self:_addSubView( o )
 	self._scroller = o
@@ -852,7 +882,7 @@ function ScrollView:__commitProperties__()
 	end
 
 	if self._scrollWidth_dirty then
-		local value = self._scrollWidth
+		local value = self._actualScrollW
 		scr.width = value
 		if self._axis_x then
 			self._axis_x.scrollLength = value
@@ -860,7 +890,7 @@ function ScrollView:__commitProperties__()
 		self._scrollWidth_dirty=false
 	end
 	if self._scrollHeight_dirty then
-		local value = self._scrollHeight
+		local value = self._actualScrollH
 		scr.height = value
 		if self._axis_y then
 			self._axis_y.scrollLength = value
