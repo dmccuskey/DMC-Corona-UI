@@ -67,11 +67,12 @@ local ui_find = dmc_ui_func.find
 local AxisMotion = require( ui_find( 'dmc_widget.widget_scrollview.axis_motion' ) )
 local Gesture = require 'dmc_gestures'
 local Objects = require 'dmc_objects'
+local TouchMgr = require 'dmc_touchmanager'
 local Utils = require 'dmc_utils'
 
 local uiConst = require( ui_find( 'ui_constants' ) )
 
-local View = require( ui_find( 'core.view' ) )
+local WidgetBase = require( ui_find( 'core.widget' ) )
 local Scroller = require( ui_find( 'dmc_widget.widget_scrollview.scroller' ) )
 
 
@@ -80,9 +81,6 @@ local Scroller = require( ui_find( 'dmc_widget.widget_scrollview.scroller' ) )
 --== Setup, Constants
 
 
---== To be set in initialize()
-local dUI = nil
-
 local newClass = Objects.newClass
 
 -- local mabs = math.abs
@@ -90,6 +88,12 @@ local newClass = Objects.newClass
 -- local tinsert = table.insert
 -- local tremove = table.remove
 -- local tstr = tostring
+local tcancel = timer.cancel
+local tdelay = timer.performWithDelay
+local type = _G.type
+
+--== To be set in initialize()
+local dUI = nil
 
 
 
@@ -97,8 +101,18 @@ local newClass = Objects.newClass
 --== ScrollView Widget Class
 --====================================================================--
 
+--- Scroll View Widget.
+-- a container view which can scroll independently on two axis (X/Y).
+--
+-- @classmod Widget.ScrollView
+-- @usage
+-- local dUI = require 'dmc_ui'
+-- local widget = dUI.newScrollView()
 
-local ScrollView = newClass( View, { name = "ScrollView" } )
+local ScrollView = newClass( WidgetBase, { name="ScrollView" } )
+
+--- Class Constants.
+-- @section
 
 --== Class Constants
 
@@ -122,6 +136,13 @@ ScrollView.STYLE_TYPE = uiConst.SCROLLVIEW
 
 --== Event Constants
 
+--- ScrollView event constant.
+-- used when setting up event listeners.
+--
+-- @usage
+-- widget:addEventListener( widget.EVENT, listener )
+
+
 ScrollView.EVENT = 'scrollview-widget-event'
 
 
@@ -133,17 +154,21 @@ ScrollView.EVENT = 'scrollview-widget-event'
 function ScrollView:__init__( params )
 	-- print( "ScrollView:__init__", params )
 	params = params or {}
+	if params.bounceIsActive==nil then params.bounceIsActive=true end
+	if params.horizontalScrollEnabled==nil then params.horizontalScrollEnabled=true end
+	if params.lowerHorizontalOffset==nil then params.lowerHorizontalOffset = 0 end
+	if params.lowerVerticalOffset==nil then params.lowerVerticalOffset = 0 end
 	if params.scrollWidth==nil then params.scrollWidth=dUI.WIDTH end
 	if params.scrollHeight==nil then params.scrollHeight=dUI.HEIGHT end
-	if params.horizontalScrollEnabled==nil then params.horizontalScrollEnabled=true end
-	if params.verticalScrollEnabled==nil then params.verticalScrollEnabled=true end
 	if params.upperHorizontalOffset==nil then params.upperHorizontalOffset = 0 end
-	if params.lowerHorizontalOffset==nil then params.lowerHorizontalOffset = 0 end
 	if params.upperVerticalOffset==nil then params.upperVerticalOffset = 0 end
-	if params.lowerVerticalOffset==nil then params.lowerVerticalOffset = 0 end
+	if params.verticalScrollEnabled==nil then params.verticalScrollEnabled=true end
 
 	self:superCall( '__init__', params )
 	--==--
+
+	-- save params for later
+	self._sv_tmp_params = params -- tmp
 
 	--== Create Properties ==--
 
@@ -156,12 +181,14 @@ function ScrollView:__init__( params )
 
 	self._hasMoved = false
 	self._isMoving = false
-	self._isRendered = false
 
-	self._scrollWidth = params.scrollWidth
+	self._scrollWidth = -1
 	self._scrollWidth_dirty=true
-	self._scrollHeight = params.scrollHeight
+	self._scrollHeight = -1
 	self._scrollHeight_dirty=true
+
+	self._actualScrollH = -1
+	self._actualScrollW = -1
 
 	-- controlled by Directional Lock Enabled
 	self._scrollBlockedH = false
@@ -173,35 +200,23 @@ function ScrollView:__init__( params )
 
 	-- properties from style
 
-	self._bounceIsActive = true
 	self._alwaysBounceVertically = false
 	self._alwaysBounceHorizontally = false
 
-	self._canScrollH = params.horizontalScrollEnabled
-	self._canScrollV = params.verticalScrollEnabled
 	self._isDirectionalLockEnabled = false
 
 	self._showHorizontalScrollIndicator = false
 	self._showVerticalScrollIndicator = false
 
-	self._upperHorizontalOffset = params.upperHorizontalOffset
-	self._lowerHorizontalOffset = params.lowerHorizontalOffset
-	self._upperVerticalOffset = params.upperVerticalOffset
-	self._lowerVerticalOffset = params.lowerVerticalOffset
-
 	self._stopMotion = false
 
 	--== Display Groups ==--
-
-	self._dgBg = nil
-	self._dgViews = nil
-	self._dgUI = nil
 
 	--== Object References ==--
 
 	self._axis_x = nil -- y-axis motion
 	self._axis_y = nil -- x-axis motion
-	self._axis_f = nil -- x-axis handler
+	self._axis_f = nil -- axis event handler (both)
 
 	self._gesture = nil -- pan gesture
 	self._gesture_f = nil -- callback
@@ -214,12 +229,12 @@ function ScrollView:__init__( params )
 end
 
 --[[
+--]]
 function ScrollView:__undoInit__()
 	-- print( "ScrollView:__undoInit__" )
 	--==--
 	self:superCall( '__undoInit__' )
 end
---]]
 
 --== createView
 
@@ -227,7 +242,7 @@ function ScrollView:__createView__()
 	-- print( "ScrollView:__createView__" )
 	self:superCall( '__createView__' )
 	--==--
-	local dg, o
+	local o
 
 	-- local background, gesture hit area
 
@@ -241,19 +256,8 @@ end
 
 function ScrollView:__undoCreateView__()
 	-- print( "ScrollView:__undoCreateView__" )
-	local o
-
-	self._axis_x:removeSelf()
-	self._axis_x = nil
-
-	self._axis_y:removeSelf()
-	self._axis_y = nil
-
 	self._rectBg:removeSelf()
 	self._rectBg=nil
-
-	self._dgBg:removeSelf()
-	self._dgBg=nil
 	--==--
 	self:superCall( '__undoCreateView__' )
 end
@@ -265,7 +269,9 @@ function ScrollView:__initComplete__()
 	-- print( "ScrollView:__initComplete__" )
 	self:superCall( '__initComplete__' )
 	--==--
+	local tmp = self._sv_tmp_params
 	local o, f
+
 
 	f = self:createCallback( self._gestureEvent_handler )
 	o = Gesture.newPanGesture( self._rectBg, { touches=1, threshold=0 } )
@@ -273,20 +279,32 @@ function ScrollView:__initComplete__()
 	self._gesture = o
 	self._gesture_f = f
 
+	-- before axis creation
+	self.scrollWidth = tmp.scrollWidth
+	self.scrollHeight = tmp.scrollHeight
+
 	self._axis_f = self:createCallback( self._axisEvent_handler )
-	--== Use Setters
-	self.horizontalScrollEnabled = self._canScrollH
-	self.verticalScrollEnabled = self._canScrollV
+	self:_createAxisMotionX()
+	self:_createAxisMotionY()
 
-	self._isRendered = true
+	--== Use Setters, after axis motion objects are created
 
+	self.bounceIsActive = tmp.bounceIsActive
+
+	self.horizontalScrollEnabled = tmp.horizontalScrollEnabled
+	self.upperHorizontalOffset = tmp.upperHorizontalOffset
+	self.lowerHorizontalOffset = tmp.lowerHorizontalOffset
+
+	self.verticalScrollEnabled = tmp.verticalScrollEnabled
+	self.upperVerticalOffset = tmp.upperVerticalOffset
+	self.lowerVerticalOffset = tmp.lowerVerticalOffset
+
+	self._sv_tmp_params = nil
 end
 
 function ScrollView:__undoInitComplete__()
 	--print( "ScrollView:__undoInitComplete__" )
 	local o, f
-
-	self._isRendered = false
 
 	self:_removeAxisMotionX()
 	self:_removeAxisMotionY()
@@ -327,20 +345,132 @@ end
 --== Public Methods
 
 
---== .contentPosition
+--- description of parameters for method :setContentPosition().
+-- this is the complete list of properties for the :setContentPosition() parameter table. Though x or y are optional, at least one of them must be specified.
+--
+-- @within Parameters
+-- @tfield[opt] number x The x position to scroll to.
+-- @tfield[opt] number y The y position to scroll to.
+-- @tfield[opt=500] number Time duration for scroll animation, in milliseconds. set to 0 for immediate transition.
+-- @tfield[opt] func onComplete a function to call when the animation is complete
+-- @table .setContentPositionParams
 
-function ScrollView.__getters:contentPosition()
-	-- print( "ScrollView.__getters:contentPosition" )
-	return self._contentPosition
+
+--== .alwaysBounceHorizontally
+
+-- set/get activate rebound action when hitting a scroll-limit.
+-- defaults to true.
+-- @TODO
+-- @within Properties
+-- @function .alwaysBounceHorizontally
+-- @usage widget.alwaysBounceHorizontally = true
+-- @usage print( widget.alwaysBounceHorizontally )
+
+function ScrollView.__getters:alwaysBounceHorizontally()
+	-- print( "ScrollView.__getters:bounceIsActive" )
+	return ( self._axis_x.alwaysBounceHorizontally and self._axis_y.alwaysBounceHorizontally )
 end
-function ScrollView.__setters:contentPosition( value )
-	-- print( "ScrollView.__setters:contentPosition", value )
-	self._contentPosition = value
-	self._contentPosition_dirty=true
+function ScrollView.__setters:alwaysBounceHorizontally( value )
+	-- print( "ScrollView.__setters:alwaysBounceHorizontally", value )
+	self._axis_x.alwaysBounceHorizontally = value
+	self._axis_y.alwaysBounceHorizontally = value
 end
 
+--== .alwaysBounceVertically
+
+-- set/get activate rebound action when hitting a scroll-limit.
+-- defaults to true.
+-- @TODO
+-- @within Properties
+-- @function .alwaysBounceVertically
+-- @usage widget.alwaysBounceVertically = true
+-- @usage print( widget.alwaysBounceVertically )
+
+function ScrollView.__getters:alwaysBounceVertically()
+	-- print( "ScrollView.__getters:bounceIsActive" )
+	return ( self._axis_x.alwaysBounceVertically and self._axis_y.alwaysBounceVertically )
+end
+function ScrollView.__setters:alwaysBounceVertically( value )
+	-- print( "ScrollView.__setters:alwaysBounceVertically", value )
+	self._axis_x.alwaysBounceVertically = value
+	self._axis_y.alwaysBounceVertically = value
+end
+
+--== .bounceIsActive
+
+--- set/get activate rebound action when hitting a scroll-limit.
+-- defaults to true.
+--
+-- @within Properties
+-- @function .bounceIsActive
+-- @usage widget.bounceIsActive = true
+-- @usage print( widget.bounceIsActive )
+
+function ScrollView.__getters:bounceIsActive()
+	-- print( "ScrollView.__getters:bounceIsActive" )
+	return ( self._axis_x.bounceIsActive and self._axis_y.bounceIsActive )
+end
+function ScrollView.__setters:bounceIsActive( value )
+	-- print( "ScrollView.__setters:bounceIsActive", value )
+	self._axis_x.bounceIsActive = value
+	self._axis_y.bounceIsActive = value
+end
+
+--== .delegate
+
+--- set/get delegate for item.
+--
+-- @within Properties
+-- @function .delegate
+-- @usage widget.delegate = <delegate object>
+-- @usage print( widget.delegate )
+
+--== .lowerHorizontalOffset
+
+--- set/get the lower horizontal offset for the ScrollView.
+-- value must be a number, can be negative or positive. defaults to zero.
+--
+-- @within Properties
+-- @function .lowerHorizontalOffset
+-- @usage widget.lowerHorizontalOffset = 30
+-- @usage print( widget.lowerHorizontalOffset )
+
+function ScrollView.__getters:lowerHorizontalOffset()
+	-- print( "ScrollView.__getters:lowerHorizontalOffset" )
+	return self._axis_x.lowerOffset
+end
+function ScrollView.__setters:lowerHorizontalOffset( value )
+	-- print( "ScrollView.__setters:lowerHorizontalOffset", value )
+	self._axis_x.lowerOffset = value
+end
+
+--== .lowerVerticalOffset
+
+--- set/get the lower vertical offset for the ScrollView.
+-- value must be a number, can be negative or positive. defaults to zero.
+--
+-- @within Properties
+-- @function .lowerVerticalOffset
+-- @usage widget.lowerVerticalOffset = 30
+-- @usage print( widget.lowerVerticalOffset )
+
+function ScrollView.__getters:lowerVerticalOffset()
+	-- print( "ScrollView.__getters:lowerVerticalOffset" )
+	return self._axis_y.lowerOffset
+end
+function ScrollView.__setters:lowerVerticalOffset( value )
+	-- print( "ScrollView.__setters:lowerVerticalOffset", value )
+	self._axis_y.lowerOffset = value
+end
 
 --== .isDirectionalLockEnabled
+
+-- set/get whether bouncing on edges (TBD).
+-- @TODO
+-- @within Properties
+-- @function .directionalLockEnabled
+-- @usage widget.directionalLockEnabled = true
+-- @usage print( widget.directionalLockEnabled )
 
 function ScrollView.__getters:isDirectionalLockEnabled()
 	-- print( "ScrollView.__getters:isDirectionalLockEnabled" )
@@ -351,46 +481,54 @@ function ScrollView.__setters:isDirectionalLockEnabled( value )
 	self._isDirectionalLockEnabled = value
 end
 
-
 --== .horizontalScrollEnabled
+
+--- set/get control ScrollView horizontal motion.
+-- setting to false will disable scrolling in X-axis.
+--
+-- @within Properties
+-- @function .horizontalScrollEnabled
+-- @usage widget.horizontalScrollEnabled = true
+-- @usage print( widget.horizontalScrollEnabled )
 
 function ScrollView.__getters:horizontalScrollEnabled()
 	-- print( "ScrollView.__getters:horizontalScrollEnabled" )
-	return self._canScrollH
+	return self._axis_x.scrollIsEnabled
 end
 function ScrollView.__setters:horizontalScrollEnabled( value )
 	-- print( "ScrollView.__setters:horizontalScrollEnabled", value )
-	assert( type(value)=='boolean' )
-	--==--
-	self._canScrollH = value
-	if value then
-		self:_createAxisMotionX()
-	else
-		self:_removeAxisMotionX()
-	end
+	self._axis_x.scrollIsEnabled = value
 end
-
 
 --== .verticalScrollEnabled
 
+--- set/get control ScrollView vertical motion.
+-- setting to false will disable scrolling in Y-axis.
+--
+-- @within Properties
+-- @function .verticalScrollEnabled
+-- @usage widget.verticalScrollEnabled = true
+-- @usage print( widget.verticalScrollEnabled )
+
 function ScrollView.__getters:verticalScrollEnabled()
 	-- print( "ScrollView.__getters:verticalScrollEnabled" )
-	return self._canScrollV
+	return self._axis_y.scrollIsEnabled
 end
 function ScrollView.__setters:verticalScrollEnabled( value )
 	-- print( "ScrollView.__setters:verticalScrollEnabled", value )
-	assert( type(value)=='boolean' )
-	--==--
-	self._canScrollV = value
-	if value then
-		self:_createAxisMotionY()
-	else
-		self:_removeAxisMotionY()
-	end
+	self._axis_y.scrollIsEnabled = value
 end
 
-
 --== .scrollWidth
+
+--- set/get width of scroll area.
+-- this is the total scroll area, not just the scroll view port.
+-- value must be greater than zero.
+--
+-- @within Properties
+-- @function .scrollWidth
+-- @usage widget.scrollWidth = 1000
+-- @usage print( widget.scrollWidth )
 
 function ScrollView.__getters:scrollWidth()
 	-- print( "ScrollView.__getters:scrollWidth" )
@@ -398,12 +536,28 @@ function ScrollView.__getters:scrollWidth()
 end
 function ScrollView.__setters:scrollWidth( value )
 	-- print( "ScrollView.__setters:scrollWidth", value )
+	assert( type(value)=='number' and value>=0 )
+	--==--
 	if self._scrollWidth==value then return end
 	self._scrollWidth = value
 	self._scrollWidth_dirty=true
+
+	local aSW = value
+	local width = self._width
+	if value < width then aSW=width end
+	self._actualScrollW = aSW
 end
 
 --== .scrollHeight
+
+--- set/get height of scroll area.
+-- this is the total scroll area, not just the scroll view port.
+-- value must be greater than zero.
+--
+-- @within Properties
+-- @function .scrollHeight
+-- @usage widget.scrollHeight = 1000
+-- @usage print( widget.scrollHeight )
 
 function ScrollView.__getters:scrollHeight()
 	-- print( "ScrollView.__getters:scrollHeight" )
@@ -411,41 +565,209 @@ function ScrollView.__getters:scrollHeight()
 end
 function ScrollView.__setters:scrollHeight( value )
 	-- print( "ScrollView.__setters:scrollHeight", value )
+	assert( type(value)=='number' and value>=0 )
+	--==--
 	if self._scrollHeight==value then return end
 	self._scrollHeight = value
 	self._scrollHeight_dirty=true
+
+	local aSH = value
+	local height = self._height
+	if value < height then aSH=height end
+	self._actualScrollH = aSH
 end
 
---== scrollTo()
+--== .upperHorizontalOffset
 
--- pos={x,y}
-function ScrollView:scrollTo( pos, params )
-	params = params or {}
-	if params.animate==nil then params.animate=true end
-	params.time=params.time
-	params.onComplete=params.onComplete
-	--==--
-	-- TODO: start animation
+--- set/get the upper horizontal offset for the ScrollView.
+-- value must be a number, can be negative or positive. defaults to zero.
+--
+-- @within Properties
+-- @function .upperHorizontalOffset
+-- @usage widget.upperHorizontalOffset = 30
+-- @usage print( widget.upperHorizontalOffset )
+
+function ScrollView.__getters:upperHorizontalOffset()
+	-- print( "ScrollView.__getters:upperHorizontalOffset" )
+	return self._axis_x.upperOffset
+end
+function ScrollView.__setters:upperHorizontalOffset( value )
+	-- print( "ScrollView.__setters:upperHorizontalOffset", value )
+	self._axis_x.upperOffset = value
 end
 
---== scrollToPosition()
+--== .upperVerticalOffset
 
--- pos={x,y}
-function ScrollView:scrollToPosition( pos, params )
-	params = params or {}
-	if params.animate==nil then params.animate=true end
-	params.time=params.time
-	params.onComplete=params.onComplete
-	--==--
-	-- TODO: start animation
+--- set/get the upper vertical offset for the ScrollView.
+-- value must be a number, can be negative or positive. defaults to zero.
+--
+-- @within Properties
+-- @function .upperVerticalOffset
+-- @usage widget.upperVerticalOffset = 30
+-- @usage print( widget.upperVerticalOffset )
+
+function ScrollView.__getters:upperVerticalOffset()
+	-- print( "ScrollView.__getters:upperVerticalOffset" )
+	return self._axis_y.upperOffset
+end
+function ScrollView.__setters:upperVerticalOffset( value )
+	-- print( "ScrollView.__setters:upperVerticalOffset", value )
+	self._axis_y.upperOffset = value
 end
 
 
-function ScrollView:takeFocus( event, params )
-	params = params or {}
-	params.returnFocus=params.returnFocus
+--======================================================--
+-- Methods
+
+--== .contentPosition
+
+--- Returns the x and y coordinates of the ScrollView content.
+--
+-- @within Methods
+-- @function :getContentPosition
+-- @treturn number x
+-- @treturn number y
+-- @usage local x, y = widget:getContentPosition()
+
+function ScrollView:getContentPosition()
+	-- print( "ScrollView.__getters:contentPosition" )
+	return self._axis_x.value, self._axis_y.value
+end
+
+--- Scroll to a specific x and/or y position.
+-- Moves content position to x/y over a certain time duration. negative values are up and left, positive values are down and right.
+--
+-- @within Methods
+-- @function :setContentPosition
+-- @tab params table of coordinates, see @{setContentPositionParams}
+-- @usage widget:setContentPosition( { x=-20, y=-35 } )
+
+function ScrollView:setContentPosition( params )
+	-- print( "ScrollView:setContentPosition", params )
+	assert( type(params)=='table' )
 	--==--
-	-- TODO: start animation
+	local xIsNum = (type(params.x)=='number')
+	local yIsNum = (type(params.y)=='number')
+	assert( xIsNum or type(params.x)=='nil' )
+	assert( yIsNum or type(params.y)=='nil' )
+
+	local tcf -- transition complete func
+	if params.onComplete then
+		if xIsNum and yIsNum then
+			tcf = Utils.getTransitionCompleteFunc( 2, params.onComplete )
+		else
+			tcf = params.onComplete
+		end
+	end
+	if xIsNum then
+		self._axis_x:scrollToPosition( params.x, {
+			onComplete=tcf, time=params.time
+		})
+	end
+	if yIsNum then
+		self._axis_y:scrollToPosition( params.y, {
+			onComplete=tcf, time=params.time
+		})
+	end
+end
+
+
+-- completes process of giving up focus.
+-- the main point it to terminate any touch action on ScrollView
+--
+function ScrollView:relinquishFocus( event )
+	-- print( "ScrollView:relinquishFocus" )
+	event.phase='cancelled'
+	self._rectBg:dispatchEvent( event )
+end
+
+--- give touch focus to the ScrollView.
+-- the ScrollView will take the touch event and set the focus to itself. _event must be from DMC TouchManager_.
+--
+-- @within Methods
+-- @function :takeFocus
+-- @param event Touch Event from DMC TouchManager
+-- @usage widget:takeFocus( event )
+
+function ScrollView:takeFocus( event )
+	TouchMgr.setFocus( self._rectBg, event.id )
+
+	-- stop existing returnFocus timer, if any
+	if self._returnFocusCancel then self._returnFocusCancel() end
+
+	self._tmpTouchEvt = event
+
+	if event.returnFocus then
+		-- we have returnFocus request, so do setup for it
+
+		local rFCallback = event.returnFocus
+		local rFTarget = event.returnTarget
+		assert( rFTarget and rFCallback )
+
+		local returnFocus_f, cancelFocus_f
+
+		-- returns focus back to initiator
+		-- this is set on timer, either it gets cancelled
+		-- or the timer goes off and initiates returnFocus
+		--
+		returnFocus_f = function( state )
+			-- print( "ScrollView: returnFocus" )
+
+			cancelFocus_f()
+
+			local e = self._tmpTouchEvt
+
+			local evt = {
+				name=e.name,
+				id=e.id,
+				time=e.time,
+				x=e.x,
+				y=e.y,
+				xStart=e.xStart,
+				yStart=e.yStart,
+			}
+
+			if state then
+				-- coming from end touch
+				-- make event 'ended'
+				evt.phase = state
+			else
+				-- coming from timer
+				-- terminate current touch action
+				-- then send 'began' event
+				self:relinquishFocus( e )
+				evt.phase = 'began'
+			end
+
+			evt.target = rFTarget
+			rFCallback( evt )
+		end
+
+		cancelFocus_f = function()
+			-- print( 'ScrollerBase: cancelFocus' )
+
+			if self._returnFocus_t then
+				tcancel( self._returnFocus_t )
+				self._returnFocus_t = nil
+			end
+
+			self._returnFocus = nil
+			self._returnFocusCancel = nil
+		end
+
+		self._returnFocus = returnFocus_f
+		self._returnFocusCancel = cancelFocus_f
+		self._returnFocus_t = tdelay( 100, function(e) returnFocus_f() end )
+
+	end
+
+	-- remove previous focus, if any
+
+	TouchMgr.unsetFocus( event.target, event.id )
+	-- send new event through touch area
+	event.phase='began'
+	event.target=self._rectBg
+	event.target:dispatchEvent( event )
 end
 
 
@@ -469,9 +791,7 @@ function ScrollView:_createAxisMotionX()
 	local o = AxisMotion:new{
 		id='x',
 		length=self._width,
-		scrollLength=self._scrollWidth,
-		upperOffset=self._upperHorizontalOffset,
-		lowerOffset=self._lowerHorizontalOffset,
+		scrollLength=self._actualScrollW,
 		callback=self._axis_f
 	}
 	self._axis_x = o
@@ -492,9 +812,7 @@ function ScrollView:_createAxisMotionY()
 	local o = AxisMotion:new{
 		id='y',
 		length=self._height,
-		scrollLength=self._scrollHeight,
-		upperOffset=self._upperVerticalOffset,
-		lowerOffset=self._lowerVerticalOffset,
+		scrollLength=self._actualScrollH,
 		callback=self._axis_f
 	}
 	self._axis_y = o
@@ -515,8 +833,8 @@ function ScrollView:_createScroller()
 	self:_removeScroller()
 
 	local o = Scroller:new{
-		width=self._scrollWidth,
-		height=self._scrollHeight
+		width=self._actualScrollW,
+		height=self._actualScrollH
 	}
 	self:_addSubView( o )
 	self._scroller = o
@@ -564,7 +882,7 @@ function ScrollView:__commitProperties__()
 	end
 
 	if self._scrollWidth_dirty then
-		local value = self._scrollWidth
+		local value = self._actualScrollW
 		scr.width = value
 		if self._axis_x then
 			self._axis_x.scrollLength = value
@@ -572,7 +890,7 @@ function ScrollView:__commitProperties__()
 		self._scrollWidth_dirty=false
 	end
 	if self._scrollHeight_dirty then
-		local value = self._scrollHeight
+		local value = self._actualScrollH
 		scr.height = value
 		if self._axis_y then
 			self._axis_y.scrollLength = value
@@ -712,10 +1030,10 @@ function ScrollView:stylePropertyChangeHandler( event )
 			self._width_dirty=true
 		elseif property=='height' then
 			self._height_dirty=true
-			elseif property=='anchorX' then
-				self._anchorX_dirty=true
-			elseif property=='anchorY' then
-				self._anchorY_dirty=true
+		elseif property=='anchorX' then
+			self._anchorX_dirty=true
+		elseif property=='anchorY' then
+			self._anchorY_dirty=true
 
 		elseif property=='align' then
 			self._align_dirty=true
@@ -754,6 +1072,7 @@ function ScrollView:_gestureEvent_handler( event )
 	local etype = event.type
 	local phase = event.phase
 	local gesture = event.target
+	local f = self._returnFocusCancel
 
 	-- Utils.print( event )
 	local evt = {
@@ -778,6 +1097,10 @@ function ScrollView:_gestureEvent_handler( event )
 				self._axis_y:touch( evt )
 			end
 		elseif phase=='changed' then
+			-- if changed, then already know movement was enough
+			-- because Pan Gesture will filter movement
+			f = self._returnFocusCancel
+			if f then f() end
 			evt.phase = 'moved'
 			if self._axis_x then
 				evt.value = event.x
@@ -801,6 +1124,10 @@ function ScrollView:_gestureEvent_handler( event )
 				evt.start = event.yStart
 				self._axis_y:touch( evt )
 			end
+			-- if ended (quickly), like a tap
+			-- then give back to the initiator
+			f = self._returnFocus
+			if f then f( 'ended' ) end
 		end
 	end
 end
