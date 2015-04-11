@@ -158,11 +158,14 @@ function ScrollView:__init__( params )
 	if params.horizontalScrollEnabled==nil then params.horizontalScrollEnabled=true end
 	if params.lowerHorizontalOffset==nil then params.lowerHorizontalOffset = 0 end
 	if params.lowerVerticalOffset==nil then params.lowerVerticalOffset = 0 end
+	if params.maximumZoom==nil then params.maximumZoom=1.0 end
+	if params.minimumZoom==nil then params.minimumZoom=1.0 end
 	if params.scrollWidth==nil then params.scrollWidth=dUI.WIDTH end
 	if params.scrollHeight==nil then params.scrollHeight=dUI.HEIGHT end
 	if params.upperHorizontalOffset==nil then params.upperHorizontalOffset = 0 end
 	if params.upperVerticalOffset==nil then params.upperVerticalOffset = 0 end
 	if params.verticalScrollEnabled==nil then params.verticalScrollEnabled=true end
+	if params.zoomScale==nil then params.zoomScale=1.0 end
 
 	self:superCall( '__init__', params )
 	--==--
@@ -181,6 +184,10 @@ function ScrollView:__init__( params )
 
 	self._hasMoved = false
 	self._isMoving = false
+
+	self._minZoom = -1
+	self._maxZoom = -1
+	self._zoomScale = -1
 
 	self._scrollWidth = -1
 	self._scrollWidth_dirty=true
@@ -218,8 +225,9 @@ function ScrollView:__init__( params )
 	self._axisX = nil -- y-axis motion
 	self._axisY = nil -- x-axis motion
 
-	self._gesture = nil -- pan gesture
 	self._gesture_f = nil -- callback
+	self._panGesture = nil
+	self._pinchGesture = nil
 
 	self._rectBg = nil -- background object, touch area
 
@@ -274,9 +282,15 @@ function ScrollView:__initComplete__()
 
 
 	f = self:createCallback( self._gestureEvent_handler )
-	o = Gesture.newPanGesture( self._rectBg, { touches=1, threshold=0 } )
+	-- o = Gesture.newPanGesture( self._rectBg, { touches=1, threshold=0, id="pan" } )
+	-- o:addEventListener( o.EVENT, f )
+	self._panGesture = o
+
+	o = Gesture.newPinchGesture( self._rectBg, { id="pinch" } )
+	o.test_mode=true
 	o:addEventListener( o.EVENT, f )
-	self._gesture = o
+	self._pinchGesture = o
+
 	self._gesture_f = f
 
 	-- before axis creation
@@ -290,6 +304,10 @@ function ScrollView:__initComplete__()
 	--== Use Setters, after axis motion objects are created
 
 	self.bounceIsActive = tmp.bounceIsActive
+
+	self.minimumZoom = tmp.minimumZoom
+	self.maximumZoom = tmp.maximumZoom
+	self:setZoomScale( tmp.zoomScale )
 
 	self.horizontalScrollEnabled = tmp.horizontalScrollEnabled
 	self.upperHorizontalOffset = tmp.upperHorizontalOffset
@@ -309,10 +327,15 @@ function ScrollView:__undoInitComplete__()
 	self:_removeAxisMotionX()
 	self:_removeAxisMotionY()
 
-	o = self._gesture
+	o = self._panGesture
 	o:removeEventListener( o.EVENT, self._gesture_f )
+	self._panGesture = nil
+
+	o = self._pinchGesture
+	o:removeEventListener( o.EVENT, self._gesture_f )
+	self._pinchGesture = nil
+
 	self._gesture_f = nil
-	self._gesture = nil
 
 	self:_removeScroller()
 
@@ -499,7 +522,44 @@ function ScrollView.__setters:horizontalScrollEnabled( value )
 	-- print( "ScrollView.__setters:horizontalScrollEnabled", value )
 	self._axisX.scrollIsEnabled = value
 end
+
+
+function ScrollView.__getters:maximumZoom()
+	-- print( "ScrollView.__getters:maximumZoom" )
+	return self._maxZoom
 end
+function ScrollView.__setters:maximumZoom( value )
+	-- print( "ScrollView.__setters:maximumZoom", value )
+	assert( type(value)=='number' and value>=0 )
+	--==--
+	self._maxZoom = value
+end
+
+
+function ScrollView.__getters:minimumZoom()
+	-- print( "ScrollView.__getters:minimumZoom" )
+	return self._minZoom
+end
+function ScrollView.__setters:minimumZoom( value )
+	-- print( "ScrollView.__setters:minimumZoom", value )
+	assert( type(value)=='number' and value>=0 )
+	--==--
+	self._minZoom = value
+end
+
+
+function ScrollView.__getters:zoomScale()
+	-- print( "ScrollView.__getters:zoomScale" )
+	return self._zoomScale
+end
+function ScrollView:setZoomScale( value )
+	print( "ScrollView:setZoomScale" )
+	assert( type(value)=='number' and value>=0 )
+	--==--
+	return self._zoomScale
+end
+
+
 
 --== .verticalScrollEnabled
 
@@ -519,6 +579,33 @@ function ScrollView.__setters:verticalScrollEnabled( value )
 	-- print( "ScrollView.__setters:verticalScrollEnabled", value )
 	self._axisY.scrollIsEnabled = value
 end
+
+--== .panGesture
+
+--- get reference to pan gesture. read-only
+--
+-- @within Properties
+-- @function .panGesture
+-- @usage print( widget.panGesture )
+
+function ScrollView.__getters:panGesture()
+	-- print( "ScrollView.__setters:panGesture" )
+	return self._panGesture
+end
+
+--== .pinchGesture
+
+--- get reference to pinch gesture. read-only
+--
+-- @within Properties
+-- @function .pinchGesture
+-- @usage print( widget.pinchGesture )
+
+function ScrollView.__getters:pinchGesture()
+	-- print( "ScrollView.__setters:pinchGesture" )
+	return self._pinchGesture
+end
+
 
 --== .scrollWidth
 
