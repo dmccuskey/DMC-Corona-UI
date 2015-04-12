@@ -729,10 +729,10 @@ function TableView:scrollToRowAt( idx, params )
 
 	if params.time then
 		-- set scroll in motion
-		self._axis_y:scrollToPosition( pos, params )
+		self._axisY:scrollToPosition( pos, params )
 	else
 		self:_unrenderAllTableCells()
-		self._axis_y:scrollToPosition( pos, params )
+		self._axisY:scrollToPosition( pos, params )
 		self:_renderDisplay{ clearAll=false }
 	end
 
@@ -756,7 +756,7 @@ function TableView:_viewportBounds()
 		yMin = nil,
 		yMax = nil,
 	}
-	local o = self._axis_y
+	local o = self._axisY
 	local rM = self._renderMargin
 	if o then
 		bounds.yMin = 0 - o.value - rM
