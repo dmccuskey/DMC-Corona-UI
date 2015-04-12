@@ -65,6 +65,9 @@ local PATCH_STRING_FORMAT = 'string-format'
 local addTablePopPatch, removeTablePopPatch
 local addStringFormatPatch, removeStringFormatPatch
 
+local sfmt = string.format
+local tstr = tostring
+
 
 
 --====================================================================--
@@ -213,6 +216,13 @@ removeTablePopPatch = function()
 end
 
 
+local function printWarning( str, params )
+	local prefix = "WARNING"
+	print( sfmt( "\n\n[%s] %s\n\n", prefix, tstr(str) ) )
+end
+
+
+_G.pwarn = printWarning
 
 --====================================================================--
 --== Patch Facade
