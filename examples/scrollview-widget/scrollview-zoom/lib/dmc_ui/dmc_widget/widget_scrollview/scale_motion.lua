@@ -1,5 +1,5 @@
 --====================================================================--
--- dmc_ui/dmc_widget/widget_scrollview/axis_motion.lua
+-- dmc_ui/dmc_widget/widget_scrollview/scale_motion.lua
 --
 -- Documentation:
 --====================================================================--
@@ -33,7 +33,7 @@ SOFTWARE.
 
 
 --====================================================================--
---== DMC Corona UI : Axis Motion
+--== DMC Corona UI : Scale Motion
 --====================================================================--
 
 
@@ -82,6 +82,7 @@ local ObjectBase = Objects.ObjectBase
 
 local mabs = math.abs
 local mfloor = math.floor
+local mmin = math.min
 local sfmt = string.format
 local tinsert = table.insert
 local tremove = table.remove
@@ -90,91 +91,90 @@ local tstr = tostring
 
 
 --====================================================================--
---== Axis Motion Class
+--== Scale Motion Class
 --====================================================================--
 
 
-local AxisMotion = newClass( ObjectBase, {name="Axis Motion"} )
+local ScaleMotion = newClass( ObjectBase, {name="Scale Motion"} )
 
-StatesMixModule.patch( AxisMotion )
+StatesMixModule.patch( ScaleMotion )
 
 --== Class Constants
 
 -- max number of items for velocity calculation
-AxisMotion.VELOCITY_STACK_LENGTH = 4
+ScaleMotion.VELOCITY_STACK_LENGTH = 4
 -- speed limit
-AxisMotion.VELOCITY_LIMIT = 1
+ScaleMotion.VELOCITY_LIMIT = 1
 
-AxisMotion.DECELERATE_TRANS_TIME = 3000 -- test 1000 / def 1000
-AxisMotion.RESTORE_TRANS_TIME = 400 -- test 1000 / def 400
-AxisMotion.RESTRAINT_TRANS_TIME = 350  -- test 1000 / def 100
-AxisMotion.SCROLLTO_TRANS_TIME = 500  -- test 1000 / def 100
+ScaleMotion.DECELERATE_TRANS_TIME = 3000 -- test 1000 / def 1000
+ScaleMotion.RESTORE_TRANS_TIME = 400 -- test 1000 / def 400
+ScaleMotion.RESTRAINT_TRANS_TIME = 350  -- test 1000 / def 100
+ScaleMotion.SCROLLTO_TRANS_TIME = 500  -- test 1000 / def 100
 
-AxisMotion.SCROLLBACK_FACTOR = 1/3
+ScaleMotion.ZOOMBACK_FACTOR = 1/3
 
-AxisMotion.HIT_UPPER_LIMIT = 'upper_limit_hit'
-AxisMotion.HIT_LOWER_LIMIT = 'lower_limit_hit'
+ScaleMotion.HIT_UPPER_LIMIT = 'upper_limit_hit'
+ScaleMotion.HIT_LOWER_LIMIT = 'lower_limit_hit'
 
 --== State Constants
 
-AxisMotion.STATE_CREATE = 'state_create'
-AxisMotion.STATE_AT_REST = 'state_at_rest'
-AxisMotion.STATE_DECELERATE = 'state_decelerate'
-AxisMotion.STATE_RESTORE = 'state_restore'
-AxisMotion.STATE_RESTRAINT = 'state_restraint'
-AxisMotion.STATE_TOUCH = 'state_touch'
+ScaleMotion.STATE_CREATE = 'state_create'
+ScaleMotion.STATE_AT_REST = 'state_at_rest'
+ScaleMotion.STATE_DECELERATE = 'state_decelerate'
+ScaleMotion.STATE_RESTORE = 'state_restore'
+ScaleMotion.STATE_RESTRAINT = 'state_restraint'
+ScaleMotion.STATE_TOUCH = 'state_touch'
 
 --== Event Constants
 
-AxisMotion.SCROLLING = 'scrolling'
-AxisMotion.SCROLLED = 'scrolled'
+ScaleMotion.WILL_ZOOM = 'will-zoom'
+ScaleMotion.ZOOMING = 'zooming'
+ScaleMotion.DID_ZOOM = 'did-zoom'
 
 
 --======================================================--
 -- Start: Setup DMC Objects
 
-function AxisMotion:__init__( params )
-	-- print( "AxisMotion:__init__" )
+function ScaleMotion:__init__( params )
+	-- print( "ScaleMotion:__init__" )
 	params = params or {}
 	if params.bounceIsActive==nil then params.bounceIsActive = true end
-	if params.length==nil then params.length = 0 end
-	if params.lowerOffset==nil then params.lowerOffset = 0 end
-	if params.scrollbackFactor==nil then params.scrollbackFactor = AxisMotion.SCROLLBACK_FACTOR end
-	if params.scrollIsEnabled==nil then params.scrollIsEnabled = true end
-	if params.scrollLength==nil then params.scrollLength = 0 end
-	if params.upperOffset==nil then params.upperOffset = 0 end
+	if params.zoomScale==nil then params.zoomScale=1.0 end
+	if params.zoomBackLimit==nil then params.zoomBackLimit = 0.1 end
 
 	self:superCall( '__init__', params )
 	--==--
 
 	-- save params for later
-	self._ax_tmp_params = params -- tmp
-
-	assert( params.callback )
+	self._sm_tmp_params = params -- tmp
 
 	--== Create Properties ==--
 
-	-- value is current position, eg x/y
-	self._value = 0
+	-- value is current scale
+	self._scale = 1.0
+	self._scaleBase = 1.0 -- scale factor
 
-	self._length = 0
-	self._scrollLength = 0
+	self._minZoom = nil
+	self._maxZoom = nil
+	self._zoomScale = -1
+	self._isZooming = false
 
-	self._lowerOffset = 0
-	self._upperOffset = 0
+	-- are we scrolling
+	self._isMoving = false
+	self._zoomIsActive = false
 
-	self._scrollbackFactor = 0
-	self._scrollbackLimit = 0
+	self._zoomBackLimit = -1 -- << test 1 / def 3
+	-- self._zoomBackFactor = value
 
-	self._id = params.id
 	self._callback = params.callback
 
+	-- flag used during touch sequence
 	self._didBegin = false
 
 	--== Internal Properties
 
 	-- eg, HIT_UPPER_LIMIT, HIT_LOWER_LIMIT
-	self._scrollLimit = nil
+	self._scaleLimit = nil
 
 	-- last Touch Event, used for calculating deltas
 	self._tmpTouchEvt = nil
@@ -188,38 +188,35 @@ function AxisMotion:__init__( params )
 
 	self._enterFrameIterator = nil
 
-	self._bounceIsActive = false
+	self._bounceIsActive = params.bounceIsActive
 	self._alwaysBounce = false
-	self._scrollEnabled = false
 
-	self:setState( AxisMotion.STATE_CREATE )
+	self:setState( ScaleMotion.STATE_CREATE )
 end
 
 --== createView
 
-function AxisMotion:__initComplete__()
-	-- print( "AxisMotion:__initComplete__" )
+function ScaleMotion:__initComplete__()
+	-- print( "ScaleMotion:__initComplete__" )
 	self:superCall( '__initComplete__' )
 	--==--
 
-	local tmp = self._ax_tmp_params
+	local tmp = self._sm_tmp_params
 
 	--== Use Setters
 	self.bounceIsActive = tmp.bounceIsActive
-	self.length = tmp.length
-	self.lowerOffset = tmp.lowerOffset
-	self.scrollIsEnabled = tmp.scrollIsEnabled
-	self.scrollLength = tmp.scrollLength
-	self.scrollbackFactor = tmp.scrollbackFactor
-	self.upperOffset = tmp.upperOffset
+	self.maximumZoom = tmp.maximumZoom
+	self.minimumZoom = tmp.minimumZoom
+	self.zoomScale = tmp.zoomScale
+	self.zoomBackLimit = tmp.zoomBackLimit
 
-	self._ax_tmp_params = nil
+	self._sm_tmp_params = nil
 
-	self:gotoState( AxisMotion.STATE_AT_REST )
+	self:gotoState( ScaleMotion.STATE_AT_REST )
 end
 
-function AxisMotion:__undoInitComplete__()
-	-- print( "AxisMotion:__undoInitComplete__" )
+function ScaleMotion:__undoInitComplete__()
+	-- print( "ScaleMotion:__undoInitComplete__" )
 	--==--
 	self:superCall( '__undoInitComplete__' )
 end
@@ -233,96 +230,93 @@ end
 --== Public Methods
 
 
+--======================================================--
+-- Getters/Setters
+
 -- whether to bounce on constraint
-function AxisMotion.__getters:bounceIsActive()
+function ScaleMotion.__getters:bounceIsActive()
 	return self._bounceIsActive
 end
-function AxisMotion.__setters:bounceIsActive( value )
+function ScaleMotion.__setters:bounceIsActive( value )
 	assert( type(value)=='boolean' )
 	--==--
 	self._bounceIsActive = value
 end
 
 
--- this is the length of the view port
-function AxisMotion.__getters:length()
-	return self._length
+function ScaleMotion.__getters:maximumZoom()
+	return self._maxZoom
 end
-function AxisMotion.__setters:length( value )
-	assert( type(value)=='number' and value > 0 )
+function ScaleMotion.__setters:maximumZoom( value )
+	assert( value==nil or (type(value)=='number' and value>0 ) )
 	--==--
-	self._length = value
-	self:_setScrollbackLimit()
+	self._maxZoom = value
+	self:_updateZoomIsActive()
 end
 
 
-function AxisMotion.__getters:lowerOffset()
-	return self._lowerOffset
+function ScaleMotion.__getters:minimumZoom()
+	return self._minZoom
 end
-function AxisMotion.__setters:lowerOffset( value )
-	assert( type(value)=='number' )
+function ScaleMotion.__setters:minimumZoom( value )
+	-- print("ScaleMotion.__setters:minimumZoom", value)
+	assert( value==nil or (type(value)=='number' and value>0 ) )
 	--==--
-	self._lowerOffset = value
+	self._minZoom = value
+	self:_updateZoomIsActive()
 end
 
 
 -- decimal fraction (1/3)
-function AxisMotion.__setters:scrollbackFactor( value )
-	self._scrollbackFactor = value
-	self:_setScrollbackLimit()
-end
+-- function ScaleMotion.__setters:scrollbackFactor( value )
+-- 	self._zoomBackFactor = value
+-- 	self:_setZoomBackLimit()
+-- end
 
 
-function AxisMotion.__getters:scrollIsEnabled()
-	return self._scrollEnabled
-end
-function AxisMotion.__setters:scrollIsEnabled( value )
-	assert( type(value)=='boolean' )
-	--==--
-	self._scrollEnabled = value
-end
-
-
--- this is the maximum dimension of the scroller
-function AxisMotion.__getters:scrollLength()
-	return self._scrollLength
-end
-function AxisMotion.__setters:scrollLength( value )
-	assert( type(value)=='number' and value >= 0 )
-	--==--
-	self._scrollLength = value
-end
-
-
-function AxisMotion.__getters:upperOffset()
-	return self._upperOffset
-end
-function AxisMotion.__setters:upperOffset( value )
+function ScaleMotion.__setters:zoomBackLimit( value )
 	assert( type(value)=='number' )
 	--==--
-	self._upperOffset = value
+	self._zoomBackLimit = value
 end
 
 
--- current position/location
-function AxisMotion.__getters:value()
-	return self._value
+function ScaleMotion.__getters:zoomIsActive()
+	return self._zoomIsActive
 end
 
 
-function AxisMotion:scrollToPosition( pos, params )
-	-- print( "AxisMotion:scrollToPosition", pos )
+function ScaleMotion.__getters:zoomScale()
+	return self._scale
+end
+
+
+--======================================================--
+-- Methods
+
+function ScaleMotion:setZoomScale( scale, params )
+	-- print( "ScaleMotion:setZoomScale", scale )
+	assert( type(scale)=='number' )
+	if not self._zoomIsActive then return end
 	params = params or {}
 	-- params.onComplete=params.onComplete
-	if params.time==nil then params.time=AxisMotion.SCROLLTO_TRANS_TIME end
-	if params.limitIsActive==nil then params.limitIsActive=false end
+	if params.time==nil then params.time=ScaleMotion.SCROLLTO_TRANS_TIME end
 	--==--
+	if scale < self._minZoom then
+		scale = self._minZoom
+		print("NOTICE: scale being reset to ", scale )
+	elseif scale > self._maxZoom then
+		scale = self._maxZoom
+		print("NOTICE: scale being reset to ", scale )
+	end
+
 	local eFI
 
 	if params.time==0 then
 
+		-- this will be run once
 		eFI = function()
-			self._value = pos
+			self._scale = scale
 			self._isMoving=false
 			self._hasMoved=true
 			self._enterFrameIterator=nil
@@ -332,30 +326,28 @@ function AxisMotion:scrollToPosition( pos, params )
 	else
 		local time = params.time
 		local ease_f = easingx.easeOut
-		local val = self._value
+		local val = self._scale
+		local delta = mmin( scale - val )
 		local startEvt = {
 			time=system.getTimer()
 		}
 		self._isMoving = true
-		local delta = self._value + pos
-		if params.limitIsActive then
-			local velocity = mabs( delta/time )
-			if velocity > AxisMotion.VELOCITY_LIMIT then
-				time = mfloor( mabs(delta/AxisMotion.VELOCITY_LIMIT) )
-			end
-		end
+
+		self:_dispatchBeginZoom()
 
 		eFI = function( e )
 			local deltaT = e.time - startEvt.time
 			local deltaV = ease_f( deltaT, time, val, delta )
 
 			if deltaT < time then
-				self._value = deltaV
+				self._scale = deltaV
 			else
 				self._isMoving = false
 				self._hasMoved = true
-				self._value = delta
+				self._scale = scale
 				self._enterFrameIterator=nil
+				self:_dispatchEndZoom()
+
 				if params.onComplete then params.onComplete() end
 			end
 		end
@@ -373,33 +365,30 @@ end
 --== Private Methods
 
 
--- set how far table can be scrolled against a boundary limit
---
-function AxisMotion:_setScrollbackLimit()
-	self._scrollbackLimit = self._length * self._scrollbackFactor
-end
-
-
 -- check if position is at a limit
 --
-function AxisMotion:_checkScrollBounds( value )
-	-- print( "AxisMotion:_checkScrollBounds", value )
-	local calcs = { min=0, max=0 }
+function ScaleMotion:_checkScaleBounds( value )
+	-- print( "ScaleMotion:_checkScaleBounds", value )
+	local calcs = { min=1, max=1 }
 
-	if self._scrollEnabled and value then
-		local upper = 0 + self._upperOffset
-		local lower = (self._length-self._scrollLength) - self._lowerOffset
+	if self._zoomIsActive and value then
+		local upper = self._maxZoom
+		local lower = self._minZoom
 
-		calcs.min=upper
-		calcs.max=lower
+		calcs.max=upper
+		calcs.min=lower
 
 		if value > upper then
-			self._scrollLimit = AxisMotion.HIT_UPPER_LIMIT
+			self._scaleLimit = ScaleMotion.HIT_UPPER_LIMIT
+			calcs.overage=mabs(value-upper)
 		elseif value < lower then
-			self._scrollLimit = AxisMotion.HIT_LOWER_LIMIT
+			self._scaleLimit = ScaleMotion.HIT_LOWER_LIMIT
+			calcs.overage=mabs(value-lower)
 		else
-			self._scrollLimit = nil
+			self._scaleLimit = nil
+			calcs.overage=0
 		end
+
 	end
 
 	return calcs
@@ -408,52 +397,66 @@ end
 
 -- ensure position stays within boundaries
 --
-function AxisMotion:_constrainPosition( value, delta )
-	-- print( "AxisMotion:_constrainPosition", value, delta )
+function ScaleMotion:_constrainScale( value )
+	-- print( "ScaleMotion:_constrainScale", value )
 	local isBounceActive = self._bounceIsActive
-	local LIMIT = self._scrollbackLimit
-	local scrollLimit, newVal, calcs, s, factor
+	local LIMIT = self._zoomBackLimit
+	local scrollLimit, calcs, factor
 
-	newVal = value + delta
-	calcs = self:_checkScrollBounds( newVal )
-	scrollLimit = self._scrollLimit -- after check bounds
+	calcs = self:_checkScaleBounds( value )
+	scrollLimit = self._scaleLimit -- after check bounds
 
-	if scrollLimit==AxisMotion.HIT_UPPER_LIMIT then
+	if scrollLimit==ScaleMotion.HIT_UPPER_LIMIT then
 		if not isBounceActive then
-			newVal=calcs.min
+			value=calcs.max
 		else
-			s = newVal-self._upperOffset
-			factor = 1 - (s/LIMIT)
-			if factor < 0 then factor = 0 end
-			newVal = value + ( delta * factor )
-			-- check bounds again
-			self:_checkScrollBounds( newVal )
+			local overage = calcs.overage
+			if overage >= LIMIT then
+				overage = LIMIT
+			else
+				factor = 1 - (overage/LIMIT)
+				if factor < 0 then factor = 0 end
+				overage = overage * factor
+			end
+			value = calcs.max + overage
+			self:_checkScaleBounds( value )
 		end
 
-	elseif scrollLimit==AxisMotion.HIT_LOWER_LIMIT then
+	elseif scrollLimit==ScaleMotion.HIT_LOWER_LIMIT then
 		if not isBounceActive then
-			newVal=calcs.max
+			value=calcs.min
 		else
-			s = (self._length - self._scrollLength) - newVal - self._lowerOffset
-			factor = 1 - (s/LIMIT)
-			if factor < 0 then factor = 0 end
-			newVal = value + ( delta * factor )
-			-- check bounds again
-			self:_checkScrollBounds( newVal )
+			local overage = calcs.overage
+			if overage >= LIMIT then
+				overage = LIMIT
+			else
+				factor = 1 - (overage/LIMIT)
+				if factor < 0 then factor = 0 end
+				overage = overage * factor
+			end
+			value = calcs.min - overage
+			self:_checkScaleBounds( value )
 		end
 
 	end
 
-	return newVal
+	return value
 end
+
+
+-- set how far much view can be scaled against a boundary limit
+--
+-- function ScaleMotion:_setZoomBackLimit()
+-- 	self._zoomBackLimit = self._length * self._zoomBackFactor
+-- end
 
 
 -- clamp max velocity, calculate average velocity
 --
-function AxisMotion:_updateVelocity( value )
-	-- print( "AxisMotion:_updateVelocity", value )
-	local VEL_STACK_LENGTH = AxisMotion.VELOCITY_STACK_LENGTH
-	local LIMIT = AxisMotion.VELOCITY_LIMIT
+function ScaleMotion:_updateVelocity( value )
+	-- print( "ScaleMotion:_updateVelocity", value )
+	local VEL_STACK_LENGTH = ScaleMotion.VELOCITY_STACK_LENGTH
+	local LIMIT = ScaleMotion.VELOCITY_LIMIT
 	local _mabs = mabs
 	local velStack = self._velocityStack
 	local vel = self._velocity
@@ -488,13 +491,51 @@ function AxisMotion:_updateVelocity( value )
 end
 
 
+function ScaleMotion:_updateZoomIsActive()
+	self._zoomIsActive = (
+		type(self._maxZoom)=='number' and
+		self._maxZoom > 0 and
+		type(self._minZoom)=='number' and
+		self._minZoom > 0 and
+		self._minZoom < self._maxZoom
+	)
+end
+
+
+--======================================================--
+-- Event Dispatch
+
+function ScaleMotion:_dispatchBeginZoom()
+	self._callback{
+		id=self._id,
+		target=self,
+		state = ScaleMotion.WILL_ZOOM,
+		scale = self._scale,
+		velocity = 0
+	}
+end
+
+function ScaleMotion:_dispatchEndZoom()
+	if self._hasMoved then
+		self._callback{
+			id=self._id,
+			target=self,
+			state = ScaleMotion.DID_ZOOM,
+			scale = self._scale,
+			velocity = 0
+		}
+		self._hasMoved = false
+	end
+end
+
+
 
 --====================================================================--
 --== Event Handlers
 
 
-function AxisMotion:enterFrame( event )
-	-- print( "AxisMotion:enterFrame" )
+function ScaleMotion:enterFrame( event )
+	-- print( "ScaleMotion:enterFrame" )
 
 	local f = self._enterFrameIterator
 
@@ -509,34 +550,23 @@ function AxisMotion:enterFrame( event )
 			local vel = self._velocity
 			self._callback{
 				id=self._id,
-				state=AxisMotion.SCROLLING,
-				value=self._value,
+				target=self,
+				state=ScaleMotion.ZOOMING,
+				scale=self._scale,
 				velocity = vel.value * vel.vector,
 			}
 			self._hasMoved = true
-		end
-
-		-- look at "full" 'enterFrameIterator' in case value
-		-- was changed during last call to interator
-		if not self._enterFrameIterator and self._hasMoved then
-			self._callback{
-				id=self._id,
-				state = AxisMotion.SCROLLED,
-				value = self._value,
-				velocity = 0
-			}
-			self._hasMoved = false
 		end
 
 	end
 end
 
 
-function AxisMotion:touch( event )
-	-- print( "AxisMotion:touch", event.phase, event.value )
+function ScaleMotion:touch( event )
+	-- print( "ScaleMotion:touch", event.phase, event.value )
 	local phase = event.phase
 
-	if not self._scrollEnabled then return end
+	if not self._zoomIsActive then return end
 
 	local evt = {
 		-- make a "copy" of the event
@@ -558,7 +588,10 @@ function AxisMotion:touch( event )
 
 		self._tmpTouchEvt = evt
 		self._didBegin = true
-		self:gotoState( AxisMotion.STATE_TOUCH )
+		self._scaleBase = self._scale
+		self:gotoState( ScaleMotion.STATE_TOUCH )
+
+		self:_dispatchBeginZoom()
 
 	end
 
@@ -567,7 +600,8 @@ function AxisMotion:touch( event )
 	if phase == 'moved' then
 
 		local tmpTouchEvt = self._tmpTouchEvt
-		local constrain = AxisMotion._constrainPosition
+		local constrain = ScaleMotion._constrainScale
+		local scale = event.value
 
 		local deltaVal = event.value - tmpTouchEvt.value
 		local deltaT = event.time - tmpTouchEvt.time
@@ -575,13 +609,13 @@ function AxisMotion:touch( event )
 
 		self._isMoving = true
 
-		--== Calculate new position/velocity
+		--== Calculate new scale/velocity
 
-		oldVal = self._value
-		newVal = constrain( self, oldVal, deltaVal )
+		oldVal = self._scale
+		newVal = constrain( self, self._scaleBase * scale )
 		self:_updateVelocity( (oldVal-newVal)/deltaT )
 
-		self._value = newVal
+		self._scale = newVal
 		self._tmpTouchEvt = evt
 
 	elseif phase=='ended' or phase=='cancelled' then
@@ -602,11 +636,11 @@ end
 --== State Machine
 
 
-function AxisMotion:_getNextState( params )
-	-- print( "AxisMotion:_getNextState" )
+function ScaleMotion:_getNextState( params )
+	-- print( "ScaleMotion:_getNextState" )
 	params = params or {}
 	--==--
-	local scrollLimit = self._scrollLimit
+	local scrollLimit = self._scaleLimit
 	local velocity = self._velocity
 	local isBounceActive = self._bounceIsActive
 	local s, p -- state, params
@@ -614,19 +648,19 @@ function AxisMotion:_getNextState( params )
 	-- print( "gNS>>", velocity.value, scrollLimit, isBounceActive )
 
 	if velocity.value > 0 and not scrollLimit then
-		s = AxisMotion.STATE_DECELERATE
+		s = ScaleMotion.STATE_DECELERATE
 		p = { event=params.event }
 
 	elseif velocity.value <= 0 and scrollLimit and isBounceActive then
-		s = AxisMotion.STATE_RESTORE
+		s = ScaleMotion.STATE_RESTORE
 		p = { event=params.event }
 
 	elseif velocity.value > 0 and scrollLimit and isBounceActive then
-		s = AxisMotion.STATE_RESTRAINT
+		s = ScaleMotion.STATE_RESTRAINT
 		p = { event=params.event }
 
 	else
-		s = AxisMotion.STATE_AT_REST
+		s = ScaleMotion.STATE_AT_REST
 		p = { event=params.event }
 
 	end
@@ -637,22 +671,22 @@ end
 
 --== State Create
 
-function AxisMotion:state_create( next_state, params )
-	-- print( "AxisMotion:state_create: >> ", next_state )
+function ScaleMotion:state_create( next_state, params )
+	-- print( "ScaleMotion:state_create: >> ", next_state )
 
-	if next_state == AxisMotion.STATE_AT_REST then
+	if next_state == ScaleMotion.STATE_AT_REST then
 		self:do_state_at_rest( params )
 
 	else
-		pwarn( sfmt( "AxisMotion:state_create unknown trans '%s'", tstr( next_state )))
+		pwarn( sfmt( "ScaleMotion:state_create unknown trans '%s'", tstr( next_state )))
 	end
 end
 
 
 --== State At-Rest
 
-function AxisMotion:do_state_at_rest( params )
-	-- print( "AxisMotion:do_state_at_rest", params )
+function ScaleMotion:do_state_at_rest( params )
+	-- print( "ScaleMotion:do_state_at_rest", params )
 	params = params or {}
 	--==--
 	local vel = self._velocity
@@ -662,17 +696,18 @@ function AxisMotion:do_state_at_rest( params )
 	self._enterFrameIterator = nil
 	Runtime:removeEventListener( 'enterFrame', self )
 
-	self:setState( AxisMotion.STATE_AT_REST )
+	self:setState( ScaleMotion.STATE_AT_REST )
+	self:_dispatchEndZoom()
 end
 
-function AxisMotion:state_at_rest( next_state, params )
-	-- print( "AxisMotion:state_at_rest: >> ", next_state )
+function ScaleMotion:state_at_rest( next_state, params )
+	-- print( "ScaleMotion:state_at_rest: >> ", next_state )
 
-	if next_state == AxisMotion.STATE_TOUCH then
+	if next_state == ScaleMotion.STATE_TOUCH then
 		self:do_state_touch( params )
 
 	else
-		pwarn( sfmt( "AxisMotion:state_at_rest unknown trans '%s'", tstr( next_state )))
+		pwarn( sfmt( "ScaleMotion:state_at_rest unknown trans '%s'", tstr( next_state )))
 	end
 
 end
@@ -680,8 +715,8 @@ end
 
 --== State Touch
 
-function AxisMotion:do_state_touch( params )
-	-- print( "AxisMotion:do_state_touch" )
+function ScaleMotion:do_state_touch( params )
+	-- print( "ScaleMotion:do_state_touch" )
 	-- params = params or {}
 	-- --==--
 
@@ -698,26 +733,26 @@ function AxisMotion:do_state_touch( params )
 	self._enterFrameIterator = enterFrameFunc1
 
 	-- set current state
-	self:setState( AxisMotion.STATE_TOUCH )
+	self:setState( ScaleMotion.STATE_TOUCH )
 end
 
-function AxisMotion:state_touch( next_state, params )
-	-- print( "AxisMotion:state_touch: >> ", next_state )
+function ScaleMotion:state_touch( next_state, params )
+	-- print( "ScaleMotion:state_touch: >> ", next_state )
 
-	if next_state == AxisMotion.STATE_RESTORE then
+	if next_state == ScaleMotion.STATE_RESTORE then
 		self:do_state_restore( params )
 
-	elseif next_state == AxisMotion.STATE_RESTRAINT then
+	elseif next_state == ScaleMotion.STATE_RESTRAINT then
 		self:do_state_restraint( params )
 
-	elseif next_state == AxisMotion.STATE_AT_REST then
+	elseif next_state == ScaleMotion.STATE_AT_REST then
 		self:do_state_at_rest( params )
 
-	elseif next_state == AxisMotion.STATE_DECELERATE then
+	elseif next_state == ScaleMotion.STATE_DECELERATE then
 		self:do_state_decelerate( params )
 
 	else
-		print( sfmt( "AxisMotion:state_touch unknown trans '%s'", tstr( next_state )))
+		print( sfmt( "ScaleMotion:state_touch unknown trans '%s'", tstr( next_state )))
 	end
 
 end
@@ -725,12 +760,12 @@ end
 
 --== State Decelerate
 
-function AxisMotion:do_state_decelerate( params )
-	-- print( "AxisMotion:do_state_decelerate" )
+function ScaleMotion:do_state_decelerate( params )
+	-- print( "ScaleMotion:do_state_decelerate" )
 	params = params or {}
 	--==--
-	local TIME = AxisMotion.DECELERATE_TRANS_TIME
-	local constrain = AxisMotion._constrainPosition
+	local TIME = ScaleMotion.DECELERATE_TRANS_TIME
+	local constrain = ScaleMotion._constrainScale
 	local ease_f = easingx.easeOutQuad
 	local _mabs = mabs
 
@@ -742,10 +777,10 @@ function AxisMotion:do_state_decelerate( params )
 	self._isMoving = true
 
 	local enterFrameFunc = function( e )
-		-- print( "AxisMotion: enterFrameFunc: do_state_decelerate" )
+		-- print( "ScaleMotion: enterFrameFunc: do_state_decelerate" )
 
 		local frameEvt = self._tmpFrameEvent
-		local scrollLimit = self._scrollLimit
+		local scrollLimit = self._scaleLimit
 
 		local deltaStart = e.time - startEvt.time
 		local deltaFrame = e.time - frameEvt.time
@@ -758,17 +793,17 @@ function AxisMotion:do_state_decelerate( params )
 
 		--== Action
 
-		oldVal = self._value
+		oldVal = self._scale
 		newVal = constrain( self, oldVal, deltaVal )
-		self._value = newVal
+		self._scale = newVal
 
 		if vel.value > 0 and scrollLimit then
 			-- hit edge while moving
-			self:gotoState( AxisMotion.STATE_RESTRAINT, { event=e } )
+			self:gotoState( ScaleMotion.STATE_RESTRAINT, { event=e } )
 
 		elseif deltaStart >= TIME or _mabs( newVal-oldVal ) < 1 then
 			-- over time or movement too small to see (pixel)
-			self:gotoState( AxisMotion.STATE_AT_REST )
+			self:gotoState( ScaleMotion.STATE_AT_REST )
 
 		end
 
@@ -782,12 +817,12 @@ function AxisMotion:do_state_decelerate( params )
 	self._enterFrameIterator = enterFrameFunc
 
 	-- set current state
-	self:setState( AxisMotion.STATE_DECELERATE )
+	self:setState( ScaleMotion.STATE_DECELERATE )
 
 end
 
-function AxisMotion:state_decelerate( next_state, params )
-	-- print( "AxisMotion:state_decelerate: >> ", next_state )
+function ScaleMotion:state_decelerate( next_state, params )
+	-- print( "ScaleMotion:state_decelerate: >> ", next_state )
 
 	if next_state == self.STATE_TOUCH then
 		self:do_state_touch( params )
@@ -799,7 +834,7 @@ function AxisMotion:state_decelerate( next_state, params )
 		self:do_state_restraint( params )
 
 	else
-		print( "WARNING :: AxisMotion:state_decelerate > " .. tostring( next_state ) )
+		print( "WARNING :: ScaleMotion:state_decelerate > " .. tostring( next_state ) )
 	end
 
 end
@@ -807,32 +842,32 @@ end
 
 --== State Restore
 
-function AxisMotion:do_state_restore( params )
-	-- print( "AxisMotion:do_state_restore" )
+function ScaleMotion:do_state_restore( params )
+	-- print( "ScaleMotion:do_state_restore" )
 	params = params or {}
 	--==--
-	local TIME = AxisMotion.RESTORE_TRANS_TIME
-	local constrain = AxisMotion._constrainPosition
+	local TIME = ScaleMotion.RESTORE_TRANS_TIME
+	local constrain = ScaleMotion._constrainScale
 	local ease_f = easingx.easeOut
 
 	local startEvt = params.event
-	local val = self._value
+	local val = self._scale
 	local vel = self._velocity
 
 	local delta, offset
 
 	-- calculate restore distance
-	if self._scrollLimit == AxisMotion.HIT_UPPER_LIMIT then
-		offset = self._upperOffset
+	if self._scaleLimit == ScaleMotion.HIT_UPPER_LIMIT then
+		offset = self._maxZoom
 	else
-		offset = (self._length - self._scrollLength - self._lowerOffset)
+		offset = self._minZoom
 	end
 	delta = offset-val
 
 	self._isMoving = true
 
 	local enterFrameFunc = function( e )
-		-- print( "AxisMotion: enterFrameFunc: do_state_restore " )
+		-- print( "ScaleMotion: enterFrameFunc: do_state_restore " )
 
 		--== Calculation
 
@@ -842,10 +877,10 @@ function AxisMotion:do_state_restore( params )
 		--== Action
 
 		if deltaT < TIME then
-			self._value = deltaV
+			self._scale = deltaV
 		else
-			self._value = offset
-			self:gotoState( AxisMotion.STATE_AT_REST )
+			self._scale = offset
+			self:gotoState( ScaleMotion.STATE_AT_REST )
 		end
 	end
 
@@ -857,20 +892,20 @@ function AxisMotion:do_state_restore( params )
 	self._enterFrameIterator = enterFrameFunc
 
 	-- set current state
-	self:setState( AxisMotion.STATE_RESTORE )
+	self:setState( ScaleMotion.STATE_RESTORE )
 end
 
-function AxisMotion:state_restore( next_state, params )
-	-- print( "AxisMotion:state_restore: >> ", next_state )
+function ScaleMotion:state_restore( next_state, params )
+	-- print( "ScaleMotion:state_restore: >> ", next_state )
 
-	if next_state == AxisMotion.STATE_TOUCH then
+	if next_state == ScaleMotion.STATE_TOUCH then
 		self:do_state_touch( params )
 
-	elseif next_state == AxisMotion.STATE_AT_REST then
+	elseif next_state == ScaleMotion.STATE_AT_REST then
 		self:do_state_at_rest( params )
 
 	else
-		print( "WARNING :: AxisMotion:state_restore > " .. tostring( next_state ) )
+		print( "WARNING :: ScaleMotion:state_restore > " .. tostring( next_state ) )
 	end
 
 end
@@ -881,12 +916,12 @@ end
 -- when object has velocity and hit limit
 -- we constrain its motion away from limit
 --
-function AxisMotion:do_state_restraint( params )
-	-- print( "AxisMotion:do_state_restraint" )
+function ScaleMotion:do_state_restraint( params )
+	-- print( "ScaleMotion:do_state_restraint" )
 	params = params or {}
 	--==--
-	local TIME = AxisMotion.RESTRAINT_TRANS_TIME
-	local constrain = AxisMotion._constrainPosition
+	local TIME = ScaleMotion.RESTRAINT_TRANS_TIME
+	local constrain = ScaleMotion._constrainScale
 	local ease_f = easingx.easeOut
 	local _mabs = mabs
 
@@ -901,7 +936,7 @@ function AxisMotion:do_state_restraint( params )
 	self._isMoving = true
 
 	local enterFrameFunc = function( e )
-		-- print( "AxisMotion: enterFrameFunc: do_state_restraint" )
+		-- print( "ScaleMotion: enterFrameFunc: do_state_restraint" )
 
 		local frameEvt = self._tmpFrameEvent
 
@@ -916,13 +951,13 @@ function AxisMotion:do_state_restraint( params )
 
 		--== Action
 
-		oldVal = self._value
+		oldVal = self._scale
 		newVal = constrain( self, oldVal, deltaVal )
-		self._value = newVal
+		self._scale = newVal
 
 		if deltaStart >= TIME or _mabs( newVal-oldVal ) < 1 then
 			vel.value, vel.vector = 0, 0
-			self:gotoState( AxisMotion.STATE_RESTORE, { event=e } )
+			self:gotoState( ScaleMotion.STATE_RESTORE, { event=e } )
 
 		end
 
@@ -936,11 +971,11 @@ function AxisMotion:do_state_restraint( params )
 	self._enterFrameIterator = enterFrameFunc
 
 	-- set current state
-	self:setState( AxisMotion.STATE_RESTRAINT )
+	self:setState( ScaleMotion.STATE_RESTRAINT )
 end
 
-function AxisMotion:state_restraint( next_state, params )
-	-- print( "AxisMotion:state_restraint: >> ", next_state )
+function ScaleMotion:state_restraint( next_state, params )
+	-- print( "ScaleMotion:state_restraint: >> ", next_state )
 
 	if next_state == self.STATE_TOUCH then
 		self:do_state_touch( params )
@@ -949,7 +984,7 @@ function AxisMotion:state_restraint( next_state, params )
 		self:do_state_restore( params )
 
 	else
-		print( "WARNING :: AxisMotion:state_restraint > " .. tostring( next_state ) )
+		print( "WARNING :: ScaleMotion:state_restraint > " .. tostring( next_state ) )
 	end
 
 end
@@ -957,4 +992,4 @@ end
 
 
 
-return AxisMotion
+return ScaleMotion
