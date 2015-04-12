@@ -174,7 +174,7 @@ function Scroller.__getters:x( value )
 	return ( self.view.x - self._x_offset )
 end
 function Scroller.__setters:x( value )
-	-- print( "Scroller.__setters:x" )
+	-- print( "Scroller.__setters:x", value )
 	self.view.x = ( value + self._x_offset )
 end
 function Scroller.__getters:y( value )
