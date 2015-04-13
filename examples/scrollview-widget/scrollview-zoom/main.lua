@@ -104,18 +104,19 @@ local delegate = {
 
 
 --== Create ScrollView
+local w, h = 200, 300
 
 local widget = dUI.newScrollView{
-	width=100,
-	height=200,
-	scrollWidth=150,
-	scrollHeight=300,
+	width=w,
+	height=h,
+	scrollWidth=300,
+	scrollHeight=400,
 	delegate=delegate
 }
-widget.x, widget.y = H_CENTER/2, V_CENTER/2
+widget.x, widget.y = H_CENTER-w/2, V_CENTER-h/2
 
 widget.minimumZoom=0.5
-widget.maximumZoom=2.0
+widget.maximumZoom=1.2
 
 
 --== Create our object to display
@@ -130,26 +131,13 @@ widget.scroller:insert( view )
 
 
 
-
 tdelay( 500, function()
-	print("start")
+	print("Main:start")
 	local function callback()
 		print( "here in motion callback" )
 	end
 	widget:setContentPosition{
-		x=-10, y=0, onComplete=callback
+		x=-40, y=0, onComplete=callback
 	}
 end)
 
-tdelay( 1500, function()
-	print("start 2")
-	-- widget:setZoomScale( 0.2 )
-end)
-
-
--- tdelay( 8000, function()
--- 	print("start 3")
--- 	widget.horizontalScrollEnabled = true
--- 	widget.upperVerticalOffset = -10
--- 	widget.bounceIsActive = true
--- end)

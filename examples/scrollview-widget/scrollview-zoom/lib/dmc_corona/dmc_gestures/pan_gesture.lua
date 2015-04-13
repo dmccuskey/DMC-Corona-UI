@@ -271,6 +271,56 @@ function PanGesture:_do_reset()
 end
 
 
+--======================================================--
+--== Multitouch Event Methods
+
+
+--[[
+function PanGesture:_createMultitouchEvent( params )
+	-- print( "PanGesture:_createMultitouchEvent" )
+	-- update to our "starting" touch
+	params = params or {}
+	--==--
+	local me = Continuous._createMultitouchEvent( self, params )
+
+	local pos = self:_calculateCentroid( self._touches )
+	me.xStart=pos.x
+	me.yStart=pos.y
+	me.x=pos.x
+	me.y=pos.y
+
+	return me
+end
+--]]
+
+
+--[[
+function PanGesture:_updateMultitouchEvent( me, params )
+	-- print( "PanGesture:_updateMultitouchEvent" )
+	me = Continuous._updateMultitouchEvent( self, me, params )
+
+	local pos = self:_calculateCentroid( self._touches )
+	me.x, me.y = pos.x, pos.y
+
+	return me
+end
+--]]
+
+
+--[[
+function PanGesture:_endMultitouchEvent( me, params )
+	-- print( "PanGesture:_endMultitouchEvent" )
+	me = Continuous._endMultitouchEvent( self, me, params )
+
+	local pos = self:_calculateCentroid( self._touches )
+	me.x, me.y = pos.x, pos.y
+
+	return me
+end
+--]]
+
+
+
 
 --====================================================================--
 --== Event Handlers

@@ -154,11 +154,23 @@ function AxisMotion:__init__( params )
 
 	--== Create Properties ==--
 
+	self._id = params.id
+	self._callback = params.callback
+
 	-- value is current position, eg x/y
 	self._value = 0
 
+	-- view port size
 	self._length = 0
+	-- actual scroller size (at 1.0)
 	self._scrollLength = 0
+	-- current scale
+	self._scale = 1.0
+	-- scroller size at scale
+	self._scaledScrollLength = 0
+	-- reference point at scale 1.0 (eg, x,y)
+	self._refPoint = nil
+	self._location = 0 -- x/y position, used for offset
 
 	self._lowerOffset = 0
 	self._upperOffset = 0
@@ -166,8 +178,6 @@ function AxisMotion:__init__( params )
 	self._scrollbackFactor = 0
 	self._scrollbackLimit = 0
 
-	self._id = params.id
-	self._callback = params.callback
 
 	self._didBegin = false
 
@@ -256,6 +266,13 @@ function AxisMotion.__setters:length( value )
 end
 
 
+function AxisMotion.__setters:location( value )
+	assert( type(value)=='number' )
+	--==--
+	self._location = value
+end
+
+
 function AxisMotion.__getters:lowerOffset()
 	return self._lowerOffset
 end
@@ -263,6 +280,17 @@ function AxisMotion.__setters:lowerOffset( value )
 	assert( type(value)=='number' )
 	--==--
 	self._lowerOffset = value
+end
+
+
+function AxisMotion.__setters:scale( value )
+	-- print("AxisMotion.__setters:scale", value )
+	self._scale = value
+	local refPoint = self._refPoint
+	if refPoint~=nil then
+		self._value = self._tmpTouchEvt.value - refPoint*value
+	end
+	self:_setScaledScrollLength()
 end
 
 
@@ -284,6 +312,16 @@ end
 
 
 -- this is the maximum dimension of the scroller
+function AxisMotion.__getters:scaledScrollLength()
+	return self._scaledScrollLength
+end
+
+function AxisMotion:_setScaledScrollLength()
+	self._scaledScrollLength = self._scrollLength * self._scale
+end
+
+
+-- this is the maximum dimension of the scroller
 function AxisMotion.__getters:scrollLength()
 	return self._scrollLength
 end
@@ -291,6 +329,7 @@ function AxisMotion.__setters:scrollLength( value )
 	assert( type(value)=='number' and value >= 0 )
 	--==--
 	self._scrollLength = value
+	self:_setScaledScrollLength()
 end
 
 
@@ -388,7 +427,7 @@ function AxisMotion:_checkScrollBounds( value )
 
 	if self._scrollEnabled and value then
 		local upper = 0 + self._upperOffset
-		local lower = (self._length-self._scrollLength) - self._lowerOffset
+		local lower = (self._length-self._scaledScrollLength) - self._lowerOffset
 
 		calcs.min=upper
 		calcs.max=lower
@@ -410,6 +449,7 @@ end
 --
 function AxisMotion:_constrainPosition( value, delta )
 	-- print( "AxisMotion:_constrainPosition", value, delta )
+
 	local isBounceActive = self._bounceIsActive
 	local LIMIT = self._scrollbackLimit
 	local scrollLimit, newVal, calcs, s, factor
@@ -434,7 +474,7 @@ function AxisMotion:_constrainPosition( value, delta )
 		if not isBounceActive then
 			newVal=calcs.max
 		else
-			s = (self._length - self._scrollLength) - newVal - self._lowerOffset
+			s = (self._length - self._scaledScrollLength) - newVal - self._lowerOffset
 			factor = 1 - (s/LIMIT)
 			if factor < 0 then factor = 0 end
 			newVal = value + ( delta * factor )
@@ -542,7 +582,8 @@ function AxisMotion:touch( event )
 		-- make a "copy" of the event
 		time=event.time,
 		start=event.start,
-		value=event.value
+		-- make relative position, without using globalToContent
+		value=event.value-self._location
 	}
 
 	if phase=='began' then
@@ -551,6 +592,9 @@ function AxisMotion:touch( event )
 
 		-- @TODO, probably check to see state we're in
 		vel.value, vel.vector = 0, 0
+
+		-- get our initial reference point
+		self._refPoint = (evt.value - self._value)/self._scale
 
 		if #velStack==0 then
 			tinsert( velStack, 1, 0 )
@@ -569,8 +613,8 @@ function AxisMotion:touch( event )
 		local tmpTouchEvt = self._tmpTouchEvt
 		local constrain = AxisMotion._constrainPosition
 
-		local deltaVal = event.value - tmpTouchEvt.value
-		local deltaT = event.time - tmpTouchEvt.time
+		local deltaVal = evt.value - tmpTouchEvt.value
+		local deltaT = evt.time - tmpTouchEvt.time
 		local oldVal, newVal
 
 		self._isMoving = true
@@ -588,8 +632,9 @@ function AxisMotion:touch( event )
 
 		self._tmpTouchEvt = evt
 		self._didBegin = false
+		self._refPoint = nil
 
-		local next_state, next_params = self:_getNextState{ event=event }
+		local next_state, next_params = self:_getNextState{ event=evt }
 		self:gotoState( next_state, next_params )
 
 	end
@@ -825,7 +870,7 @@ function AxisMotion:do_state_restore( params )
 	if self._scrollLimit == AxisMotion.HIT_UPPER_LIMIT then
 		offset = self._upperOffset
 	else
-		offset = (self._length - self._scrollLength - self._lowerOffset)
+		offset = (self._length - self._scaledScrollLength - self._lowerOffset)
 	end
 	delta = offset-val
 

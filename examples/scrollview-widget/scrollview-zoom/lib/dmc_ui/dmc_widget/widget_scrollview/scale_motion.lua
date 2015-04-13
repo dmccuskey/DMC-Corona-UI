@@ -140,7 +140,7 @@ function ScaleMotion:__init__( params )
 	params = params or {}
 	if params.bounceIsActive==nil then params.bounceIsActive = true end
 	if params.zoomScale==nil then params.zoomScale=1.0 end
-	if params.zoomBackLimit==nil then params.zoomBackLimit = 0.1 end
+	if params.zoomBackLimit==nil then params.zoomBackLimit = 0.2 end
 
 	self:superCall( '__init__', params )
 	--==--
@@ -151,12 +151,11 @@ function ScaleMotion:__init__( params )
 	--== Create Properties ==--
 
 	-- value is current scale
-	self._scale = 1.0
+	self._scale = params.zoomScale
 	self._scaleBase = 1.0 -- scale factor
 
 	self._minZoom = nil
 	self._maxZoom = nil
-	self._zoomScale = -1
 	self._isZooming = false
 
 	-- are we scrolling
@@ -207,7 +206,6 @@ function ScaleMotion:__initComplete__()
 	self.bounceIsActive = tmp.bounceIsActive
 	self.maximumZoom = tmp.maximumZoom
 	self.minimumZoom = tmp.minimumZoom
-	self.zoomScale = tmp.zoomScale
 	self.zoomBackLimit = tmp.zoomBackLimit
 
 	self._sm_tmp_params = nil
@@ -287,6 +285,7 @@ end
 
 
 function ScaleMotion.__getters:zoomScale()
+	-- print("ScaleMotion.__getters:zoomScale", self._scale)
 	return self._scale
 end
 
@@ -397,50 +396,39 @@ end
 
 -- ensure position stays within boundaries
 --
-function ScaleMotion:_constrainScale( value )
-	-- print( "ScaleMotion:_constrainScale", value )
+function ScaleMotion:_constrainScale( value, delta )
+	-- print( "ScaleMotion:_constrainScale", value, delta )
 	local isBounceActive = self._bounceIsActive
 	local LIMIT = self._zoomBackLimit
-	local scrollLimit, calcs, factor
+	local scaleLimit, calcs, factor, newVal
 
-	calcs = self:_checkScaleBounds( value )
-	scrollLimit = self._scaleLimit -- after check bounds
+	newVal = value + delta
+	calcs = self:_checkScaleBounds( newVal )
+	scaleLimit = self._scaleLimit -- after check bounds
 
-	if scrollLimit==ScaleMotion.HIT_UPPER_LIMIT then
+	if scaleLimit==ScaleMotion.HIT_UPPER_LIMIT then
 		if not isBounceActive then
-			value=calcs.max
+			newVal=calcs.max
 		else
-			local overage = calcs.overage
-			if overage >= LIMIT then
-				overage = LIMIT
-			else
-				factor = 1 - (overage/LIMIT)
-				if factor < 0 then factor = 0 end
-				overage = overage * factor
-			end
-			value = calcs.max + overage
-			self:_checkScaleBounds( value )
+			factor = 1 - (newVal/(self._maxZoom+LIMIT))
+			if factor < 0 then factor = 0 end
+			newVal = value + ( delta * factor )
+			self:_checkScaleBounds( newVal )
 		end
 
-	elseif scrollLimit==ScaleMotion.HIT_LOWER_LIMIT then
+	elseif scaleLimit==ScaleMotion.HIT_LOWER_LIMIT then
 		if not isBounceActive then
-			value=calcs.min
+			newVal=calcs.min
 		else
-			local overage = calcs.overage
-			if overage >= LIMIT then
-				overage = LIMIT
-			else
-				factor = 1 - (overage/LIMIT)
-				if factor < 0 then factor = 0 end
-				overage = overage * factor
-			end
-			value = calcs.min - overage
-			self:_checkScaleBounds( value )
+			factor = 1 - ((self._minZoom-LIMIT)/newVal)
+			if factor < 0 then factor = 0 end
+			newVal = value + ( delta * factor )
+			self:_checkScaleBounds( newVal )
 		end
 
 	end
 
-	return value
+	return newVal
 end
 
 
@@ -612,7 +600,7 @@ function ScaleMotion:touch( event )
 		--== Calculate new scale/velocity
 
 		oldVal = self._scale
-		newVal = constrain( self, self._scaleBase * scale )
+		newVal = constrain( self, self._scale, deltaVal )
 		self:_updateVelocity( (oldVal-newVal)/deltaT )
 
 		self._scale = newVal
@@ -640,22 +628,22 @@ function ScaleMotion:_getNextState( params )
 	-- print( "ScaleMotion:_getNextState" )
 	params = params or {}
 	--==--
-	local scrollLimit = self._scaleLimit
+	local scaleLimit = self._scaleLimit
 	local velocity = self._velocity
 	local isBounceActive = self._bounceIsActive
 	local s, p -- state, params
 
-	-- print( "gNS>>", velocity.value, scrollLimit, isBounceActive )
+	-- print( "gNS>>", velocity.value, scaleLimit, isBounceActive )
 
-	if velocity.value > 0 and not scrollLimit then
+	if velocity.value > 0 and not scaleLimit then
 		s = ScaleMotion.STATE_DECELERATE
 		p = { event=params.event }
 
-	elseif velocity.value <= 0 and scrollLimit and isBounceActive then
+	elseif velocity.value <= 0 and scaleLimit and isBounceActive then
 		s = ScaleMotion.STATE_RESTORE
 		p = { event=params.event }
 
-	elseif velocity.value > 0 and scrollLimit and isBounceActive then
+	elseif velocity.value > 0 and scaleLimit and isBounceActive then
 		s = ScaleMotion.STATE_RESTRAINT
 		p = { event=params.event }
 
