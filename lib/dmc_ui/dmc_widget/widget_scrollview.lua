@@ -84,12 +84,9 @@ local Scroller = require( ui_find( 'dmc_widget.widget_scrollview.scroller' ) )
 
 local newClass = Objects.newClass
 
--- local mabs = math.abs
+local circle
+
 local mmax = math.max
--- local sfmt = string.format
--- local tinsert = table.insert
--- local tremove = table.remove
--- local tstr = tostring
 local tcancel = timer.cancel
 local tdelay = timer.performWithDelay
 local type = _G.type
@@ -289,13 +286,21 @@ function ScrollView:__initComplete__()
 	local tmp = self._sv_tmp_params
 	local o, f
 
+	local delegate = {
+		shouldRecognizeWith=function(self, gr_rec, gr_fail )
+			return true
+		end
+	}
+
 	f = self:createCallback( self._gestureEvent_handler )
-	-- o = Gesture.newPanGesture( self._rectBg, { touches=1, threshold=0, id="pan" } )
-	-- o:addEventListener( o.EVENT, f )
+	o = Gesture.newPanGesture( self._rectBg, { touches=1, threshold=0, id='pan' } )
+	o.delegate=delegate
+	o:addEventListener( o.EVENT, f )
 	self._panGesture = o
 
-	o = Gesture.newPinchGesture( self._rectBg, { id="pinch" } )
-	o.test_mode=true
+	o = Gesture.newPinchGesture( self._rectBg, { id='pinch' } )
+	o.test_mode=false
+	o.delegate=delegate
 	o:addEventListener( o.EVENT, f )
 	self._pinchGesture = o
 
@@ -391,6 +396,16 @@ end
 -- @tfield[opt] func onComplete a function to call when the animation is complete
 -- @table .setContentPositionParams
 
+
+function ScrollView.__setters:x( value )
+	WidgetBase.__setters.x( self, value )
+	self._axisX.location = value
+end
+
+function ScrollView.__setters:y( value )
+	WidgetBase.__setters.y( self, value )
+	self._axisY.location = value
+end
 
 --== .alwaysBounceHorizontally
 
@@ -777,12 +792,13 @@ end
 
 function ScrollView:setContentPosition( params )
 	-- print( "ScrollView:setContentPosition", params )
-	assert( type(params)=='table' )
+	local _type = type
+	assert( _type(params)=='table' )
 	--==--
-	local xIsNum = (type(params.x)=='number')
-	local yIsNum = (type(params.y)=='number')
-	assert( xIsNum or type(params.x)=='nil' )
-	assert( yIsNum or type(params.y)=='nil' )
+	local xIsNum = (_type(params.x)=='number')
+	local yIsNum = (_type(params.y)=='number')
+	assert( xIsNum or _type(params.x)=='nil' )
+	assert( yIsNum or _type(params.y)=='nil' )
 
 	local tcf -- transition complete func
 	if params.onComplete then
@@ -917,10 +933,13 @@ function ScrollView:_getZoomView()
 end
 
 function ScrollView.__setters:_zoomScale( value )
+	-- print( "ScrollView.__setters:_zoomScale", value )
 	assert( type(value)=='number' )
 	--==--
 	if self.__zoomScale==value then return end
 	self.__zoomScale = value
+	self._axisX.scale = value
+	self._axisY.scale = value
 	self._zoomScale_dirty=true
 	self:__invalidateProperties__()
 end
@@ -1057,32 +1076,28 @@ function ScrollView:__commitProperties__()
 
 
 	if self._scrollWidth_dirty then
+		self._axisX.scrollLength = self._scrollWidth
 		self._scrollWidth_dirty=false
 
 		self._actualScrollW_dirty=true
 	end
 	if self._scrollHeight_dirty then
+		self._axisY.scrollLength = self._scrollHeight
 		self._scrollHeight_dirty=false
 
 		self._actualScrollH_dirty=true
 	end
 
 	if self._actualScrollW_dirty then
-		local value = self._scrollWidth*self.__zoomScale
+		local value = self._axisX.scaledScrollLength
 		self._actualScrollW = value
 		scr.width = value
-		if self._axisX then
-			self._axisX.scrollLength = value
-		end
 		self._actualScrollW_dirty=false
 	end
 	if self._actualScrollH_dirty then
-		local value = self._scrollHeight*self.__zoomScale
+		local value = self._axisY.scaledScrollLength
 		self._actualScrollH = value
 		scr.height = value
-		if self._axisY then
-			self._axisY.scrollLength = value
-		end
 		self._actualScrollH_dirty=false
 	end
 
@@ -1252,8 +1267,6 @@ function ScrollView:stylePropertyChangeHandler( event )
 end
 
 
-
-
 -- take output from gesture recognizers and put into
 -- motion controllers
 --
@@ -1263,6 +1276,8 @@ function ScrollView:_gestureEvent_handler( event )
 	local phase = event.phase
 	local gesture = event.target
 	local f = self._returnFocusCancel
+
+	-- print( "ScrollView:_gestureEvent_handler", phase, gesture._id )
 
 	-- Utils.print( event )
 	local evt = {
@@ -1275,7 +1290,8 @@ function ScrollView:_gestureEvent_handler( event )
 
 	if etype == gesture.GESTURE then
 		if phase=='began' then
-			evt.phase = 'began' -- convert Gesture to Axis
+			evt.phase = 'began' -- convert Gesture to Motion
+
 			if self._axisX then
 				evt.value = event.x
 				evt.start = event.xStart
@@ -1286,21 +1302,26 @@ function ScrollView:_gestureEvent_handler( event )
 				evt.start = event.yStart
 				self._axisY:touch( evt )
 			end
+
 			if event.gesture=='pinch' and self._canZoom then
-				evt.value = event.scale
-				evt.start = event.start
+				-- circle = display.newCircle( event.x, event.y, 6 )
 				local zView = self:_getZoomView()
 				if zView then
+					evt.value = event.scale
+					evt.start = event.start
 					self._zoomView = zView
 					self._scaleMotion:touch( evt )
 				end
 			end
+
+
 		elseif phase=='changed' then
 			-- if changed, then already know movement was enough
 			-- because Pan Gesture will filter movement
 			f = self._returnFocusCancel
 			if f then f() end
-			evt.phase = 'moved' -- convert Gesture to Axis
+			evt.phase = 'moved' -- convert Gesture to Motion
+
 			if self._axisX then
 				evt.value = event.x
 				evt.start = event.xStart
@@ -1311,13 +1332,18 @@ function ScrollView:_gestureEvent_handler( event )
 				evt.start = event.yStart
 				self._axisY:touch( evt )
 			end
+
 			if event.gesture=='pinch' and self._zoomView then
+				-- circle.x, circle.y = event.x, event.y
 				evt.value = event.scale
 				evt.start = event.start
 				self._scaleMotion:touch( evt )
 			end
+
+
 		else
-			evt.phase = 'ended' -- convert Gesture to Axis
+			evt.phase = 'ended' -- convert Gesture to Motion
+
 			if self._axisX then
 				evt.value = event.x
 				evt.start = event.xStart
@@ -1328,20 +1354,26 @@ function ScrollView:_gestureEvent_handler( event )
 				evt.start = event.yStart
 				self._axisY:touch( evt )
 			end
+
 			if event.gesture=='pinch' and self._zoomView then
+				-- if circle then circle:removeSelf() ; circle=nil end
 				evt.value = event.scale
 				evt.start = event.start
 				self._scaleMotion:touch( evt )
 			end
+
 			-- if ended (quickly), like a tap
 			-- then give back to the initiator
 			f = self._returnFocus
 			if f then f( 'ended' ) end
+
 		end
 	end
 end
 
 
+-- handle events from Axis Motion objects
+--
 function ScrollView:_axisEvent_handler( event )
 	-- print( "ScrollView:_axisEvent_handler", event.state )
 	if event.id=='x' then
@@ -1352,6 +1384,8 @@ function ScrollView:_axisEvent_handler( event )
 end
 
 
+-- handle events from Scale Motion object
+--
 function ScrollView:_scaleEvent_handler( event )
 	-- print( "ScrollView:_scaleEvent_handler", event.state )
 	local delegate = self._delegate
