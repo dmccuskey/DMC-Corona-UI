@@ -67,6 +67,7 @@ local ui_find = dmc_ui_func.find
 local AxisMotion = require( ui_find( 'dmc_widget.widget_scrollview.axis_motion' ) )
 local Gesture = require 'dmc_gestures'
 local Objects = require 'dmc_objects'
+local ScaleMotion = require( ui_find( 'dmc_widget.widget_scrollview.scale_motion' ) )
 local TouchMgr = require 'dmc_touchmanager'
 local Utils = require 'dmc_utils'
 
@@ -84,6 +85,7 @@ local Scroller = require( ui_find( 'dmc_widget.widget_scrollview.scroller' ) )
 local newClass = Objects.newClass
 
 -- local mabs = math.abs
+local mmax = math.max
 -- local sfmt = string.format
 -- local tinsert = table.insert
 -- local tremove = table.remove
@@ -163,6 +165,7 @@ function ScrollView:__init__( params )
 	if params.upperHorizontalOffset==nil then params.upperHorizontalOffset = 0 end
 	if params.upperVerticalOffset==nil then params.upperVerticalOffset = 0 end
 	if params.verticalScrollEnabled==nil then params.verticalScrollEnabled=true end
+	if params.zoomScale==nil then params.zoomScale=1.0 end
 
 	self:superCall( '__init__', params )
 	--==--
@@ -182,13 +185,23 @@ function ScrollView:__init__( params )
 	self._hasMoved = false
 	self._isMoving = false
 
+	-- smallest scale to fit current scroll dimensions
+	self._minScale = 1.0
+	self.__zoomScale = 1.0
+	self._zoomScale_dirty=true
+	self._zoomView = nil
+
+	self._canScroll = false
+
 	self._scrollWidth = -1
 	self._scrollWidth_dirty=true
 	self._scrollHeight = -1
 	self._scrollHeight_dirty=true
 
-	self._actualScrollH = -1
-	self._actualScrollW = -1
+	-- scroll dimensions might be adjusted if
+	-- values are too small to fill viewport
+	self._actualScrollH = 0
+	self._actualScrollW = 0
 
 	-- controlled by Directional Lock Enabled
 	self._scrollBlockedH = false
@@ -214,12 +227,16 @@ function ScrollView:__init__( params )
 
 	--== Object References ==--
 
-	self._axis_x = nil -- y-axis motion
-	self._axis_y = nil -- x-axis motion
 	self._axis_f = nil -- axis event handler (both)
+	self._axisX = nil -- y-axis motion
+	self._axisY = nil -- x-axis motion
 
-	self._gesture = nil -- pan gesture
+	self._scale_f = nil -- pinch motion handler
+	self._scaleMotion = nil -- pinch motion
+
 	self._gesture_f = nil -- callback
+	self._panGesture = nil
+	self._pinchGesture = nil
 
 	self._rectBg = nil -- background object, touch area
 
@@ -272,11 +289,16 @@ function ScrollView:__initComplete__()
 	local tmp = self._sv_tmp_params
 	local o, f
 
-
 	f = self:createCallback( self._gestureEvent_handler )
-	o = Gesture.newPanGesture( self._rectBg, { touches=1, threshold=0 } )
+	-- o = Gesture.newPanGesture( self._rectBg, { touches=1, threshold=0, id="pan" } )
+	-- o:addEventListener( o.EVENT, f )
+	self._panGesture = o
+
+	o = Gesture.newPinchGesture( self._rectBg, { id="pinch" } )
+	o.test_mode=true
 	o:addEventListener( o.EVENT, f )
-	self._gesture = o
+	self._pinchGesture = o
+
 	self._gesture_f = f
 
 	-- before axis creation
@@ -287,9 +309,16 @@ function ScrollView:__initComplete__()
 	self:_createAxisMotionX()
 	self:_createAxisMotionY()
 
-	--== Use Setters, after axis motion objects are created
+	self._scale_f = self:createCallback( self._scaleEvent_handler )
+	self:_createScaleMotion()
+
+	--== Use Setters, after motion objects are created
 
 	self.bounceIsActive = tmp.bounceIsActive
+
+	self.minimumZoom = tmp.minimumZoom
+	self.maximumZoom = tmp.maximumZoom
+	-- self:setZoomScale( tmp.zoomScale )
 
 	self.horizontalScrollEnabled = tmp.horizontalScrollEnabled
 	self.upperHorizontalOffset = tmp.upperHorizontalOffset
@@ -309,10 +338,17 @@ function ScrollView:__undoInitComplete__()
 	self:_removeAxisMotionX()
 	self:_removeAxisMotionY()
 
-	o = self._gesture
+	self:_removeScaleMotion()
+
+	o = self._panGesture
 	o:removeEventListener( o.EVENT, self._gesture_f )
+	self._panGesture = nil
+
+	o = self._pinchGesture
+	o:removeEventListener( o.EVENT, self._gesture_f )
+	self._pinchGesture = nil
+
 	self._gesture_f = nil
-	self._gesture = nil
 
 	self:_removeScroller()
 
@@ -368,12 +404,12 @@ end
 
 function ScrollView.__getters:alwaysBounceHorizontally()
 	-- print( "ScrollView.__getters:bounceIsActive" )
-	return ( self._axis_x.alwaysBounceHorizontally and self._axis_y.alwaysBounceHorizontally )
+	return ( self._axisX.alwaysBounceHorizontally and self._axisY.alwaysBounceHorizontally )
 end
 function ScrollView.__setters:alwaysBounceHorizontally( value )
 	-- print( "ScrollView.__setters:alwaysBounceHorizontally", value )
-	self._axis_x.alwaysBounceHorizontally = value
-	self._axis_y.alwaysBounceHorizontally = value
+	self._axisX.alwaysBounceHorizontally = value
+	self._axisY.alwaysBounceHorizontally = value
 end
 
 --== .alwaysBounceVertically
@@ -388,12 +424,12 @@ end
 
 function ScrollView.__getters:alwaysBounceVertically()
 	-- print( "ScrollView.__getters:bounceIsActive" )
-	return ( self._axis_x.alwaysBounceVertically and self._axis_y.alwaysBounceVertically )
+	return ( self._axisX.alwaysBounceVertically and self._axisY.alwaysBounceVertically )
 end
 function ScrollView.__setters:alwaysBounceVertically( value )
 	-- print( "ScrollView.__setters:alwaysBounceVertically", value )
-	self._axis_x.alwaysBounceVertically = value
-	self._axis_y.alwaysBounceVertically = value
+	self._axisX.alwaysBounceVertically = value
+	self._axisY.alwaysBounceVertically = value
 end
 
 --== .bounceIsActive
@@ -408,12 +444,12 @@ end
 
 function ScrollView.__getters:bounceIsActive()
 	-- print( "ScrollView.__getters:bounceIsActive" )
-	return ( self._axis_x.bounceIsActive and self._axis_y.bounceIsActive )
+	return ( self._axisX.bounceIsActive and self._axisY.bounceIsActive )
 end
 function ScrollView.__setters:bounceIsActive( value )
 	-- print( "ScrollView.__setters:bounceIsActive", value )
-	self._axis_x.bounceIsActive = value
-	self._axis_y.bounceIsActive = value
+	self._axisX.bounceIsActive = value
+	self._axisY.bounceIsActive = value
 end
 
 --== .delegate
@@ -437,11 +473,11 @@ end
 
 function ScrollView.__getters:lowerHorizontalOffset()
 	-- print( "ScrollView.__getters:lowerHorizontalOffset" )
-	return self._axis_x.lowerOffset
+	return self._axisX.lowerOffset
 end
 function ScrollView.__setters:lowerHorizontalOffset( value )
 	-- print( "ScrollView.__setters:lowerHorizontalOffset", value )
-	self._axis_x.lowerOffset = value
+	self._axisX.lowerOffset = value
 end
 
 --== .lowerVerticalOffset
@@ -456,11 +492,11 @@ end
 
 function ScrollView.__getters:lowerVerticalOffset()
 	-- print( "ScrollView.__getters:lowerVerticalOffset" )
-	return self._axis_y.lowerOffset
+	return self._axisY.lowerOffset
 end
 function ScrollView.__setters:lowerVerticalOffset( value )
 	-- print( "ScrollView.__setters:lowerVerticalOffset", value )
-	self._axis_y.lowerOffset = value
+	self._axisY.lowerOffset = value
 end
 
 --== .isDirectionalLockEnabled
@@ -493,11 +529,67 @@ end
 
 function ScrollView.__getters:horizontalScrollEnabled()
 	-- print( "ScrollView.__getters:horizontalScrollEnabled" )
-	return self._axis_x.scrollIsEnabled
+	return self._axisX.scrollIsEnabled
 end
 function ScrollView.__setters:horizontalScrollEnabled( value )
 	-- print( "ScrollView.__setters:horizontalScrollEnabled", value )
-	self._axis_x.scrollIsEnabled = value
+	self._axisX.scrollIsEnabled = value
+end
+
+
+function ScrollView.__getters:maximumZoom()
+	-- print( "ScrollView.__getters:maximumZoom" )
+	return self._scaleMotion.maximumZoom
+end
+function ScrollView.__setters:maximumZoom( value )
+	-- print( "ScrollView.__setters:maximumZoom", value )
+	self._scaleMotion.maximumZoom = value
+	self:_updateCanZoom()
+end
+
+
+function ScrollView.__getters:minimumZoom()
+	-- print( "ScrollView.__getters:minimumZoom" )
+	local scale = self._scaleMotion and self._scaleMotion.minimumZoom or 1.0
+	return scale
+end
+function ScrollView.__setters:minimumZoom( value )
+	-- print( "ScrollView.__setters:minimumZoom", value, self._minScale )
+	if value and value < self._minScale then value=self._minScale end
+	self._scaleMotion.minimumZoom = value
+	self:_updateCanZoom()
+end
+
+
+function ScrollView.__getters:scroller()
+	-- print( "ScrollView.__getters:scroller" )
+	return self._scroller
+end
+
+
+function ScrollView.__getters:zoomScale()
+	-- print( "ScrollView.__getters:zoomScale" )
+	return self._scaleMotion.zoomScale
+end
+function ScrollView:setZoomScale( value, params )
+	local zView = self._zoomView
+	if not zView then
+		zView = self:_getZoomView()
+		self._zoomView = zView
+	end
+	if not zView then return end
+	return self._scaleMotion:setZoomScale( value, params )
+end
+
+
+function ScrollView.__getters:isZooming()
+	-- print( "ScrollView.__getters:isZooming" )
+	return self._scaleMotion.isZooming
+end
+
+function ScrollView:_updateCanZoom()
+	-- print( "ScrollView.__getters:_updateCanZoom" )
+	self._canZoom = self._scaleMotion.zoomIsActive
 end
 
 --== .verticalScrollEnabled
@@ -512,12 +604,39 @@ end
 
 function ScrollView.__getters:verticalScrollEnabled()
 	-- print( "ScrollView.__getters:verticalScrollEnabled" )
-	return self._axis_y.scrollIsEnabled
+	return self._axisY.scrollIsEnabled
 end
 function ScrollView.__setters:verticalScrollEnabled( value )
 	-- print( "ScrollView.__setters:verticalScrollEnabled", value )
-	self._axis_y.scrollIsEnabled = value
+	self._axisY.scrollIsEnabled = value
 end
+
+--== .panGesture
+
+--- get reference to pan gesture. read-only
+--
+-- @within Properties
+-- @function .panGesture
+-- @usage print( widget.panGesture )
+
+function ScrollView.__getters:panGesture()
+	-- print( "ScrollView.__setters:panGesture" )
+	return self._panGesture
+end
+
+--== .pinchGesture
+
+--- get reference to pinch gesture. read-only
+--
+-- @within Properties
+-- @function .pinchGesture
+-- @usage print( widget.pinchGesture )
+
+function ScrollView.__getters:pinchGesture()
+	-- print( "ScrollView.__setters:pinchGesture" )
+	return self._pinchGesture
+end
+
 
 --== .scrollWidth
 
@@ -532,20 +651,20 @@ end
 
 function ScrollView.__getters:scrollWidth()
 	-- print( "ScrollView.__getters:scrollWidth" )
-	return self._scrollWidth
+	return self._scrollWidth * self.__zoomScale
 end
 function ScrollView.__setters:scrollWidth( value )
 	-- print( "ScrollView.__setters:scrollWidth", value )
 	assert( type(value)=='number' and value>=0 )
 	--==--
+	local width = self._width
+	if value < width then value=width end
 	if self._scrollWidth==value then return end
 	self._scrollWidth = value
 	self._scrollWidth_dirty=true
+	self:__invalidateProperties__()
 
-	local aSW = value
-	local width = self._width
-	if value < width then aSW=width end
-	self._actualScrollW = aSW
+	self:_calculateMinScale()
 end
 
 --== .scrollHeight
@@ -561,21 +680,35 @@ end
 
 function ScrollView.__getters:scrollHeight()
 	-- print( "ScrollView.__getters:scrollHeight" )
-	return self._scrollHeight
+	return self._scrollHeight * self.__zoomScale
 end
 function ScrollView.__setters:scrollHeight( value )
 	-- print( "ScrollView.__setters:scrollHeight", value )
 	assert( type(value)=='number' and value>=0 )
 	--==--
+	local height = self._height
+	if value < height then value=height end
 	if self._scrollHeight==value then return end
 	self._scrollHeight = value
 	self._scrollHeight_dirty=true
+	self:__invalidateProperties__()
 
-	local aSH = value
-	local height = self._height
-	if value < height then aSH=height end
-	self._actualScrollH = aSH
+	self:_calculateMinScale()
 end
+
+
+function ScrollView:_calculateMinScale()
+	local scaleW = self._width / self._scrollWidth
+	local scaleH = self._height / self._scrollHeight
+	local minScale = mmax( scaleW, scaleH )
+
+	self._minScale = minScale
+	if self.minimumZoom < minScale then
+		print( "NOTICE: reset minimum scale to ", minScale )
+		self.minimumZoom = minScale
+	end
+end
+
 
 --== .upperHorizontalOffset
 
@@ -589,11 +722,11 @@ end
 
 function ScrollView.__getters:upperHorizontalOffset()
 	-- print( "ScrollView.__getters:upperHorizontalOffset" )
-	return self._axis_x.upperOffset
+	return self._axisX.upperOffset
 end
 function ScrollView.__setters:upperHorizontalOffset( value )
 	-- print( "ScrollView.__setters:upperHorizontalOffset", value )
-	self._axis_x.upperOffset = value
+	self._axisX.upperOffset = value
 end
 
 --== .upperVerticalOffset
@@ -608,11 +741,11 @@ end
 
 function ScrollView.__getters:upperVerticalOffset()
 	-- print( "ScrollView.__getters:upperVerticalOffset" )
-	return self._axis_y.upperOffset
+	return self._axisY.upperOffset
 end
 function ScrollView.__setters:upperVerticalOffset( value )
 	-- print( "ScrollView.__setters:upperVerticalOffset", value )
-	self._axis_y.upperOffset = value
+	self._axisY.upperOffset = value
 end
 
 
@@ -631,7 +764,7 @@ end
 
 function ScrollView:getContentPosition()
 	-- print( "ScrollView.__getters:contentPosition" )
-	return self._axis_x.value, self._axis_y.value
+	return self._axisX.value, self._axisY.value
 end
 
 --- Scroll to a specific x and/or y position.
@@ -660,12 +793,12 @@ function ScrollView:setContentPosition( params )
 		end
 	end
 	if xIsNum then
-		self._axis_x:scrollToPosition( params.x, {
+		self._axisX:scrollToPosition( params.x, {
 			onComplete=tcf, time=params.time
 		})
 	end
 	if yIsNum then
-		self._axis_y:scrollToPosition( params.y, {
+		self._axisY:scrollToPosition( params.y, {
 			onComplete=tcf, time=params.time
 		})
 	end
@@ -775,14 +908,30 @@ end
 --====================================================================--
 --== Private Methods
 
+function ScrollView:_getZoomView()
+	local delegate = self._delegate
+	local zF = delegate and delegate.getViewForZoom
+	local zView
+	if zF then zView = zF( delegate, {target=self} ) end
+	return zView
+end
+
+function ScrollView.__setters:_zoomScale( value )
+	assert( type(value)=='number' )
+	--==--
+	if self.__zoomScale==value then return end
+	self.__zoomScale = value
+	self._zoomScale_dirty=true
+	self:__invalidateProperties__()
+end
 
 
 function ScrollView:_removeAxisMotionX()
 	-- print( "ScrollView:_removeAxisMotionX" )
-	local o = self._axis_x
+	local o = self._axisX
 	if not o then return end
 	o:removeSelf()
-	self._axis_x = nil
+	self._axisX = nil
 end
 
 function ScrollView:_createAxisMotionX()
@@ -794,16 +943,16 @@ function ScrollView:_createAxisMotionX()
 		scrollLength=self._actualScrollW,
 		callback=self._axis_f
 	}
-	self._axis_x = o
+	self._axisX = o
 end
 
 
 function ScrollView:_removeAxisMotionY()
 	-- print( "ScrollView:_removeAxisMotionY" )
-	local o = self._axis_y
+	local o = self._axisY
 	if not o then return end
 	o:removeSelf()
-	self._axis_y = nil
+	self._axisY = nil
 end
 
 function ScrollView:_createAxisMotionY()
@@ -815,7 +964,27 @@ function ScrollView:_createAxisMotionY()
 		scrollLength=self._actualScrollH,
 		callback=self._axis_f
 	}
-	self._axis_y = o
+	self._axisY = o
+end
+
+
+function ScrollView:_removeScaleMotion()
+	-- print( "ScrollView:_removeScaleMotion" )
+	local o = self._scaleMotion
+	if not o then return end
+	o:removeSelf()
+	self._scaleMotion = nil
+end
+
+function ScrollView:_createScaleMotion()
+	-- print( "ScrollView:_createScaleMotion" )
+	self:_removeScaleMotion()
+	local o = ScaleMotion:new{
+		-- minimumZoom=self._minZoom,
+		-- maximumZoom=self._maxZoom,
+		callback=self._scale_f
+	}
+	self._scaleMotion = o
 end
 
 
@@ -829,16 +998,13 @@ end
 
 function ScrollView:_createScroller()
 	-- print( "ScrollView:_createScroller" )
-
 	self:_removeScroller()
-
 	local o = Scroller:new{
 		width=self._actualScrollW,
 		height=self._actualScrollH
 	}
 	self:_addSubView( o )
 	self._scroller = o
-
 end
 
 
@@ -867,6 +1033,13 @@ function ScrollView:__commitProperties__()
 		self._height_dirty=true
 	end
 
+	if self._zoomScale_dirty then
+		self._zoomScale_dirty = false
+
+		self._actualScrollW_dirty=true
+		self._actualScrollH_dirty=true
+	end
+
 	if self._align_dirty then
 		self._align_dirty = false
 	end
@@ -881,21 +1054,36 @@ function ScrollView:__commitProperties__()
 		self._height_dirty=false
 	end
 
+
+
 	if self._scrollWidth_dirty then
-		local value = self._actualScrollW
-		scr.width = value
-		if self._axis_x then
-			self._axis_x.scrollLength = value
-		end
 		self._scrollWidth_dirty=false
+
+		self._actualScrollW_dirty=true
 	end
 	if self._scrollHeight_dirty then
-		local value = self._actualScrollH
-		scr.height = value
-		if self._axis_y then
-			self._axis_y.scrollLength = value
-		end
 		self._scrollHeight_dirty=false
+
+		self._actualScrollH_dirty=true
+	end
+
+	if self._actualScrollW_dirty then
+		local value = self._scrollWidth*self.__zoomScale
+		self._actualScrollW = value
+		scr.width = value
+		if self._axisX then
+			self._axisX.scrollLength = value
+		end
+		self._actualScrollW_dirty=false
+	end
+	if self._actualScrollH_dirty then
+		local value = self._scrollHeight*self.__zoomScale
+		self._actualScrollH = value
+		scr.height = value
+		if self._axisY then
+			self._axisY.scrollLength = value
+		end
+		self._actualScrollH_dirty=false
 	end
 
 
@@ -1066,7 +1254,9 @@ end
 
 
 
-
+-- take output from gesture recognizers and put into
+-- motion controllers
+--
 function ScrollView:_gestureEvent_handler( event )
 	-- print( "ScrollView:_gestureEvent_handler", event.phase )
 	local etype = event.type
@@ -1077,7 +1267,7 @@ function ScrollView:_gestureEvent_handler( event )
 	-- Utils.print( event )
 	local evt = {
 		name='touch',
-		phase=event.phase,
+		phase='tbd',
 		time=event.time,
 		value=0, -- this is holder for x/y
 		start=0, -- this is holder for xStart/yStart
@@ -1085,44 +1275,63 @@ function ScrollView:_gestureEvent_handler( event )
 
 	if etype == gesture.GESTURE then
 		if phase=='began' then
-			evt.phase = 'began'
-			if self._axis_x then
+			evt.phase = 'began' -- convert Gesture to Axis
+			if self._axisX then
 				evt.value = event.x
 				evt.start = event.xStart
-				self._axis_x:touch( evt )
+				self._axisX:touch( evt )
 			end
-			if self._axis_y then
+			if self._axisY then
 				evt.value = event.y
 				evt.start = event.yStart
-				self._axis_y:touch( evt )
+				self._axisY:touch( evt )
+			end
+			if event.gesture=='pinch' and self._canZoom then
+				evt.value = event.scale
+				evt.start = event.start
+				local zView = self:_getZoomView()
+				if zView then
+					self._zoomView = zView
+					self._scaleMotion:touch( evt )
+				end
 			end
 		elseif phase=='changed' then
 			-- if changed, then already know movement was enough
 			-- because Pan Gesture will filter movement
 			f = self._returnFocusCancel
 			if f then f() end
-			evt.phase = 'moved'
-			if self._axis_x then
+			evt.phase = 'moved' -- convert Gesture to Axis
+			if self._axisX then
 				evt.value = event.x
 				evt.start = event.xStart
-				self._axis_x:touch( evt )
+				self._axisX:touch( evt )
 			end
-			if self._axis_y then
+			if self._axisY then
 				evt.value = event.y
 				evt.start = event.yStart
-				self._axis_y:touch( evt )
+				self._axisY:touch( evt )
+			end
+			if event.gesture=='pinch' and self._zoomView then
+				evt.value = event.scale
+				evt.start = event.start
+				self._scaleMotion:touch( evt )
 			end
 		else
-			evt.phase = 'ended'
-			if self._axis_x then
+			evt.phase = 'ended' -- convert Gesture to Axis
+			if self._axisX then
 				evt.value = event.x
 				evt.start = event.xStart
-				self._axis_x:touch( evt )
+				self._axisX:touch( evt )
 			end
-			if self._axis_y then
+			if self._axisY then
 				evt.value = event.y
 				evt.start = event.yStart
-				self._axis_y:touch( evt )
+				self._axisY:touch( evt )
+			end
+			if event.gesture=='pinch' and self._zoomView then
+				evt.value = event.scale
+				evt.start = event.start
+				self._scaleMotion:touch( evt )
 			end
 			-- if ended (quickly), like a tap
 			-- then give back to the initiator
@@ -1135,13 +1344,43 @@ end
 
 function ScrollView:_axisEvent_handler( event )
 	-- print( "ScrollView:_axisEvent_handler", event.state )
-	local state = event.state
-	-- local velocity = event.velocity
 	if event.id=='x' then
-		self._scroller.x = event.value
+		self._scroller.x = event.value*self.__zoomScale
 	else
-		self._scroller.y = event.value
+		self._scroller.y = event.value*self.__zoomScale
 	end
+end
+
+
+function ScrollView:_scaleEvent_handler( event )
+	-- print( "ScrollView:_scaleEvent_handler", event.state )
+	local delegate = self._delegate
+	local scale = event.scale
+	local state = event.state
+	local target = event.target
+	local zView = self._zoomView
+	local zF
+
+	self._zoomScale = scale -- setter
+
+	if state==target.WILL_ZOOM then
+		zView.xScale, zView.yScale = scale, scale
+		zF = delegate and delegate.willBeginZooming
+		if zF then zF( delegate, {target=self,view=zView,scale=scale} ) end
+
+	elseif state==target.ZOOMING then
+		zView.xScale, zView.yScale = scale, scale
+		zF = delegate and delegate.didZoom
+		if zF then zF( delegate, {target=self,view=zView,scale=scale} ) end
+
+	elseif state==target.DID_ZOOM then
+		zView.xScale, zView.xScale = scale, scale
+		zF = delegate and delegate.didEndZooming
+		if zF then zF( delegate, {target=self,view=zView,scale=scale} ) end
+		self._zoomView = nil
+
+	end
+
 end
 
 

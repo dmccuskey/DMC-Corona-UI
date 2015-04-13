@@ -147,17 +147,24 @@ function AxisMotion:__init__( params )
 	self:superCall( '__init__', params )
 	--==--
 
+	-- save params for later
+	self._ax_tmp_params = params -- tmp
+
+	assert( params.callback )
+
+	--== Create Properties ==--
+
 	-- value is current position, eg x/y
 	self._value = 0
 
-	self._length = params.length
-	self._scrollLength = params.scrollLength
+	self._length = 0
+	self._scrollLength = 0
 
-	self._lowerOffset = params.lowerOffset
-	self._upperOffset = params.upperOffset
+	self._lowerOffset = 0
+	self._upperOffset = 0
 
-	self._scrollbackFactor = params.scrollbackFactor
-	self._scrollbackLimit = params.length/3 -- << test 1 / def 3
+	self._scrollbackFactor = 0
+	self._scrollbackLimit = 0
 
 	self._id = params.id
 	self._callback = params.callback
@@ -181,9 +188,9 @@ function AxisMotion:__init__( params )
 
 	self._enterFrameIterator = nil
 
-	self._bounceIsActive = params.bounceIsActive
+	self._bounceIsActive = false
 	self._alwaysBounce = false
-	self._scrollEnabled = params.scrollIsEnabled
+	self._scrollEnabled = false
 
 	self:setState( AxisMotion.STATE_CREATE )
 end
@@ -195,14 +202,18 @@ function AxisMotion:__initComplete__()
 	self:superCall( '__initComplete__' )
 	--==--
 
+	local tmp = self._ax_tmp_params
+
 	--== Use Setters
-	self.bounceIsActive = self._bounceIsActive
-	self.length = self._length
-	self.lowerOffset = self._lowerOffset
-	self.scrollIsEnabled = self._scrollEnabled
-	self.scrollLength = self._scrollLength
-	self.scrollbackFactor = self._scrollbackFactor
-	self.upperOffset = self._upperOffset
+	self.bounceIsActive = tmp.bounceIsActive
+	self.length = tmp.length
+	self.lowerOffset = tmp.lowerOffset
+	self.scrollIsEnabled = tmp.scrollIsEnabled
+	self.scrollLength = tmp.scrollLength
+	self.scrollbackFactor = tmp.scrollbackFactor
+	self.upperOffset = tmp.upperOffset
+
+	self._ax_tmp_params = nil
 
 	self:gotoState( AxisMotion.STATE_AT_REST )
 end
@@ -277,7 +288,7 @@ function AxisMotion.__getters:scrollLength()
 	return self._scrollLength
 end
 function AxisMotion.__setters:scrollLength( value )
-	assert( type(value)=='number' and value > 0 )
+	assert( type(value)=='number' and value >= 0 )
 	--==--
 	self._scrollLength = value
 end
