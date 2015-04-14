@@ -203,8 +203,8 @@ function Scroller.__getters:y_offset()
 end
 
 
-function Scroller:insert( item )
-	-- print( "Scroller:insert", item )
+function Scroller:insertItem( item )
+	-- print( "Scroller:insertItem", item )
 	return self._dgMain:insert( item )
 end
 
