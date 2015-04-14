@@ -65,6 +65,7 @@ local ui_find = dmc_ui_func.find
 
 
 local Objects = require 'dmc_objects'
+local Patch = require 'dmc_patch'
 local StatesMixModule = require 'dmc_states_mix'
 local Utils = require 'dmc_utils'
 
@@ -76,6 +77,8 @@ local easingx = require( ui_find( 'dmc_widget.lib.easingx' ) )
 --====================================================================--
 --== Setup, Constants
 
+
+Patch.addPatch( 'print-output' )
 
 local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
@@ -303,10 +306,10 @@ function ScaleMotion:setZoomScale( scale, params )
 	--==--
 	if scale < self._minZoom then
 		scale = self._minZoom
-		print("NOTICE: scale being reset to ", scale )
+		pnotice( sfmt( "ScaleMotion:setZoomScale minimum scale being set to: %s", scale ) )
 	elseif scale > self._maxZoom then
 		scale = self._maxZoom
-		print("NOTICE: scale being reset to ", scale )
+		pnotice( sfmt( "ScaleMotion:setZoomScale maximum scale being set to: %s", scale ) )
 	end
 
 	local eFI
@@ -666,7 +669,7 @@ function ScaleMotion:state_create( next_state, params )
 		self:do_state_at_rest( params )
 
 	else
-		pwarn( sfmt( "ScaleMotion:state_create unknown trans '%s'", tstr( next_state )))
+		pwarn( sfmt( "ScaleMotion:state_create unknown state transition '%s'", tstr( next_state )))
 	end
 end
 
@@ -695,7 +698,7 @@ function ScaleMotion:state_at_rest( next_state, params )
 		self:do_state_touch( params )
 
 	else
-		pwarn( sfmt( "ScaleMotion:state_at_rest unknown trans '%s'", tstr( next_state )))
+		pwarn( sfmt( "ScaleMotion:state_at_rest unknown state transition '%s'", tstr( next_state )))
 	end
 
 end
@@ -740,7 +743,7 @@ function ScaleMotion:state_touch( next_state, params )
 		self:do_state_decelerate( params )
 
 	else
-		print( sfmt( "ScaleMotion:state_touch unknown trans '%s'", tstr( next_state )))
+		pwarn( sfmt( "ScaleMotion:state_touch unknown state transition '%s'", tstr( next_state )))
 	end
 
 end
@@ -822,7 +825,7 @@ function ScaleMotion:state_decelerate( next_state, params )
 		self:do_state_restraint( params )
 
 	else
-		print( "WARNING :: ScaleMotion:state_decelerate > " .. tostring( next_state ) )
+		pwarn( sfmt( "ScaleMotion:state_decelerate unknown state transition '%s'", tstr( next_state )))
 	end
 
 end
@@ -893,7 +896,7 @@ function ScaleMotion:state_restore( next_state, params )
 		self:do_state_at_rest( params )
 
 	else
-		print( "WARNING :: ScaleMotion:state_restore > " .. tostring( next_state ) )
+		pwarn( sfmt( "ScaleMotion:state_restore unknown state transition '%s'", tstr( next_state )))
 	end
 
 end
@@ -972,7 +975,7 @@ function ScaleMotion:state_restraint( next_state, params )
 		self:do_state_restore( params )
 
 	else
-		print( "WARNING :: ScaleMotion:state_restraint > " .. tostring( next_state ) )
+		pwarn( sfmt( "ScaleMotion:state_restraint unknown state transition '%s'", tstr( next_state )))
 	end
 
 end
