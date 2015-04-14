@@ -128,7 +128,7 @@ function Scroller:__createView__()
 
 	o = display.newRect( 0,0,W,H )
 	o.anchorX, o.anchorY = 0, 0
-	o:setFillColor( 1,1,0,0.1 )
+	o:setFillColor( 1,1,1,0 )
 	self.view:insert( o )
 	self._rectBg = o
 
