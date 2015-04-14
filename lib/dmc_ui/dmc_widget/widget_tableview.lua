@@ -222,7 +222,7 @@ function TableView:__init__( params )
 	-- print( "TableView:__init__" )
 	params = params or {}
 	-- params.dataSource=params.dataSource
-	-- params.delegate=params.delegate
+	if params.decelerateTransitionTime==nil then params.decelerateTransitionTime=uiConst.TABLEVIEW_DECELERATE_TIME end
 	if params.estimatedRowHeight==nil then params.estimatedRowHeight=20 end
 	if params.renderMargin==nil then params.renderMargin=TableView._DEFAULT_RENDER_MARGIN end
 

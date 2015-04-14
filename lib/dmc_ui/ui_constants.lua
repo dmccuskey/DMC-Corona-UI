@@ -160,6 +160,11 @@ Constant.AXIS_VELOCITY_STACK_LENGTH = 4
 Constant.AXIS_VELOCITY_LIMIT = 1
 
 
+--======================================================--
+-- TableView
+
+Constant.TABLEVIEW_DECELERATE_TIME = 2000
+
 
 --====================================================================--
 --== Controls
