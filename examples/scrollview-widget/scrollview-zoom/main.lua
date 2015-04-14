@@ -68,9 +68,9 @@ end
 local function didZoomEvent( self, event )
 	-- print( "Main:didZoomEvent" )
 	-- local target = event.target -- scrollview
-	local view = event.view -- zoom item
-	local scale = event.scale -- zoom item
-	view.x, view.y = viewPos.x*scale, viewPos.y*scale
+	-- local view = event.view -- zoom item
+	-- local scale = event.scale -- zoom item
+	-- view.x, view.y = viewPos.x*scale, viewPos.y*scale
 end
 
 
@@ -81,9 +81,9 @@ local function zoomEndEvent( self, event )
 	-- print( "Main:zoomEndEvent" )
 	-- local target = event.target -- scrollview
 	-- local view = event.view -- zoom item
-	local view = event.view -- zoom item
-	local scale = event.scale -- zoom item
-	view.x, view.y = viewPos.x*scale, viewPos.y*scale
+	-- local view = event.view -- zoom item
+	-- local scale = event.scale -- zoom item
+	-- view.x, view.y = viewPos.x*scale, viewPos.y*scale
 end
 
 
@@ -92,6 +92,8 @@ end
 --== Main
 --===================================================================--
 
+
+viewPos = { x=0, y=0 }
 
 --== Create ScrollView delgate
 
@@ -109,22 +111,22 @@ local w, h = 200, 300
 local widget = dUI.newScrollView{
 	width=w,
 	height=h,
-	scrollWidth=300,
-	scrollHeight=400,
+	scrollWidth=1024,
+	scrollHeight=680,
 	delegate=delegate
 }
 widget.x, widget.y = H_CENTER-w/2, V_CENTER-h/2
 
-widget.minimumZoom=0.5
-widget.maximumZoom=1.2
+widget.minimumZoom=0.1
+widget.maximumZoom=1
+
 
 
 --== Create our object to display
 
-viewPos = { x=10, y=10 }
-view = display.newRect( viewPos.x, viewPos.y, 40,40 )
+view = display.newImage( 'asset/aci-trezza-faraglioni-sunset.jpg', viewPos.x, viewPos.y, true )
 view.anchorX, view.anchorY = 0,0
-view:setFillColor( 0.3,0.3,0.3 )
+view.alpha = 0.3
 
 widget.scroller:insert( view )
 
@@ -136,8 +138,9 @@ tdelay( 500, function()
 	local function callback()
 		print( "here in motion callback" )
 	end
-	widget:setContentPosition{
-		x=-40, y=0, onComplete=callback
-	}
+	widget:setZoomScale( 0.9 )
+	-- widget:setContentPosition{
+	-- 	-- x=-40, y=0, onComplete=callback
+	-- }
 end)
 
