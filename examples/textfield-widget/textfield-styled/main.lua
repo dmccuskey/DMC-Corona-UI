@@ -1,7 +1,7 @@
 --====================================================================--
--- Themed Background
+-- Styled TextField
 --
--- Shows themed use of the DMC Widget: Background
+-- Shows styled use of the DMC TextField Widget
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
@@ -19,6 +19,7 @@ print( "\n\n#########################################################\n\n" )
 
 
 local dUI = require 'lib.dmc_ui'
+local Utils = require 'dmc_utils'
 
 
 
@@ -84,6 +85,19 @@ end
 setupBackground()
 
 
+local delegate = {
+	-- shouldChangeCharacters = function( self, event )
+	-- 	print("main:shouldChangeCharacters", event )
+	-- 	Utils.print( event )
+	-- 	return true
+	-- end,
+	-- shouldBeginEditing = function( self )
+	-- 	print("main:shouldBeginEditing" )
+	-- 	return true
+	-- end
+}
+
+
 --======================================================--
 --== create textfield widget, default style
 
@@ -93,7 +107,8 @@ function run_example1()
 
 	tf1 = dUI.newTextField{
 		text="",
-		hintText="Pizza Topping:"
+		hintText="Pizza Topping:",
+		delegate=delegate
 	}
 	-- tf1:addEventListener( tf1.EVENT, widgetEvent_handler )
 	-- tf1.onProperty = widgetOnPropertyEvent_handler

@@ -56,6 +56,8 @@ local VERSION = "0.1.0"
 local Objects = require 'dmc_objects'
 local StatesMixModule = require 'dmc_states_mix'
 
+local Constants = require 'dmc_gestures.gesture_constants'
+
 
 
 --====================================================================--
@@ -67,6 +69,9 @@ local ObjectBase = Objects.ObjectBase
 
 local StatesMix = StatesMixModule.StatesMix
 
+local tcancel = timer.cancel
+local tdelay = timer.performWithDelay
+local tstr = tostring
 
 
 --====================================================================--
@@ -115,21 +120,32 @@ function Gesture:__init__( params )
 
 	assert( params.view )
 
+	-- save params for later
+	self._gr_params = params
+
 	--== Create Properties ==--
 
-	self._id = params.id
-
+	self._delegate = nil
+	self._id = nil
 	self._view = params.view
 
-	self._delegate = params.delegate
+	-- internal properties
+
+	self._fail_timer=nil
+
+	self._gesture_attempt=false
+	self._gesture_timer=nil
+
+	self._multitouch_evt = nil
+	self._multitouch_queue = {}
 
 	self._touch_count = 0
 	self._total_touch_count = 0
 	self._touches = {} -- keyed on ID
-	self._multitouch_evt = nil
-	self._multitouch_queue = {}
 
-	self._gesture_mgr = params.gesture_mgr
+	--== Objects ==--
+
+	self._gesture_mgr = nil
 
 	self:setState( Gesture.STATE_CREATE )
 end
@@ -145,16 +161,26 @@ function Gesture:__initComplete__()
 	-- print( "Gesture:__initComplete__" )
 	self:superCall( ObjectBase, '__initComplete__' )
 	--==--
+
+	local tmp = self._gr_params
+
+	--== Use Setters
+	self.id = tmp.id
+	self.delegate = tmp.delegate
+	self.gesture_mgr = tmp.gesture_mgr
+
+	self._gr_params = nil
+
 	self:gotoState( Gesture.STATE_POSSIBLE )
 end
 
---[[
+
 function Gesture:__undoInitComplete__()
 	-- print( "Gesture:__undoInitComplete__" )
+	self:_stopAllTimers()
 	--==--
 	self:superCall( ObjectBase, '__undoInitComplete__' )
 end
---]]
 
 -- END: Setup DMC Objects
 --======================================================--
@@ -163,6 +189,28 @@ end
 
 --====================================================================--
 --== Public Methods
+
+--======================================================--
+-- Getters/Setters
+
+
+function Gesture.__getters:id()
+	return self._id
+end
+function Gesture.__setters:id( value )
+	assert( value==nil or type(value)=='string' )
+	self._id = value
+end
+
+-- delegate
+
+function Gesture.__getters:delegate()
+	return self._delegate
+end
+function Gesture.__setters:delegate( value )
+	assert( value==nil or type(value)=='table' )
+	self._delegate = value
+end
 
 
 function Gesture.__getters:gesture_mgr()
@@ -176,24 +224,28 @@ end
 function Gesture.__getters:view()
 	return self._view
 end
-function Gesture.__setters:view( value )
-	self._view = value
-end
+-- function Gesture.__setters:view( value )
+-- 	self._view = value
+-- end
 
 
+-- @TODO
 function Gesture:cancelsTouchesInView()
 	-- print( "Gesture:cancelsTouchesInView" )
 end
 
+-- @TODO
 function Gesture:delaysTouchesBegan()
 	-- print( "Gesture:delaysTouchesBegan" )
 end
 
 
+-- @TODO
 function Gesture:delaysTouchesEnded()
 	-- print( "Gesture:delaysTouchesEnded" )
 end
 
+-- @TODO
 function Gesture:requiresGestureRecognizerToFail()
 	-- print( "Gesture:requiresGestureRecognizerToFail" )
 end
@@ -212,6 +264,8 @@ function Gesture:_do_reset()
 	self._touches = {} -- keyed on ID
 	self._multitouch_evt = nil
 	self._multitouch_queue = {}
+	self._gesture_attempt=false
+	self:_stopAllTimers()
 end
 
 function Gesture:reset()
@@ -226,16 +280,20 @@ function Gesture:shouldReceiveTouch()
 	local f = del and del.shouldReceiveTouch
 	local shouldReceiveTouch = true
 	if f then shouldReceiveTouch = f( self ) end
+	assert( type(shouldReceiveTouch)=='boolean', "ERROR: Delegate shouldReceiveTouch, expected return type boolean")
 	return shouldReceiveTouch
 end
 
 
+-- gesture is one which is Recognizing
+--
 function Gesture:forceToFail( gesture )
 	-- print( "Gesture:forceToFail", gesture )
 	local del = self._delegate
-	local f = del and del.shouldRecognizeSimultaneously
+	local f = del and del.shouldRecognizeWith
 	local shouldResume = false
-	if f then shouldResume = f( self, gesture ) end
+	if f then shouldResume = f( del, gesture, self ) end
+	assert( type(shouldResume)=='boolean', "ERROR: Delegate shouldRecognizeWith, expected return type boolean")
 	if not shouldResume then
 		self:gotoState( Gesture.STATE_FAILED, {notify=false} )
 	end
@@ -247,6 +305,9 @@ end
 --====================================================================--
 --== Private Methods
 
+
+--======================================================--
+-- Event Dispatch
 
 -- this one goes to the Gesture Manager
 function Gesture:_dispatchGestureNotification( notify )
@@ -289,11 +350,68 @@ function Gesture:_dispatchRecognizedEvent( data )
 end
 
 
+--======================================================--
+-- Gesture Timers
+
+function Gesture:_stopFailTimer()
+	-- print( "Gesture:_stopFailTimer" )
+	if not self._fail_timer then return end
+	tcancel( self._fail_timer )
+	self._fail_timer=nil
+end
+
+function Gesture:_startFailTimer( time )
+	if time==nil then time=Constants.FAIL_TIMEOUT end
+	--==--
+	-- print( "Gesture:_startFailTimer", self )
+	self:_stopFailTimer()
+	local func = function()
+		tdelay( 1, function()
+			self:gotoState( Gesture.STATE_FAILED )
+			self._fail_timer = nil
+		end)
+	end
+	self._fail_timer = tdelay( time, func )
+end
+
+
+function Gesture:_stopGestureTimer()
+	-- print( "Gesture:_stopGestureTimer" )
+	if not self._gesture_timer then return end
+	tcancel( self._gesture_timer )
+	self._gesture_timer=nil
+end
+
+function Gesture:_startGestureTimer( time )
+	-- print( "Gesture:_startGestureTimer", self )
+	if time==nil then time=Constants.GESTURE_TIMEOUT end
+	--==--
+	self:_stopFailTimer()
+	self:_stopGestureTimer()
+	local func = function()
+		tdelay( 1, function()
+			self:gotoState( Gesture.STATE_FAILED )
+			self._gesture_timer = nil
+		end)
+	end
+	self._gesture_timer = tdelay( time, func )
+end
+
+
+function Gesture:_stopAllTimers()
+	self:_stopFailTimer()
+	self:_stopGestureTimer()
+end
+
+
+--======================================================--
+-- Touch Event
+
 function Gesture:_createTouchEvent( event )
 	-- print( "Gesture:_createTouchEvent", event, self )
 	self._total_touch_count = self._total_touch_count + 1
 	self._touch_count = self._touch_count + 1
-	self._touches[ tostring(event.id) ] = {
+	self._touches[ tstr(event.id) ] = {
 		id=event.id,
 		name=event.name,
 		target=event.target,
@@ -309,7 +427,7 @@ end
 function Gesture:_updateTouchEvent( event )
 	-- print( "Gesture:_updateTouchEvent" )
 	for id, evt in pairs( self._touches ) do
-		if id==tostring(event.id) then
+		if id==tstr(event.id) then
 			evt.x, evt.y = event.x, event.y
 			evt.phase = event.phase
 		else
@@ -323,6 +441,13 @@ function Gesture:_endTouchEvent( event )
 	self:_updateTouchEvent( event )
 	self._touch_count = self._touch_count - 1
 end
+
+
+function Gesture:_removeTouchEvent( event )
+	-- print( "Gesture:_removeTouchEvent" )
+	self._touches[ tstr(event.id) ] = nil
+end
+
 
 
 
@@ -358,7 +483,7 @@ function Gesture:state_create( next_state, params )
 	elseif next_state == Gesture.STATE_FAILED then
 		self:do_state_failed( params )
 	else
-		print( "WARNING :: Gesture:state_create " .. tostring( next_state ) )
+		pwarn( sfmt( "Gesture:state_create unknown transition '%s'", tstr( next_state )))
 	end
 end
 
@@ -395,7 +520,7 @@ function Gesture:state_possible( next_state, params )
 		self:do_state_possible( params )
 
 	else
-		print( "WARNING :: Gesture:state_possible " .. tostring( next_state ) )
+		pwarn( sfmt( "Gesture:state_possible unknown transition '%s'", tstr( next_state )))
 	end
 end
 
@@ -420,7 +545,7 @@ function Gesture:state_recognized( next_state, params )
 		self:do_state_possible( params )
 
 	else
-		print( "WARNING :: Gesture:state_recognized " .. tostring( next_state ) )
+		pwarn( sfmt( "Gesture:state_recognized unknown transition '%s'", tstr( next_state )))
 	end
 end
 
@@ -432,6 +557,7 @@ function Gesture:do_state_failed( params )
 	params = params or {}
 	if params.notify==nil then params.notify=true end
 	--==--
+	self:_stopAllTimers()
 	self:setState( Gesture.STATE_FAILED )
 	self:_dispatchStateNotification( params.notify )
 end
@@ -444,7 +570,7 @@ function Gesture:state_failed( next_state, params )
 	elseif next_state == Gesture.STATE_FAILED then
 		-- pass
 	else
-		print( "WARNING :: Gesture:state_failed " .. tostring( next_state ) )
+		pwarn( sfmt( "Gesture:state_failed unknown transition '%s'", tstr( next_state )))
 	end
 end
 
