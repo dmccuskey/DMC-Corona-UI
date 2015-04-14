@@ -95,9 +95,17 @@ local BaseStyle = newClass( ObjectBase, {name="Style Base"}  )
 
 --== Class Constants
 
+--- the main style instance for the class.
+-- is is the root style for the class, all styles
+-- inherit from this one. set later in setup.
+--
 BaseStyle.__base_style__ = nil  -- <instance of class>
 
--- table to check for properties style should have
+--- table (hash) of valid style properties.
+-- used to check properties when updates come from Parent Style
+-- It's highly possible for Parent to have properties not available in
+-- a Child Style, so those should be skipped for propagation
+--
 BaseStyle._VALID_PROPERTIES = {}
 
 -- table of properties to exclude from checking
@@ -105,6 +113,12 @@ BaseStyle._VALID_PROPERTIES = {}
 --
 BaseStyle._EXCLUDE_PROPERTY_CHECK = {}
 
+--- table (hash) of children styles.
+-- this allows data (structures) for children
+-- to be processed separately.
+-- key/value should be name of child set to true, eg
+-- { text=true }
+--
 BaseStyle._CHILDREN = {}
 
 BaseStyle._VALID_PROPERTIES = {

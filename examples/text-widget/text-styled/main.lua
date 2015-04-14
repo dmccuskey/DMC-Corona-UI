@@ -1,7 +1,7 @@
 --====================================================================--
--- Themed Background
+-- Styled Text
 --
--- Shows themed use of the DMC Widget: Background
+-- Shows styled use of the DMC Text Widget
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License

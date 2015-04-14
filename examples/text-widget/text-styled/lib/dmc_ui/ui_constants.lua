@@ -89,7 +89,7 @@ Constant.IOS_8x = "8.0.0"
 
 Constant.WINDOWS = 'WinPhone'
 
-Constant.IS_IOS = ( PLATFORM=='iPhone OS' )
+Constant.IS_IOS = ( PLATFORM=='iPhone OS' or PLATFORM=='Mac OS X' )
 Constant.IS_ANDROID = ( PLATFORM=='Android' )
 Constant.IS_WINDOWS = ( PLATFORM=='WinPhone' )
 Constant.IS_SIMULATOR = ( PLATFORM=='Mac OS X' or PLATFORM=='Win' )
@@ -105,6 +105,13 @@ function Constant.getKeyboardHeight()
 	end
 end
 
+function Constant.getSystemSeparator()
+	if Constant.IS_IOS then
+		return '/'
+	else
+		return '\\'
+	end
+end
 
 
 --====================================================================--
@@ -126,6 +133,8 @@ Constant.NAVITEM = 'NavItem'
 Constant.NAVBAR = 'NavBar'
 Constant.SCROLLVIEW = 'ScrollView'
 Constant.TABLEVIEW = 'TableView'
+Constant.TABLEVIEWCELL = 'TableViewCell'
+Constant.TABLEVIEWCELL_STATE = 'TableViewCell-State'
 Constant.TEXT = 'Text'
 Constant.TEXTFIELD = 'TextField'
 
@@ -134,6 +143,27 @@ Constant.TEXTFIELD = 'TextField'
 Constant.ROUNDED = 'rounded'
 Constant.RECTANGLE = 'rectangle'
 
+
+--======================================================--
+-- ScrollView
+
+Constant.SCROLLVIEW_DECELERATE_TIME = 200
+
+-- Axis Motion
+
+Constant.AXIS_DECELERATE_TIME = 200
+Constant.AXIS_RESTORE_TIME = 400
+Constant.AXIS_RESTRAINT_TIME = 400
+Constant.AXIS_SCROLLTO_TIME = 500
+
+Constant.AXIS_VELOCITY_STACK_LENGTH = 4
+Constant.AXIS_VELOCITY_LIMIT = 1
+
+
+--======================================================--
+-- TableView
+
+Constant.TABLEVIEW_DECELERATE_TIME = 2000
 
 
 --====================================================================--
@@ -144,6 +174,8 @@ Constant.RECTANGLE = 'rectangle'
 
 Constant.NAVBAR_TRANSITION_TIME = 400
 Constant.PRESENT_CONTROL_TRANSITION_TIME = 100
+
+Constant.TABLEVIEW_TOUCH_THRESHOLD = 10
 
 -- Modal Types
 
