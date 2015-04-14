@@ -111,15 +111,15 @@ end)
 
 -- Go back
 
-timer.performWithDelay( 5000, function()
-	-- print( "going back" )
-	navBar:popNavItemAnimated()
-end)
+-- timer.performWithDelay( 5000, function()
+-- 	-- print( "going back" )
+-- 	navBar:popNavItemAnimated()
+-- end)
 
--- Go back
+-- -- Go back
 
-timer.performWithDelay( 7000, function()
-	-- print( "going back" )
-	navBar:popNavItemAnimated()
-end)
+-- timer.performWithDelay( 7000, function()
+-- 	-- print( "going back" )
+-- 	navBar:popNavItemAnimated()
+-- end)
 

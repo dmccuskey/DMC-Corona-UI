@@ -144,6 +144,27 @@ Constant.ROUNDED = 'rounded'
 Constant.RECTANGLE = 'rectangle'
 
 
+--======================================================--
+-- ScrollView
+
+Constant.SCROLLVIEW_DECELERATE_TIME = 200
+
+-- Axis Motion
+
+Constant.AXIS_DECELERATE_TIME = 200
+Constant.AXIS_RESTORE_TIME = 400
+Constant.AXIS_RESTRAINT_TIME = 400
+Constant.AXIS_SCROLLTO_TIME = 500
+
+Constant.AXIS_VELOCITY_STACK_LENGTH = 4
+Constant.AXIS_VELOCITY_LIMIT = 1
+
+
+--======================================================--
+-- TableView
+
+Constant.TABLEVIEW_DECELERATE_TIME = 2000
+
 
 --====================================================================--
 --== Controls
