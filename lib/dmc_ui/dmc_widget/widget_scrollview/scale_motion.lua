@@ -603,7 +603,7 @@ function ScaleMotion:touch( event )
 		--== Calculate new scale/velocity
 
 		oldVal = self._scale
-		newVal = constrain( self, self._scale, deltaVal )
+		newVal = constrain( self, self._scale, deltaVal*0.4 )
 		self:_updateVelocity( (oldVal-newVal)/deltaT )
 
 		self._scale = newVal
