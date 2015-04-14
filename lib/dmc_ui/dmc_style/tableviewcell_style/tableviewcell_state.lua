@@ -91,6 +91,14 @@ local Style = nil
 --====================================================================--
 
 
+--- TableViewCellState Style.
+-- This style is not to be created directly. The @{Style.TableViewCell} creates them for you.
+--
+-- **Inherits from:** <br>
+-- * @{Core.Style}
+--
+-- @classmod Style.TableViewCellState
+
 local TableViewCellStateStyle = newClass( BaseStyle, {name="TableViewCell State Style"} )
 
 --== Class Constants
