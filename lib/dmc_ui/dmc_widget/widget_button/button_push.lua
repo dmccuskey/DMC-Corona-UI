@@ -316,6 +316,7 @@ function PushButton:_hitAreaTouch_handler( event )
 
 		self:gotoState( self.STATE_ACTIVE )
 		self:_doPressEventDispatch()
+		return true
 	end
 
 	if not self._has_focus then return end
