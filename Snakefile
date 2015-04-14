@@ -13,6 +13,7 @@ module_config = {
 		"files": [
 			"dmc_ui.lua",
 			"dmc_ui/core/widget.lua",
+			"dmc_ui/core/style.lua",
 			"dmc_ui/ui_constants.lua",
 			"dmc_ui/ui_utils.lua",
 
@@ -28,7 +29,6 @@ module_config = {
 			"dmc_ui/dmc_style/background_style/rectangle_style.lua",
 			"dmc_ui/dmc_style/background_style/rounded_style.lua",
 			"dmc_ui/dmc_style/background_style/style_factory.lua",
-			"dmc_ui/dmc_style/base_style.lua",
 			"dmc_ui/dmc_style/button_state.lua",
 			"dmc_ui/dmc_style/button_style.lua",
 			"dmc_ui/dmc_style/navbar_style.lua",
