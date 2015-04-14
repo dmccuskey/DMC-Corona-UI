@@ -100,20 +100,23 @@ StatesMixModule.patch( AxisMotion )
 
 --== Class Constants
 
--- max number of items for velocity calculation
-AxisMotion.VELOCITY_STACK_LENGTH = 4
--- speed limit
-AxisMotion.VELOCITY_LIMIT = 1
-
-AxisMotion.DECELERATE_TRANS_TIME = 3000 -- test 1000 / def 1000
-AxisMotion.RESTORE_TRANS_TIME = 400 -- test 1000 / def 400
-AxisMotion.RESTRAINT_TRANS_TIME = 350  -- test 1000 / def 100
-AxisMotion.SCROLLTO_TRANS_TIME = 500  -- test 1000 / def 100
+AxisMotion.HIT_UPPER_LIMIT = 'upper-limit-hit'
+AxisMotion.HIT_LOWER_LIMIT = 'lower-limit-hit'
+AxisMotion.HIT_SIZE_LIMIT = 'size-limit-hit'
 
 AxisMotion.SCROLLBACK_FACTOR = 1/3
 
-AxisMotion.HIT_UPPER_LIMIT = 'upper_limit_hit'
-AxisMotion.HIT_LOWER_LIMIT = 'lower_limit_hit'
+AxisMotion.VELOCITY_STACK_LENGTH = uiConst.AXIS_VELOCITY_STACK_LENGTH
+AxisMotion.VELOCITY_LIMIT = uiConst.AXIS_VELOCITY_LIMIT
+
+AxisMotion.UPPER = 'upper-alignment'
+AxisMotion.MIDDLE = 'middle-aligment'
+AxisMotion.LOWER = 'lower-alignment'
+AxisMotion._VALID_ALIGNMENT = {
+	AxisMotion.UPPER,
+	AxisMotion.MIDDLE,
+	AxisMotion.LOWER
+}
 
 --== State Constants
 
@@ -136,13 +139,18 @@ AxisMotion.SCROLLED = 'scrolled'
 function AxisMotion:__init__( params )
 	-- print( "AxisMotion:__init__" )
 	params = params or {}
-	if params.bounceIsActive==nil then params.bounceIsActive = true end
-	if params.length==nil then params.length = 0 end
-	if params.lowerOffset==nil then params.lowerOffset = 0 end
-	if params.scrollbackFactor==nil then params.scrollbackFactor = AxisMotion.SCROLLBACK_FACTOR end
-	if params.scrollIsEnabled==nil then params.scrollIsEnabled = true end
-	if params.scrollLength==nil then params.scrollLength = 0 end
-	if params.upperOffset==nil then params.upperOffset = 0 end
+	if params.bounceIsActive==nil then params.bounceIsActive=true end
+	if params.autoAlign==nil then params.autoAlign=AxisMotion.MIDDLE end
+	if params.decelerateTransitionTime==nil then params.decelerateTransitionTime=uiConst.AXIS_DECELERATE_TIME end
+	if params.restoreTransitionTime==nil then params.restoreTransitionTime=uiConst.AXIS_RESTORE_TIME end
+	if params.restraintTransitionTime==nil then params.restraintTransitionTime=uiConst.AXIS_RESTRAINT_TIME end
+	if params.scrollToTransitionTime==nil then params.scrollToTransitionTime=uiConst.AXIS_SCROLLTO_TIME end
+	if params.length==nil then params.length=0 end
+	if params.lowerOffset==nil then params.lowerOffset=0 end
+	if params.scrollbackFactor==nil then params.scrollbackFactor=AxisMotion.SCROLLBACK_FACTOR end
+	if params.scrollIsEnabled==nil then params.scrollIsEnabled=true end
+	if params.scrollLength==nil then params.scrollLength=0 end
+	if params.upperOffset==nil then params.upperOffset=0 end
 
 	self:superCall( '__init__', params )
 	--==--
@@ -156,6 +164,13 @@ function AxisMotion:__init__( params )
 
 	self._id = params.id
 	self._callback = params.callback
+
+	self._autoAlign = nil
+
+	self._decelTransTime = 0
+	self._restoreTransTime = 0
+	self._restraintTransTime = 0
+	self._scrollToTransTime = 0
 
 	-- value is current position, eg x/y
 	self._value = 0
@@ -178,21 +193,21 @@ function AxisMotion:__init__( params )
 	self._scrollbackFactor = 0
 	self._scrollbackLimit = 0
 
-
+	-- block to make sure had a proper start
+	-- to touch events, eg 'began'
 	self._didBegin = false
 
 	--== Internal Properties
 
-	-- eg, HIT_UPPER_LIMIT, HIT_LOWER_LIMIT
+	-- eg, HIT_UPPER_LIMIT, HIT_LOWER_LIMIT, etc
 	self._scrollLimit = nil
 
-	-- last Touch Event, used for calculating deltas
+	-- previous Touch Event, used for calculating deltas
 	self._tmpTouchEvt = nil
 
-	-- last enterFrame event, used for calculating deltas
+	-- previous enterFrame event, used for calculating deltas
 	self._tmpFrameEvent = nil
 
-	-- self._touchEvtStack = {}
 	self._velocityStack = {0,0}
 	self._velocity = { value=0, vector=0 }
 
@@ -215,12 +230,18 @@ function AxisMotion:__initComplete__()
 	local tmp = self._ax_tmp_params
 
 	--== Use Setters
+	self.alignment = tmp.alignment
+	self.autoAlign = tmp.autoAlign
 	self.bounceIsActive = tmp.bounceIsActive
+	self.decelerateTransitionTime = tmp.decelerateTransitionTime
 	self.length = tmp.length
 	self.lowerOffset = tmp.lowerOffset
+	self.restoreTransitionTime = tmp.restoreTransitionTime
+	self.restraintTransitionTime = tmp.restraintTransitionTime
+	self.scrollbackFactor = tmp.scrollbackFactor
 	self.scrollIsEnabled = tmp.scrollIsEnabled
 	self.scrollLength = tmp.scrollLength
-	self.scrollbackFactor = tmp.scrollbackFactor
+	self.scrollToTransitionTime = tmp.scrollToTransitionTime
 	self.upperOffset = tmp.upperOffset
 
 	self._ax_tmp_params = nil
@@ -244,6 +265,22 @@ end
 
 
 -- whether to bounce on constraint
+function AxisMotion.__getters:autoAlign()
+	return self._autoAlign
+end
+function AxisMotion.__setters:autoAlign( value )
+	assert( value==nil or type(value)=='string' )
+	if value~=nil then
+		if not Utils.propertyIn( AxisMotion._VALID_ALIGNMENT, value ) then
+			error( "AxisMotion.alignment expected a valid value" )
+		end
+	end
+	--==--
+	self._autoAlign = value
+end
+
+
+-- whether to bounce on constraint
 function AxisMotion.__getters:bounceIsActive()
 	return self._bounceIsActive
 end
@@ -251,6 +288,16 @@ function AxisMotion.__setters:bounceIsActive( value )
 	assert( type(value)=='boolean' )
 	--==--
 	self._bounceIsActive = value
+end
+
+
+function AxisMotion.__getters:decelerateTransitionTime()
+	return self._decelTransTime
+end
+function AxisMotion.__setters:decelerateTransitionTime( value )
+	assert( type(value)=='number' and value > 0, "ERROR: AxisMotion.decelerateTransitionTime expected number", value )
+	--==--
+	self._decelTransTime = value
 end
 
 
@@ -283,14 +330,35 @@ function AxisMotion.__setters:lowerOffset( value )
 end
 
 
+function AxisMotion.__getters:restoreTransitionTime()
+	return self._restoreTransTime
+end
+function AxisMotion.__setters:restoreTransitionTime( value )
+	assert( type(value)=='number' and value > 0, "ERROR: AxisMotion.restoreTransitionTime expected number", value )
+	--==--
+	self._restoreTransTime = value
+end
+
+function AxisMotion.__getters:restraintTransitionTime()
+	return self._restraintTransTime
+end
+function AxisMotion.__setters:restraintTransitionTime( value )
+	assert( type(value)=='number' and value > 0, "ERROR: AxisMotion.restraintTransitionTime expected number", value )
+	--==--
+	self._restraintTransTime = value
+end
+
+
+
 function AxisMotion.__setters:scale( value )
 	-- print("AxisMotion.__setters:scale", value )
 	self._scale = value
 	local refPoint = self._refPoint
+	self:_setScaledScrollLength()
 	if refPoint~=nil then
 		self._value = self._tmpTouchEvt.value - refPoint*value
 	end
-	self:_setScaledScrollLength()
+	self:_checkScaledPosition()
 end
 
 
@@ -311,13 +379,23 @@ function AxisMotion.__setters:scrollIsEnabled( value )
 end
 
 
+function AxisMotion.__getters:scrollToTransitionTime()
+	return self._scrollToTransTime
+end
+function AxisMotion.__setters:scrollToTransitionTime( value )
+	assert( type(value)=='number' and value > 0, "ERROR: AxisMotion.scrollToTransitionTime expected number", value )
+	--==--
+	self._scrollToTransTime = value
+end
+
+
 -- this is the maximum dimension of the scroller
 function AxisMotion.__getters:scaledScrollLength()
 	return self._scaledScrollLength
 end
 
 function AxisMotion:_setScaledScrollLength()
-	self._scaledScrollLength = self._scrollLength * self._scale
+	self._scaledScrollLength = mfloor( self._scrollLength * self._scale )
 end
 
 
@@ -353,7 +431,7 @@ function AxisMotion:scrollToPosition( pos, params )
 	-- print( "AxisMotion:scrollToPosition", pos )
 	params = params or {}
 	-- params.onComplete=params.onComplete
-	if params.time==nil then params.time=AxisMotion.SCROLLTO_TRANS_TIME end
+	if params.time==nil then params.time=self._scrollToTransTime end
 	if params.limitIsActive==nil then params.limitIsActive=false end
 	--==--
 	local eFI
@@ -419,6 +497,18 @@ function AxisMotion:_setScrollbackLimit()
 end
 
 
+function AxisMotion:_checkScaledPosition()
+	-- print( "AxisMotion:_checkScaledPosition" )
+	if self:getState() ~= AxisMotion.STATE_AT_REST then return end
+	local value = self._value
+	if value==nil then return end
+	local newVal = self:_constrainPosition( value, 0 )
+	if value==newVal then return end
+	if newVal==nil then return end
+	self:scrollToPosition( newVal, {time=0} )
+end
+
+
 -- check if position is at a limit
 --
 function AxisMotion:_checkScrollBounds( value )
@@ -432,7 +522,9 @@ function AxisMotion:_checkScrollBounds( value )
 		calcs.min=upper
 		calcs.max=lower
 
-		if value > upper then
+		if self._scaledScrollLength < self._length then
+			self._scrollLimit = AxisMotion.HIT_SIZE_LIMIT
+		elseif value > upper then
 			self._scrollLimit = AxisMotion.HIT_UPPER_LIMIT
 		elseif value < lower then
 			self._scrollLimit = AxisMotion.HIT_LOWER_LIMIT
@@ -448,7 +540,9 @@ end
 -- ensure position stays within boundaries
 --
 function AxisMotion:_constrainPosition( value, delta )
-	-- print( "AxisMotion:_constrainPosition", value, delta )
+	if self._id=='y' then
+		-- print( "AxisMotion:_constrainPosition", value, delta )
+	end
 
 	local isBounceActive = self._bounceIsActive
 	local LIMIT = self._scrollbackLimit
@@ -458,7 +552,19 @@ function AxisMotion:_constrainPosition( value, delta )
 	calcs = self:_checkScrollBounds( newVal )
 	scrollLimit = self._scrollLimit -- after check bounds
 
-	if scrollLimit==AxisMotion.HIT_UPPER_LIMIT then
+	if scrollLimit==AxisMotion.HIT_SIZE_LIMIT then
+		local align = self._autoAlign
+		if align==nil then
+			newVal = newValue
+		elseif align==AxisMotion.MIDDLE then
+			newVal = self._length*0.5 - self._scaledScrollLength*0.5
+		elseif align==AxisMotion.LOWER then
+			newVal = self._length - self._scaledScrollLength
+		else
+			newVal = 0
+		end
+
+	elseif scrollLimit==AxisMotion.HIT_UPPER_LIMIT then
 		if not isBounceActive then
 			newVal=calcs.min
 		else
@@ -482,6 +588,10 @@ function AxisMotion:_constrainPosition( value, delta )
 			self:_checkScrollBounds( newVal )
 		end
 
+	end
+
+	if self._id=='y' then
+		-- print( "constain", self._scrollLimit )
 	end
 
 	return newVal
@@ -689,7 +799,7 @@ function AxisMotion:state_create( next_state, params )
 		self:do_state_at_rest( params )
 
 	else
-		pwarn( sfmt( "AxisMotion:state_create unknown trans '%s'", tstr( next_state )))
+		pwarn( sfmt( "AxisMotion:state_create unknown transition '%s'", tstr( next_state )))
 	end
 end
 
@@ -717,7 +827,7 @@ function AxisMotion:state_at_rest( next_state, params )
 		self:do_state_touch( params )
 
 	else
-		pwarn( sfmt( "AxisMotion:state_at_rest unknown trans '%s'", tstr( next_state )))
+		pwarn( sfmt( "AxisMotion:state_at_rest unknown transition '%s'", tstr( next_state )))
 	end
 
 end
@@ -762,7 +872,7 @@ function AxisMotion:state_touch( next_state, params )
 		self:do_state_decelerate( params )
 
 	else
-		print( sfmt( "AxisMotion:state_touch unknown trans '%s'", tstr( next_state )))
+		pwarn( sfmt( "AxisMotion:state_touch unknown state transition '%s'", tstr( next_state )))
 	end
 
 end
@@ -774,7 +884,7 @@ function AxisMotion:do_state_decelerate( params )
 	-- print( "AxisMotion:do_state_decelerate" )
 	params = params or {}
 	--==--
-	local TIME = AxisMotion.DECELERATE_TRANS_TIME
+	local TIME = self._decelTransTime
 	local constrain = AxisMotion._constrainPosition
 	local ease_f = easingx.easeOutQuad
 	local _mabs = mabs
@@ -844,7 +954,7 @@ function AxisMotion:state_decelerate( next_state, params )
 		self:do_state_restraint( params )
 
 	else
-		print( "WARNING :: AxisMotion:state_decelerate > " .. tostring( next_state ) )
+		pwarn( sfmt( "AxisMotion:state_decelerate unknown state transition '%s'", tstr( next_state )))
 	end
 
 end
@@ -856,7 +966,7 @@ function AxisMotion:do_state_restore( params )
 	-- print( "AxisMotion:do_state_restore" )
 	params = params or {}
 	--==--
-	local TIME = AxisMotion.RESTORE_TRANS_TIME
+	local TIME = self._restoreTransTime
 	local constrain = AxisMotion._constrainPosition
 	local ease_f = easingx.easeOut
 
@@ -867,7 +977,10 @@ function AxisMotion:do_state_restore( params )
 	local delta, offset
 
 	-- calculate restore distance
-	if self._scrollLimit == AxisMotion.HIT_UPPER_LIMIT then
+	local scrollLimit = self._scrollLimit
+	if scrollLimit == AxisMotion.HIT_SIZE_LIMIT then
+		offset = constrain( self, val, 0 )
+	elseif scrollLimit == AxisMotion.HIT_UPPER_LIMIT then
 		offset = self._upperOffset
 	else
 		offset = (self._length - self._scaledScrollLength - self._lowerOffset)
@@ -915,7 +1028,7 @@ function AxisMotion:state_restore( next_state, params )
 		self:do_state_at_rest( params )
 
 	else
-		print( "WARNING :: AxisMotion:state_restore > " .. tostring( next_state ) )
+		pwarn( sfmt( "AxisMotion:state_restore unknown state transition '%s'", tstr( next_state )))
 	end
 
 end
@@ -930,7 +1043,7 @@ function AxisMotion:do_state_restraint( params )
 	-- print( "AxisMotion:do_state_restraint" )
 	params = params or {}
 	--==--
-	local TIME = AxisMotion.RESTRAINT_TRANS_TIME
+	local TIME = self._restraintTransTime
 	local constrain = AxisMotion._constrainPosition
 	local ease_f = easingx.easeOut
 	local _mabs = mabs
@@ -994,7 +1107,7 @@ function AxisMotion:state_restraint( next_state, params )
 		self:do_state_restore( params )
 
 	else
-		print( "WARNING :: AxisMotion:state_restraint > " .. tostring( next_state ) )
+		pwarn( sfmt( "AxisMotion:state_restraint unknown state transition '%s'", tstr( next_state )))
 	end
 
 end

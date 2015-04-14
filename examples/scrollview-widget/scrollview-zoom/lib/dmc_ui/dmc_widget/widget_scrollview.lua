@@ -86,7 +86,7 @@ local newClass = Objects.newClass
 
 local circle
 
-local mmax = math.max
+local mmin = math.min
 local tcancel = timer.cancel
 local tdelay = timer.performWithDelay
 local type = _G.type
@@ -141,7 +141,6 @@ ScrollView.STYLE_TYPE = uiConst.SCROLLVIEW
 -- @usage
 -- widget:addEventListener( widget.EVENT, listener )
 
-
 ScrollView.EVENT = 'scrollview-widget-event'
 
 
@@ -154,6 +153,7 @@ function ScrollView:__init__( params )
 	-- print( "ScrollView:__init__", params )
 	params = params or {}
 	if params.bounceIsActive==nil then params.bounceIsActive=true end
+	if params.decelerateTransitionTime==nil then params.decelerateTransitionTime=uiConst.SCROLLVIEW_DECELERATE_TIME end
 	if params.horizontalScrollEnabled==nil then params.horizontalScrollEnabled=true end
 	if params.lowerHorizontalOffset==nil then params.lowerHorizontalOffset = 0 end
 	if params.lowerVerticalOffset==nil then params.lowerVerticalOffset = 0 end
@@ -178,6 +178,8 @@ function ScrollView:__init__( params )
 	self._contentPosition_dirty=true
 
 	-- self._enterFrameIterator = nil
+
+	self._autoAlign = true
 
 	self._hasMoved = false
 	self._isMoving = false
@@ -276,7 +278,6 @@ function ScrollView:__undoCreateView__()
 	self:superCall( '__undoCreateView__' )
 end
 
-
 --== initComplete
 
 function ScrollView:__initComplete__()
@@ -287,7 +288,7 @@ function ScrollView:__initComplete__()
 	local o, f
 
 	local delegate = {
-		shouldRecognizeWith=function(self, gr_rec, gr_fail )
+		shouldRecognizeWith=function( self, gr_rec, gr_fail )
 			return true
 		end
 	}
@@ -299,7 +300,7 @@ function ScrollView:__initComplete__()
 	self._panGesture = o
 
 	o = Gesture.newPinchGesture( self._rectBg, { id='pinch' } )
-	o.test_mode=false
+	-- o.test_mode=false
 	o.delegate=delegate
 	o:addEventListener( o.EVENT, f )
 	self._pinchGesture = o
@@ -324,6 +325,8 @@ function ScrollView:__initComplete__()
 	self.minimumZoom = tmp.minimumZoom
 	self.maximumZoom = tmp.maximumZoom
 	-- self:setZoomScale( tmp.zoomScale )
+
+	self.decelerateTransitionTime = tmp.decelerateTransitionTime
 
 	self.horizontalScrollEnabled = tmp.horizontalScrollEnabled
 	self.upperHorizontalOffset = tmp.upperHorizontalOffset
@@ -385,17 +388,8 @@ end
 --====================================================================--
 --== Public Methods
 
-
---- description of parameters for method :setContentPosition().
--- this is the complete list of properties for the :setContentPosition() parameter table. Though x or y are optional, at least one of them must be specified.
---
--- @within Parameters
--- @tfield[opt] number x The x position to scroll to.
--- @tfield[opt] number y The y position to scroll to.
--- @tfield[opt=500] number Time duration for scroll animation, in milliseconds. set to 0 for immediate transition.
--- @tfield[opt] func onComplete a function to call when the animation is complete
--- @table .setContentPositionParams
-
+-- override x/y to can give location to Axis Motion controls
+-- we sidestep use of localToContent()
 
 function ScrollView.__setters:x( value )
 	WidgetBase.__setters.x( self, value )
@@ -466,6 +460,17 @@ function ScrollView.__setters:bounceIsActive( value )
 	self._axisX.bounceIsActive = value
 	self._axisY.bounceIsActive = value
 end
+
+function ScrollView.__getters:decelerateTransitionTime()
+	-- print( "ScrollView.__getters:decelerateTransitionTime" )
+	return self._axisX.decelerateTransitionTime
+end
+function ScrollView.__setters:decelerateTransitionTime( value )
+	-- print( "ScrollView.__setters:decelerateTransitionTime", value )
+	self._axisX.decelerateTransitionTime = value
+	self._axisY.decelerateTransitionTime = value
+end
+
 
 --== .delegate
 
@@ -549,6 +554,24 @@ end
 function ScrollView.__setters:horizontalScrollEnabled( value )
 	-- print( "ScrollView.__setters:horizontalScrollEnabled", value )
 	self._axisX.scrollIsEnabled = value
+end
+
+--== .horizontalAxisAutoAlign
+
+function ScrollView.__getters:horizontalAxisAutoAlign()
+	return self._axisX.autoAlign
+end
+function ScrollView.__setters:horizontalAxisAutoAlign( value )
+	self._axisX.autoAlign = value
+end
+
+--== .verticalAxisAutoAlign
+
+function ScrollView.__getters:verticalAxisAutoAlign()
+	return self._axisY.autoAlign
+end
+function ScrollView.__setters:verticalAxisAutoAlign( value )
+	self._axisY.autoAlign = value
 end
 
 
@@ -715,11 +738,11 @@ end
 function ScrollView:_calculateMinScale()
 	local scaleW = self._width / self._scrollWidth
 	local scaleH = self._height / self._scrollHeight
-	local minScale = mmax( scaleW, scaleH )
+	local minScale = mmin( scaleW, scaleH )
 
 	self._minScale = minScale
 	if self.minimumZoom < minScale then
-		print( "NOTICE: reset minimum scale to ", minScale )
+		pnotice( sfmt( "ScrollView minimum scale being set to: %s", minScale ) )
 		self.minimumZoom = minScale
 	end
 end
@@ -787,8 +810,11 @@ end
 --
 -- @within Methods
 -- @function :setContentPosition
--- @tab params table of coordinates, see @{setContentPositionParams}
--- @usage widget:setContentPosition( { x=-20, y=-35 } )
+-- @tab params table of coordinates (Though x or y are optional, at least one of them must be specified)
+-- @number[opt] params.x x position
+-- @number[opt] params.y y position
+-- @number[opt=500] params.time duration of animation
+-- @func[opt] params.onComplete function reference to call after animation
 
 function ScrollView:setContentPosition( params )
 	-- print( "ScrollView:setContentPosition", params )
@@ -1304,7 +1330,7 @@ function ScrollView:_gestureEvent_handler( event )
 			end
 
 			if event.gesture=='pinch' and self._canZoom then
-				-- circle = display.newCircle( event.x, event.y, 6 )
+				circle = display.newCircle( event.x, event.y, 6 )
 				local zView = self:_getZoomView()
 				if zView then
 					evt.value = event.scale
@@ -1334,7 +1360,7 @@ function ScrollView:_gestureEvent_handler( event )
 			end
 
 			if event.gesture=='pinch' and self._zoomView then
-				-- circle.x, circle.y = event.x, event.y
+				circle.x, circle.y = event.x, event.y
 				evt.value = event.scale
 				evt.start = event.start
 				self._scaleMotion:touch( evt )
@@ -1356,7 +1382,7 @@ function ScrollView:_gestureEvent_handler( event )
 			end
 
 			if event.gesture=='pinch' and self._zoomView then
-				-- if circle then circle:removeSelf() ; circle=nil end
+				if circle then circle:removeSelf() ; circle=nil end
 				evt.value = event.scale
 				evt.start = event.start
 				self._scaleMotion:touch( evt )
@@ -1377,9 +1403,9 @@ end
 function ScrollView:_axisEvent_handler( event )
 	-- print( "ScrollView:_axisEvent_handler", event.state )
 	if event.id=='x' then
-		self._scroller.x = event.value*self.__zoomScale
+		self._scroller.x = event.value -- *self.__zoomScale
 	else
-		self._scroller.y = event.value*self.__zoomScale
+		self._scroller.y = event.value -- *self.__zoomScale
 	end
 end
 
