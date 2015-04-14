@@ -123,9 +123,6 @@ tableData = createDataArray()
 -- setup tableview delegate/helper
 
 local delegate = {
-}
-
-local dataSource = {
 	numberOfRows=getRows,
 	onRowRender=onRender,
 	onRowUnrender=onUnrender,
@@ -137,7 +134,6 @@ local tV = dUI.newTableView{
 	width=DIMS.w,
 	height=DIMS.h*SHOW,
 	delegate=delegate,
-	dataSource=dataSource,
 	estimatedRowHeight=DIMS.h,
 	-- autoMask=true
 }

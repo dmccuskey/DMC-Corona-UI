@@ -221,7 +221,6 @@ TableView.SELECTED_ROW = 'row-selected-event'
 function TableView:__init__( params )
 	-- print( "TableView:__init__" )
 	params = params or {}
-	-- params.dataSource=params.dataSource
 	if params.decelerateTransitionTime==nil then params.decelerateTransitionTime=uiConst.TABLEVIEW_DECELERATE_TIME end
 	if params.estimatedRowHeight==nil then params.estimatedRowHeight=20 end
 	if params.renderMargin==nil then params.renderMargin=TableView._DEFAULT_RENDER_MARGIN end
@@ -267,8 +266,6 @@ function TableView:__init__( params )
 	self._tableCellHighlight_timer = nil
 	self._tableCellTouch_f = nil
 
-	self._dataSource = nil
-
 end
 
 -- function TableView:__undoInit__()
@@ -285,7 +282,6 @@ function TableView:__initComplete__()
 	self:superCall( '__initComplete__' )
 	--==--
 	local tmp = self._tv_tmp_params
-	local o, f
 
 	self._is_rendered = false
 
@@ -295,7 +291,6 @@ function TableView:__initComplete__()
 	self._tableCellTouch_f = self:createCallback( TableView._tableCellTouch_handler )
 
 	--== Use Setters
-	self.dataSource = tmp.dataSource
 	self.estimatedRowHeight = tmp.estimatedRowHeight
 	self.renderMargin = tmp.renderMargin
 
@@ -306,7 +301,6 @@ end
 
 function TableView:__undoInitComplete__()
 	-- print( "TableView:__undoInitComplete__" )
-	local o, f
 
 	self:deleteAllItems()
 
@@ -462,25 +456,6 @@ end
 function TableView.__setters:scrollWidth( value )
 	-- print( "TableView.__setters:scrollWidth", value )
 	ScrollView.__setters.scrollWidth( self, 0 )
-end
-
-
---== .dataSource
-
---- set/get the data source for the TableView.
--- this should be an object (or table). It should define methods following @{DataSource.TableView}.
---
--- @within Properties
--- @function .dataSource
--- @usage widget.dataSource = <delegate object>
-
-function TableView.__getters:dataSource()
-	-- print( "TableView.__getters:dataSource" )
-	return self._dataSource
-end
-function TableView.__setters:dataSource( value )
-	-- print( "TableView.__setters:dataSource", value )
-	self._dataSource = value
 end
 
 --== .estimatedRowHeight
@@ -658,10 +633,10 @@ end
 
 function TableView:reloadData()
 	-- print( "TableView:reloadData" )
-	assert( self._dataSource and self._delegate, "TableView:reloadData missing data source or delegate" )
+	assert( self._delegate, "TableView:reloadData missing delegate" )
 	--==--
 	local eRH = self._estimatedRowHeight
-	local num = self._dataSource:numberOfRows( self, 0 )
+	local num = self._delegate:numberOfRows( self, 0 )
 	local records = {}
 	local yMin = 0
 
@@ -1097,9 +1072,7 @@ function TableView:_renderTableCell( record, options )
 	if record._view then --[[ print("already rendered") ; --]] return end
 
 	local width = self._width
-	local dataSource = self._dataSource
 	local renderedCells = self._renderedTableCells
-	local scr = self._scroller
 	local view, hit
 	local bg, line, o
 
@@ -1155,9 +1128,9 @@ function TableView:_renderTableCell( record, options )
 		index=record._index,
 		data=record._user,
 	}
-	dataSource:onRowRender( e )
+	self._delegate:onRowRender( e )
 
-	scr:insertItem( view )
+	self._scroller:insertItem( view )
 	view.x, view.y = 0, record._yMin
 
 	-- save rendered record
@@ -1180,9 +1153,7 @@ function TableView:_unrenderTableCell( record, options )
 	--==--
 	if not record._view then return false end
 
-	local dataSource = self._dataSource
 	local renderedCells = self._renderedTableCells
-	local scr = self._scroller
 	local index = options.index
 	local view, hit
 	local o
@@ -1200,7 +1171,7 @@ function TableView:_unrenderTableCell( record, options )
 
 	tremove( renderedCells, index )
 
-	scr:removeItem( view )
+	self._scroller:removeItem( view )
 
 	local e ={
 		name = TableView.EVENT,
@@ -1211,7 +1182,7 @@ function TableView:_unrenderTableCell( record, options )
 		data=record._user,
 		index=record._index,
 	}
-	dataSource:onRowUnrender( e )
+	self._delegate:onRowUnrender( e )
 
 	view.__bg:removeSelf()
 	view.__bg= nil
