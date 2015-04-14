@@ -64,6 +64,7 @@ module_config = {
 			"dmc_ui/dmc_widget/widget_navitem.lua",
 			"dmc_ui/dmc_widget/widget_scrollview.lua",
 			"dmc_ui/dmc_widget/widget_scrollview/axis_motion.lua",
+			"dmc_ui/dmc_widget/widget_scrollview/scale_motion.lua",
 			"dmc_ui/dmc_widget/widget_scrollview/scroller.lua",
 			"dmc_ui/dmc_widget/widget_slideview.lua",
 			"dmc_ui/dmc_widget/widget_tableview.lua",
