@@ -211,7 +211,7 @@ function NavBar:__createView__()
 	local o = display.newRect( 0,0,0,0 )
 	o.isHitTestable = true
 	o.anchorX, o.anchorY = 0.5,0.5
-	self.view:insert( o ) -- using view because of override
+	self._dgBg:insert( o )
 	self._rctHit = o
 end
 

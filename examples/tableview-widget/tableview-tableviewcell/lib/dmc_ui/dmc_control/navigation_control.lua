@@ -191,8 +191,8 @@ function NavControl:__createView__()
 
 	o = display.newRect( 0, 0, W, H )
 	o:setFillColor(0,0,0,0)
-	if LOCAL_DEBUG or true then
-		o:setFillColor(1,0,0,1)
+	if LOCAL_DEBUG then
+		o:setFillColor(1,0,0,0.2)
 	end
 	o.anchorX, o.anchorY = ANCHOR.x, ANCHOR.y
 
