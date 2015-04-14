@@ -89,6 +89,7 @@ local function onRender( self, event )
 
 	o = display.newText( "row : "..index, 10, 5, native.systemFont, 16 )
 	o.anchorX, o.anchorY = 0,0
+	o:setFillColor(0,0,0)
 
 	view:insert( o )
 	view._txt = o
@@ -137,7 +138,8 @@ local tV = dUI.newTableView{
 	height=DIMS.h*SHOW,
 	delegate=delegate,
 	dataSource=dataSource,
-	estimatedRowHeight=DIMS.h
+	estimatedRowHeight=DIMS.h,
+	-- autoMask=true
 }
 tV.x, tV.y = OFFSET*0.5, OFFSET*0.5+100
 

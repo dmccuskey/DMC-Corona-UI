@@ -222,7 +222,7 @@ function TableView:__init__( params )
 	-- print( "TableView:__init__" )
 	params = params or {}
 	-- params.dataSource=params.dataSource
-	-- params.delegate=params.delegate
+	if params.decelerateTransitionTime==nil then params.decelerateTransitionTime=uiConst.TABLEVIEW_DECELERATE_TIME end
 	if params.estimatedRowHeight==nil then params.estimatedRowHeight=20 end
 	if params.renderMargin==nil then params.renderMargin=TableView._DEFAULT_RENDER_MARGIN end
 
@@ -729,10 +729,10 @@ function TableView:scrollToRowAt( idx, params )
 
 	if params.time then
 		-- set scroll in motion
-		self._axis_y:scrollToPosition( pos, params )
+		self._axisY:scrollToPosition( pos, params )
 	else
 		self:_unrenderAllTableCells()
-		self._axis_y:scrollToPosition( pos, params )
+		self._axisY:scrollToPosition( pos, params )
 		self:_renderDisplay{ clearAll=false }
 	end
 
@@ -756,7 +756,7 @@ function TableView:_viewportBounds()
 		yMin = nil,
 		yMax = nil,
 	}
-	local o = self._axis_y
+	local o = self._axisY
 	local rM = self._renderMargin
 	if o then
 		bounds.yMin = 0 - o.value - rM
@@ -1058,11 +1058,7 @@ function TableView:_tableCellTouch_handler( event )
 		-- give back again. this enables better looking motion
 		self._tmpTouchEvt = event
 
-	end
-
-	if not event.isFocused then return end
-
-	if phase == 'moved' then
+	elseif phase == 'moved' then
 		local threshold = uiConst.TABLEVIEW_TOUCH_THRESHOLD
 		local hasScrolled = (mabs( event.yStart - event.y ) > threshold)
 		if hasScrolled then
