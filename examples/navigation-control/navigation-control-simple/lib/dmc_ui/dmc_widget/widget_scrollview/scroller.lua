@@ -128,12 +128,12 @@ function Scroller:__createView__()
 
 	o = display.newRect( 0,0,W,H )
 	o.anchorX, o.anchorY = 0, 0
-	o:setFillColor( 1,1,0,0.2 )
-	self:insert( o )
+	o:setFillColor( 1,1,1,0 )
+	self.view:insert( o )
 	self._rectBg = o
 
 	dg = display.newGroup()
-	self:insert( dg )
+	self.view:insert( dg )
 	self._dgMain = dg
 
 end
@@ -174,7 +174,7 @@ function Scroller.__getters:x( value )
 	return ( self.view.x - self._x_offset )
 end
 function Scroller.__setters:x( value )
-	-- print( "Scroller.__setters:x" )
+	-- print( "Scroller.__setters:x", value )
 	self.view.x = ( value + self._x_offset )
 end
 function Scroller.__getters:y( value )
@@ -204,7 +204,7 @@ end
 
 
 function Scroller:insertItem( item )
-	-- print( "Scroller:insertItem" )
+	-- print( "Scroller:insertItem", item )
 	return self._dgMain:insert( item )
 end
 

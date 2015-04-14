@@ -205,6 +205,16 @@ end
 
 --== Style Getters/Setters ==--
 
+--- set/get widget style.
+-- style can be a style name or a Style Object.
+-- Style Object must be appropriate style for Widget, eg style for Background widget comes from dUI.newBackgroundStyle().
+-- @within Inherited
+-- @function .style
+-- @usage widget.style = 'widget-home-page'
+-- @usage
+-- local wStyle = dUI.newBackgroundStyle()
+-- widget.style = wStyle
+--
 function StyleMix.__getters:style()
 	-- print( "StyleMix.__getters:style" )
 	return self.curr_style
@@ -277,6 +287,13 @@ function StyleMix.setActiveStyle( self, data, params )
 	end
 end
 
+--- clear any local properties on style.
+-- causes full style-inheritance to activate.
+--
+-- @within Inherited
+-- @function clearStyle
+-- @usage widget:clearStyle()
+--
 function StyleMix:clearStyle()
 	return self.curr_style:clearProperties()
 end
@@ -306,6 +323,7 @@ function StyleMix.__getters:width()
 end
 function StyleMix.__setters:width( value )
 	-- print( 'StyleMix.__setters:width', value )
+	self:_widthChanged()
 	self.curr_style.width = value
 end
 
@@ -317,6 +335,7 @@ function StyleMix.__getters:height()
 end
 function StyleMix.__setters:height( value )
 	-- print( 'StyleMix.__setters:height', value )
+	self:_heightChanged()
 	self.curr_style.height = value
 end
 
@@ -332,6 +351,13 @@ end
 
 --== anchorX
 
+--- set/get anchorX.
+--
+-- @within Inherited
+-- @function .anchorX
+-- @usage widget.anchorX = 5
+-- @usage print( widget.anchorX )
+--
 function StyleMix.__getters:anchorX()
 	return self.curr_style.anchorX
 end
@@ -342,6 +368,13 @@ end
 
 --== anchorY
 
+--- set/get anchorY.
+--
+-- @within Inherited
+-- @function .anchorY
+-- @usage widget.anchorY = 5
+-- @usage print( widget.anchorY )
+--
 function StyleMix.__getters:anchorY()
 	return self.curr_style.anchorY
 end

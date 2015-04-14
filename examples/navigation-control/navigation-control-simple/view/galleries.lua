@@ -104,7 +104,7 @@ local function createGalleriesView( data )
 	-- background
 
 	o = display.newRect(0, 0, W, H)
-	o:setFillColor(0.2,0.2,0.5)
+	o:setFillColor(0,0.2,0.1)
 	o.anchorX, o.anchorY = 0.5, 0
 	dg:insert( o )
 
@@ -112,7 +112,6 @@ local function createGalleriesView( data )
 
 	local pos, offset = 100, 75
 	for i, gallery in ipairs( data ) do
-
 		local o = dUI.newPushButton{
 			labelText = "Show "..gallery.title,
 			data = { navView, gallery },
