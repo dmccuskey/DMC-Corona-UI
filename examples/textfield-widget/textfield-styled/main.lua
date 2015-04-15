@@ -36,8 +36,9 @@ local H_CENTER, V_CENTER = W*0.5, H*0.5
 --== Support Functions
 
 
+--======================================================--
 -- Setup Visual Screen Items
---
+
 local function setupBackground()
 	local width, height = 100, 50
 	local o
@@ -56,6 +57,9 @@ local function setupBackground()
 	o.x, o.y = H_CENTER, V_CENTER
 end
 
+
+--======================================================--
+-- Widget Handlers
 
 local function widgetOnPropertyEvent_handler( event )
 	print( 'Main: widgetOnPropertyEvent_handler', event.id, event.phase )
@@ -127,7 +131,7 @@ function run_example1()
 	tf1.align='left'
 	tf1.marginX=10
 	tf1.hintFontSize=18
-	tf1:setBackgroundFillColor( 1,0.5,0.2,1 )
+	tf1:setBackgroundFillColor( 1,0.5,0.2,0.3 )
 
 	-- tf1.isSecure=true
 	-- tf1.isHitActive=true
@@ -191,7 +195,7 @@ function run_example1()
 
 end
 
-run_example1()
+-- run_example1()
 
 
 
@@ -202,74 +206,33 @@ run_example1()
 
 function run_example2()
 
+	local w1
 
-	-- timer.performWithDelay( 2000, function()
-	-- 	print("\n\n Update Properties")
-	-- 	-- test hint-text props
+	w1 = dUI.newTextField{
+		text="",
+		hintText="Pizza Topping:",
+	}
+	w1.x = H_CENTER
+	w1.y = V_CENTER
 
-	-- 	tf1.x = H_CENTER
-	-- 	tf1.y = V_CENTER
+	w1:setAnchor( {0,0} )
+	w1:setAnchor( {0.5,0.5} )
+	-- w1:setAnchor( {1,1} )
 
-	-- 	-- testing hint properties
-	-- 	tf1.text=""
-
-	-- 	tf1.align='right'
-
-	-- 	-- tf1.marginX=5
-	-- 	-- tf1.marginY=10
-
-	-- 	-- tf1.width=200
-	-- 	-- tf1.height=60
-
-	-- 	-- tf1:setAnchor( {0,0} )
-	-- 	-- tf1:setAnchor( {0,1} )
-	-- 	-- tf1:setAnchor( {1,1} )
-
-	-- 	tf1.hintFont = native.systemFontBold
-	-- 	tf1.hintFontSize = 50
-	-- 	tf1:setHintColor( 0.5,0.5,0.5, 1)
-
-	-- end)
+	w1:setBackgroundFillColor( 1,0.5,0.2,1 )
+	w1.marginX = 10
+	w1.align = 'left'
 
 
-	-- tf1.text="hamburger"
-
-
-	-- timer.performWithDelay( 1000, function()
-	-- 	print("\n\n Update Properties")
-	-- 	-- test hint-text props
-
-	-- 	tf1.x = H_CENTER
-	-- 	tf1.y = V_CENTER
-
-	-- 	-- testing text properties
-
-	-- 	tf1.align='right'
-
-	-- 	tf1.marginX=5
-	-- 	tf1.marginY=10
-
-	-- 	tf1.width=200
-	-- 	tf1.height=60
-
-	-- 	tf1:setAnchor( {0,0} )
-	-- 	-- tf1:setAnchor( {0,1} )
-	-- 	-- tf1:setAnchor( {1,1} )
-
-	-- 		tf1:setBackgroundFillColor( 1,0.5,0.2,0.5 )
-	-- 		tf1:setBackgroundStrokeColor( 2,0,0,1 )
-	-- 		tf1.backgroundStrokeWidth = 1
-
-	-- 	tf1.textFont = native.systemFontBold
-	-- 	tf1.textFontSize = 20
-	-- 	tf1:setTextColor( 0.5,0.5,0.5, 1)
-
-	-- end)
-
+	timer.performWithDelay( 2000, function()
+		print("\n\n Update Properties")
+		w1:setAnchor( {1,1} )
+		w1.align='right'
+	end)
 
 end
 
--- run_example2()
+run_example2()
 
 
 
