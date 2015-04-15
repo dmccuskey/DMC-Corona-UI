@@ -466,9 +466,9 @@ end
 --
 -- @usage widget.imageView = display.newImageRect( 'image.jpg', 26, 26 )
 
--- function TableViewCell.__getters:imageView()
--- 	return self._imageView
--- end
+function TableViewCell.__getters:imageView()
+	return self._imageView
+end
 function TableViewCell.__setters:imageView( value )
 	self._imageView = value
 	if value then value.isVisible=false end
