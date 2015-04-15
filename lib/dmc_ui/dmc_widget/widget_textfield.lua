@@ -208,7 +208,6 @@ function TextField:__init__( params )
 	self._backgroundStyle_dirty=true
 	self._inputType_dirty=true
 	self._isHitActive_dirty=true
-	self._isHitTestable_dirty=true
 	self._isSecure_dirty=true
 	self._marginX_dirty=true
 	self._marginY_dirty=true
@@ -231,7 +230,9 @@ function TextField:__init__( params )
 	self._inputFieldAlign_dirty=true
 	self._inputFieldFont_dirty=true
 	self._inputFieldFontSize_dirty=true
+	self._inputFieldWidth_dirty=true
 	self._inputFieldHeight_dirty=true
+	self._inputFieldMarginX_dirty=true
 	self._inputFieldIsSecure_dirty=true
 	self._inputFieldStyle_dirty=true
 	self._inputFieldText_dirty=true
@@ -934,10 +935,10 @@ function TextField:__commitProperties__()
 	if self._width_dirty then
 		local width = style.width
 		hit.width = width
-		input.width = width
 		self._width_dirty=false
 
 		self._inputFieldX_dirty=true
+		self._inputFieldWidth_dirty=true
 	end
 	if self._height_dirty then
 		local height = style.height
@@ -976,6 +977,7 @@ function TextField:__commitProperties__()
 		self._marginX_dirty = false
 
 		self._inputFieldX_dirty=true
+		self._inputFieldMarginX_dirty=true
 	end
 	if self._marginY_dirty then
 		self._marginY_dirty = false
@@ -1076,11 +1078,6 @@ function TextField:__commitProperties__()
 
 	--== Hit
 
-	if self._isHitTestable_dirty then
-		hit.isHitTestable=style.isHitTestable
-		self._isHitTestable_dirty=false
-	end
-
 	if self._wgtTextHeight_dirty then
 		self._wgtTextHeight_dirty=false
 
@@ -1097,9 +1094,17 @@ function TextField:__commitProperties__()
 		self._inputFieldStyle_dirty=false
 	end
 
+	if self._inputFieldWidth_dirty or self._inputFieldMarginX_dirty then
+		local width = style.width
+		local marginX = style.marginX
+		input.width = width - marginX*2
+		self._inputFieldWidth_dirty=false
+		self._inputFieldMarginX_dirty=false
+	end
+
 	if self._inputFieldHeight_dirty then
 		input.height = text:getTextHeight()
-		self._inputFieldHeight_dirty=true
+		self._inputFieldHeight_dirty=false
 	end
 
 	-- X/Y
@@ -1269,11 +1274,12 @@ function TextField:_hitAreaTouch_handler( e )
 	if phase=='began' then
 		display.getCurrentStage():setFocus( background )
 		self._has_focus = true
-
 		self:dispatchEvent( self.PRESSED, {isWithinBounds=true}, {merge=true} )
+		return true
 	end
 
 	if not self._has_focus then return false end
+
 
 	local bgCb = background.contentBounds
 	local isWithinBounds =
@@ -1459,7 +1465,6 @@ function TextField:stylePropertyChangeHandler( event )
 		self._backgroundStyle_dirty=true
 		self._inputType_dirty=true
 		self._isHitActive_dirty=true
-		self._isHitTestable_dirty=true
 		self._isSecure_dirty=true
 		self._marginX_dirty=true
 		self._marginY_dirty=true
@@ -1490,8 +1495,6 @@ function TextField:stylePropertyChangeHandler( event )
 			self._inputType_dirty=true
 		elseif property=='isHitActive' then
 			self._isHitActive_dirty=true
-		elseif property=='isHitTestable' then
-			self._isHitTestable_dirty=true
 		elseif property=='isSecure' then
 			self._isSecure_dirty=true
 		elseif property=='marginX' then
