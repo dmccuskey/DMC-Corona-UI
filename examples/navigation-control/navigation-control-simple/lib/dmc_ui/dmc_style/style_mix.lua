@@ -323,7 +323,6 @@ function StyleMix.__getters:width()
 end
 function StyleMix.__setters:width( value )
 	-- print( 'StyleMix.__setters:width', value )
-	self:_widthChanged()
 	self.curr_style.width = value
 end
 
@@ -335,7 +334,6 @@ function StyleMix.__getters:height()
 end
 function StyleMix.__setters:height( value )
 	-- print( 'StyleMix.__setters:height', value )
-	self:_heightChanged()
 	self.curr_style.height = value
 end
 

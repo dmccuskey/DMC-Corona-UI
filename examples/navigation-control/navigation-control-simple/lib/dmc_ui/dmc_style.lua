@@ -136,6 +136,7 @@ function Style.initialize( manager, params )
 	dUI.newButtonStyle = Style.newButtonStyle
 	dUI.newNavBarStyle = Style.newNavBarStyle
 	dUI.newNavItemStyle = Style.newNavItemStyle
+	dUI.newNineSliceBackgroundStyle = Style.newNineSliceBackgroundStyle
 	dUI.newRectangleBackgroundStyle = Style.newRectangleBackgroundStyle
 	dUI.newRoundedBackgroundStyle = Style.newRoundedBackgroundStyle
 	dUI.newTableViewStyle = Style.newTableViewStyle
@@ -220,6 +221,16 @@ function Style.newBackgroundStyle( style_info, params )
 	params.data = style_info
 	if not Style.Background then Style._loadBackgroundStyleSupport() end
 	return Style.Background:createStyleFrom( params )
+end
+
+function Style.newNineSliceBackgroundStyle( style_info, params )
+	print("Style.newNineSliceBackgroundStyle")
+	style_info = style_info or {}
+	params = params or {}
+	--==--
+	if not Style.Background then Style._loadBackgroundStyleSupport() end
+	style_info.type = Style.BackgroundFactory.NineSlice.TYPE
+	return Style.newBackgroundStyle( style_info, params )
 end
 
 function Style.newRectangleBackgroundStyle( style_info, params )
