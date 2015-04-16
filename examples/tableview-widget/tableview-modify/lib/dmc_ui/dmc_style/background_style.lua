@@ -127,7 +127,6 @@ BackgroundStyle._EXCLUDE_PROPERTY_CHECK = {
 }
 
 BackgroundStyle._STYLE_DEFAULTS = {
-	name='background-default-style',
 	debugOn=false,
 	width=76,
 	height=30,
@@ -418,7 +417,6 @@ function BackgroundStyle:getDefaultStyleValues( data )
 
 	return style
 end
-
 
 
 -- copyProperties()

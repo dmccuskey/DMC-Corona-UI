@@ -217,7 +217,7 @@ function ButtonBase:__createView__()
 	local o = display.newRect( 0,0,0,0 )
 	o.anchorX, o.anchorY = 0.5,0.5
 	o.isHitTestable=true
-	self:insert( o )
+	self._dgBg:insert( o )
 	self._rctHit = o
 end
 
