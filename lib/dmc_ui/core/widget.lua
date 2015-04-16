@@ -349,7 +349,7 @@ function View:_widthChanged()
 	-- print( "OVERRIDE View:_widthChanged" )
 end
 function View.__setters:width( value )
-	print("View.__setters:width", value)
+	-- print("View.__setters:width", value)
 	StyleMix.__setters.width( self, value )
 	-- self._width = value
 	self:_widthChanged()
