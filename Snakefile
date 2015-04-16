@@ -26,6 +26,7 @@ module_config = {
 			"dmc_ui/dmc_style.lua",
 			"dmc_ui/dmc_style/background_style.lua",
 			"dmc_ui/dmc_style/background_style/base_view_style.lua",
+			"dmc_ui/dmc_style/background_style/nine_slice_style.lua",
 			"dmc_ui/dmc_style/background_style/rectangle_style.lua",
 			"dmc_ui/dmc_style/background_style/rounded_style.lua",
 			"dmc_ui/dmc_style/background_style/style_factory.lua",
