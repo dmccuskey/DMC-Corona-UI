@@ -18,7 +18,7 @@ print( "\n\n#########################################################\n\n" )
 --== Imports
 
 
-local Widgets = require 'lib.dmc_widgets'
+local dUI = require 'lib.dmc_ui'
 
 
 
@@ -26,13 +26,40 @@ local Widgets = require 'lib.dmc_widgets'
 --== Setup, Constants
 
 
-local o
+local W, H = display.contentWidth, display.contentHeight
+local H_CENTER, V_CENTER = W*0.5, H*0.5
 
 
 
 --===================================================================--
 -- Support Functions
 
+
+--======================================================--
+-- Setup Visual Screen Items
+
+local function setupBackground()
+	local width, height = 100, 50
+	local o
+
+	o = display.newRect(0,0,W,H)
+	o:setFillColor(0.5,0.5,0.5)
+	o.x, o.y = H_CENTER, V_CENTER
+
+	o = display.newRect(0,0,width+4,height+4)
+	o:setStrokeColor(0,0,0)
+	o.strokeWidth=2
+	o.x, o.y = H_CENTER, V_CENTER
+
+	o = display.newRect( 0,0,10,10)
+	o:setFillColor(1,0,0)
+	o.x, o.y = H_CENTER, V_CENTER
+end
+
+
+
+--======================================================--
+-- Button Handlers
 
 local function onPress_handler( event )
 	print( 'Main: onPress_handler: id', event.id )
@@ -47,125 +74,53 @@ local function onEvent_handler( event )
 end
 
 
-local function createBlueCloudSheet()
-	local button_info = require 'asset.image.button-cloud-sheet'
-	return graphics.newImageSheet( 'asset/image/button-cloud-sheet.png', button_info:getSheet() )
-end
-
-local function createBlueButtonSheet()
-	local button_info = require 'asset.image.btn-blue-sheet'
-	return graphics.newImageSheet( 'asset/image/btn-blue-sheet.png', button_info:getSheet() )
-end
-
-local function createGoldButtonSheet()
-	local button_info = require 'asset.image.btn-gold-sheet'
-	return graphics.newImageSheet( 'asset/image/btn-gold-sheet.png', button_info:getSheet() )
-end
-
-
 
 --===================================================================--
 --== Main
 --===================================================================--
 
 
---== Create Buttons
-
---[[
-	button shows:
-	* simple label
-	* more complex 'active' view (alignment, color)
---]]
-o = Widgets.newButton{
-	-- button info
-	type='push',
-	id='button-back',
-	hit_width = 200,
-	hit_height = 76,
-
-	-- label info
-	label = {
-		text = "Press",
-		color={0,0,0},
-	},
-
-	-- view info
-	view='9-slice',
-	width = 200,
-	height = 80,
-	sheet = createBlueButtonSheet(),
-	frames = {
-		top_left=1,
-		top_middle=2,
-		top_right=3,
-		middle_left=4,
-		middle=5,
-		middle_right=6,
-		bottom_left=7,
-		bottom_middle=8,
-		bottom_right=9,
-	},
-
-	active = {
-		sheet = createGoldButtonSheet(),
-		label = {
-			text = "Me",
-			color={1,0.3,0.3},
-		},
-	},
-
-	-- handlers
-	onPress = onPress_handler,
-	onRelease = onRelease_handler,
-	onEvent = onEvent_handler,
-}
-o.x, o.y = 150, 70
+setupBackground()
 
 
---[[
-	button shows:
-	* simple label
-	* more complex 'active' view (alignment, color)
---]]
-o = Widgets.newButton{
-	-- button info
-	type='push',
-	id='button-back',
-	hit_width = 200,
-	hit_height = 100,
 
-	-- label info
-	label = {
-		text = "Back",
-		color={0,0,0},
-	},
+--======================================================--
+--== create background, default style
 
-	-- view info
-	view='9-slice',
-	width = 122,
-	height = 72,
-	sheet = createBlueCloudSheet(),
-	frames = {
-		top_left=1,
-		top_middle=2,
-		top_right=3,
-		middle_left=4,
-		middle=5,
-		middle_right=6,
-		bottom_left=7,
-		bottom_middle=8,
-		bottom_right=9,
-	},
+function run_example1a()
 
-	active = {
-		label = {
-			color={1,1,1},
-		},
-	},
+	local bw1
 
-	-- handlers
-	onPress = onPress_handler,
-	onRelease = onRelease_handler,
-	onEvent = onEvent_handler,
-}
-o.x, o.y = 150, 200
+	bw1 = dUI.newRoundedBackground()
+	bw1.x, bw1.y = 20,30
+	bw1 = dUI.newRectangleBackground()
+	bw1.x, bw1.y = 20,60
+
+	bw1 = dUI.new9SliceBackground{
+
+		style={
+			anchorX=0.5,
+			anchorY=0.5,
+			view = {
+				sheetInfo='asset.image.cloud_button.button-sheet',
+				sheetImage='asset/image/cloud_button/button-sheet.png',
+				offsetLeft=8,
+				offsetRight=7,
+				offsetTop=4,
+				offsetBottom=12,
+			}
+		}
+	}
+	bw1.width, bw1.height = 200, 100
+	bw1.x, bw1.y = H_CENTER, V_CENTER+0
+
+	timer.performWithDelay( 1000, function()
+		bw1.width=100
+		bw1.anchorX=1
+	end)
+
+end
+
+run_example1a()
+
+
