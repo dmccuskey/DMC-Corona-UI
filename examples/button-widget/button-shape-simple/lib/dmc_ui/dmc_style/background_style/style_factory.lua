@@ -63,7 +63,7 @@ local ui_find = dmc_ui_func.find
 --== Imports
 
 
-local BaseStyle = require( ui_find( 'dmc_style.base_style' ) )
+local BaseStyle = require( ui_find( 'core.style' ) )
 local Rectangle = require( ui_find( 'dmc_style.background_style.rectangle_style' ) )
 local Rounded = require( ui_find( 'dmc_style.background_style.rounded_style' ) )
 

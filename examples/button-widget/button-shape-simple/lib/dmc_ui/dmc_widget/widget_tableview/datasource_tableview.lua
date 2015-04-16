@@ -71,30 +71,13 @@ local VERSION = "0.1.0"
 
 
 
---- description of parameters for method :onRowRender().
--- this is the complete list of properties for the :onRowRender() parameter table.
---
--- @within Parameters
--- @tfield string name the event name (TableView.EVENT)
--- @tfield string type event type (TableView.RENDER_ROW)
--- @tfield object target the TableView
--- @tfield object view the view (Display Group) to populate with items
--- @tfield number index the index of the row inside of the TableView.
--- @tfield table data a table for general data storage for the row.
--- @table .onRowRenderEvent
 
-
---- description of parameters for method :onRowRender().
--- this is the complete list of properties for the :onRowRender() parameter table.
+--- description of methods for a row object.
 --
--- @within Parameters
--- @tfield string name the event name (TableView.EVENT)
--- @tfield string type event type (TableView.UNRENDER_ROW)
--- @tfield object target the TableView
--- @tfield object view the view (Display Group) to remove items
--- @tfield number index the index of the row inside of the TableView.
--- @tfield table data a table for general data storage for the row.
--- @table .onRowUnrenderEvent
+-- @within Row-Object
+-- @tfield function setBackgroundColor sets the background color of the row
+-- @tfield function setLineColor sets the line color of the row
+-- @table .rowObjectMethods
 
 
 
@@ -111,12 +94,26 @@ local VERSION = "0.1.0"
 --
 -- @within Methods
 -- @function :onRowRender
--- @param event the @{onRowRenderEvent} object
+-- @param event the event table
+-- @tparam string event.name the event name (`TableView.EVENT`)
+-- @tparam string event.type the event type (`TableView.RENDER_ROW`)
+-- @object event.target the @{Widget.TableView} object
+-- @object event.row the row object @{rowObjectMethods}
+-- @object event.view the row's Display Group, for visual items
+-- @tparam number event.index the index of the row inside of the TableView
+-- @tab event.data a table for general data storage for the row.
 
 
 --- (required) asks the data source to unrender the view for the row to be removed from the display.
 --
 -- @within Methods
 -- @function :onRowUnrender
--- @param event the @{onRowUnrenderEvent} object
+-- @param event the event table
+-- @tparam string event.name the event name (`TableView.EVENT`)
+-- @tparam string event.type the event type (`TableView.UNRENDER_ROW`)
+-- @object event.target the @{Widget.TableView} object
+-- @object event.row the row object @{rowObjectMethods}
+-- @object event.view the row's Display Group, for visual items
+-- @tparam number event.index the index of the row inside of the TableView
+-- @tab event.data a table for general data storage for the row.
 
