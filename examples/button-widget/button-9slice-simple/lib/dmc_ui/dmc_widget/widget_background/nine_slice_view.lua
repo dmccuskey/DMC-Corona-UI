@@ -1,5 +1,5 @@
 --====================================================================--
--- dmc_widget/widget_background/nice_slice_view.lua
+-- dmc_ui/dmc_widget/widget_background/nice_slice_view.lua
 --
 -- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
