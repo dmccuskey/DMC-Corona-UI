@@ -109,6 +109,9 @@ local FontMgr = nil
 
 local TableViewCell = newClass( WidgetBase, { name="TableViewCell" } )
 
+--- Class Constants.
+-- @section
+
 --== Class Constants
 
 TableViewCell.LEFT = 'left'
@@ -121,7 +124,6 @@ TableViewCell.RIGHT = 'right'
 --- Layout Constant to specify the Default layout.
 -- single row of text. this is usually defined in the @{Style.TableViewCellStyle}.
 --
--- @within Constants
 -- @field HELLO
 --
 -- @usage
@@ -132,7 +134,6 @@ TableViewCell.DEFAULT = uiConst.TABLEVIEWCELL_DEFAULT_LAYOUT
 --- Layout Constant to specify the Subtitle layout.
 -- layout with two rows of text – Label and Detail. this is usually defined in the .
 --
--- @within Constants
 -- @field HELLO
 --
 -- @usage
@@ -145,8 +146,6 @@ TableViewCell.SUBTITLE = uiConst.TABLEVIEWCELL_SUBTITLE_LAYOUT
 --- Accessory Constant to specify the Checkmark accessory.
 -- this is usually defined in the @{Style.TableViewCellStyle}.
 --
--- @within Constants
---
 -- @usage
 -- widget.accessory = TableViewCell.CHECKMARK
 
@@ -154,8 +153,6 @@ TableViewCell.CHECKMARK = uiConst.TABLEVIEWCELL_CHECKMARK
 
 --- Accessory Constant to specify the Detail Button accessory.
 -- this is usually defined in the @{Style.TableViewCellStyle}.
---
--- @within Constants
 --
 -- @usage
 -- widget.accessory = TableViewCell.DETAIL_BUTTON
@@ -165,8 +162,6 @@ TableViewCell.DETAIL_BUTTON = uiConst.TABLEVIEWCELL_DETAIL_BUTTON
 --- Accessory Constant to specify the Disclosure Indicator accessory.
 -- this is usually defined in the @{Style.TableViewCellStyle}.
 --
--- @within Constants
---
 -- @usage
 -- widget.accessory = TableViewCell.DISCLOSURE_INDICATOR
 
@@ -174,8 +169,6 @@ TableViewCell.DISCLOSURE_INDICATOR = uiConst.TABLEVIEWCELL_DISCLOSURE_INDICATOR
 
 --- Accessory Constant to specify the no accessory.
 -- this is usually defined in the @{Style.TableViewCellStyle}.
---
--- @within Constants
 --
 -- @usage
 -- widget.accessory = TableViewCell.NONE
