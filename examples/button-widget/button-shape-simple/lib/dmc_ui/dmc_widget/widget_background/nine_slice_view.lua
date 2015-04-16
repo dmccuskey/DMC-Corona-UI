@@ -257,32 +257,38 @@ end
 --== Private Methods
 
 
-function NineSliceView:_adjustSliceLayout( width, height )
+function NineSliceView:_adjustSliceLayout( width, height, off )
 	-- print( "NineSliceView:_adjustSliceLayout", width, height )
-	local midW = width - ( self._tl.width + self._tr.width )
-	local midH = height - ( self._tl.height + self._bl.height )
-	local o, tmp, tmp2
+	local leftW = self._tl.width-off.L
+	local rightW = self._tr.width-off.R
+	local midW = width - leftW - rightW
+	local topH = self._tl.height-off.T
+	local bottomH = self._bl.height-off.B
+	local midH = height - topH - bottomH - off.T
+	local o, tmp, tmp2, s
 
 	--== Top
 
 	o = self._tl
-	o.x, o.y = 0, 0
+	o.x, o.y = 0-off.L, 0-off.T
 
 	tmp = o
 	o = self._tm
-	o.x, o.y = tmp.width, 0
+	o.x, o.y = tmp.x+tmp.width, tmp.y
+	s = midW / o.width
 	o.width = midW
 
 	tmp2 = o
 	o = self._tr
-	o.x, o.y = tmp2.x+tmp2.width, 0
+	o.x, o.y = tmp2.x+tmp2.width, tmp.y
 
 	--== Middle
 
 	tmp = self._tl
+	x = 0-off.L
 	o = self._ml
 	o.height = midH
-	o.x, o.y = 0, tmp.height
+	o.x, o.y = tmp.x, tmp.y+tmp.height
 
 	tmp = o
 	o = self._mm
@@ -298,7 +304,7 @@ function NineSliceView:_adjustSliceLayout( width, height )
 
 	tmp = self._ml
 	o = self._bl
-	o.x, o.y = 0, tmp.y+tmp.height
+	o.x, o.y = tmp.x, tmp.y+tmp.height
 
 	tmp = o
 	o = self._bm
@@ -480,7 +486,13 @@ function NineSliceView:__commitProperties__()
 	end
 
 	if self._sliceLayout_dirty then
-		self:_adjustSliceLayout( style.width, style.height )
+		local offsets = {
+			L=style.offsetLeft,
+			R=style.offsetRight,
+			T=style.offsetTop,
+			B=style.offsetBottom,
+		}
+		self:_adjustSliceLayout( style.width, style.height, offsets )
 		self._sliceLayout_dirty=false
 	end
 
@@ -502,8 +514,7 @@ function NineSliceView:__commitProperties__()
 		local anchorX = style.anchorX
 		local width = style.width
 		local offsetLeft, offsetRight = style.offsetLeft, style.offsetRight
-		local realW = width-( offsetLeft + offsetRight )
-		local anchor = realW*anchorX + offsetLeft
+		local anchor = width*anchorX
 		dg.x = self._x - anchor
 		self._sliceX_dirty=false
 	end
@@ -513,8 +524,8 @@ function NineSliceView:__commitProperties__()
 		local anchorY = style.anchorY
 		local height = style.height
 		local offsetTop, offsetBottom = style.offsetTop, style.offsetBottom
-		local realH = height-( offsetTop + offsetBottom )
-		local anchor = realH*anchorY + offsetTop
+		local realH = height - (offsetTop + offsetBottom)
+		local anchor = height*anchorY
 		dg.y = self._y - anchor
 		self._sliceY_dirty=false
 	end

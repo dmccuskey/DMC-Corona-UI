@@ -226,8 +226,11 @@ UI._VALID_OS_VERSION = {
 UI.RUN_MODE = uiConst.RUN_MODE
 UI.TEST_MODE = uiConst.TEST_MODE
 
-UI.ROUNDED = uiConst.ROUNDED
+-- background types
+
+UI.NINE_SLICE = uiConst.NINE_SLICE
 UI.RECTANGLE = uiConst.RECTANGLE
+UI.ROUNDED = uiConst.ROUNDED
 
 -- Control Modal Types
 
