@@ -348,14 +348,13 @@ end
 function View:_widthChanged()
 	-- print( "OVERRIDE View:_widthChanged" )
 end
-function View.__getters:width()
-	return self._width
-end
 function View.__setters:width( value )
-	self._width = value
+	-- print("View.__setters:width", value)
+	StyleMix.__setters.width( self, value )
+	-- self._width = value
 	self:_widthChanged()
-	self._width_dirty=true
-	self:__invalidateProperties__()
+	-- self._width_dirty=true
+	-- self:__invalidateProperties__()
 end
 
 --== .height
@@ -363,15 +362,13 @@ end
 function View:_heightChanged()
 	-- print( "OVERRIDE View:_heightChanged" )
 end
-function View.__getters:height()
-	return self._height
-end
 function View.__setters:height( value )
 	-- print( "View.__setters:height", value )
-	self._height = value
+	StyleMix.__setters.height( self, value )
+	-- self._height = value
 	self:_heightChanged()
-	self._height_dirty=true
-	self:__invalidateProperties__()
+	-- -- self._height_dirty=true
+	-- self:__invalidateProperties__()
 end
 
 
