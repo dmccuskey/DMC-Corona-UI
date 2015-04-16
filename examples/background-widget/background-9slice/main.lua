@@ -77,25 +77,25 @@ function run_example1a()
 	bw1 = dUI.new9SliceBackground{
 
 		style={
-			anchorX=0.5,
-			anchorY=0.5,
+			anchorX=1,
+			anchorY=1,
 			view = {
 				sheetInfo='asset.image.cloud_button.button-sheet',
 				sheetImage='asset/image/cloud_button/button-sheet.png',
-				offsetLeft=8,
+				offsetLeft=6,
 				offsetRight=7,
 				offsetTop=4,
 				offsetBottom=12,
 			}
 		}
 	}
-	bw1.width, bw1.height = 200, 100
+	bw1.width, bw1.height = 150, 100
 	bw1.x, bw1.y = H_CENTER, V_CENTER+0
 
-	timer.performWithDelay( 1000, function()
-		bw1.width=100
-		bw1.anchorX=1
-	end)
+	-- timer.performWithDelay( 1000, function()
+	-- 	bw1.width=100
+	-- 	bw1.anchorX=1
+	-- end)
 
 end
 
