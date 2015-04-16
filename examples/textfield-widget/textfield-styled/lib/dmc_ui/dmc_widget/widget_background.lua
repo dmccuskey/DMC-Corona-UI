@@ -108,7 +108,7 @@ local Background = newClass( WidgetBase, { name="Background Widget" } )
 Background.STYLE_CLASS = nil -- added later
 Background.STYLE_TYPE = uiConst.BACKGROUND
 
-Background._DEFAULT_VIEWTYPE = uiConst.ROUNDED
+Background._DEFAULT_VIEWTYPE = uiConst.DEFAULT_BACKGROUND_TYPE
 
 -- TODO: hook up later
 -- Background.DEFAULT = 'default'
@@ -129,7 +129,7 @@ function Background:__init__( params )
 	params = params or {}
 	if params.x==nil then params.x=0 end
 	if params.y==nil then params.y=0 end
-	if params.viewType==nil then params.viewType=Background._DEFAULT_VIEWTYPE end
+	if params.viewType==nil then params.viewType=uiConst._DEFAULT_VIEWTYPE end
 
 	self:superCall( '__init__', params )
 	--==--
@@ -139,6 +139,7 @@ function Background:__init__( params )
 	-- properties stored in Class
 
 	self._viewType = params.viewType -- default style type
+	params.style = self:_createDefaultStyleParams( params.viewType, params.style )
 
 	-- "Virtual" properties
 
@@ -289,85 +290,8 @@ Inherited
 -- Local Properties
 
 
-
---======================================================--
--- View Style Properties
-
-
---== .cornerRadius
-
---- set/get cornerRadius for shape.
--- only applies to Rounded Rectangles
---
--- @within Properties
--- @function .cornerRadius
--- @usage widget.cornerRadius = 5
--- @usage print( widget.cornerRadius )
---
-function Background.__getters:cornerRadius()
-	return self.curr_style.view.cornerRadius
-end
-function Background.__setters:cornerRadius( value )
-	-- print( 'Background.__setters:cornerRadius', value )
-	self.curr_style.view.cornerRadius = value
-end
-
---== .viewStrokeWidth
-
---- set/get viewStrokeWidth for shape.
--- does not apply to image or 9-slice backgrounds
---
--- @within Properties
--- @function .viewStrokeWidth
--- @usage widget.viewStrokeWidth = 5
--- @usage print( widget.viewStrokeWidth )
---
-function Background.__getters:viewStrokeWidth()
-	return self.curr_style.view.strokeWidth
-end
-function Background.__setters:viewStrokeWidth( value )
-	-- print( "Background.__setters:viewStrokeWidth", value )
-	self.curr_style.view.strokeWidth = value
-end
-
---== setViewFillColor
-
---- set the fill color for shape.
--- does not apply to image or 9-slice backgrounds
---
--- @within Methods
--- @function setViewFillColor
--- @param colors list of color attributes, 0-1
--- @usage
--- widget:setViewFillColor( gray )
--- widget:setViewFillColor( gray, alpha )
--- widget:setViewFillColor( red, green, blue )
--- widget:setViewFillColor( red, green, blue, alpha )
--- widget:setViewFillColor( gradient )
---
-function Background:setViewFillColor( ... )
-	-- print( "Background:setViewFillColor" )
-	self.curr_style.view.fillColor = {...}
-end
-
---== setViewStrokeColor
-
---- set the fill color for shape.
--- does not apply to image or 9-slice backgrounds
---
--- @within Methods
--- @function setViewStrokeColor
--- @param colors list of color attributes, 0-1
--- @usage
--- widget:setViewStrokeColor( gray )
--- widget:setViewStrokeColor( gray, alpha )
--- widget:setViewStrokeColor( red, green, blue )
--- widget:setViewStrokeColor( red, green, blue, alpha )
--- widget:setViewStrokeColor( gradient )
---
-function Background:setViewStrokeColor( ... )
-	-- print( "Background:setViewStrokeColor" )
-	self.curr_style.view.strokeColor = {...}
+function Background.__getters:viewStyle()
+	return self.curr_style.view
 end
 
 
@@ -386,11 +310,13 @@ function Background:beforeRemoveStyle()
 	self:__invalidateProperties__()
 end
 
-function Background:_createDefaultStyleParams()
-	return {
-		name=nil,
-		data={type=self._viewType}
-	}
+function Background:_createDefaultStyleParams( vType, vStyle )
+	-- print( "Background:_createDefaultStyleParams", vType )
+	if vStyle==nil then
+		vStyle = { name=nil }
+	end
+	vStyle.type = vType
+	return vStyle
 end
 
 
@@ -443,9 +369,9 @@ function Background:__commitProperties__()
 
 	--== Update Widget View
 
-	local style = self.curr_style
+	-- local style = self.curr_style
 	local view = self.view
-	local bg = self._wgtView
+	-- local bg = self._wgtView
 
 	-- x/y
 
