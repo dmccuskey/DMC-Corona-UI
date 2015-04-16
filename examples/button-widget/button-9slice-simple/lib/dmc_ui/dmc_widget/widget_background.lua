@@ -125,7 +125,7 @@ Background._DEFAULT_VIEWTYPE = uiConst.DEFAULT_BACKGROUND_TYPE
 --== Init
 
 function Background:__init__( params )
-	print( "Background:__init__", params )
+	-- print( "Background:__init__", params )
 	params = params or {}
 	if params.x==nil then params.x=0 end
 	if params.y==nil then params.y=0 end

@@ -919,7 +919,7 @@ data, inherit - inherit.type (unset) or data.type (set) or default (set)
 -- _prepareData()
 --
 function BackgroundStyle:_prepareData( data, dataSrc, params )
-	print( "BackgroundStyle:_prepareData", data, dataSrc, self )
+	-- print( "BackgroundStyle:_prepareData", data, dataSrc, self )
 	params = params or {}
 	--==--
 	local inherit = params.inherit
@@ -932,7 +932,6 @@ function BackgroundStyle:_prepareData( data, dataSrc, params )
 		data = BackgroundStyle.createStyleStructure( dataSrc )
 	end
 
-	-- Utils.print( data )
 	src, dest = data, nil
 
 	--== make sure we have structure for children

@@ -230,14 +230,14 @@ end
 
 
 function NineSliceStyle.addMissingDestProperties( dest, src )
-	print( "NineSliceStyle.addMissingDestProperties", dest, src )
+	-- print( "NineSliceStyle.addMissingDestProperties", dest, src )
 	assert( dest )
 	--==--
 	local srcs = { NineSliceStyle._DEFAULTS }
 	if src then tinsert( srcs, 1, src ) end
 
 	dest = ViewStyle.addMissingDestProperties( dest, src )
-print("dont")
+
 	for i=1,#srcs do
 		local src = srcs[i]
 
@@ -440,7 +440,7 @@ function NineSliceStyle.__getters:sheetInfo()
 	return value
 end
 function NineSliceStyle.__setters:sheetInfo( value )
-	print( "NineSliceStyle.__setters:sheetInfo", value )
+	-- print( "NineSliceStyle.__setters:sheetInfo", value )
 	assert( type(value)=='string' or (value==nil and (self._inherit or self._isClearing) ) )
 	--==--
 	if value == self._sheetInfo then return end

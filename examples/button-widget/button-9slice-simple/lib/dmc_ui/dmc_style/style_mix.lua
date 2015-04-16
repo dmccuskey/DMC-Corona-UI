@@ -322,7 +322,7 @@ function StyleMix.__getters:width()
 	return self.curr_style.width
 end
 function StyleMix.__setters:width( value )
-	print( 'StyleMix.__setters:width', value )
+	-- print( 'StyleMix.__setters:width', value )
 	self.curr_style.width = value
 end
 
@@ -485,10 +485,9 @@ end
 
 
 function StyleMix._createStyle( self, StyleClass, data )
-	print( "StyleMix._createStyle", self, StyleClass, data )
+	-- print( "StyleMix._createStyle", self, StyleClass, data )
 	-- create copied style
 	local name = string.format( "copied-style-%s", tostring( self ) )
-	Utils.print( data )
 	local style = StyleClass:createStyleFrom{
 		data=data,
 		name=name
@@ -512,7 +511,7 @@ end
 -- create the default Style instance for this Widget
 --
 function StyleMix._createDefaultStyle( self, params )
-	print( "StyleMix._createDefaultStyle", self.STYLE_CLASS )
+	-- print( "StyleMix._createDefaultStyle", self.STYLE_CLASS )
 	params = params or {}
 	if params.copy==nil then params.copy=true end
 	--==--

@@ -109,6 +109,9 @@ local FontMgr = nil
 
 local TableViewCell = newClass( WidgetBase, { name="TableViewCell" } )
 
+--- Class Constants.
+-- @section
+
 --== Class Constants
 
 TableViewCell.LEFT = 'left'
@@ -121,7 +124,6 @@ TableViewCell.RIGHT = 'right'
 --- Layout Constant to specify the Default layout.
 -- single row of text. this is usually defined in the @{Style.TableViewCellStyle}.
 --
--- @within Constants
 -- @field HELLO
 --
 -- @usage
@@ -132,7 +134,6 @@ TableViewCell.DEFAULT = uiConst.TABLEVIEWCELL_DEFAULT_LAYOUT
 --- Layout Constant to specify the Subtitle layout.
 -- layout with two rows of text – Label and Detail. this is usually defined in the .
 --
--- @within Constants
 -- @field HELLO
 --
 -- @usage
@@ -145,8 +146,6 @@ TableViewCell.SUBTITLE = uiConst.TABLEVIEWCELL_SUBTITLE_LAYOUT
 --- Accessory Constant to specify the Checkmark accessory.
 -- this is usually defined in the @{Style.TableViewCellStyle}.
 --
--- @within Constants
---
 -- @usage
 -- widget.accessory = TableViewCell.CHECKMARK
 
@@ -154,8 +153,6 @@ TableViewCell.CHECKMARK = uiConst.TABLEVIEWCELL_CHECKMARK
 
 --- Accessory Constant to specify the Detail Button accessory.
 -- this is usually defined in the @{Style.TableViewCellStyle}.
---
--- @within Constants
 --
 -- @usage
 -- widget.accessory = TableViewCell.DETAIL_BUTTON
@@ -165,8 +162,6 @@ TableViewCell.DETAIL_BUTTON = uiConst.TABLEVIEWCELL_DETAIL_BUTTON
 --- Accessory Constant to specify the Disclosure Indicator accessory.
 -- this is usually defined in the @{Style.TableViewCellStyle}.
 --
--- @within Constants
---
 -- @usage
 -- widget.accessory = TableViewCell.DISCLOSURE_INDICATOR
 
@@ -174,8 +169,6 @@ TableViewCell.DISCLOSURE_INDICATOR = uiConst.TABLEVIEWCELL_DISCLOSURE_INDICATOR
 
 --- Accessory Constant to specify the no accessory.
 -- this is usually defined in the @{Style.TableViewCellStyle}.
---
--- @within Constants
 --
 -- @usage
 -- widget.accessory = TableViewCell.NONE
@@ -253,7 +246,7 @@ function TableViewCell:__init__( params )
 	self._detailY_dirty=true
 	self._labelY_dirty=true
 
-	self._accessory_dirty=true
+	self._cellAccessory_dirty=true
 	self._cellLayout_dirty = true
 	self._contentMargin_dirty=true
 
@@ -616,7 +609,7 @@ function TableViewCell:__commitProperties__()
 		self._activeStateStyle = style
 		self._highlightIsActive_dirty=false
 
-		self._accessory_dirty=true
+		self._cellAccessory_dirty=true
 		self._textLabelX_dirty=true
 		self._textLabelY_dirty=true
 		self._textLabelWidth_dirty=true
@@ -713,7 +706,7 @@ function TableViewCell:__commitProperties__()
 
 	-- accessory / accessoryX
 
-	if self._accessory_dirty then
+	if self._cellAccessory_dirty then
 		local accessory = style.accessory
 		local accessObj = self._accessoryObject
 
@@ -736,7 +729,7 @@ function TableViewCell:__commitProperties__()
 			self._accessoryX_dirty=true
 		end
 		self._accessoryObject = accessObj
-		self._accessory_dirty=false
+		self._cellAccessory_dirty=false
 
 		self._textLabelWidth_dirty=true
 		self._textDetailWidth_dirty=true
@@ -856,7 +849,7 @@ function TableViewCell:stylePropertyChangeHandler( event )
 		self._anchorX_dirty=true
 		self._anchorY_dirty=true
 
-		self._accessory_dirty = true
+		self._cellAccessory_dirty = true
 		self._cellLayout_dirty=true
 		self._cellMargin_dirty=true
 		self._contentMargin_dirty=true
@@ -878,7 +871,7 @@ function TableViewCell:stylePropertyChangeHandler( event )
 				self._anchorY_dirty=true
 
 		elseif property=='accessory' then
-			self._accessory_dirty=true
+			self._cellAccessory_dirty=true
 		elseif property=='cellLayout' then
 			self._cellLayout_dirty=true
 		elseif property=='cellMargin' then

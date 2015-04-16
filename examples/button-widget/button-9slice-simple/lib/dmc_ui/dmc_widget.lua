@@ -275,7 +275,6 @@ function Widget.new9SliceBackground( options )
 	if not Widget.Background then Widget._loadBackgroundSupport() end
 	options = options or {}
 	options.viewType=uiConst.NINE_SLICE
-	print("\n\n Creating background \n\n", uiConst.NINE_SLICE )
 	return Widget.Background:new( options )
 end
 
