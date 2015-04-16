@@ -93,9 +93,14 @@ local dUI = nil
 
 
 --====================================================================--
---== View Control Base Class
+--== Widget Base Class
 --====================================================================--
 
+
+--- Widget Base Class.
+-- The base class used for all Widgets.
+--
+-- @classmod Core.Widget
 
 local View = newClass(
 	{ StyleMix, ComponentBase, LifecycleMix },
@@ -145,7 +150,9 @@ function View:__init__( params )
 	-- properties from style
 
 	self._debugOn_dirty=true
+	self._width=params.width
 	self._width_dirty=true
+	self._height=params.height
 	self._height_dirty=true
 	self._anchorX_dirty=true
 	self._anchorY_dirty=true
@@ -154,6 +161,7 @@ function View:__init__( params )
 	self._autoResizeSubViews_dirty=true
 
 	self._layoutMargins_dirty=true
+
 
 	--[[
 	references to main View/Control objects, not their property 'view'
@@ -337,34 +345,34 @@ end
 
 --== .width
 
--- function View:_widthChanged()
--- 	-- print( "OVERRIDE View:_widthChanged" )
--- end
--- function View.__getters:width()
--- 	return self._width
--- end
--- function View.__setters:width( value )
--- 	self._width = value
--- 	self:_widthChanged()
--- 	self._width_dirty=true
--- 	self:__invalidateProperties__()
--- end
+function View:_widthChanged()
+	-- print( "OVERRIDE View:_widthChanged" )
+end
+function View.__getters:width()
+	return self._width
+end
+function View.__setters:width( value )
+	self._width = value
+	self:_widthChanged()
+	self._width_dirty=true
+	self:__invalidateProperties__()
+end
 
 --== .height
 
--- function View:_heightChanged()
--- 	-- print( "OVERRIDE View:_heightChanged" )
--- end
--- -- function View.__getters:height()
--- -- 	return self._height
--- -- end
--- function View.__setters:height( value )
--- 	-- print( "View.__setters:height", value )
--- 	self._height = value
--- 	self:_heightChanged()
--- 	self._height_dirty=true
--- 	self:__invalidateProperties__()
--- end
+function View:_heightChanged()
+	-- print( "OVERRIDE View:_heightChanged" )
+end
+function View.__getters:height()
+	return self._height
+end
+function View.__setters:height( value )
+	-- print( "View.__setters:height", value )
+	self._height = value
+	self:_heightChanged()
+	self._height_dirty=true
+	self:__invalidateProperties__()
+end
 
 
 --== _addSubView()

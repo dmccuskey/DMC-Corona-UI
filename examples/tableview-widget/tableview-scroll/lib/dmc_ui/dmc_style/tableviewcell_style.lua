@@ -66,9 +66,10 @@ local ui_find = dmc_ui_func.find
 
 local Objects = require 'dmc_objects'
 local Utils = require 'dmc_utils'
+
 local uiConst = require( ui_find( 'ui_constants' ) )
 
-local BaseStyle = require( ui_find( 'dmc_style.base_style' ) )
+local BaseStyle = require( ui_find( 'core.style' ) )
 
 
 
@@ -91,6 +92,16 @@ local Style = nil
 --== TableViewCell Style Class
 --====================================================================--
 
+--- TableViewCell Style.
+-- A style object for a TableViewCell.
+--
+-- **Inherits from:** <br>
+-- * @{Core.Style}
+--
+-- @classmod Style.TableViewCell
+-- @usage
+-- local dUI = require 'dmc_ui'
+-- local widget = dUI.newTableViewCellStyle()
 
 local TableViewCell = newClass( BaseStyle, {name="TableViewCell Style"} )
 
@@ -128,8 +139,8 @@ TableViewCell._STYLE_DEFAULTS = {
 	anchorX=0,
 	anchorY=1,
 
-	accessory='disclosure-indicator-accessory',
-	cellLayout='subtitle-layout',
+	accessory=uiConst.TABLEVIEWCELL_DISCLOSURE_INDICATOR,
+	cellLayout=uiConst.TABLEVIEWCELL_SUBTITLE_LAYOUT,
 	cellMargin=5,
 	contentMargin=5,
 

@@ -48,9 +48,9 @@ local VERSION = "0.1.0"
 --====================================================================--
 
 
-local dmc_widget_data, dmc_widget_func
-dmc_widget_data = _G.__dmc_widget
-dmc_widget_func = dmc_widget_data.func
+local dmc_widget_data = _G.__dmc_widget
+local dmc_widget_func = dmc_widget_data.func
+local widget_find = dmc_widget_func.find
 
 
 
@@ -65,11 +65,14 @@ dmc_widget_func = dmc_widget_data.func
 
 
 local Objects = require 'dmc_objects'
+local LifecycleMixModule = require 'dmc_lifecycle_mix'
+local StyleMixModule = require( widget_find( 'widget_style_mix' ) )
 
---== Components
-
-local Widgets -- set later
-
+--== To be set in initialize()
+local Widgets = nil
+local StyleMgr = nil
+local NavBar = nil
+local Button = nil
 
 
 --====================================================================--
@@ -80,10 +83,11 @@ local Widgets -- set later
 local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
 
+local LifecycleMix = LifecycleMixModule.LifecycleMix
+local StyleMix = StyleMixModule.StyleMix
+
 local tinsert = table.insert
 local tremove = table.remove
-
-local LOCAL_DEBUG = false
 
 
 
@@ -92,31 +96,75 @@ local LOCAL_DEBUG = false
 --====================================================================--
 
 
-local NavItem = newClass( ObjectBase, {name="Nav Item"}  )
+local NavItem = newClass(
+	{ StyleMix, ObjectBase, LifecycleMix }, {name="Nav Item"}
+)
+
+--== Style/Theme Constants
+
+NavItem.STYLE_CLASS = nil -- added later
+NavItem.STYLE_TYPE = nil -- added later
 
 
 --======================================================--
 -- Start: Setup DMC Objects
 
+--== Init
+
 function NavItem:__init__( params )
 	-- print( "NavItem:__init__" )
 	params = params or {}
+	if params.x==nil then params.x=0 end
+	if params.y==nil then params.y=0 end
 	if params.title==nil then params.title="" end
-	self:superCall( '__init__', params )
-	--==--
 
-	--== Sanity Check ==--
+	self:superCall( LifecycleMix, '__init__', params )
+	self:superCall( ObjectBase, '__init__', params )
+	self:superCall( StyleMix, '__init__', params )
+	--==--
 
 	--== Create Properties ==--
 
+	-- properties stored in Class
+
+	self._x = params.x
+	self._x_dirty=true
+	self._y = params.y
+	self._y_dirty=true
+
 	self._title = params.title
+
+	-- properties stored in Style
+
+	self._debugOn_dirty=true
+	self._width_dirty=true
+	self._height_dirty=true
+	self._anchorX_dirty=true
+	self._anchorY_dirty=true
+
+	-- "Virtual" properties
+
+	self._widgetStyle_dirty=true
 
 	--== Object References ==--
 
-	self._btn_back = nil
-	self._btn_left = nil
-	self._txt_title = nil
-	self._btn_right = nil
+	self._tmp_style = params.style -- save
+
+	self._wgtBtnBack = nil -- Back button widget
+	self._wgtBtnBack_dirty=true
+	self._wgtBtnBackStyle_dirty=true
+
+	self._wgtText = nil -- text widget (for title)
+	self._wgtText_f = nil -- widget handler
+	self._wgtText_dirty=true
+	self._wgtTextStyle_dirty=true
+	self._wgtTextText_dirty=true
+
+	self._btnLeft = nil
+	self._btnLeftStyle_dirty=true
+
+	self._btnRight = nil
+	self._btnRightStyle_dirty=true
 
 end
 
@@ -133,74 +181,38 @@ end
 --
 function NavItem:__initComplete__()
 	--print( "NavItem:__initComplete__" )
-	self:superCall( '__initComplete__' )
+	self:superCall( StyleMix, '__initComplete__' )
+	self:superCall( ObjectBase, '__initComplete__' )
 	--==--
+	self.style = self._tmp_style
 
-	local o
-
-	o = Widgets.newPushButton{
-		width = 80,
-		height = 40,
-		id='button-back',
-		label = {
-			text="Back",
-			color={0,0,0},
-		},
-		active = {
-			label = {
-				color={1,0,0},
-			},
-		},
-	}
-	self._btn_back = o
-
-	o = Widgets.newPushButton{
-		width = 80,
-		height = 40,
-		id='button-title',
-		label = {
-			text=self._title,
-			color={0,0,0},
-		}
-	}
-	self._txt_title = o
-
+	self:_createText()
+	self:_createBackButton()
 
 end
 
 function NavItem:__undoInitComplete__()
 	-- print( "NavItem:__undoInitComplete__" )
+	self:_removeBackButton()
+	self:_removeText()
 
-	local o
+	--== Though not default, check them
 
-	o = self._btn_back
+	o = self._btnLeft
 	if o then
 		o:removeSelf()
-		self._btn_back = nil
+		self._btnLeft = nil
 	end
 
-	o = self._txt_title
+	o = self._btnRight
 	if o then
 		o:removeSelf()
-		self._txt_title = nil
-	end
-
-	--== Though this aren't default, check them
-
-	o = self._btn_left
-	if o then
-		o:removeSelf()
-		self._btn_left = nil
-	end
-
-	o = self._btn_right
-	if o then
-		o:removeSelf()
-		self._btn_right = nil
+		self._btnRight = nil
 	end
 
 	--==--
-	self:superCall( '__undoInitComplete__' )
+	self:superCall( ObjectBase, '__undoInitComplete__' )
+	self:superCall( StyleMix, '__undoInitComplete__' )
 end
 
 
@@ -213,12 +225,17 @@ end
 --== Static Methods
 
 
-function NavItem.__setWidgetManager( manager )
-	-- print( "NavItem.__setWidgetManager" )
-	NavItem.__WIDGET = manager
+function NavItem.initialize( manager )
+	-- print( "NavItem.initialize" )
 	Widgets = manager
-	Button = manager.Button
-	NavItem = manager.NavItem
+	StyleMgr = Widgets.StyleMgr
+	Button = Widgets.Button
+	NavBar = Widgets.NavBar
+
+	NavItem.STYLE_CLASS = Widgets.Style.NavItem
+	NavItem.STYLE_TYPE = NavItem.STYLE_CLASS.TYPE
+
+	StyleMgr:registerWidget( NavItem )
 end
 
 
@@ -229,52 +246,225 @@ end
 
 -- getter, back button
 --
-function NavItem.__getters:back_button()
-	-- print( "NavItem.__getters:back_button" )
-	return self._btn_back
+function NavItem.__getters:backButton()
+	-- print( "NavItem.__getters:backButton" )
+	return self._wgtBtnBack
 end
 
 
 -- getter/setter, left button
 --
-function NavItem.__getters:left_button()
-	-- print( "NavItem.__getters:left_button" )
-	return self._btn_left
+function NavItem.__getters:leftButton()
+	-- print( "NavItem.__getters:leftButton" )
+	return self._btnLeft
 end
-function NavItem.__setters:left_button( button )
-	-- print( "NavItem.__setters:left_button", button )
+function NavItem.__setters:leftButton( button )
+	-- print( "NavItem.__setters:leftButton", button )
 	assert( type(button)=='table' and button.isa, "wrong type for button" )
-	assert( button:isa(Widget.Button), "wrong type for button" )
+	assert( button:isa( Button ), "wrong type for button" )
 	--==--
-	self._btn_left = button
+	self._btnLeft = button
 end
 
 
 -- getter/setter, right button
 --
-function NavItem.__getters:right_button()
-	-- print( "NavItem.__getters:right_button" )
-	return self._btn_right
+function NavItem.__getters:rightButton()
+	-- print( "NavItem.__getters:rightButton" )
+	return self._btnRight
 end
-function NavItem.__setters:right_button( button )
-	-- print( "NavItem.__setters:right_button", button )
+function NavItem.__setters:rightButton( button )
+	-- print( "NavItem.__setters:rightButton", button )
 	assert( type(button)=='table' and button.isa, "wrong type for button" )
-	assert( button:isa(Widget.Button), "wrong type for button" )
-	self._btn_right = button
+	assert( button:isa( Button ), "wrong type for button" )
+	self._btnRight = button
 end
 
 
 -- getter/setter, title TODO (inside of buttons)
 --
 function NavItem.__getters:title()
-	-- print( "NavItem.__getters:right_button" )
-	return self._txt_title
+	-- print( "NavItem.__getters:rightButton" )
+	return self._wgtText
 end
 function NavItem.__setters:title( title )
 	-- print( "NavItem.__setters:title", button )
 	assert( type(title)=='string', "title must be a string" )
 	--==--
-	self._txt_title.text = title
+	self._wgtText.text = title
+end
+
+
+--======================================================--
+-- Theme Methods
+
+-- afterAddStyle()
+--
+function NavItem:afterAddStyle()
+	-- print( "NavItem:afterAddStyle", self )
+	self._widgetStyle_dirty=true
+	self:__invalidateProperties__()
+end
+
+-- beforeRemoveStyle()
+--
+function NavItem:beforeRemoveStyle()
+	-- print( "NavItem:beforeRemoveStyle", self )
+	self._widgetStyle_dirty=true
+	self:__invalidateProperties__()
+end
+
+
+
+--====================================================================--
+--== Private Methods
+
+
+--== Create/Destroy Text Widget
+
+function NavItem:_removeBackButton()
+	-- print( "NavItem:_removeBackButton" )
+	local o = self._wgtBtnBack
+	if not o then return end
+	o:removeSelf()
+	self._wgtBtnBack = nil
+end
+
+function NavItem:_createBackButton()
+	-- print( "NavItem:_createBackButton" )
+
+	self:_removeBackButton()
+
+	local o = Widgets.newButton{
+		labelText="< Back",
+		defaultStyle = self.defaultStyle.backButton
+	}
+	self._wgtBtnBack = o
+
+	--== Reset properties
+
+	self._wgtBtnBackStyle_dirty=true
+end
+
+
+--== Create/Destroy Text Widget
+
+function NavItem:_removeText()
+	-- print( "NavItem:_removeText" )
+	local o = self._wgtText
+	if not o then return end
+	o.onUpdate=nil
+	o:removeSelf()
+	self._wgtText = nil
+end
+
+function NavItem:_createText()
+	-- print( "NavItem:_createText" )
+
+	self:_removeText()
+
+	local o = Widgets.newText{
+	defaultStyle = self.defaultStyle.title
+	}
+	self._wgtText = o
+
+	--== Reset properties
+
+	self._wgtTextStyle_dirty=true
+	self._wgtTextText_dirty=true
+end
+
+
+function NavItem:__commitProperties__()
+	-- print( 'NavItem:__commitProperties__' )
+
+	--== Update Widget View ==--
+
+	local style = self.curr_style
+	local view = self.view
+	local text = self._wgtText
+	local back = self._wgtBtnBack
+	local left = self._btnLeft
+	local right = self._btnRight
+
+	--== Set Styles
+
+	if self._wgtBtnBackStyle_dirty then
+		back:setActiveStyle( style.buttonBack, {copy=false} )
+		self._wgtBtnBackStyle_dirty=false
+	end
+
+	-- TODO: check widget type (apply style if Widget)
+	if left and self._btnLeftStyle_dirty then
+		left:setActiveStyle( style.buttonLeft, {copy=false} )
+		self._btnLeftStyle_dirty=false
+	end
+
+	-- TODO: check widget type (apply style if Widget)
+	if right and self._btnRightStyle_dirty then
+		right:setActiveStyle( style.buttonRight, {copy=false} )
+		self._btnRightStyle_dirty=false
+	end
+
+	if self._wgtTextText_dirty then
+		text.text=self._title
+		self._wgtTextText_dirty=false
+	end
+	if self._wgtTextStyle_dirty then
+		text:setActiveStyle( style.title, {copy=false} )
+		self._wgtTextStyle_dirty=false
+	end
+
+end
+
+
+
+--====================================================================--
+--== Event Handlers
+
+
+function NavItem:stylePropertyChangeHandler( event )
+	-- print( "NavItem:stylePropertyChangeHandler", event.property, event.value )
+	local style = event.target
+	local etype= event.type
+	local property= event.property
+	local value = event.value
+
+	-- Utils.print( event )
+
+	-- print( "Style Changed", etype, property, value )
+
+	if etype==style.STYLE_RESET then
+		self._debugOn_dirty = true
+		self._width_dirty=true
+		self._height_dirty=true
+		self._anchorX_dirty=true
+		self._anchorY_dirty=true
+
+		self._wgtBtnBackStyle_dirty=true
+		self._btnLeftStyle_dirty=true
+		self._btnRightStyle_dirty=true
+		self._wgtTextStyle_dirty=true
+
+		property = etype
+
+	else
+		if property=='debugActive' then
+			self._debugOn_dirty=true
+		elseif property=='width' then
+			self._width_dirty=true
+		elseif property=='height' then
+			self._height_dirty=true
+		elseif property=='anchorX' then
+			self._anchorX_dirty=true
+		elseif property=='anchorY' then
+			self._anchorY_dirty=true
+		end
+
+	end
+
+	self:__invalidateProperties__()
+	self:__dispatchInvalidateNotification__( property, value )
 end
 
 

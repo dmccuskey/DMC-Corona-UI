@@ -82,10 +82,6 @@ o:setFillColor(1,0,0)
 o.x, o.y = H_CENTER, V_CENTER
 
 
--- create formatter
-
-formatter = Widgets.newFormatter( Widgets.Formatter.US_ZIPCODE )
-
 -- create text field
 
 textfield = Widgets.newTextField{
@@ -112,13 +108,11 @@ textfield = Widgets.newTextField{
 textfield.onEvent = textFieldOnEvent_handler
 textfield:addEventListener( textfield.EVENT, textFieldOnEvent_handler )
 
-textfield.formatter = formatter
-
 --== Make different changes
 
 textfield:setFillColor( 0.5, 0.2, 0.1 )
-textfield:setDisplayColor( 1, 0, 0 )
-textfield:setHintColor( 0.7, 0.2, 0.7 )
+textfield:setDisplayTextColor( 1, 0, 0 )
+textfield:setHintTextColor( 0.7, 0.2, 0.7 )
 
 -- textfield.x = H_CENTER
 -- textfield.y = V_CENTER
@@ -128,7 +122,7 @@ textfield:setAnchor( {0.5, 0.5} )
 -- textfield:setAnchor( {1,1} )
 
 textfield.align = textfield.LEFT
--- textfield.align = textfield.CENTER
+textfield.align = textfield.CENTER
 -- textfield.align = textfield.RIGHT
 
 textfield.x = H_CENTER

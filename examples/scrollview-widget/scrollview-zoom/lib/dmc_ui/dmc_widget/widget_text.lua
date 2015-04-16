@@ -78,9 +78,50 @@ local WidgetBase = require( ui_find( 'core.widget' ) )
 
 local newClass = Objects.newClass
 
+local ssub = string.sub
+
 --== To be set in initialize()
 local dUI = nil
 local FontMgr = nil
+
+
+
+--====================================================================--
+--== Support Functions
+
+
+local function testTextLength( text, params )
+	-- print( "Text:testTextLength", text, params.width )
+	local w = params.width
+	local _ssub = ssub
+	local o = display.newText{
+		text=text,
+		font=params.font,
+		fontSize=params.fontSize
+	}
+	local tw = o.width
+	o:removeSelf()
+	if tw < w then return text end
+
+	local cnt = 0
+	local prev = '...'
+	while true do
+		local t = ssub( text, 0, cnt )..'...'
+		local o = display.newText{
+			text=t,
+			font=params.font,
+			fontSize=params.fontSize
+		}
+		local tw = o.width
+		o:removeSelf()
+		if tw <= w then
+			cnt = cnt + 1 ;	prev = t
+		else
+			break
+		end
+	end
+	return prev
+end
 
 
 
@@ -148,10 +189,10 @@ function Text:__init__( params )
 	-- properties from style
 
 	-- virtual
-	self._rectBgWidth_dirty=true
-	self._rectBgHeight_dirty=true
 	self._displayWidth_dirty=true
 	self._displayHeight_dirty=true
+	self._rectBgWidth_dirty=true
+	self._rectBgHeight_dirty=true
 
 	self._align_dirty=true
 	self._fillColor_dirty = true
@@ -163,6 +204,8 @@ function Text:__init__( params )
 	self._strokeWidth_dirty=true
 
 	self._textColor_dirty=true
+	self._textObject_dirty=true
+
 	-- virtual
 	self._textX_dirty=true
 	self._textY_dirty=true
@@ -391,9 +434,11 @@ from text object after creation
 
 function Text.__getters:width()
 	-- print( 'Text.__getters:width' )
-	local w, t = self.curr_style.width, self._txtText
+	local style = self.curr_style
+	local mX = style.marginX*2
+	local w, t = style.width, self._txtText
 	if w==nil and t then w=t.width end
-	return w
+	return w+mX
 end
 function Text.__setters:width( value )
 	-- print( 'Text.__setters:width', value )
@@ -483,8 +528,11 @@ function Text:_createText()
 	self:_removeText()
 
 	local w, h = style.width, style.height
+	local text = self._text
 	if w ~= nil then
-		w = w - style.marginX*2
+		text = testTextLength( text, {
+			width=w, font=style.font, fontSize=style.fontSize
+		})
 	end
 
 	o = display.newText{
@@ -494,7 +542,7 @@ function Text:_createText()
 		-- don't use height, turns into multi-line
 		height=nil,
 
-		text=self._text,
+		text=text,
 		align=style.align,
 		font=style.font,
 		fontSize=style.fontSize,
@@ -510,7 +558,7 @@ function Text:_createText()
 	self._width_dirty=true
 	self._height_dirty=true
 
-	self._text_dirty=true
+	self._text_dirty=false
 	self._textColor_dirty=true
 end
 
@@ -521,12 +569,29 @@ function Text:__commitProperties__()
 	-- local metric = FontMgr:getFontMetric( style.font, style.fontSize )
 	-- metric={offsetX=0,offsetY=0}
 
+	if self._width_dirty then
+		self._width_dirty=false
+
+		self._anchorX_dirty=true
+		self._displayWidth_dirty=true
+		self._rectBgWidth_dirty=true
+		self._textObject_dirty=true
+	end
+	if self._height_dirty then
+		self._height_dirty=false
+
+		self._anchorY_dirty=true
+		self._displayHeight_dirty=true
+		self._rectBgHeight_dirty=true
+	end
+
 	-- create new text if necessary
-	if self._align_dirty or self._font_dirty or self._fontSize_dirty then
+	if self._align_dirty or self._font_dirty or self._fontSize_dirty or self._textObject_dirty then
 		self:_createText()
 		self._align_dirty=false
 		self._font_dirty=false
 		self._fontSize_dirty=false
+		self._textObject_dirty=false
 	end
 
 	local view = self.view
@@ -538,62 +603,37 @@ function Text:__commitProperties__()
 	-- set text string
 
 	if self._text_dirty then
-		txt.text = self._text
 		self._text_dirty=false
-
-		self._width_dirty=true
-		self._height_dirty=true
-	end
-
-	if self._align_dirty then
-		txt.align=style.align
-		self._align_dirty = false
-	end
-
-	if self._width_dirty then
-		bg.width = self.width -- use getter
-		self._width_dirty=false
-
-		self._anchorX_dirty=true
-		self._rectBgWidth_dirty=true
-		self._displayWidth_dirty=true
-	end
-	if self._height_dirty then
-		bg.height = self.height -- use getter
-		self._height_dirty=false
-
-		self._anchorY_dirty=true
-		self._rectBgHeight_dirty=true
-		self._displayHeight_dirty=true
 	end
 
 	if self._marginX_dirty then
 		self._marginX_dirty=false
 
+		self._displayWidth_dirty=true
 		self._rectBgWidth_dirty=true
 		self._textX_dirty=true
-		self._displayWidth_dirty=true
 	end
 	if self._marginY_dirty then
-		-- reminder, we don't set text height
+		--== Reminder, we don't set text height ==--
 		self._marginY_dirty=false
 
+		self._displayHeight_dirty=true
 		self._rectBgHeight_dirty=true
 		self._textY_dirty=true
-		self._displayHeight_dirty=true
 	end
 
 	-- bg width/height
 
 	if self._rectBgWidth_dirty then
+		bg.width = self.width -- use getter
 		self._rectBgWidth_dirty=false
 	end
 	if self._rectBgHeight_dirty then
+		bg.height = self.height -- use getter
 		self._rectBgHeight_dirty=false
 	end
 
 	if self._displayWidth_dirty then
-		txt.width = self.width-style.marginX*2 -- use getter
 		self._displayWidth_dirty=false
 	end
 	if self._displayHeight_dirty then

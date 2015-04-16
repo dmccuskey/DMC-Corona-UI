@@ -238,17 +238,15 @@ tableData = createDataArray()
 -- setup tableview delegate/datasource helpers
 
 local delegate = {
+	numberOfRows=getRows,
+	onRowRender=onRender,
+	onRowUnrender=onUnrender,
+
 	shouldHighlightRow=onEvent,
 	didHighlightRow=onEvent,
 	didUnhighlightRow=onEvent,
 	willSelectRow=onEvent,
 	didSelectRow=onEvent,
-}
-
-local dataSource = {
-	numberOfRows=getRows,
-	onRowRender=onRender,
-	onRowUnrender=onUnrender,
 }
 
 
@@ -258,7 +256,6 @@ local tV = dUI.newTableView{
 	width=DIMS.w,
 	height=DIMS.h*SHOW,
 	delegate=delegate,
-	dataSource=dataSource,
 	estimatedRowHeight=DIMS.h,
 	autoMask=true
 }

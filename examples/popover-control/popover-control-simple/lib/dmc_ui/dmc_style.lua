@@ -138,6 +138,7 @@ function Style.initialize( manager, params )
 	dUI.newNavItemStyle = Style.newNavItemStyle
 	dUI.newRectangleBackgroundStyle = Style.newRectangleBackgroundStyle
 	dUI.newRoundedBackgroundStyle = Style.newRoundedBackgroundStyle
+	dUI.newTableViewStyle = Style.newTableViewStyle
 	dUI.newTextFieldStyle = Style.newTextFieldStyle
 	dUI.newTextStyle = Style.newTextStyle
 
@@ -163,7 +164,7 @@ function Style.loadBaseStyleSupport( params )
 		kmode = Kolor.hRGBA
 	end
 
-	local BaseStyle = require( ui_find( 'dmc_style.base_style' ) )
+	local BaseStyle = require( ui_find( 'core.style' ) )
 	Style.Base=BaseStyle
 	initKolors(
 		function()
@@ -389,7 +390,6 @@ function Style.newScrollView( style_info, params )
 end
 
 
-
 --======================================================--
 -- newTableView Support
 
@@ -410,6 +410,7 @@ function Style.loadTableViewStyleSupport( params )
 
 	--== Components
 
+	local TableViewStyle = require( ui_find( 'dmc_style.tableview_style' ) )
 	local TableViewStyle = require( ui_find( 'dmc_style.tableview_style' ) )
 
 	Style.TableView=TableViewStyle
@@ -433,7 +434,53 @@ function Style.newTableView( style_info, params )
 end
 
 
+--======================================================--
+-- newTableViewCell Support
 
+function Style.loadTableViewCellStyleSupport( params )
+	-- print( "Style.loadTableViewCellStyleSupport" )
+	if Style.TableViewCell then return end
+	params = params or {}
+	if params.mode==nil then params.mode=uiConst.RUN_MODE end
+	--==--
+	local kmode
+	if params.mode==uiConst.TEST_MODE then
+		kmode = Kolor.hRGBA
+	end
+
+	--== Dependencies
+
+	Style.loadBaseStyleSupport( params )
+	Style._loadBackgroundStyleSupport( params )
+	Style._loadTextStyleSupport( params )
+
+	--== Components
+
+	local TableViewCellStyle = require( ui_find( 'dmc_style.tableviewcell_style' ) )
+	local TableViewCellStateStyle = require( ui_find( 'dmc_style.tableviewcell_style.tableviewcell_state' ) )
+
+	Style.TableViewCell=TableViewCellStyle
+	Style.TableViewCellState=TableViewCellStateStyle
+
+	initKolors(
+		function()
+			-- reverse order
+			TableViewCellStateStyle.initialize( Style, params )
+			TableViewCellStyle.initialize( Style, params )
+		end,
+		kmode
+	)
+end
+
+function Style.newTableViewCell( style_info, params )
+	-- print( "Style.newTableViewCell" )
+	style_info = style_info or {}
+	params = params or {}
+	--==--
+	params.data = style_info
+	if not Style.TableViewCell then Style.loadTableViewCellStyleSupport() end
+	return Style.TableViewCell:createStyleFrom( params )
+end
 
 
 --======================================================--
@@ -529,6 +576,8 @@ end
 --== Private Functions
 
 
+-- none
+
 
 
 --====================================================================--
@@ -536,6 +585,7 @@ end
 
 
 -- none
+
 
 
 

@@ -93,9 +93,14 @@ local dUI = nil
 
 
 --====================================================================--
---== View Control Base Class
+--== Widget Base Class
 --====================================================================--
 
+
+--- Widget Base Class.
+-- The base class used for all Widgets.
+--
+-- @classmod Core.Widget
 
 local View = newClass(
 	{ StyleMix, ComponentBase, LifecycleMix },

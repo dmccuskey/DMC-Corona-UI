@@ -67,7 +67,7 @@ local ui_find = dmc_ui_func.find
 local Objects = require 'dmc_objects'
 local Utils = require 'dmc_utils'
 
-local BaseStyle = require( ui_find( 'dmc_style.base_style' ) )
+local BaseStyle = require( ui_find( 'core.style' ) )
 
 
 

@@ -411,4 +411,125 @@ function run_example5()
 
 end
 
-run_example5()
+-- run_example5()
+
+
+
+--======================================================--
+--== create widget, long text, put elipses in place
+
+function run_example6()
+
+	local w1
+
+	w1 = dUI.newText{}
+	w1.width = 80
+	w1.text = "this is long text too long to fit"
+	w1.x, w1.y = H_CENTER, 100
+
+	timer.performWithDelay( 1000, function()
+		print( "\n\n Main:Increase length" )
+		w1.width = 120
+	end)
+
+end
+
+-- run_example6()
+
+
+
+--======================================================--
+--== create widget, test anchors
+
+function run_example7()
+
+	local txt2
+
+	txt2 = dUI.newText{
+		text="inline style",
+
+		style={
+			width=225,
+			height=35,
+
+			align='right',
+			fontSize=26,
+			marginX=5,
+			fillColor={0.5,0,0.25},
+			textColor={1,0,0},
+		}
+	}
+
+	txt2.x = H_CENTER
+	txt2.y = V_CENTER
+	txt2.align='center'
+	-- txt2.align='right'
+
+	txt2:setAnchor( {0,0} )
+	txt2:setAnchor( {0.5,0.5} )
+	-- txt2:setAnchor( {1,1} )
+
+
+	timer.performWithDelay( 1000, function()
+		txt2.style=nil -- clear style, to default
+	end)
+
+
+	timer.performWithDelay( 2000, function()
+		print( "\n\nUpdate properties" )
+
+		txt2.text="hamburger"
+
+		txt2.width=300
+		txt2.height=70
+
+		txt2.align='right'
+
+		txt2:setAnchor( {1,1} )
+
+		txt2:setFillColor( 1,0,0,0.5 )
+		txt2:setTextColor( 1,0,0,0.5 )
+
+		txt2.font = native.systemFontBold
+
+		txt2:setStrokeColor( 0,0,0,0.5 )
+		txt2.strokeWidth = 4
+
+		txt2.fontSize = 18
+		txt2.marginX = 15
+		txt2.marginY = 15
+
+	end)
+
+	timer.performWithDelay( 3000, function()
+		print( "\n\nUpdate properties" )
+
+		-- txt2.x=100
+
+		txt2.text="pizza"
+
+		txt2.width=300
+		txt2.width=60
+		txt2.width=nil
+		txt2.height=nil
+
+		txt2:setAnchor( {0,0} )
+
+		txt2.align='left'
+		-- txt2:setAnchor( {0.5,0.5} )
+
+		txt2.strokeWidth = 2
+		txt2:setStrokeColor( 1,0,0,1 )
+
+		txt2.font = native.systemFontBold
+		txt2.fontSize = 30
+
+		txt2:setFillColor( 0,0,0.5,0.8 )
+		txt2:setTextColor( 1,0,1,0.5 )
+
+	end)
+
+end
+
+run_example7()
+

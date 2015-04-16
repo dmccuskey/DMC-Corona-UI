@@ -164,7 +164,7 @@ function Style.loadBaseStyleSupport( params )
 		kmode = Kolor.hRGBA
 	end
 
-	local BaseStyle = require( ui_find( 'dmc_style.base_style' ) )
+	local BaseStyle = require( ui_find( 'core.style' ) )
 	Style.Base=BaseStyle
 	initKolors(
 		function()

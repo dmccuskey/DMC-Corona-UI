@@ -166,6 +166,19 @@ Constant.AXIS_VELOCITY_LIMIT = 1
 Constant.TABLEVIEW_DECELERATE_TIME = 2000
 
 
+--======================================================--
+-- TableViewCell
+
+Constant.TABLEVIEWCELL_DEFAULT_LAYOUT = 'default-layout'
+Constant.TABLEVIEWCELL_SUBTITLE_LAYOUT = 'subtitle-layout'
+
+Constant.TABLEVIEWCELL_CHECKMARK = 'checkmark-accessory'
+Constant.TABLEVIEWCELL_DETAIL_BUTTON = 'detail-button-accessory'
+Constant.TABLEVIEWCELL_DISCLOSURE_INDICATOR = 'disclosure-indicator-accessory'
+Constant.TABLEVIEWCELL_NONE = 'no-accessory'
+
+
+
 --====================================================================--
 --== Controls
 

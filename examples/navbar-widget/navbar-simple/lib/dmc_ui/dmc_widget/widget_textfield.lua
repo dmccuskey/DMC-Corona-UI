@@ -208,7 +208,6 @@ function TextField:__init__( params )
 	self._backgroundStyle_dirty=true
 	self._inputType_dirty=true
 	self._isHitActive_dirty=true
-	self._isHitTestable_dirty=true
 	self._isSecure_dirty=true
 	self._marginX_dirty=true
 	self._marginY_dirty=true
@@ -231,7 +230,9 @@ function TextField:__init__( params )
 	self._inputFieldAlign_dirty=true
 	self._inputFieldFont_dirty=true
 	self._inputFieldFontSize_dirty=true
+	self._inputFieldWidth_dirty=true
 	self._inputFieldHeight_dirty=true
+	self._inputFieldMarginX_dirty=true
 	self._inputFieldIsSecure_dirty=true
 	self._inputFieldStyle_dirty=true
 	self._inputFieldText_dirty=true
@@ -588,21 +589,21 @@ function TextField.__getters:backgroundStrokeWidth()
 	return self.curr_style.backgroundStrokeWidth
 end
 function TextField.__setters:backgroundStrokeWidth( value )
-	-- print( 'TextField.__setters:backgroundStrokeWidth', value )
+	-- print( "TextField.__setters:backgroundStrokeWidth", value )
 	self.curr_style.backgroundStrokeWidth = value
 end
 
 -- setBackgroundFillColor()
 --
 function TextField:setBackgroundFillColor( ... )
-	-- print( 'TextField:setBackgroundFillColor' )
+	-- print( "TextField:setBackgroundFillColor" )
 	self.curr_style.backgroundFillColor = {...}
 end
 
 -- setBackgroundStrokeColor()
 --
 function TextField:setBackgroundStrokeColor( ... )
-	-- print( 'TextField:setBackgroundStrokeColor' )
+	-- print( "TextField:setBackgroundStrokeColor" )
 	self.curr_style.backgroundStrokeColor = {...}
 end
 
@@ -613,21 +614,21 @@ end
 -- .hintFont  TODO: move to style
 --
 function TextField.__setters:hintFont( value )
-	-- print( 'TextField.__setters:hintFont', value )
+	-- print( "TextField.__setters:hintFont", value )
 	self.curr_style.hint.font = value
 end
 
 -- .hintFontSize
 --
 function TextField.__setters:hintFontSize( value )
-	-- print( 'TextField.__setters:hintFontSize', value )
+	-- print( "TextField.__setters:hintFontSize", value )
 	self.curr_style.hint.fontSize = value
 end
 
 -- setHintTextColor()
 --
 function TextField:setHintTextColor( ... )
-	-- print( 'TextField:setHintTextColor' )
+	-- print( "TextField:setHintTextColor" )
 	self.curr_style.hintTextColor = {...}
 end
 
@@ -638,21 +639,21 @@ end
 -- .displayFont -- TODO move to stlye
 --
 function TextField.__setters:displayFont( value )
-	-- print( 'TextField.__setters:displayFont', value )
+	-- print( "TextField.__setters:displayFont", value )
 	self.curr_style.displayFont = value
 end
 
 -- .displayFontSize
 --
 function TextField.__setters:displayFontSize( value )
-	-- print( 'TextField.__setters:displayFontSize', value )
+	-- print( "TextField.__setters:displayFontSize", value )
 	self.curr_style.displayFontSize = value
 end
 
 -- setDisplayTextColor()
 --
 function TextField:setDisplayTextColor( ... )
-	-- print( 'TextField:setDisplayTextColor' )
+	-- print( "TextField:setDisplayTextColor" )
 	self.curr_style.displayTextColor = {...}
 end
 
@@ -886,7 +887,7 @@ end
 
 
 function TextField:__commitProperties__()
-	-- print( 'TextField:__commitProperties__' )
+	-- print( "TextField:__commitProperties__" )
 
 	--== Update Widget Components ==--
 
@@ -934,10 +935,10 @@ function TextField:__commitProperties__()
 	if self._width_dirty then
 		local width = style.width
 		hit.width = width
-		input.width = width
 		self._width_dirty=false
 
 		self._inputFieldX_dirty=true
+		self._inputFieldWidth_dirty=true
 	end
 	if self._height_dirty then
 		local height = style.height
@@ -976,6 +977,7 @@ function TextField:__commitProperties__()
 		self._marginX_dirty = false
 
 		self._inputFieldX_dirty=true
+		self._inputFieldMarginX_dirty=true
 	end
 	if self._marginY_dirty then
 		self._marginY_dirty = false
@@ -1076,11 +1078,6 @@ function TextField:__commitProperties__()
 
 	--== Hit
 
-	if self._isHitTestable_dirty then
-		hit.isHitTestable=style.isHitTestable
-		self._isHitTestable_dirty=false
-	end
-
 	if self._wgtTextHeight_dirty then
 		self._wgtTextHeight_dirty=false
 
@@ -1097,9 +1094,17 @@ function TextField:__commitProperties__()
 		self._inputFieldStyle_dirty=false
 	end
 
+	if self._inputFieldWidth_dirty or self._inputFieldMarginX_dirty then
+		local width = style.width
+		local marginX = style.marginX
+		input.width = width - marginX*2
+		self._inputFieldWidth_dirty=false
+		self._inputFieldMarginX_dirty=false
+	end
+
 	if self._inputFieldHeight_dirty then
 		input.height = text:getTextHeight()
-		self._inputFieldHeight_dirty=true
+		self._inputFieldHeight_dirty=false
 	end
 
 	-- X/Y
@@ -1212,18 +1217,18 @@ end
 
 
 function TextField:_startEdit( set_focus )
-	-- print( 'TextField:_startEdit' )
+	-- print( "TextField:_startEdit" )
 	self:setEditActive( true, {set_focus=set_focus} )
 end
 
 function TextField:_stopEdit( set_focus )
-	-- print( 'TextField:_stopEdit' )
+	-- print( "TextField:_stopEdit" )
 	self:setEditActive( false, {set_focus=set_focus} )
 end
 
 
 function TextField:_dispatchStateBegan( event )
-	-- print( 'TextField:_dispatchStateBegan', event )
+	-- print( "TextField:_dispatchStateBegan", event )
 	self:_startEdit( false )
 
 	self._tmp_text = self._displayText -- start last ok state
@@ -1234,7 +1239,7 @@ function TextField:_dispatchStateBegan( event )
 end
 
 function TextField:_dispatchStateEditing( event )
-	-- print( 'TextField:_dispatchStateEditing', event )
+	-- print( "TextField:_dispatchStateEditing", event )
 
 	self._tmp_text = event.text -- save for last ok state
 
@@ -1243,7 +1248,7 @@ function TextField:_dispatchStateEditing( event )
 end
 
 function TextField:_dispatchStateEnded( event )
-	-- print( 'TextField:_dispatchStateEnded', event )
+	-- print( "TextField:_dispatchStateEnded", event )
 	self:_stopEdit( false )
 
 	self._tmp_text = nil
@@ -1269,11 +1274,12 @@ function TextField:_hitAreaTouch_handler( e )
 	if phase=='began' then
 		display.getCurrentStage():setFocus( background )
 		self._has_focus = true
-
 		self:dispatchEvent( self.PRESSED, {isWithinBounds=true}, {merge=true} )
+		return true
 	end
 
 	if not self._has_focus then return false end
+
 
 	local bgCb = background.contentBounds
 	local isWithinBounds =
@@ -1446,7 +1452,7 @@ function TextField:stylePropertyChangeHandler( event )
 
 	-- Utils.print( event )
 
-	-- print( "Style Changed", etype, property, value )
+	-- print( "TF Style Changed", etype, property, value )
 
 	if etype==style.STYLE_RESET then
 		self._debugOn_dirty = true
@@ -1459,7 +1465,6 @@ function TextField:stylePropertyChangeHandler( event )
 		self._backgroundStyle_dirty=true
 		self._inputType_dirty=true
 		self._isHitActive_dirty=true
-		self._isHitTestable_dirty=true
 		self._isSecure_dirty=true
 		self._marginX_dirty=true
 		self._marginY_dirty=true
@@ -1490,8 +1495,6 @@ function TextField:stylePropertyChangeHandler( event )
 			self._inputType_dirty=true
 		elseif property=='isHitActive' then
 			self._isHitActive_dirty=true
-		elseif property=='isHitTestable' then
-			self._isHitTestable_dirty=true
 		elseif property=='isSecure' then
 			self._isSecure_dirty=true
 		elseif property=='marginX' then
