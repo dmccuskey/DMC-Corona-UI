@@ -150,7 +150,7 @@ Constant.DEFAULT_BACKGROUND_TYPE = Constant.ROUNDED
 
 
 --======================================================--
--- ScrollView
+-- ScrollView Widget
 
 Constant.SCROLLVIEW_DECELERATE_TIME = 200
 
@@ -166,13 +166,13 @@ Constant.AXIS_VELOCITY_LIMIT = 1
 
 
 --======================================================--
--- TableView
+-- TableView Widget
 
 Constant.TABLEVIEW_DECELERATE_TIME = 2000
 
 
 --======================================================--
--- TableViewCell
+-- TableViewCell Widget
 
 Constant.TABLEVIEWCELL_DEFAULT_LAYOUT = 'default-layout'
 Constant.TABLEVIEWCELL_SUBTITLE_LAYOUT = 'subtitle-layout'
