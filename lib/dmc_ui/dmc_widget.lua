@@ -124,6 +124,7 @@ function Widget.initialize( manager, params )
 	--== Add API calls
 
 	dUI.newBackground = Widget.newBackground
+	dUI.new9SliceBackground = Widget.new9SliceBackground
 	dUI.newRectangleBackground = Widget.newRoundedBackground
 	dUI.newRoundedBackground = Widget.newRectangleBackground
 	dUI.newButton = Widget.newButton
@@ -262,13 +263,29 @@ function Widget.newBackground( options )
 	return Widget.Background:new( options )
 end
 
+
+--- convenience function for Rectangle Background widgets.
+--
+-- @function new9SliceBackground
+-- @tab[opt] options parameters used to create Background
+-- @treturn object @{Widget.Background}
+-- @usage local uiBg = dUI.new9SliceBackground()
+
+function Widget.new9SliceBackground( options )
+	if not Widget.Background then Widget._loadBackgroundSupport() end
+	options = options or {}
+	options.viewType=uiConst.NINE_SLICE
+	print("\n\n Creating background \n\n", uiConst.NINE_SLICE )
+	return Widget.Background:new( options )
+end
+
 --- convenience function for Rectangle Background widgets.
 --
 -- @function newRectangleBackground
 -- @tab[opt] options parameters used to create Background
 -- @treturn object @{Widget.Background}
 -- @usage local uiBg = dUI.newRectangleBackground()
---
+
 function Widget.newRectangleBackground( options )
 	if not Widget.Background then Widget._loadBackgroundSupport() end
 	options = options or {}
@@ -282,7 +299,7 @@ end
 -- @tab[opt] options parameters used to create Background
 -- @treturn object @{Widget.Background}
 -- @usage local uiBg = dUI.newRoundedBackground()
---
+
 function Widget.newRoundedBackground( options )
 	if not Widget.Background then Widget._loadBackgroundSupport() end
 	options = options or {}

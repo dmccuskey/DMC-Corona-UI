@@ -138,10 +138,15 @@ Constant.TABLEVIEWCELL_STATE = 'TableViewCell-State'
 Constant.TEXT = 'Text'
 Constant.TEXTFIELD = 'TextField'
 
--- View Types
 
-Constant.ROUNDED = 'rounded'
+--======================================================--
+-- Background Widget
+
+Constant.NINE_SLICE = '9-slice'
 Constant.RECTANGLE = 'rectangle'
+Constant.ROUNDED = 'rounded'
+
+Constant.DEFAULT_BACKGROUND_TYPE = Constant.ROUNDED
 
 
 --======================================================--
