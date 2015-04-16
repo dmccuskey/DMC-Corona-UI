@@ -246,7 +246,7 @@ function TableViewCell:__init__( params )
 	self._detailY_dirty=true
 	self._labelY_dirty=true
 
-	self._accessory_dirty=true
+	self._cellAccessory_dirty=true
 	self._cellLayout_dirty = true
 	self._contentMargin_dirty=true
 
@@ -609,7 +609,7 @@ function TableViewCell:__commitProperties__()
 		self._activeStateStyle = style
 		self._highlightIsActive_dirty=false
 
-		self._accessory_dirty=true
+		self._cellAccessory_dirty=true
 		self._textLabelX_dirty=true
 		self._textLabelY_dirty=true
 		self._textLabelWidth_dirty=true
@@ -706,7 +706,7 @@ function TableViewCell:__commitProperties__()
 
 	-- accessory / accessoryX
 
-	if self._accessory_dirty then
+	if self._cellAccessory_dirty then
 		local accessory = style.accessory
 		local accessObj = self._accessoryObject
 
@@ -729,7 +729,7 @@ function TableViewCell:__commitProperties__()
 			self._accessoryX_dirty=true
 		end
 		self._accessoryObject = accessObj
-		self._accessory_dirty=false
+		self._cellAccessory_dirty=false
 
 		self._textLabelWidth_dirty=true
 		self._textDetailWidth_dirty=true
@@ -849,7 +849,7 @@ function TableViewCell:stylePropertyChangeHandler( event )
 		self._anchorX_dirty=true
 		self._anchorY_dirty=true
 
-		self._accessory_dirty = true
+		self._cellAccessory_dirty = true
 		self._cellLayout_dirty=true
 		self._cellMargin_dirty=true
 		self._contentMargin_dirty=true
@@ -871,7 +871,7 @@ function TableViewCell:stylePropertyChangeHandler( event )
 				self._anchorY_dirty=true
 
 		elseif property=='accessory' then
-			self._accessory_dirty=true
+			self._cellAccessory_dirty=true
 		elseif property=='cellLayout' then
 			self._cellLayout_dirty=true
 		elseif property=='cellMargin' then
