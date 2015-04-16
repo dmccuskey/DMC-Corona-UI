@@ -5,7 +5,7 @@
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
--- Copyright (C) 2014-2015 David McCuskey. All Rights Reserved.
+-- Copyright (C) 2015 David McCuskey. All Rights Reserved.
 --====================================================================--
 
 
@@ -57,7 +57,6 @@ local function setupBackground()
 end
 
 
-
 --======================================================--
 -- Button Handlers
 
@@ -91,33 +90,42 @@ function run_example1a()
 
 	local bw1
 
-	bw1 = dUI.newRoundedBackground()
-	bw1.x, bw1.y = 20,30
-	bw1 = dUI.newRectangleBackground()
-	bw1.x, bw1.y = 20,60
+	bw1 = dUI.newPushButton{
 
-	bw1 = dUI.new9SliceBackground{
+		id='9-slice-button',
+		labelText="Press",
+
+		data="your data",
+		onPress=onPress_handler,
 
 		style={
 			anchorX=0.5,
-			anchorY=0.5,
-			view = {
-				sheetInfo='asset.image.cloud_button.button-sheet',
-				sheetImage='asset/image/cloud_button/button-sheet.png',
-				offsetLeft=8,
-				offsetRight=7,
-				offsetTop=4,
-				offsetBottom=12,
+			anchorY=1,
+			hitMarginX=10,
+			hitMarginY=10,
+
+			inactive = {
+				background = {
+					type=dUI.NINE_SLICE,
+					view = {
+						sheetInfo='asset.image.cloud_button.button-sheet',
+						sheetImage='asset/image/cloud_button/button-sheet.png',
+						offsetLeft=8,
+						offsetRight=7,
+						offsetTop=4,
+						offsetBottom=12,
+					}
+				}
 			}
 		}
 	}
 	bw1.width, bw1.height = 200, 100
 	bw1.x, bw1.y = H_CENTER, V_CENTER+0
 
-	timer.performWithDelay( 1000, function()
-		bw1.width=100
-		bw1.anchorX=1
-	end)
+	-- timer.performWithDelay( 1000, function()
+	-- 	bw1.width=100
+	-- 	bw1.anchorX=1
+	-- end)
 
 end
 
