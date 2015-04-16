@@ -63,6 +63,7 @@ local ui_find = dmc_ui_func.find
 --== Imports
 
 
+local NineSlice = require( ui_find( 'dmc_widget.widget_background.nine_slice_view' ) )
 local Rectangle = require( ui_find( 'dmc_widget.widget_background.rectangle_view' ) )
 local Rounded = require( ui_find( 'dmc_widget.widget_background.rounded_view' ) )
 
@@ -87,6 +88,7 @@ local function initializeFactory( manager )
 	-- print( "ViewFactory.initializeFactory" )
 	Widgets = manager
 
+	NineSlice.initialize( manager )
 	Rectangle.initialize( manager )
 	Rounded.initialize( manager )
 end
@@ -98,6 +100,8 @@ local function createView( style_type, params )
 		return Rectangle:new( params )
 	elseif style_type==Rounded.TYPE then
 		return Rounded:new( params )
+	elseif style_type==NineSlice.TYPE then
+		return NineSlice:new( params )
 	else
 		error( sfmt( "ViewFactory: Unknown style type '%s'", tostring( style_type )))
 	end
@@ -110,6 +114,8 @@ local function getViewClass( style_type )
 		return Rectangle
 	elseif style_type==Rounded.TYPE then
 		return Rounded
+	elseif style_type==NineSlice.TYPE then
+		return NineSlice
 	else
 		error( sfmt( "ViewFactory: Unknown style type '%s'", tostring( style_type )))
 	end
@@ -127,6 +133,7 @@ return {
 
 	initialize = initializeFactory,
 
+	NineSlice = NineSlice,
 	Rectangle = Rectangle,
 	Rounded = Rounded,
 
