@@ -1,11 +1,11 @@
 --====================================================================--
--- Simple 9-Slice Button
+-- Simple 9-Slice Background
 --
--- Shows basic use of the DMC Widget: Button
+-- Shows 9-slice setup with DMC Background Widget
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
--- Copyright (C) 2014-2015 David McCuskey. All Rights Reserved.
+-- Copyright (C) 2015 David McCuskey. All Rights Reserved.
 --====================================================================--
 
 
@@ -58,23 +58,6 @@ end
 
 
 
---======================================================--
--- Button Handlers
-
-local function onPress_handler( event )
-	print( 'Main: onPress_handler: id', event.id )
-end
-
-local function onRelease_handler( event )
-	print( 'Main: onRelease_handler: id', event.id )
-end
-
-local function onEvent_handler( event )
-	print( 'Main: onEvent_handler: id', event.id, event.phase )
-end
-
-
-
 --===================================================================--
 --== Main
 --===================================================================--
@@ -85,16 +68,11 @@ setupBackground()
 
 
 --======================================================--
---== create background, default style
+--== create 9-slice background, from sprite sheet
 
 function run_example1a()
 
 	local bw1
-
-	bw1 = dUI.newRoundedBackground()
-	bw1.x, bw1.y = 20,30
-	bw1 = dUI.newRectangleBackground()
-	bw1.x, bw1.y = 20,60
 
 	bw1 = dUI.new9SliceBackground{
 
