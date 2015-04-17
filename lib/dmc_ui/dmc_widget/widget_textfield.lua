@@ -91,6 +91,13 @@ local Widget = nil
 
 
 --- TextField Widget Module.
+-- a widget used to collect text from user.
+--
+-- **Inherits from:** <br>
+-- * @{Core.Widget}
+--
+-- **Style Object:** <br>
+-- * @{Style.TextField}
 --
 -- @classmod Widget.TextField
 -- @usage
@@ -99,7 +106,7 @@ local Widget = nil
 
 local TextField = newClass( WidgetBase, {name="TextField"} )
 
---- Class Constants.
+--- Constants
 -- @section
 
 --== Class Constants
@@ -116,8 +123,21 @@ TextField.BORDER_STYLE_ROUNDED = 'border-style-rounded'
 TextField.BORDER_IMAGE = 'border-style-rounded'
 
 -- keyboard
+
+--- defines default Keyboard input type.
+-- set input type using styles (inline, style, or direct)
+-- @usage
+-- widget.style.inputType = widget.INPUT_DEFAULT
+
 TextField.INPUT_DEFAULT = 'default'
+
+--- defines decimal Keyboard input type.
+-- set input type using styles (inline, style, or direct)
+-- @usage
+-- widget.style.inputType = widget.INPUT_DECIMAL
+
 TextField.INPUT_DECIMAL = 'decimal'
+
 TextField.INPUT_EMAIL = 'email'
 TextField.INPUT_NUMBER = 'number'
 TextField.INPUT_PASSWORD = 'password'
@@ -349,57 +369,9 @@ end
 -- Local Properties
 
 
-
 --[[
 Inherited Methods
 --]]
-
---- set/get x position.
---
--- @within Properties
--- @function .x
--- @usage widget.x = 5
--- @usage print( widget.x )
-
---- set/get y position.
---
--- @within Properties
--- @function .y
--- @usage widget.y = 5
--- @usage print( widget.y )
-
---- set/get anchorX.
---
--- @within Properties
--- @function .anchorX
--- @usage widget.anchorX = 5
--- @usage print( widget.anchorX )
-
---- set/get anchorY.
---
--- @within Properties
--- @function .anchorY
--- @usage widget.anchorY = 5
--- @usage print( widget.anchorY )
-
---- set/get widget style.
--- style can be a style name or a Style Object.
--- Style Object must be appropriate style for Widget, eg style for Background widget comes from dUI.newBackgroundStyle().
--- @within Properties
--- @function .style
--- @usage widget.style = 'widget-home-page'
--- @usage
--- local wStyle = dUI.newTextStyle()
--- widget.style = wStyle
-
-
---- clear any local properties on style.
--- convenience method, calls clearProperties() on active style.
---
--- @within Methods
--- @function :clearStyle
--- @usage widget:clearStyle()
-
 
 --- set/get align.
 -- values are 'left', 'center', 'right'
@@ -408,15 +380,6 @@ Inherited Methods
 -- @function .align
 -- @usage widget.align = 'center'
 -- @usage print( widget.align )
-
---- set/get marginX.
--- set the margin inset of the widget. this value is *subtracted* from the widget width.
---
--- @within Properties
--- @function .marginX
--- @usage widget.marginX = 18
--- @usage print( widget.marginX )
-
 
 --== .hintText
 
@@ -439,6 +402,7 @@ function TextField.__setters:hintText( value )
 	self:__invalidateProperties__()
 end
 
+
 --== .isEditing
 
 --- get editing state for TextField.
@@ -456,13 +420,12 @@ end
 
 --== .isHitActive
 
---- get state of touch-activity.
--- returns true if the TextField is currently enabled.
+--- set state of touch-activity.
+-- set true if the TextField editing is enabled.
 --
--- @within isHitActive
+-- @within Properties
 -- @function .isHitActive
--- @treturn bool
--- @usage print( widget.isHitActive )
+-- @usage widget.isHitActive = true
 
 function TextField.__setters:isHitActive( value, params )
 	-- print( "TextField.__setters:isHitActive", value )
@@ -488,27 +451,26 @@ function TextField.__setters:isSecure( value )
 	self.curr_style.isSecure = value
 end
 
---== .text
 
---- set/get input text for TextWidget.
+--== .marginX
+
+--- set/get marginX.
+-- set the margin inset of the widget. this value is *subtracted* from the widget width.
 --
 -- @within Properties
--- @function .text
--- @usage widget.text = true
--- @usage print( widget.text )
+-- @function .marginX
+-- @usage widget.marginX = 18
+-- @usage print( widget.marginX )
 
-function TextField.__getters:text()
-	return self._displayText
-end
-function TextField.__setters:text( value )
-	-- print( "TextField.__setters:text", value )
-	assert( type(value)=='string' )
-	--==--
-	if value == self._displayText then return end
-	self._displayText = value
-	self._displayText_dirty=true
-	self:__invalidateProperties__()
-end
+--== .marginY
+
+--- set/get marginY.
+-- set the margin inset of the widget. this value is *subtracted* from the widget width.
+--
+-- @within Properties
+-- @function .marginY
+-- @usage widget.marginY = 18
+-- @usage print( widget.marginY )
 
 
 --== :setEditActive()
@@ -533,12 +495,15 @@ function TextField:setEditActive( value, params )
 	self:__invalidateProperties__()
 end
 
+
 --== :setKeyboardFocus()
 
 --- set keyboard cursor-focus on this TextField.
+-- this will show the keyboard.
 --
 -- @within Properties
 -- @function :setKeyboardFocus
+-- @usage widget:setKeyboardFocus()
 
 function TextField:setKeyboardFocus()
 	-- print( "TextField:setKeyboardFocus" )
@@ -550,6 +515,7 @@ end
 --== :unsetKeyboardFocus()
 
 --- remove keyboard cursor-focus on this TextField.
+-- this will hide the keyboard.
 --
 -- @within Properties
 -- @function :unsetKeyboardFocus
@@ -578,6 +544,30 @@ function TextField:setReturnKey( value )
 	self._returnKey_dirty = true
 	self:__invalidateProperties__()
 end
+
+
+--== .text
+
+--- set/get input text for TextWidget.
+--
+-- @within Properties
+-- @function .text
+-- @usage widget.text = "input field text"
+-- @usage print( widget.text )
+
+function TextField.__getters:text()
+	return self._displayText
+end
+function TextField.__setters:text( value )
+	-- print( "TextField.__setters:text", value )
+	assert( type(value)=='string' )
+	--==--
+	if value == self._displayText then return end
+	self._displayText = value
+	self._displayText_dirty=true
+	self:__invalidateProperties__()
+end
+
 
 
 --======================================================--
