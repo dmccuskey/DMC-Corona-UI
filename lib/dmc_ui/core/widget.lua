@@ -224,7 +224,6 @@ function View:__undoCreateView__()
 
 	self._dgBg:removeSelf()
 	self._dgBg=nil
-
 	--==--
 	self:superCall( ComponentBase, '__undoCreateView__' )
 end
@@ -239,7 +238,6 @@ function View:__initComplete__()
 	local tmp = self._wc_tmp_params
 
 	self._isRendered = true
-
 	self.delegate = tmp.delegate
 	self.style = tmp.style
 
@@ -293,6 +291,41 @@ Inherited Methods
 -- @function .y
 -- @usage widget.y = 5
 -- @usage print( widget.y )
+
+
+--- set/get anchorX.
+--
+-- @within Properties
+-- @function .anchorX
+-- @usage widget.anchorX = 5
+-- @usage print( widget.anchorX )
+
+--- set/get anchorY.
+--
+-- @within Properties
+-- @function .anchorY
+-- @usage widget.anchorY = 5
+-- @usage print( widget.anchorY )
+
+--- set/get widget style.
+-- style can be a style name or a Style Object.
+-- Style Object must be appropriate style for Widget, eg style for Background widget comes from dUI.newBackgroundStyle().
+-- @within Properties
+-- @function .style
+-- @usage widget.style = 'widget-home-page'
+-- @usage
+-- local wStyle = dUI.newTextStyle()
+-- widget.style = wStyle
+
+
+--- clear any local properties on style.
+-- convenience method, calls clearProperties() on active style.
+--
+-- @within Methods
+-- @function :clearStyle
+-- @usage widget:clearStyle()
+
+
 
 
 --== .X
