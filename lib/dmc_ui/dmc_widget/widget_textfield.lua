@@ -211,7 +211,7 @@ function TextField:__init__( params )
 
 	self._isWidgetEnabled = true
 
-	self._isEditActive = { state=false, set_focus=nil }
+	self._isEditActive = { state=false, setFocus=nil }
 	self._isEditActive_dirty = true
 
 	self._clearOnBeginEdit = false
@@ -479,14 +479,16 @@ end
 --
 -- @within Properties
 -- @function :setEditActive
+--
 -- @tparam bool value true if
 -- @tab[opt] params table of optional parameters
--- @usage widget:setEditActive( true, { set_focus=true })
+-- @tparam[opt=true] bool params.setFocus set focus on the text field
+-- @usage widget:setEditActive( true, { setFocus=true })
 
 function TextField:setEditActive( value, params )
 	-- print( "TextField:setEditActive", value )
 	params = params or {}
-	if params.set_focus==nil then params.set_focus=true end
+	if params.setFocus==nil then params.setFocus=true end
 	assert( type(value)=='boolean' )
 	--==--
 	params.state=value
@@ -1032,10 +1034,10 @@ function TextField:__commitProperties__()
 
 	if self._isEditActive_dirty then
 		local is_editing = self._isEditActive
-		local edit, set_focus = is_editing.state, is_editing.set_focus
+		local edit, setFocus = is_editing.state, is_editing.setFocus
 		text.isVisible=not edit
 		input.isVisible=edit
-		if set_focus then
+		if setFocus then
 			local focus = input
 			if not edit then focus=nil end
 			native.setKeyboardFocus( focus )
@@ -1206,14 +1208,14 @@ function TextField:_stopKeyboardFocus()
 end
 
 
-function TextField:_startEdit( set_focus )
+function TextField:_startEdit( setFocus )
 	-- print( "TextField:_startEdit" )
-	self:setEditActive( true, {set_focus=set_focus} )
+	self:setEditActive( true, {setFocus=setFocus} )
 end
 
-function TextField:_stopEdit( set_focus )
+function TextField:_stopEdit( setFocus )
 	-- print( "TextField:_stopEdit" )
-	self:setEditActive( false, {set_focus=set_focus} )
+	self:setEditActive( false, {setFocus=setFocus} )
 end
 
 
