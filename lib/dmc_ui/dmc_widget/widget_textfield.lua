@@ -66,6 +66,7 @@ local ui_find = dmc_ui_func.find
 
 local Objects = require 'dmc_objects'
 local Utils = require 'dmc_utils'
+local wUtils = require( ui_find( 'ui_utils' ) )
 
 local uiConst = require( ui_find( 'ui_constants' ) )
 
@@ -78,6 +79,9 @@ local WidgetBase = require( ui_find( 'core.widget' ) )
 
 
 local newClass = Objects.newClass
+
+local tcancel = timer.cancel
+local tdelay = timer.performWithDelay
 
 --== To be set in initialize()
 local dUI = nil
@@ -110,6 +114,11 @@ local TextField = newClass( WidgetBase, {name="TextField"} )
 -- @section
 
 --== Class Constants
+
+TextField._START_FOCUS_TIMER = nil
+TextField._STOP_FOCUS_TIMER = nil
+TextField._FOCUS_COUNT = 0
+
 
 -- alignment
 TextField.LEFT = 'left'
@@ -856,6 +865,7 @@ function TextField:_createTextField()
 
 	o = native.newTextField(0,0,w,h)
 	self:insert( o )
+	o.isFontSizeScaled=true
 	o:addEventListener( 'userInput', self._inputField_f )
 	self._inputField = o
 
@@ -1040,7 +1050,12 @@ function TextField:__commitProperties__()
 		if setFocus then
 			local focus = input
 			if not edit then focus=nil end
-			native.setKeyboardFocus( focus )
+			if focus then
+				self:_startKeyboardFocus( focus )
+			else
+				self:_stopKeyboardFocus()
+			end
+			-- native.setKeyboardFocus( focus )
 		end
 		self._isEditActive_dirty=false
 	end
@@ -1136,7 +1151,10 @@ function TextField:__commitProperties__()
 	-- font
 
 	if self._inputFieldFont_dirty or self._inputFieldFontSize_dirty then
-		input.font=native.newFont( style.display.font, style.display.fontSize )
+		local font = style.display.font
+		local fontSize = style.display.fontSize
+		local sFontSize = wUtils.getNativeFontSize( font, fontSize )
+		input.font=native.newFont( font, sFontSize )
 		self._inputFieldFont_dirty=false
 		self._inputFieldFontSize_dirty=false
 	end
@@ -1146,7 +1164,7 @@ function TextField:__commitProperties__()
 	if self._hasBackground_dirty then
 		-- hard-code, no background
 		-- TEST – false/(true)
-		input.hasBackground=true
+		input.hasBackground=false
 		self._hasBackground_dirty = false
 	end
 
@@ -1157,7 +1175,11 @@ function TextField:__commitProperties__()
 		if self._keyboardFocus==true then
 			focus = input
 		end
-		self:_startKeyboardFocus( focus )
+		if focus then
+			self:_startKeyboardFocus( focus )
+		else
+			self:_stopKeyboardFocus()
+		end
 		self._keyboardFocus_dirty=false
 	end
 
@@ -1193,35 +1215,68 @@ end
 -- sets keyboard focus, after a small timer delay
 --
 function TextField:_startKeyboardFocus( focus )
-	self:_stopKeyboardFocus()
+	-- print( "TextField:_startKeyboardFocus", self.id )
+	self:_cancelStopKeyboardFocus()
+	self:_cancelStartKeyboardFocus()
+	local count = TextField._FOCUS_COUNT
+	count = count + 1
 	local f = function()
 		native.setKeyboardFocus( focus )
-		self._keyboardFocus_timer=nil
+		TextField._START_FOCUS_TIMER=nil
 	end
-	self._keyboardFocus_timer = timer.performWithDelay( 1, f )
+	TextField._FOCUS_COUNT = count
+	TextField._START_FOCUS_TIMER = tdelay( 2, f )
+end
+
+function TextField:_cancelStartKeyboardFocus()
+	-- print( "TextField:_cancelStartKeyboardFocus", self.id )
+	local t = TextField._START_FOCUS_TIMER
+	if not t then return end
+	tcancel( t )
+	TextField._START_FOCUS_TIMER = nil
 end
 
 function TextField:_stopKeyboardFocus()
-	if not self._keyboardFocus_timer then return end
-	timer.cancel( self._keyboardFocus_timer )
-	self._keyboardFocus_timer = nil
+	-- print( "TextField:_stopKeyboardFocus", self.id )
+	self:_cancelStopKeyboardFocus()
+	local count = TextField._FOCUS_COUNT
+	if count > 0 then count = count-1 end
+	local f = function()
+		if TextField._FOCUS_COUNT==0 then
+			native.setKeyboardFocus( nil )
+		end
+		TextField._STOP_FOCUS_TIMER=nil
+	end
+	TextField._FOCUS_COUNT = count
+	TextField._STOP_FOCUS_TIMER = tdelay( 2, f )
+end
+function TextField:_cancelStopKeyboardFocus()
+	-- print( "TextField:_cancelStopKeyboardFocus", self.id )
+	local t = TextField._STOP_FOCUS_TIMER
+	if not t then return end
+	tcancel( t )
+	TextField._STOP_FOCUS_TIMER = nil
 end
 
 
+
 function TextField:_startEdit( setFocus )
-	-- print( "TextField:_startEdit" )
+	-- print( "TextField:_startEdit", setFocus, self.id )
+	if setFocus==nil then setFocus=true end
+	--==--
 	self:setEditActive( true, {setFocus=setFocus} )
 end
 
 function TextField:_stopEdit( setFocus )
-	-- print( "TextField:_stopEdit" )
+	-- print( "TextField:_stopEdit", setFocus, self.id )
+	if setFocus==nil then setFocus=false end
+	--==--
 	self:setEditActive( false, {setFocus=setFocus} )
 end
 
 
 function TextField:_dispatchStateBegan( event )
 	-- print( "TextField:_dispatchStateBegan", event )
-	self:_startEdit( false )
 
 	self._tmp_text = self._displayText -- start last ok state
 
@@ -1241,8 +1296,6 @@ end
 
 function TextField:_dispatchStateEnded( event )
 	-- print( "TextField:_dispatchStateEnded", event )
-	self:_stopEdit( false )
-
 	self._tmp_text = nil
 
 	event.target=self
@@ -1257,7 +1310,7 @@ end
 
 
 function TextField:_hitAreaTouch_handler( e )
-	-- print( "TextField:_hitAreaTouch_handler", e.phase )
+	-- print( "TextField:_hitAreaTouch_handler", e.phase, self.id )
 	local phase = e.phase
 	local background = e.target
 
@@ -1299,8 +1352,6 @@ function TextField:_textFieldEvent_handler( event )
 	local phase = event.phase
 	local textfield = event.target -- Corona TextField
 
-	-- Utils.print( event )
-
 	if phase==TextField.BEGAN then
 		-- print( "text", event.text )
 		self:_dispatchStateBegan( event )
@@ -1321,6 +1372,8 @@ function TextField:_textFieldEvent_handler( event )
 	elseif phase==TextField.ENDED or phase==TextField.SUBMITTED then
 		if self:_delegateShouldEndEditing( event ) then
 			self.text = textfield.text -- << Use Setter
+			self:_stopEdit( false )
+			self:unsetKeyboardFocus()
 			self:_dispatchStateEnded( event )
 		else
 			self:setKeyboardFocus()
