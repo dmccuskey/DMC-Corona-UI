@@ -18,9 +18,8 @@ print( "\n\n#########################################################\n\n" )
 --== Imports
 
 
--- local display, native = require('lib.dmc_corona.dmc_kozy')()
-local Utils = require 'lib.dmc_corona.dmc_utils'
-local Widgets = require 'lib.dmc_widgets'
+local dUI = require 'lib.dmc_ui'
+-- local Utils = require 'lib.dmc_corona.dmc_utils'
 
 
 
@@ -31,27 +30,47 @@ local Widgets = require 'lib.dmc_widgets'
 local W, H = display.contentWidth, display.contentHeight
 local H_CENTER, V_CENTER = W*0.5, H*0.5
 
-local textfield
-
-local formatter
-
 
 
 --===================================================================--
 -- Support Functions
 
 
+--======================================================--
+-- Setup Visual Screen Items
+
+local function setupBackground()
+	local width, height = 100, 50
+	local o
+
+	o = display.newRect(0,0,W,H)
+	o:setFillColor(0.5,0.5,0.5)
+	o.x, o.y = H_CENTER, V_CENTER
+
+	o = display.newRect(0,0,width+4,height+4)
+	o:setStrokeColor(0,0,0)
+	o.strokeWidth=2
+	o.x, o.y = H_CENTER, V_CENTER
+
+	o = display.newRect( 0,0,10,10)
+	o:setFillColor(1,0,0)
+	o.x, o.y = H_CENTER, V_CENTER
+end
+
+
+--======================================================--
+-- Widget Handlers
+
 local function textFieldOnEvent_handler( event )
 	-- print( 'Main: textFieldOnEvent_handler', event.id, event.phase )
 	local phase = event.phase
 
 	if phase=='began' then
-		print( "Begin text:", event.text )
+		-- print( "Begin text:", event.text )
 	elseif phase=='ended' or phase=='submitted' then
 		print( "End text:", event.text )
 	else
-		print( "Edit text:", event.text )
-		print( string.format( "Edit char:'%s' pos:%s del:%s", event.newCharacters, event.startPosition, event.numDeleted ) )
+		-- print( "Edit text:", event.text )
 	end
 
 end
@@ -63,102 +82,100 @@ end
 --===================================================================--
 
 
-local width, height = 100, 36
-
-local o
-
-o = display.newRect(0,0,W,H)
-o:setFillColor(0.5,0.5,0.5)
-o.x, o.y = H_CENTER, V_CENTER
-
-o = display.newRect(0,0,width+4,height+4)
--- o:setFillColor(1,0,0)
-o:setStrokeColor(0,0,0)
-o.strokeWidth=2
-o.x, o.y = H_CENTER, V_CENTER
-
-o = display.newRect( 0,0,10,10)
-o:setFillColor(1,0,0)
-o.x, o.y = H_CENTER, V_CENTER
+setupBackground()
 
 
--- create text field
+--======================================================--
+--== create textfield widget, default style
 
-textfield = Widgets.newTextField{
+function run_example1()
 
-	text = "",
-	hintText = "Zipcode",
+	local tf1
 
-	style={
-		width=width,
-		height=height,
-
-		align = nil,
-		textColor = nil,
-
-		-- font = native.systemFontBold,
-		-- fontSize = 24,
-
-		returnKey='done',
-		inputType='password',
-		-- backgroundStyle=Widgets.TextField.BORDER_STYLE_ROUNDED
-		fillColor = nil,
+	tf1 = dUI.newTextField{
+		text="",
+		hintText="Pizza Topping:",
 	}
-}
-textfield.onEvent = textFieldOnEvent_handler
-textfield:addEventListener( textfield.EVENT, textFieldOnEvent_handler )
+	tf1:addEventListener( tf1.EVENT, textFieldOnEvent_handler )
+	-- tf1.onProperty = widgetOnPropertyEvent_handler
+	-- tf1.debugOn=true
+	tf1.x, tf1.y = H_CENTER, V_CENTER
+	tf1.id="BOTTOM"
 
---== Make different changes
+	tf1:setAnchor( {0.5,0.5} )
 
-textfield:setFillColor( 0.5, 0.2, 0.1 )
-textfield:setDisplayTextColor( 1, 0, 0 )
-textfield:setHintTextColor( 0.7, 0.2, 0.7 )
+	-- tf1.align='left'
+	tf1.hintFontSize=18
+	-- tf1:setBackgroundFillColor( 1,0.5,0.2,0.3 )
 
--- textfield.x = H_CENTER
--- textfield.y = V_CENTER
+	-- tf1.isSecure=true
+	-- tf1.isHitActive=true
 
-textfield:setAnchor( {0,0} )
-textfield:setAnchor( {0.5, 0.5} )
--- textfield:setAnchor( {1,1} )
+	tf2 = dUI.newTextField{
+		text="",
+		hintText="Pizza Topping:",
+	}
+	tf2.x, tf2.y = H_CENTER, 100
+	tf2.id="TOP"
 
-textfield.align = textfield.LEFT
-textfield.align = textfield.CENTER
--- textfield.align = textfield.RIGHT
+	-- timer.performWithDelay( 1000, function()
+	-- 	print("\n\n Update Properties")
+		-- test background props
 
-textfield.x = H_CENTER
-textfield.y = V_CENTER
+		-- tf1.x = H_CENTER-50
+		-- tf1.y = V_CENTER+100
 
-textfield.height = 50
+		-- tf1.isSecure=false
 
+		-- tf1.align='center'
+		-- tf1.text="hello"
+		-- tf1.marginX=10
 
--- textfield.anchorX = 0.5
--- textfield.anchorY = 0.5
+		-- tf1.width=200
+		-- tf1.height=100
 
--- textfield.text = "hello there"
+		-- -- tf1.isHitActive=false
 
--- textfield.fontSize = 12
+		-- tf1:setHintTextColor( 1,1,0 )
+		-- tf1.hintFontSize = 18
 
--- textfield.fontSize = 12
--- textfield.font = native.systemFont
--- -- textfield.font = native.systemFontBold
+		-- tf1:setAnchor( {0,0} )
 
--- textfield.marginX = 20
--- textfield.marginX = 10
--- textfield.marginY = 5
+		-- tf1:setBackgroundStrokeColor( 0.2,0.2,0.9,0.5 )
+		-- tf1:setBackgroundFillColor( 0.2,0.2,0.2,0.2 )
+		-- tf1.backgroundStrokeWidth = 10
 
--- -- textfield.width = 100
+		-- tf1:setBackgroundStrokeColor( 0.2,0.2,0.9,0.5 )
+		-- tf1:setBackgroundFillColor( 0.2,0.2,0.2,0.2 )
+		-- tf1.backgroundStrokeWidth = 10
 
--- -- textfield.width = nil
+		-- tf1.hintFont = native.systemFontBold
+		-- tf1.hintFontSize = 30
+		-- tf1:setHintTextColor(1,0,0,1)
 
--- textfield:setFillColor( 1,0,0,0.5 )
--- textfield:setDisplayColor( 0,1,1,0.5 )
+		-- tf1.displayFont = native.systemFontBold
+		-- tf1.displayFontSize = 30
+		-- tf1:setDisplayTextColor(1,0,0,1)
 
+	-- end)
 
--- transition.to( textfield, {time=500, x=100})
+	-- timer.performWithDelay( 2000, function()
+	-- 	print("\n\n Update Properties")
+		-- test background props
+		-- tf1.width=100
+		-- tf1.height=80
+		-- tf1.x = 100
 
--- textfield:setKeyboardFocus()
--- textfield:unsetKeyboardFocus()
--- native.setKeyboardFocus( textfield )
+		-- tf1.isSecure=true
 
+		-- tf1.x = H_CENTER+50
+		-- tf1.y = V_CENTER+50
 
--- timer.performWithDelay( 1, function() textfield:setKeyboardFocus() end)
+		-- tf1.isHitActive=false
+
+	-- end)
+
+end
+
+run_example1()
+
