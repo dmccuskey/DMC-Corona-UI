@@ -51,6 +51,7 @@ local VERSION = "0.1.0"
 local dmc_ui_data = _G.__dmc_ui
 local dmc_ui_func = dmc_ui_data.func
 local ui_find = dmc_ui_func.find
+local ui_file = dmc_ui_func.file
 
 
 
@@ -155,8 +156,8 @@ TextFieldStyle._STYLE_DEFAULTS = {
 		--]]
 		type='9-slice',
 		view={
-			sheetInfo='lib.dmc_ui.theme.default.textfield.textfield-sheet',
-			sheetImage='lib/dmc_ui/theme/default/textfield/textfield-sheet.png',
+			sheetInfo=ui_find('theme.default.textfield.textfield-sheet'),
+			sheetImage=ui_file('theme/default/textfield/textfield-sheet.png'),
 		}
 	},
 	hint={
