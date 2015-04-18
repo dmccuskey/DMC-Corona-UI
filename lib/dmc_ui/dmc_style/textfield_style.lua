@@ -131,9 +131,8 @@ TextFieldStyle._EXCLUDE_PROPERTY_CHECK = {
 }
 
 TextFieldStyle._STYLE_DEFAULTS = {
-	name='textfield-default-style',
 	debugOn=false,
-	width=200,
+	width=300,
 	height=40,
 	anchorX=0.5,
 	anchorY=0.5,
@@ -143,7 +142,7 @@ TextFieldStyle._STYLE_DEFAULTS = {
 	inputType='default',
 	isHitActive=true,
 	isSecure=false,
-	marginX=0,
+	marginX=10,
 	marginY=5,
 	returnKey='done',
 
@@ -154,11 +153,10 @@ TextFieldStyle._STYLE_DEFAULTS = {
 		* height
 		* anchorX/Y
 		--]]
-		type='rectangle',
+		type='9-slice',
 		view={
-			fillColor={0.7,0.7,0.7,1},
-			strokeWidth=1,
-			strokeColor={0,0,0,1},
+			sheetInfo='lib.dmc_ui.theme.default.textfield.textfield-sheet',
+			sheetImage='lib/dmc_ui/theme/default/textfield/textfield-sheet.png',
 		}
 	},
 	hint={
@@ -173,6 +171,7 @@ TextFieldStyle._STYLE_DEFAULTS = {
 		fillColor={0,0,0,0},
 		font=native.systemFont,
 		fontSize=18,
+		marginX=15,
 		textColor={0.3,0.3,0.3,1},
 	},
 	display={
@@ -187,6 +186,7 @@ TextFieldStyle._STYLE_DEFAULTS = {
 		fillColor={0,0,0,0},
 		font=native.systemFont,
 		fontSize=18,
+		marginX=15,
 		textColor={0.1,0.1,0.1,1},
 	},
 
