@@ -334,6 +334,7 @@ end
 --== width
 
 function StyleMix.__getters:width()
+	-- print( 'StyleMix.__getters:width' )
 	return self.curr_style.width
 end
 function StyleMix.__setters:width( value )
