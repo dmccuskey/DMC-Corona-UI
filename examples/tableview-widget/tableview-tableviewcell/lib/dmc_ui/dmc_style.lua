@@ -130,6 +130,13 @@ function Style.initialize( manager, params )
 	dUI.registerWidget = Style.registerWidget
 	dUI.removeStyle = Style.removeStyle
 
+	dUI.activateTheme = Style.activateTheme
+	dUI.createTheme = Style.createTheme
+	dUI.getActiveThemeId = Style.getActiveThemeId
+	dUI.getAvailableThemeIds = Style.getAvailableThemeIds
+	dUI.loadTheme = Style.loadTheme
+	dUI.loadThemes = Style.loadThemes
+
 	-- Style Interface
 
 	dUI.newBackgroundStyle = Style.newBackgroundStyle
