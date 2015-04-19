@@ -54,6 +54,7 @@ local VERSION = "0.1.0"
 
 
 local PLATFORM = system.getInfo( 'platformName' )
+local MODEL = system.getInfo( 'model' )
 
 
 
@@ -73,6 +74,8 @@ local Constant = {}
 Constant.RUN_MODE = 'run'
 Constant.TEST_MODE = 'test'
 
+Constant.PLATFORM = PLATFORM
+Constant.MODEL = MODEL
 
 
 --====================================================================--
@@ -114,6 +117,7 @@ function Constant.getSystemSeparator()
 end
 
 
+
 --====================================================================--
 --== Views
 
@@ -138,14 +142,19 @@ Constant.TABLEVIEWCELL_STATE = 'TableViewCell-State'
 Constant.TEXT = 'Text'
 Constant.TEXTFIELD = 'TextField'
 
--- View Types
 
-Constant.ROUNDED = 'rounded'
+--======================================================--
+-- Background Widget
+
+Constant.NINE_SLICE = '9-slice'
 Constant.RECTANGLE = 'rectangle'
+Constant.ROUNDED = 'rounded'
+
+Constant.DEFAULT_BACKGROUND_TYPE = Constant.ROUNDED
 
 
 --======================================================--
--- ScrollView
+-- ScrollView Widget
 
 Constant.SCROLLVIEW_DECELERATE_TIME = 200
 
@@ -161,13 +170,13 @@ Constant.AXIS_VELOCITY_LIMIT = 1
 
 
 --======================================================--
--- TableView
+-- TableView Widget
 
 Constant.TABLEVIEW_DECELERATE_TIME = 2000
 
 
 --======================================================--
--- TableViewCell
+-- TableViewCell Widget
 
 Constant.TABLEVIEWCELL_DEFAULT_LAYOUT = 'default-layout'
 Constant.TABLEVIEWCELL_SUBTITLE_LAYOUT = 'subtitle-layout'
@@ -194,6 +203,7 @@ Constant.TABLEVIEW_TOUCH_THRESHOLD = 10
 
 Constant.POPOVER = 'popover'
 Constant.POPOVER_PREFERRED_SIZE = {width=320,height=600}
+
 
 
 
