@@ -126,38 +126,38 @@ function run_example2()
 	-- txt2:setAnchor( {1,1} )
 
 
-	timer.performWithDelay( 1000, function()
-		txt2.style=nil -- clear style, to default
-	end)
+	-- timer.performWithDelay( 1000, function()
+	-- 	txt2.style=nil -- clear style, to default
+	-- end)
 
 
-	timer.performWithDelay( 2000, function()
-		print( "\n\nUpdate properties" )
+	-- timer.performWithDelay( 2000, function()
+	-- 	print( "\n\nUpdate properties" )
 
-		transition.to( txt2, {time=5000, x=100, y=400})
+	-- 	transition.to( txt2, {time=5000, x=100, y=400})
 
-		txt2.text="hamburger"
+	-- 	txt2.text="hamburger"
 
-		txt2.width=300
-		txt2.height=70
+	-- 	txt2.width=300
+	-- 	txt2.height=70
 
-		txt2.align='right'
+	-- 	txt2.align='right'
 
-		txt2:setAnchor( {1,1} )
+	-- 	txt2:setAnchor( {1,1} )
 
-		txt2:setFillColor( 1,0,0,0.5 )
-		txt2:setTextColor( 1,0,0,0.5 )
+	-- 	txt2:setFillColor( 1,0,0,0.5 )
+	-- 	txt2:setTextColor( 1,0,0,0.5 )
 
-		txt2.font = native.systemFontBold
+	-- 	txt2.font = native.systemFontBold
 
-		txt2:setStrokeColor( 0,0,0,0.5 )
-		txt2.strokeWidth = 4
+	-- 	txt2:setStrokeColor( 0,0,0,0.5 )
+	-- 	txt2.strokeWidth = 4
 
-		txt2.fontSize = 18
-		txt2.marginX = 15
-		txt2.marginY = 15
+	-- 	txt2.fontSize = 18
+	-- 	txt2.marginX = 15
+	-- 	txt2.marginY = 15
 
-	end)
+	-- end)
 
 	timer.performWithDelay( 3000, function()
 		print( "\n\nUpdate properties" )

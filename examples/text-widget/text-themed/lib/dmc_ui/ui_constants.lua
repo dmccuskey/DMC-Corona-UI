@@ -117,33 +117,6 @@ function Constant.getSystemSeparator()
 end
 
 
-local Utils = {}
-
--- split string up in parts, using separator
--- returns array of pieces
-function Utils.split( str, sep )
-	if sep == nil then
-		sep = "%s"
-	end
-	local t, i = {}, 1
-	for str in string.gmatch( str, "([^"..sep.."]+)") do
-		t[i] = str
-		i = i + 1
-	end
-	return t
-end
-
-
-
-function Constant.parsePath( path )
-
-	local parts = Utils.split( str, Constant.getSystemSeparator() )
-
-	print(parts)
-
-end
-
-
 
 --====================================================================--
 --== Views
