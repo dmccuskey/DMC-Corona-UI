@@ -43,23 +43,26 @@ local function callback()
 end
 
 local widget = dUI.newScrollView{
-	width=100,
-	height=200,
-	scrollWidth=150,
-	scrollHeight=1000
+	width=200,
+	height=300,
+	scrollWidth=300,
+	scrollHeight=800,
+	style={
+		debugOn=true
+	}
 }
-widget.x, widget.y = H_CENTER/2, V_CENTER/2
+widget.x, widget.y = H_CENTER-widget.width/2, V_CENTER/2
 
 
 tdelay( 1000, function()
-	print("start")
+	print("start – move scroller")
 	widget:setContentPosition{
 		x=-10, y=40, onComplete=callback
 	}
 end)
 
 tdelay( 4000, function()
-	print("start 2")
+	print("start 2 – lock scroller")
 	widget.horizontalScrollEnabled = false
 	-- widget.upperVerticalOffset =50
 	widget.bounceIsActive = false
@@ -67,7 +70,7 @@ end)
 
 
 tdelay( 8000, function()
-	print("start 3")
+	print("start 3 – unlock scroller ")
 	widget.horizontalScrollEnabled = true
 	widget.upperVerticalOffset = -10
 	widget.bounceIsActive = true
