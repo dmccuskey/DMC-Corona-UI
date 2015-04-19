@@ -155,9 +155,7 @@ function View:__init__( params )
 	-- properties from style
 
 	self._debugOn_dirty=true
-	self._width=params.width
 	self._width_dirty=true
-	self._height=params.height
 	self._height_dirty=true
 	self._anchorX_dirty=true
 	self._anchorY_dirty=true
@@ -190,7 +188,7 @@ function View:__init__( params )
 	self._parentView = params.parentView
 
 	if params.autoMask == true then
-		self:_setView( display.newContainer( self._width, self._height ) )
+		self:_setView( display.newContainer( params.width, params.height ) )
 		self.view.anchorChildren = false
 		self.view.anchorX, self.view.anchorY = 0, 0
 	end
@@ -245,7 +243,12 @@ function View:__initComplete__()
 	self._isRendered = true
 	self.id = tmp.id
 	self.delegate = tmp.delegate
+
 	self.style = tmp.style
+
+	-- do these after style update
+	self.width=tmp.width
+	self.height=tmp.height
 
 	self:_loadViews()
 end
@@ -404,10 +407,7 @@ end
 function View.__setters:width( value )
 	-- print("View.__setters:width", value)
 	StyleMix.__setters.width( self, value )
-	-- self._width = value
 	self:_widthChanged()
-	-- self._width_dirty=true
-	-- self:__invalidateProperties__()
 end
 
 --== .height
@@ -418,10 +418,7 @@ end
 function View.__setters:height( value )
 	-- print( "View.__setters:height", value )
 	StyleMix.__setters.height( self, value )
-	-- self._height = value
 	self:_heightChanged()
-	-- -- self._height_dirty=true
-	-- self:__invalidateProperties__()
 end
 
 
