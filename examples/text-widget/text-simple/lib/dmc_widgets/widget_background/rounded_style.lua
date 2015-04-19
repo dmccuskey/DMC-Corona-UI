@@ -67,7 +67,7 @@ local widget_find = dmc_widget_func.find
 local Objects = require 'dmc_objects'
 local Utils = require 'dmc_utils'
 
-local BaseStyle = require( widget_find( 'widget_style.base_style' ) )
+local ViewStyle = require( widget_find( 'widget_background.base_view_style' ) )
 
 
 
@@ -76,7 +76,6 @@ local BaseStyle = require( widget_find( 'widget_style.base_style' ) )
 
 
 local newClass = Objects.newClass
-local ObjectBase = Objects.ObjectBase
 
 local sformat = string.format
 local tinsert = table.insert
@@ -91,7 +90,7 @@ local Widgets = nil
 --====================================================================--
 
 
-local RoundedStyle = newClass( BaseStyle, {name="Rounded Background Style"} )
+local RoundedStyle = newClass( ViewStyle, {name="Rounded Background Style"} )
 
 --== Class Constants
 
@@ -106,7 +105,6 @@ RoundedStyle._VALID_PROPERTIES = {
 	anchorX=true,
 	anchorY=true,
 
-	type=true,
 	cornerRadius=true,
 	fillColor=true,
 	strokeColor=true,
@@ -118,25 +116,43 @@ RoundedStyle._EXCLUDE_PROPERTY_CHECK = nil
 RoundedStyle._STYLE_DEFAULTS = {
 	name='rounded-background-default-style',
 	debugOn=false,
-	width=75,
+	width=76,
 	height=30,
 	anchorX=0.5,
 	anchorY=0.5,
 
-	type=RoundedStyle.TYPE,
-
 	cornerRadius=6,
-	fillColor={1,1,1,1},
-	strokeColor={0,0,0,1},
-	strokeWidth=0
+	fillColor={
+		type='gradient',
+		color1={ 1, 1, 1 },
+		color2={ 0.6, 0.6, 0.6 },
+		direction='down'
+	},
+	strokeColor={0.1,0.1,0.1,1},
+	strokeWidth=2
 }
+
+RoundedStyle._TEST_DEFAULTS = {
+	name='rounded-background-test-style',
+	debugOn=false,
+	width=301,
+	height=302,
+	anchorX=303,
+	anchorY=304,
+
+	cornerRadius=305,
+	fillColor={301,302,303,304},
+	strokeColor={311,312,313,314},
+	strokeWidth=311
+}
+
+RoundedStyle.MODE = ViewStyle.RUN_MODE
+RoundedStyle._DEFAULTS = RoundedStyle._STYLE_DEFAULTS
+
 
 --== Event Constants
 
 RoundedStyle.EVENT = 'rounded-background-style-event'
-
--- from super
--- Class.STYLE_UPDATED
 
 
 --======================================================--
@@ -163,8 +179,6 @@ function RoundedStyle:__init__( params )
 	-- self._anchorX
 	-- self._anchorY
 
-	self._type = nil
-
 	self._cornerRadius = nil
 	self._fillColor = nil
 	self._strokeColor = nil
@@ -180,33 +194,35 @@ end
 --== Static Methods
 
 
-function RoundedStyle.initialize( manager )
-	-- print( "RoundedStyle.initialize", manager )
+function RoundedStyle.initialize( manager, params )
+	-- print( "RoundedStyle.initialize", manager, params )
+	params = params or {}
+	if params.mode==nil then params.mode=ViewStyle.RUN_MODE end
+	--==--
 	Widgets = manager
 
-	RoundedStyle._setDefaults( RoundedStyle )
+	if params.mode==ViewStyle.TEST_MODE then
+		RoundedStyle.MODE = ViewStyle.TEST_MODE
+		RoundedStyle._DEFAULTS = RoundedStyle._TEST_DEFAULTS
+	end
+	local defaults = RoundedStyle._DEFAULTS
+
+	RoundedStyle._setDefaults( RoundedStyle, {defaults=defaults} )
 end
 
 
 
-function RoundedStyle.addMissingDestProperties( dest, src, params )
+function RoundedStyle.addMissingDestProperties( dest, src )
 	-- print( "RoundedStyle.addMissingDestProperties", dest, src )
-	params = params or {}
-	if params.force==nil then params.force=false end
 	assert( dest )
 	--==--
-	local force=params.force
-	local srcs = { RoundedStyle._STYLE_DEFAULTS }
+	local srcs = { RoundedStyle._DEFAULTS }
 	if src then tinsert( srcs, 1, src ) end
+
+	dest = ViewStyle.addMissingDestProperties( dest, src )
 
 	for i=1,#srcs do
 		local src = srcs[i]
-
-		if dest.debugOn==nil then dest.debugOn=src.debugOn end
-		if dest.width==nil then dest.width=src.width end
-		if dest.height==nil then dest.height=src.height end
-		if dest.anchorX==nil then dest.anchorX=src.anchorX end
-		if dest.anchorY==nil then dest.anchorY=src.anchorY end
 
 		if dest.cornerRadius==nil then dest.cornerRadius=src.cornerRadius end
 		if dest.fillColor==nil then dest.fillColor=src.fillColor end
@@ -220,63 +236,41 @@ end
 
 
 function RoundedStyle.copyExistingSrcProperties( dest, src, params )
-	-- print( "RoundedStyle.copyExistingSrcProperties", dest, src )
+	-- print( "RoundedStyle.copyExistingSrcProperties", dest, src, params )
+	assert( dest )
+	if not src then return end
 	params = params or {}
 	if params.force==nil then params.force=false end
-	assert( dest )
 	--==--
 	local force=params.force
-	local srcs = { RoundedStyle._STYLE_DEFAULTS }
-	if src then tinsert( srcs, 1, src ) end
 
-	for i=1,#srcs do
-		local src = srcs[i]
+	dest = ViewStyle.copyExistingSrcProperties( dest, src, params )
 
-		if (src.debugOn~=nil and dest.debugOn==nil) or force
-			then src.debugOn=src.debugOn
-		end
-		if (src.width~=nil and dest.width==nil) or force
-			then src.width=src.width
-		end
-		if (src.height~=nil and dest.height==nil) or force
-			then src.height=src.height
-		end
-		if (src.anchorX~=nil and dest.anchorX==nil) or force
-			then src.anchorX=src.anchorX
-		end
-		if (src.anchorY~=nil and dest.anchorY==nil) or force
-			then src.anchorY=src.anchorY
-		end
-		if (src.cornerRadius~=nil and dest.cornerRadius==nil) or force
-			then src.cornerRadius=src.cornerRadius
-		end
-		if (src.fillColor~=nil and dest.fillColor==nil) or force
-			then src.fillColor=src.fillColor
-		end
-		if (src.strokeColor~=nil and dest.strokeColor==nil) or force
-			then src.strokeColor=src.strokeColor
-		end
-		if (src.strokeWidth~=nil and dest.strokeWidth==nil) or force
-			then src.strokeWidth=src.strokeWidth
-		end
-
+	if (src.cornerRadius~=nil and dest.cornerRadius==nil) or force then
+		dest.cornerRadius=src.cornerRadius
+	end
+	if (src.fillColor~=nil and dest.fillColor==nil) or force then
+		dest.fillColor=src.fillColor
+	end
+	if (src.strokeColor~=nil and dest.strokeColor==nil) or force then
+		dest.strokeColor=src.strokeColor
+	end
+	if (src.strokeWidth~=nil and dest.strokeWidth==nil) or force then
+		dest.strokeWidth=src.strokeWidth
 	end
 
 	return dest
 end
 
 
-function RoundedStyle._verifyClassProperties( src )
-	-- print( "RoundedStyle._verifyClassProperties" )
-	assert( src )
+function RoundedStyle._verifyStyleProperties( src, exclude )
+	-- print( "RoundedStyle._verifyStyleProperties", src )
+	assert( src, "RoundedStyle:verifyStyleProperties requires source")
 	--==--
-	local emsg = "Style: requires property '%s'"
+	local emsg = "Style (RoundedStyle) requires property '%s'"
 
-	local is_valid = BaseStyle._verifyClassProperties( src )
+	local is_valid = ViewStyle._verifyStyleProperties( src, exclude )
 
-	if not src.type then
-		print(sformat(emsg,'type')) ; is_valid=false
-	end
 	if not src.cornerRadius then
 		print(sformat(emsg,'cornerRadius')) ; is_valid=false
 	end
@@ -314,65 +308,11 @@ function RoundedStyle.__getters:cornerRadius()
 end
 function RoundedStyle.__setters:cornerRadius( value )
 	-- print( "RoundedStyle.__setters:cornerRadius", value )
-	assert( (type(value)=='number' and value>=0) or (value==nil and self._inherit) )
+	assert( (type(value)=='number' and value>=0) or (value==nil and (self._inherit or self._isClearing) ) )
 	--==--
 	if value == self._cornerRadius then return end
 	self._cornerRadius = value
 	self:_dispatchChangeEvent( 'cornerRadius', value )
-end
-
---== type
-
-function RoundedStyle.__getters:type()
-	-- print( "RoundedStyle.__getters:type" )
-	local value = self._type
-	-- TODO, check inheritance
-	if value==nil and self._inherit then
-		value = self._inherit.type
-	end
-	return value
-end
-function RoundedStyle.__setters:type( value )
-	-- print( "RoundedStyle.__setters:type", value )
-	assert( type(value)=='string' or (value==nil and self._inherit) )
-	--==--
-	if value==self._type then return end
-	self._type = value
-	self:_dispatchChangeEvent( 'type', value )
-end
-
-
-
---======================================================--
--- Misc
-
---== updateStyle
-
--- force is used when making exact copy of data
---
-function RoundedStyle:updateStyle( src, params )
-	-- print( "RoundedStyle:updateStyle", src )
-	RoundedStyle.copyExistingSrcProperties( self, src, params )
-end
-
-
-function RoundedStyle:verifyClassProperties()
-	-- print( "RoundedStyle.verifyClassProperties" )
-	local emsg = "Style: requires property '%s'"
-
-	--== Check Inheritance
-
-	-- if inheritance is not of similar type then
-	-- then make sure we have default data
-
-	local inherit_type = self._inherit and self._inherit.type or nil
-
-	if self.type ~= inherit_type and inherit_type~=nil then
-		print( sformat("[NOTICE] Style inheritance mismatch '%s'<>'%s'", tostring(self.type), tostring(inherit_type) ))
-		RoundedStyle.addMissingDestProperties( self, RoundedStyle._STYLE_DEFAULTS )
-	end
-
-	return RoundedStyle._verifyClassProperties( self )
 end
 
 
@@ -381,17 +321,7 @@ end
 --== Private Methods
 
 
--- this would clear any local modifications on style class
--- called by clearProperties()
---
-function RoundedStyle:_clearProperties()
-	-- print( "RoundedStyle:_clearProperties" )
-	self:superCall( '_clearProperties' )
-	self.cornerRadius=nil
-	self.fillColor=nil
-	self.strokeColor=nil
-	self.strokeWidth=nil
-end
+-- none
 
 
 

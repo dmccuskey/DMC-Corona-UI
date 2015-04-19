@@ -37,8 +37,9 @@ local H_CENTER, V_CENTER = W*0.5, H*0.5
 -- Support Functions
 
 
+--======================================================--
 -- Setup Visual Screen Items
---
+
 local function setupBackground()
 	local width, height = 100, 50
 	local o

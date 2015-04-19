@@ -66,11 +66,11 @@ local widget_find = dmc_widget_func.find
 
 local Objects = require 'dmc_objects'
 local LifecycleMixModule = require 'dmc_lifecycle_mix'
-local ThemeMixModule = require( dmc_widget_func.find( 'widget_theme_mix' ) )
+local StyleMixModule = require( dmc_widget_func.find( 'widget_style_mix' ) )
 
 --== To be set in initialize()
 local StyleFactory = nil
-local ThemeMgr = nil
+local StyleMgr = nil
 local ViewFactory = nil
 local Widgets = nil
 
@@ -84,7 +84,7 @@ local newClass = Objects.newClass
 local ComponentBase = Objects.ComponentBase
 
 local LifecycleMix = LifecycleMixModule.LifecycleMix
-local ThemeMix = ThemeMixModule.ThemeMix
+local StyleMix = StyleMixModule.StyleMix
 
 
 
@@ -94,7 +94,7 @@ local ThemeMix = ThemeMixModule.ThemeMix
 
 
 local RectangleView = newClass(
-	{ ThemeMix, ComponentBase, LifecycleMix },
+	{ StyleMix, ComponentBase, LifecycleMix },
 	{ name="Rectangle Background View" }
 )
 
@@ -106,10 +106,10 @@ RectangleView.LEFT = 'left'
 RectangleView.CENTER = 'center'
 RectangleView.RIGHT = 'right'
 
---== Theme Constants
+--== Style/Theme Constants
 
-RectangleView.THEME_ID = 'rectangle-background-view'
 RectangleView.STYLE_CLASS = nil -- added later
+RectangleView.STYLE_TYPE = nil -- added later
 
 -- TODO: hook up later
 -- RectangleView.DEFAULT = 'default'
@@ -136,7 +136,7 @@ function RectangleView:__init__( params )
 
 	self:superCall( LifecycleMix, '__init__', params )
 	self:superCall( ComponentBase, '__init__', params )
-	self:superCall( ThemeMix, '__init__', params )
+	self:superCall( StyleMix, '__init__', params )
 	--==--
 
 	--== Create Properties ==--
@@ -170,7 +170,7 @@ end
 function RectangleView:__undoInit__()
 	-- print( "RectangleView:__undoInit__" )
 	--==--
-	self:superCall( ThemeMix, '__undoInit__' )
+	self:superCall( StyleMix, '__undoInit__' )
 	self:superCall( ComponentBase, '__undoInit__' )
 	self:superCall( LifecycleMix, '__undoInit__' )
 end
@@ -224,13 +224,14 @@ function RectangleView.initialize( manager )
 	-- print( "RectangleView.initialize" )
 	Widgets = manager
 
-	ThemeMgr = Widgets.ThemeMgr
+	StyleMgr = Widgets.StyleMgr
 	ViewFactory = Widgets.BackgroundFactory
 	StyleFactory = Widgets.Style.BackgroundFactory
 
 	RectangleView.STYLE_CLASS = StyleFactory.Rectangle
+	RectangleView.STYLE_TYPE = RectangleView.STYLE_CLASS.TYPE
 
-	ThemeMgr:registerWidget( RectangleView.THEME_ID, RectangleView )
+	StyleMgr:registerWidget( RectangleView )
 end
 
 
@@ -320,7 +321,12 @@ function RectangleView:__commitProperties__()
 		if style.debugOn==true then
 			bg:setFillColor( 1,0,0,0.5 )
 		else
-			bg:setFillColor( unpack( style.fillColor ))
+			local color = style.fillColor
+			if color and color.type then
+				bg:setFillColor( color )
+			else
+				bg:setFillColor( unpack( color ) )
+			end
 		end
 		self._fillColor_dirty=false
 		self._debugOn_dirty=false
@@ -351,7 +357,7 @@ function RectangleView:stylePropertyChangeHandler( event )
 
 	-- print( "Style Changed", etype, property, value )
 
-	if etype==style.STYLE_RESET or etype==style.STYLE_CLEARED then
+	if etype==style.STYLE_RESET then
 		self._debugOn_dirty = true
 		self._width_dirty=true
 		self._height_dirty=true

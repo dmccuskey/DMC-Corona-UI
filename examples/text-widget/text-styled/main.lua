@@ -35,8 +35,9 @@ local H_CENTER, V_CENTER = W*0.5, H*0.5
 -- Support Functions
 
 
+--======================================================--
 -- Setup Visual Screen Items
---
+
 local function setupBackground()
 	local width, height = 100, 50
 	local o
@@ -53,17 +54,6 @@ local function setupBackground()
 	o = display.newRect( 0,0,10,10)
 	o:setFillColor(1,0,0)
 	o.x, o.y = H_CENTER, V_CENTER
-end
-
-
-local function widgetOnPropertyEvent_handler( event )
-	print( 'Main: widgetOnPropertyEvent_handler', event.id, event.phase )
-	local etype= event.type
-	local property= event.property
-	local value = event.value
-
-	print( "Widget Property Changed", etype, property, value )
-
 end
 
 

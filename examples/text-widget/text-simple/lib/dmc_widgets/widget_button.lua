@@ -48,9 +48,9 @@ local VERSION = "0.1.0"
 --====================================================================--
 
 
-local dmc_widget_data, dmc_widget_func
-dmc_widget_data = _G.__dmc_widget
-dmc_widget_func = dmc_widget_data.func
+local dmc_widget_data = _G.__dmc_widget
+local dmc_widget_func = dmc_widget_data.func
+local widget_find = dmc_widget_func.find
 
 
 
@@ -64,15 +64,15 @@ dmc_widget_func = dmc_widget_data.func
 --== Imports
 
 
+local LifecycleMixModule = require 'dmc_lifecycle_mix'
 local Objects = require 'dmc_objects'
 local StatesMixModule = require 'dmc_states_mix'
+local StyleMixModule = require( dmc_widget_func.find( 'widget_style_mix' ) )
+local Utils = require 'dmc_utils'
 
---== Components
-
-local BaseView = require( dmc_widget_func.find( 'widget_button.view_base' ) )
-local ImageView = require( dmc_widget_func.find( 'widget_button.view_image' ) )
-local NineSliceView = require( dmc_widget_func.find( 'widget_button.view_9slice' ) )
-local ShapeView = require( dmc_widget_func.find( 'widget_button.view_shape' ) )
+--== To be set in initialize()
+local Widgets = nil
+local StyleMgr = nil
 
 
 
@@ -80,42 +80,18 @@ local ShapeView = require( dmc_widget_func.find( 'widget_button.view_shape' ) )
 --== Setup, Constants
 
 
-local StatesMix = StatesMixModule.StatesMix
-
--- setup some aliases to make code cleaner
 local newClass = Objects.newClass
 local ComponentBase = Objects.ComponentBase
 
-local LOCAL_DEBUG = false
+local LifecycleMix = LifecycleMixModule.LifecycleMix
+local StatesMix = StatesMixModule.StatesMix
+local StyleMix = StyleMixModule.StyleMix
 
 
 
 --====================================================================--
 --== Support Functions
 
-
-local function getViewTypeClass( params )
-	-- print( "getViewTypeClass", params, params.view )
-	params = params or {}
-	--==--
-
-	if type( params.view ) == 'table' and params.view.new then
-		return params.view
-
-	elseif params.view == NineSliceView.TYPE then
-		return NineSliceView
-
-	elseif params.view == ShapeView.TYPE then
-		return ShapeView
-
-	elseif params.view == ImageView.TYPE then
-		return ImageView
-
-	else -- text view
-		return BaseView
-
-	end
-end
 
 
 
@@ -124,7 +100,12 @@ end
 --====================================================================--
 
 
-local ButtonBase = newClass( { ComponentBase, StatesMix }, {name="Button Base"}  )
+-- ! put StyleMix first !
+
+local ButtonBase = newClass(
+	{ StyleMix, ComponentBase, StatesMix, LifecycleMix },
+	{name="Button Base"}
+)
 
 --== Class Constants
 
@@ -133,13 +114,18 @@ ButtonBase._SUPPORTED_VIEWS = { 'active', 'inactive', 'disabled' }
 --== State Constants
 
 ButtonBase.STATE_INIT = 'state_init'
-ButtonBase.STATE_ACTIVE = 'state_active'
 ButtonBase.STATE_INACTIVE = 'state_inactive'
+ButtonBase.STATE_ACTIVE = 'state_active'
 ButtonBase.STATE_DISABLED = 'state_disabled'
 
-ButtonBase.ACTIVE = ButtonBase.STATE_ACTIVE
 ButtonBase.INACTIVE = ButtonBase.STATE_INACTIVE
+ButtonBase.ACTIVE = ButtonBase.STATE_ACTIVE
 ButtonBase.DISABLED = ButtonBase.STATE_DISABLED
+
+--== Style/Theme Constants
+
+ButtonBase.STYLE_CLASS = nil -- added later
+ButtonBase.STYLE_TYPE = nil -- added later
 
 --== Event Constants
 
@@ -152,35 +138,74 @@ ButtonBase.RELEASED = 'released'
 --======================================================--
 -- Start: Setup DMC Objects
 
+--== Init
+
 function ButtonBase:__init__( params )
 	-- print( "ButtonBase:__init__", params )
 	params = params or {}
-	self:superCall( ComponentBase, '__init__', params )
+	if params.x==nil then params.x=0 end
+	if params.y==nil then params.y=0 end
+	if params.id==nil then params.id="" end
+	if params.labelText==nil then params.labelText="OK" end
+
+	self:superCall( LifecycleMix, '__init__', params )
 	self:superCall( StatesMix, '__init__', params )
+	self:superCall( ComponentBase, '__init__', params )
+	self:superCall( StyleMix, '__init__', params )
 	--==--
-
-	--== Sanity Check ==--
-
-	if self.is_class then return end
-
-	assert( params.width and params.height, "newButton: expected params 'width' and 'height'" )
 
 	--== Create Properties ==--
 
-	self._params = params -- save for view creation
+	-- properties stored in Class
+
+	self._x = params.x
+	self._x_dirty=true
+	self._y = params.y
+	self._y_dirty=true
 
 	self._id = params.id
-	self._value = params.value
+	self._id_dirty=true
 
-	self._width = params.width
-	self._height = params.height
+	self._labelText = params.labelText
+	self._labelText_dirty=true
 
-	-- the hit area of the button
-	self._hit_width = params.hit_width or params.width
-	self._hit_height = params.hit_height or params.height
+	self._data = params.data
 
-	self._class = getViewTypeClass( params )
-	self._views = {} -- holds individual view objects
+	-- properties stored in Style
+
+	self._debugOn_dirty=true
+	self._width_dirty=true
+	self._height_dirty=true
+	self._anchorX_dirty=true
+	self._anchorY_dirty=true
+
+	self._align_dirty=true
+	self._hitMarginX_dirty=true
+	self._hitMarginY_dirty=true
+	self._isHitActive_dirty=true
+	self._marginX_dirty=true
+	self._marginY_dirty=true
+	self._offsetX_dirty=true
+	self._offsetY_dirty=true
+
+	-- "Virtual" properties
+
+	self._widgetState_dirty=true
+	self._widgetViewState = nil
+	self._widgetViewState_dirty=true
+
+	self._hitAreaX_dirty=true
+	self._hitAreaY_dirty=true
+	self._hitAreaAnchorX_dirty=true
+	self._hitAreaAnchorY_dirty=true
+	self._hitAreaWidth_dirty=true
+	self._hitAreaHeight_dirty=true
+	self._hitAreaMarginX_dirty=true
+	self._hitAreaMarginY_dirty=true
+
+	self._displayText_dirty=true
+
+
 
 	self._callbacks = {
 		onPress = params.onPress,
@@ -188,10 +213,20 @@ function ButtonBase:__init__( params )
 		onEvent = params.onEvent,
 	}
 
-	--== Display Groups ==--
+	--== Object References ==--
 
-	self._dg_views = nil -- to put button views in display hierarchy
+	self._tmp_style = params.style -- save
 
+	self._rctHit = nil -- our rectangle hit area
+	self._rctHit_f = nil
+
+	self._wgtBg = nil -- background widget
+	self._wgtBg_f = nil -- widget handler
+	self._wgtBg_dirty=true
+
+	self._wgtText = nil -- text widget (for both hint and value display)
+	self._wgtText_f = nil -- widget handler
+	self._wgtText_dirty=true
 
 	-- set initial state
 	self:setState( ButtonBase.STATE_INIT )
@@ -200,109 +235,70 @@ end
 
 function ButtonBase:__undoInit__()
 	-- print( "ButtonBase:__undoInit__" )
-
-	self._callbacks = nil
-	self._views = nil
-
 	--==--
+	self:superCall( StyleMix, '__undoInit__' )
 	self:superCall( ComponentBase, '__undoInit__' )
 	self:superCall( StatesMix, '__undoInit__' )
+	self:superCall( LifecycleMix, '__undoInit__' )
 end
 
 
--- __createView__()
---
+--== createView
+
 function ButtonBase:__createView__()
 	-- print( "ButtonBase:__createView__" )
 	self:superCall( ComponentBase, '__createView__' )
 	--==--
-
-	local o, p, dg  -- object, display group
-
-	--== hit area
-	o = display.newRect(0, 0, self._hit_width, self._hit_height)
-	o:setFillColor(0,0,0,0)
-	if LOCAL_DEBUG then
-		o:setFillColor(0,0.3,0,0.5)
-	end
-	o.isHitTestable = true
-	o.anchorX, o.anchorY = 0.5, 0.5
-
-	self.view:insert( o )
-	self._bg_hit = o
-
-	--== display group for button views
-	dg = display.newGroup()
-	self.view:insert( dg )
-	self._dg_views = dg
-
-	--== create individual button views
-
-	for _, name in ipairs( self._SUPPORTED_VIEWS ) do
-		self._params.name = name
-		o = self._class:new( self._params )
-		dg:insert( o.view )
-		self._views[ name ] = o
-	end
-	self._params.name = nil
-
+	local o = display.newRect( 0,0,0,0 )
+	o.anchorX, o.anchorY = 0.5,0.5
+	o.isHitTestable=true
+	self:insert( o )
+	self._rctHit = o
 end
 
 function ButtonBase:__undoCreateView__()
 	-- print( "ButtonBase:__undoCreateView__" )
-
-	local o
-
-	for name, view in pairs( self._views ) do
-		view:removeSelf()
-		self._views[ name ] = nil
-	end
-
-	o = self._dg_views
-	o:removeSelf()
-	self._dg_views = nil
-
-	o = self._bg_hit
-	o:removeSelf()
-	self._bg_hit = nil
-
+	self._rctHit:removeSelf()
+	self._rctHit=nil
 	--==--
 	self:superCall( ComponentBase, '__undoCreateView__' )
 end
 
 
--- __initComplete__()
---
+--== initComplete
+
 function ButtonBase:__initComplete__()
 	-- print( "ButtonBase:__initComplete__" )
+	self:superCall( StyleMix, '__initComplete__' )
 	self:superCall( ComponentBase, '__initComplete__' )
 	--==--
+	self._rctHit_f = self:createCallback( self._hitAreaTouch_handler )
+	self._rctHit:addEventListener( 'touch', self._rctHit_f )
 
-	local is_active = self._params.is_active == nil and false or self._params.is_active
-	local o
+	-- self._textStyle_f = self:createCallback( self.textStyleChange_handler )
+	-- self._wgtText_f = self:createCallback( self._wgtTextWidgetUpdate_handler )
 
-	o = self._bg_hit
-	o._f = self:createCallback( self._hitareaTouch_handler )
-	o:addEventListener( 'touch', o._f )
+	self.style = self._tmp_style
 
-	if is_active then
+	if self.isActive then
 		self:gotoState( ButtonBase.STATE_ACTIVE )
 	else
 		self:gotoState( ButtonBase.STATE_INACTIVE )
 	end
-
-	self._params = nil -- get rid of temp structure
 end
 
 function ButtonBase:__undoInitComplete__()
 	--print( "ButtonBase:__undoInitComplete__" )
+	self:_removeBackground()
+	self:_removeText()
 
-	o = self._bg_hit
-	o:removeEventListener( 'touch', o._f )
-	o._f = nil
+	self.style = nil
 
+	self._rctHit:removeEventListener( 'touch', self._rctHit_f )
+	self._rctHit_f = nil
 	--==--
 	self:superCall( ComponentBase, '__undoInitComplete__' )
+	self:superCall( StyleMix, '__undoInitComplete__' )
 end
 
 -- END: Setup DMC Objects
@@ -314,22 +310,197 @@ end
 --== Public Methods
 
 
-function ButtonBase.__getters:is_enabled()
-	return ( self:getState() ~= self.STATE_DISABLED )
-end
-function ButtonBase.__setters:is_enabled( value )
-	assert( type(value)=='boolean', "newButton: expected boolean for property 'enabled'")
-	--==--
-	if self.is_enabled == value then return end
+--======================================================--
+-- Local Properties
 
-	if value == true then
-		self:gotoState( ButtonBase.STATE_INACTIVE, { is_enabled=value } )
-	else
-		self:gotoState( ButtonBase.STATE_DISABLED, { is_enabled=value } )
+-- .X
+--
+function ButtonBase.__getters:x()
+	return self._x
+end
+function ButtonBase.__setters:x( value )
+	-- print( 'ButtonBase.__setters:x', value )
+	assert( type(value)=='number' )
+	--==--
+	self._x = value
+	self._x_dirty=true
+	self:__invalidateProperties__()
+end
+
+-- .Y
+--
+function ButtonBase.__getters:y()
+	return self._y
+end
+function ButtonBase.__setters:y( value )
+	-- print( 'ButtonBase.__setters:y', value )
+	assert( type(value)=='number' )
+	--==--
+	self._y = value
+	self._y_dirty=true
+	self:__invalidateProperties__()
+end
+
+-- .labelText
+--
+function ButtonBase.__getters:labelText()
+	return self._labelText
+end
+function ButtonBase.__setters:labelText( value )
+	-- print( "ButtonBase.__setters:labelText", value )
+	assert( type(value)=='string' )
+	if value == self._labelText then return end
+	self._labelText = value
+	self._labelText_dirty=true
+	self:__invalidateProperties__()
+end
+
+function ButtonBase.__getters:hitMarginX()
+	-- print( "ButtonBase.__getters:hitMarginX" )
+	return self.curr_style.hitMarginX
+end
+function ButtonBase.__setters:hitMarginX( value )
+	-- print( "ButtonBase.__setters:hitMarginX", value )
+	self.curr_style.hitMarginX = value
+end
+
+--== hitMarginY
+
+function ButtonBase.__getters:hitMarginY()
+	-- print( "ButtonBase.__getters:hitMarginY" )
+	return self.curr_style.hitMarginY
+end
+function ButtonBase.__setters:hitMarginY( value )
+	-- print( "ButtonBase.__setters:hitMarginY", value, self )
+	self.curr_style.hitMarginY = value
+end
+
+
+--== setHitMargin
+
+function ButtonBase:setHitMargin( ... )
+	-- print( 'ButtonBase:setHitMargin' )
+	local args = {...}
+
+	if type( args[1] ) == 'table' then
+		self.hitMarginX, self.hitMarginY = unpack( args[1] )
+	end
+	if type( args[1] ) == 'number' then
+		self.hitMarginX = args[1]
+	end
+	if type( args[2] ) == 'number' then
+		self.hitMarginY = args[2]
 	end
 end
 
-function ButtonBase.__getters:is_active()
+--== isHitActive
+
+function ButtonBase.__getters:isHitActive()
+	-- print( "ButtonBase.__getters:isHitActive" )
+	return self.curr_style.isHitActive
+end
+function ButtonBase.__setters:isHitActive( value )
+	-- print( "ButtonBase.__setters:isHitActive", value )
+	self.curr_style.isHitActive = value
+end
+
+
+
+--======================================================--
+-- Background Style Properties
+
+
+-- .backgroundStrokeWidth
+--
+function ButtonBase.__getters:backgroundStrokeWidth()
+	return self.curr_style.background.strokeWidth
+end
+function ButtonBase.__setters:backgroundStrokeWidth( value )
+	-- print( 'ButtonBase.__setters:backgroundStrokeWidth', value )
+	self.curr_style.background.strokeWidth = value
+end
+
+-- setBackgroundFillColor()
+--
+function ButtonBase:setBackgroundFillColor( ... )
+	-- print( 'ButtonBase:setBackgroundFillColor' )
+	self.curr_style.background.fillColor = {...}
+end
+
+-- setBackgroundStrokeColor()
+--
+function ButtonBase:setBackgroundStrokeColor( ... )
+	-- print( 'ButtonBase:setBackgroundStrokeColor' )
+	self.curr_style.background.strokeColor = {...}
+end
+
+
+--======================================================--
+-- Label Style Properties
+
+-- .hintFont
+--
+function ButtonBase.__setters:labelFont( value )
+	-- print( 'ButtonBase.__setters:labelFont', value )
+	self.curr_style.font = value
+end
+
+-- .labelFontSize
+--
+function ButtonBase.__setters:labelFontSize( value )
+	-- print( 'ButtonBase.__setters:labelFontSize', value )
+	self.curr_style.fontSize = value
+end
+
+-- setLabelColor()
+--
+function ButtonBase:setLabelTextColor( ... )
+	-- print( 'ButtonBase:setLabelTextColor' )
+	self.curr_style.labelTextColor = {...}
+end
+
+
+--======================================================--
+-- Theme Methods
+
+-- afterAddStyle()
+--
+function ButtonBase:afterAddStyle()
+	-- print( "ButtonBase:afterAddStyle", self )
+	self._widgetStyle_dirty=true
+	self:__invalidateProperties__()
+end
+
+-- beforeRemoveStyle()
+--
+function ButtonBase:beforeRemoveStyle()
+	-- print( "ButtonBase:beforeRemoveStyle", self )
+	self._widgetStyle_dirty=true
+	self:__invalidateProperties__()
+end
+
+
+--======================================================--
+-- Button Methods
+
+function ButtonBase.__getters:isEnabled()
+	return ( self:getState() ~= ButtonBase.STATE_DISABLED )
+end
+function ButtonBase.__setters:isEnabled( value )
+	assert( type(value)=='boolean', "newButton: expected boolean for property 'enabled'")
+	--==--
+	if self.curr_style.isHitActive == value then return end
+
+	self.curr_style.isHitActive = value
+
+	if value == true then
+		self:gotoState( ButtonBase.STATE_INACTIVE, { isEnabled=value } )
+	else
+		self:gotoState( ButtonBase.STATE_DISABLED, { isEnabled=value } )
+	end
+end
+
+function ButtonBase.__getters:isActive()
 	return ( self:getState() == self.STATE_ACTIVE )
 end
 
@@ -365,10 +536,6 @@ function ButtonBase.__setters:value( value )
 end
 
 
-function ButtonBase.__getters:views()
-	return self._views
-end
-
 -- Method to programmatically press the button
 --
 function ButtonBase:press()
@@ -381,10 +548,11 @@ function ButtonBase:press()
 	}
 
 	evt.phase = 'began'
-	self:_hitareaTouch_handler( evt )
+	self:_hitAreaTouch_handler( evt )
 	evt.phase = 'ended'
-	self:_hitareaTouch_handler( evt )
+	self:_hitAreaTouch_handler( evt )
 end
+
 
 
 
@@ -394,10 +562,11 @@ end
 
 -- dispatch 'press' events
 --
+-- TODO: use create event
 function ButtonBase:_doPressEventDispatch()
 	-- print( "ButtonBase:_doPressEventDispatch" )
 
-	if not self.is_enabled then return end
+	if not self.isEnabled then return end
 
 	local cb = self._callbacks
 	local event = {
@@ -419,7 +588,7 @@ end
 function ButtonBase:_doReleaseEventDispatch()
 	-- print( "ButtonBase:_doReleaseEventDispatch" )
 
-	if not self.is_enabled then return end
+	if not self.isEnabled then return end
 
 	local cb = self._callbacks
 	local event = {
@@ -437,8 +606,289 @@ function ButtonBase:_doReleaseEventDispatch()
 end
 
 
---======================================================--
--- START: State Machine
+--====================================================================--
+--== Private Methods
+
+
+--== Create/Destroy Background Widget
+
+function ButtonBase:_removeBackground()
+	-- print( "ButtonBase:_removeBackground" )
+	local o = self._wgtBg
+	if not o then return end
+	o:removeSelf()
+	self._wgtBg = nil
+end
+
+function ButtonBase:_createBackground()
+	-- print( "ButtonBase:_createBackground" )
+
+	self:_removeBackground()
+
+	local o = Widgets.newBackground{
+		defaultStyle = self.defaultStyle.background
+	}
+	self:insert( o.view )
+	self._wgtBg = o
+
+	--== Reset properties
+
+	self._widgetViewState_dirty=true
+end
+
+
+--== Create/Destroy Text Widget
+
+function ButtonBase:_removeText()
+	-- print( "ButtonBase:_removeText" )
+	local o = self._wgtText
+	if not o then return end
+	o.onUpdate=nil
+	o:removeSelf()
+	self._wgtText = nil
+end
+
+function ButtonBase:_createText()
+	-- print( "ButtonBase:_createText" )
+
+	self:_removeText()
+
+	local o = Widgets.newText{
+		defaultStyle = self.defaultStyle.label
+	}
+	o.onUpdate = self._wgtText_f
+	self:insert( o.view )
+	self._wgtText = o
+
+	--== Reset properties
+
+	self._widgetStyle_dirty=true
+	self._isEditActive_dirty=true
+	self._labelText_dirty=true
+end
+
+
+
+function ButtonBase:__commitProperties__()
+	-- print( 'ButtonBase:__commitProperties__' )
+
+	--== Update Widget Components ==--
+
+	if self._wgtBg_dirty then
+		self:_createBackground()
+		self._wgtBg_dirty = false
+	end
+
+	if self._wgtText_dirty then
+		self:_createText()
+		self._wgtText_dirty=false
+	end
+
+
+	--== Update Widget View ==--
+
+	local style = self.curr_style
+	-- local state = self:getState()
+	local view = self.view
+	local hit = self._rctHit
+	local bg = self._wgtBg
+	local text = self._wgtText
+
+	-- x/y
+
+	if self._x_dirty then
+		view.x = self._x
+		self._x_dirty=false
+	end
+	if self._y_dirty then
+		view.y = self._y
+		self._y_dirty=false
+	end
+
+	-- width/height
+
+	if self._width_dirty then
+		hit.width = style.width
+		self._width_dirty=false
+
+		self._anchorX_dirty=true
+		self._hitAreaWidth_dirty=true
+	end
+	if self._height_dirty then
+		hit.height = style.height
+		self._height_dirty=false
+
+		self._anchorY_dirty=true
+		self._hitAreaHeight_dirty=true
+	end
+
+	if self._anchorX_dirty then
+		self._anchorX_dirty=false
+
+		self._hitAreaX_dirty=true
+	end
+	if self._anchorY_dirty then
+		self._anchorY_dirty=false
+
+		self._hitAreaY_dirty=true
+	end
+
+	if self._hitMarginX_dirty then
+		self._hitMarginX_dirty=false
+
+		self._hitAreaMarginX_dirty=true
+	end
+	if self._hitMarginY_dirty then
+		self._hitMarginY_dirty=false
+
+		self._hitAreaMarginY_dirty=true
+	end
+
+	if self._labelText_dirty then
+		text.text = self._labelText
+		self._labelText_dirty=false
+	end
+
+	--== Set Styles
+
+	if self._widgetStyle_dirty or self._widgetViewState_dirty then
+		local state = self._widgetViewState
+		if state==ButtonBase.INACTIVE then
+			text:setActiveStyle( style.inactive.label, {copy=false} )
+			bg:setActiveStyle( style.inactive.background, {copy=false} )
+		elseif state==ButtonBase.ACTIVE then
+			text:setActiveStyle( style.active.label, {copy=false} )
+			bg:setActiveStyle( style.active.background, {copy=false} )
+		else
+			text:setActiveStyle( style.disabled.label, {copy=false} )
+			bg:setActiveStyle( style.disabled.background, {copy=false} )
+		end
+		self._widgetStyle_dirty=false
+		self._widgetViewState_dirty=false
+	end
+
+	--== Hit
+
+	if self._hitAreaX_dirty or self._hitAreaAnchorX_dirty then
+		local width = style.width
+		hit.x = width/2+(-width*style.anchorX)
+		self._hitAreaX_dirty=false
+		self._hitAreaAnchorX_dirty=false
+	end
+	if self._hitAreaY_dirty or self._hitAreaAnchorY_dirty then
+		local height = style.height
+		hit.y = height/2+(-height*style.anchorY)
+		self._hitAreaY_dirty=false
+		self._hitAreaAnchorY_dirty=false
+	end
+
+	if self._hitAreaWidth_dirty or self._hitAreaMarginX_dirty then
+		hit.width=style.width+style.hitMarginX*2
+		self._hitAreaWidth_dirty=false
+		self._hitAreaMarginX_dirty=false
+	end
+	if self._hitAreaHeight_dirty or self._hitAreaMarginY_dirty then
+		hit.height=style.height+style.hitMarginY*2
+		self._hitAreaHeight_dirty=false
+		self._hitAreaMarginY_dirty=false
+	end
+
+	-- debug on
+
+	if self._debugOn_dirty then
+		if style.debugOn then
+			hit:setFillColor( 1,0,0,0.5 )
+		else
+			hit:setFillColor( 0,0,0,0 )
+		end
+		self._debugOn_dirty=false
+	end
+
+end
+
+
+--====================================================================--
+--== Event Handlers
+
+
+-- stylePropertyChangeHandler()
+-- this is the standard property event handler
+-- needed by any DMC Widget
+-- it listens for changes in the Widget Style Object
+-- and reponds with the appropriate message
+--
+function ButtonBase:stylePropertyChangeHandler( event )
+	-- print( "ButtonBase:stylePropertyChangeHandler", event.property, event.value )
+	local style = event.target
+	local etype= event.type
+	local property= event.property
+	local value = event.value
+
+	-- Utils.print( event )
+
+	-- print( "Style Changed", etype, property, value )
+
+	if etype==style.STYLE_RESET then
+		self._debugOn_dirty=true
+		self._width_dirty=true
+		self._height_dirty=true
+		self._anchorX_dirty=true
+		self._anchorY_dirty=true
+
+		self._align_dirty=true
+		self._hitMarginX_dirty=true
+		self._hitMarginY_dirty=true
+		self._isHitActive_dirty=true
+		self._marginX_dirty=true
+		self._marginY_dirty=true
+		self._offsetX_dirty=true
+		self._offsetY_dirty=true
+
+		self._wgtText_dirty=true
+		self._widgetViewState_dirty=true
+
+		property = etype
+
+	else
+		if property=='debugActive' then
+			self._debugOn_dirty=true
+		elseif property=='width' then
+			self._width_dirty=true
+		elseif property=='height' then
+			self._height_dirty=true
+		elseif property=='anchorX' then
+			self._anchorX_dirty=true
+		elseif property=='anchorY' then
+			self._anchorY_dirty=true
+
+		elseif property=='align' then
+			self._align_dirty=true
+		elseif property=='hitMarginX' then
+			self._hitMarginX_dirty=true
+		elseif property=='hitMarginY' then
+			self._hitMarginY_dirty=true
+		elseif property=='isHitActive' then
+			self._isHitActive_dirty=true
+		elseif property=='marginX' then
+			self._marginX_dirty=true
+		elseif property=='marginY' then
+			self._marginY_dirty=true
+		elseif property=='offsetX' then
+			self._offsetX_dirty=true
+		elseif property=='offsetY' then
+			self._offsetY_dirty=true
+		end
+
+	end
+
+	self:__invalidateProperties__()
+	self:__dispatchInvalidateNotification__( property, value )
+end
+
+
+
+--====================================================================--
+--== State Machine
 
 --== State: Init
 
@@ -446,20 +896,17 @@ function ButtonBase:state_init( next_state, params )
 	-- print( "ButtonBase:state_init >>", next_state )
 	params = params or {}
 	--==--
-
 	if next_state == ButtonBase.STATE_ACTIVE then
 		self:do_state_active( params )
-
 	elseif next_state == ButtonBase.STATE_INACTIVE then
 		self:do_state_inactive( params )
-
 	elseif next_state == ButtonBase.STATE_DISABLED then
 		self:do_state_disabled( params )
-
 	else
-		print( "WARNING :: WebSocket:state_create " .. tostring( next_state ) )
+		print( "[WARNING] ButtonBase:state_init " .. tostring( next_state ) )
 	end
 end
+
 
 --== State: Active
 
@@ -468,35 +915,29 @@ function ButtonBase:do_state_active( params )
 	params = params or {}
 	params.set_state = params.set_state == nil and true or params.set_state
 	--==--
-	local views = self._views
-
-	views.inactive.isVisible = false
-	views.active.isVisible = true
-	views.disabled.isVisible = false
-
 	if params.set_state == true then
 		self:setState( ButtonBase.STATE_ACTIVE )
 	end
+	self._widgetViewState=ButtonBase.STATE_ACTIVE
+	self._widgetViewState_dirty=true
+	self:__invalidateProperties__()
 end
 
 function ButtonBase:state_active( next_state, params )
 	-- print( "ButtonBase:state_active >>", next_state )
 	params = params or {}
 	--==--
-
 	if next_state == ButtonBase.STATE_ACTIVE then
-		self:do_state_active( params )
-
+		-- self:do_state_active( params )
 	elseif next_state == ButtonBase.STATE_INACTIVE then
 		self:do_state_inactive( params )
-
 	elseif next_state == ButtonBase.STATE_DISABLED then
 		self:do_state_disabled( params )
-
 	else
-		print( "WARNING :: WebSocket:state_create " .. tostring( next_state ) )
+		print( "[WARNING] ButtonBase:state_active " .. tostring( next_state ) )
 	end
 end
+
 
 --== State: Inactive
 
@@ -505,35 +946,29 @@ function ButtonBase:do_state_inactive( params )
 	params = params or {}
 	params.set_state = params.set_state == nil and true or params.set_state
 	--==--
-	local views = self._views
-
-	views.inactive.isVisible = true
-	views.active.isVisible = false
-	views.disabled.isVisible = false
-
 	if params.set_state == true then
 		self:setState( ButtonBase.STATE_INACTIVE )
 	end
+	self._widgetViewState=ButtonBase.STATE_INACTIVE
+	self._widgetViewState_dirty=true
+	self:__invalidateProperties__()
 end
 
 function ButtonBase:state_inactive( next_state, params )
 	-- print( "ButtonBase:state_inactive >>", next_state )
 	params = params or {}
 	--==--
-
 	if next_state == ButtonBase.STATE_ACTIVE then
 		self:do_state_active( params )
-
 	elseif next_state == ButtonBase.STATE_INACTIVE then
-		self:do_state_inactive( params )
-
+		-- self:do_state_inactive( params )
 	elseif next_state == ButtonBase.STATE_DISABLED then
 		self:do_state_disabled( params )
-
 	else
-		print( "WARNING :: WebSocket:state_create " .. tostring( next_state ) )
+		print( "[WARNING] ButtonBase:state_inactive " .. tostring( next_state ) )
 	end
 end
+
 
 --== State: Disabled
 
@@ -541,51 +976,34 @@ function ButtonBase:do_state_disabled( params )
 	-- print( "ButtonBase:do_state_disabled" )
 	params = params or {}
 	--==--
-	local views = self._views
-
-	views.inactive.isVisible = false
-	views.active.isVisible = false
-	views.disabled.isVisible = true
-
 	self:setState( ButtonBase.STATE_DISABLED )
+	self._widgetViewState=ButtonBase.STATE_DISABLED
+	self._widgetViewState_dirty=true
+	self:__invalidateProperties__()
 end
 
 --[[
-params.is_enabled is to make sure that we have been enabled
+params.isEnabled is to make sure that we have been enabled
 since someone else might ask us to change state eg, to ACTIVE
 when we are disabled (like a button group)
 --]]
 function ButtonBase:state_disabled( next_state, params )
 	-- print( "ButtonBase:state_disabled >>", next_state )
 	params = params or {}
-	params.is_enabled = params.is_enabled == nil and false or params.is_enabled
+	params.isEnabled = params.isEnabled == nil and false or params.isEnabled
 	--==--
-	--
-
-	if next_state == ButtonBase.STATE_ACTIVE and params.is_enabled == true then
+	if next_state == ButtonBase.STATE_ACTIVE and params.isEnabled==true then
 		self:do_state_active( params )
-
-	elseif next_state == ButtonBase.STATE_INACTIVE and params.is_enabled == true then
+	elseif next_state == ButtonBase.STATE_INACTIVE and params.isEnabled==true then
 		self:do_state_inactive( params )
-
 	elseif next_state == ButtonBase.STATE_DISABLED then
-		self:do_state_disabled( params )
-
+		-- self:do_state_disabled( params )
 	else
-		print( "WARNING :: WebSocket:state_create " .. tostring( next_state ) )
+		print( "[WARNING] ButtonBase:state_disabled " .. tostring( next_state ) )
 	end
 end
 
--- END: State Machine
---======================================================--
 
-
-
---====================================================================--
---== Event Handlers
-
-
--- none
 
 
 
@@ -627,37 +1045,38 @@ PushButton.TYPE = 'push'
 --== Event Handlers
 
 
-function PushButton:_hitareaTouch_handler( event )
-	-- print( "PushButton:_hitareaTouch_handler", event.phase )
+function PushButton:_hitAreaTouch_handler( event )
+	-- print( "PushButton:_hitAreaTouch_handler", event.phase )
 
-	if not self.is_enabled then return true end
+	if not self.curr_style.isHitActive then return true end
 
-	local target = event.target
-	local bounds = target.contentBounds
+	local phase = event.phase
+	local button = event.target
+
+	if phase == 'began' then
+		display.getCurrentStage():setFocus( button )
+		self._has_focus = true
+
+		self:gotoState( self.STATE_ACTIVE )
+		self:_doPressEventDispatch()
+	end
+
+	if not self._has_focus then return end
+
+	local bounds = button.contentBounds
 	local x,y = event.x,event.y
 	local is_bounded =
 		( x >= bounds.xMin and x <= bounds.xMax and
 		y >= bounds.yMin and y <= bounds.yMax )
 
-	if event.phase == 'began' then
-		display.getCurrentStage():setFocus( target )
-		self._has_focus = true
-		self:gotoState( self.STATE_ACTIVE )
-		self:_doPressEventDispatch()
-
-		return true
-	end
-
-	if not self._has_focus then return end
-
-	if event.phase == 'moved' then
+	if phase == 'moved' then
 		if is_bounded then
 			self:gotoState( self.STATE_ACTIVE )
 		else
 			self:gotoState( self.STATE_INACTIVE )
 		end
 
-	elseif event.phase == 'ended' or event.phase == 'cancelled' then
+	elseif phase == 'ended' or phase == 'canceled' then
 		display.getCurrentStage():setFocus( nil )
 		self._has_focus = false
 		self:gotoState( self.STATE_INACTIVE )
@@ -717,10 +1136,10 @@ end
 --== Event Handlers
 
 
-function ToggleButton:_hitareaTouch_handler( event )
-	-- print( "ToggleButton:_hitareaTouch_handler", event.phase )
+function ToggleButton:_hitAreaTouch_handler( event )
+	-- print( "ToggleButton:_hitAreaTouch_handler", event.phase )
 
-	if not self.is_enabled then return true end
+	if not self.isEnabled then return true end
 
 	local target = event.target
 	local bounds = target.contentBounds
@@ -749,7 +1168,7 @@ function ToggleButton:_hitareaTouch_handler( event )
 			self:gotoState( curr_state, { set_state=false } )
 		end
 
-	elseif event.phase == 'ended' or event.phase == 'cancelled' then
+	elseif event.phase == 'ended' or event.phase == 'canceled' then
 		display.getCurrentStage():setFocus( nil )
 		self._has_focus = false
 		if is_bounded then
@@ -816,7 +1235,21 @@ end
 --===================================================================--
 
 
+local function initializeButtons( manager )
+	-- print( "Buttons.initialize" )
+	Widgets = manager
+	StyleMgr = Widgets.StyleMgr
+
+	ButtonBase.STYLE_CLASS = Widgets.Style.Button
+	ButtonBase.STYLE_TYPE = ButtonBase.STYLE_CLASS.TYPE
+
+	StyleMgr:registerWidget( ButtonBase )
+end
+
+
 local Buttons = {}
+
+Buttons.initialize = initializeButtons
 
 -- export class instantiations for direct access
 Buttons.ButtonBase = ButtonBase
@@ -828,19 +1261,22 @@ Buttons.RadioButton = RadioButton
 
 function Buttons.create( params )
 	-- print( "Buttons.create", params.type )
-	assert( params.type, "newButton: expected param 'type'" )
+	params = params or {}
+	if params.action==nil then params.action=PushButton.TYPE end
 	--==--
-	if params.type == PushButton.TYPE then
+	local action = params.action
+
+	if action == PushButton.TYPE then
 		return PushButton:new( params )
 
-	elseif params.type == RadioButton.TYPE then
+	elseif action == RadioButton.TYPE then
 		return RadioButton:new( params )
 
-	elseif params.type == ToggleButton.TYPE then
+	elseif action == ToggleButton.TYPE then
 		return ToggleButton:new( params )
 
 	else
-		error( "newButton: unknown button type: " .. tostring( params.type ) )
+		error( "newButton: unknown button type: " .. tostring( action ) )
 
 	end
 end

@@ -54,7 +54,7 @@ local Widgets = nil -- set later
 --== Support Functions
 
 
-function _patch( obj )
+local function _patch( obj )
 
 	obj = obj or {}
 
@@ -76,7 +76,7 @@ end
 --====================================================================--
 
 
-Popover = {}
+local Popover = {}
 
 Popover.NAME = "Popover Mixin"
 
@@ -178,6 +178,8 @@ end
 
 function Popover.isDismissed( self )
 	-- pass
+	self:hidePopover()
+	self:removeSelf()
 end
 
 function Popover.shouldDismiss( self )

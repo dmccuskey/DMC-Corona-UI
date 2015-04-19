@@ -65,6 +65,7 @@ local widget_find = dmc_widget_func.find
 
 
 local Objects = require 'dmc_objects'
+local Utils = require 'dmc_utils'
 
 local BaseStyle = require( widget_find( 'widget_style.base_style' ) )
 
@@ -132,23 +133,43 @@ TextStyle._STYLE_DEFAULTS = {
 	anchorY=0.5,
 
 	align='center',
-	fillColor={1,1,1,0},
+	fillColor={0,0,0,0},
 	font=native.systemFont,
-	fontSize=24,
+	fontSize=16,
 	marginX=0,
 	marginY=0,
 	textColor={0,0,0,1},
 
-	strokeColor={0,0,0,1},
+	strokeColor={0,0,0,0},
 	strokeWidth=0,
 }
+
+TextStyle._TEST_DEFAULTS = {
+	name='text-test-style',
+	debugOn=false,
+	width=117,
+	height=nil,
+	anchorX=101,
+	anchorY=102,
+
+	align='test-center',
+	fillColor={101,102,103,104},
+	font=native.systemFont,
+	fontSize=101,
+	marginX=102,
+	marginY=103,
+	textColor={111,112,113,114},
+
+	strokeColor={121,122,123,124},
+	strokeWidth=111,
+}
+
+TextStyle.MODE = BaseStyle.RUN_MODE
+TextStyle._DEFAULTS = TextStyle._STYLE_DEFAULTS
 
 --== Event Constants
 
 TextStyle.EVENT = 'text-style-event'
-
--- from super
--- Class.STYLE_UPDATED
 
 
 --======================================================--
@@ -162,7 +183,6 @@ function TextStyle:__init__( params )
 
 	--== Style Properties ==--
 
-	-- self._data
 	-- self._inherit
 	-- self._widget
 	-- self._parent
@@ -195,43 +215,44 @@ end
 --== Static Methods
 
 
-function TextStyle.initialize( manager )
+function TextStyle.initialize( manager, params )
 	-- print( "TextStyle.initialize", manager )
+	params = params or {}
+	if params.mode==nil then params.mode=BaseStyle.RUN_MODE end
+	--==--
 	Widgets = manager
 
-	TextStyle._setDefaults( TextStyle )
+	if params.mode==BaseStyle.TEST_MODE then
+		TextStyle.MODE = BaseStyle.TEST_MODE
+		TextStyle._DEFAULTS = TextStyle._TEST_DEFAULTS
+	end
+	local defaults = TextStyle._DEFAULTS
+
+	TextStyle._setDefaults( TextStyle, {defaults=defaults} )
 end
 
 
-function TextStyle.addMissingDestProperties( dest, src, params )
+function TextStyle.addMissingDestProperties( dest, src )
 	-- print( "TextStyle.addMissingDestProperties", dest, src )
-	params = params or {}
-	if params.force==nil then params.force=false end
 	assert( dest )
 	--==--
-	local force=params.force
-	local srcs = { TextStyle._STYLE_DEFAULTS }
+	local srcs = { TextStyle._DEFAULTS }
 	if src then tinsert( srcs, 1, src ) end
+
+	dest = BaseStyle.addMissingDestProperties( dest, src )
 
 	for i=1,#srcs do
 		local src = srcs[i]
 
-		if dest.debugOn==nil or force then dest.debugOn=src.debugOn end
-
-		if dest.width==nil or force then dest.width=src.width end
-		if dest.height==nil or force then dest.height=src.height end
-
-		if dest.align==nil or force then dest.align=src.align end
-		if dest.anchorX==nil or force then dest.anchorX=src.anchorX end
-		if dest.anchorY==nil or force then dest.anchorY=src.anchorY end
-		if dest.fillColor==nil or force then dest.fillColor=src.fillColor end
-		if dest.font==nil or force then dest.font=src.font end
-		if dest.fontSize==nil or force then dest.fontSize=src.fontSize end
-		if dest.marginX==nil or force then dest.marginX=src.marginX end
-		if dest.marginY==nil or force then dest.marginY=src.marginY end
-		if dest.strokeColor==nil or force then dest.strokeColor=src.strokeColor end
-		if dest.strokeWidth==nil or force then dest.strokeWidth=src.strokeWidth end
-		if dest.textColor==nil or force then dest.textColor=src.textColor end
+		if dest.align==nil then dest.align=src.align end
+		if dest.fillColor==nil then dest.fillColor=src.fillColor end
+		if dest.font==nil then dest.font=src.font end
+		if dest.fontSize==nil then dest.fontSize=src.fontSize end
+		if dest.marginX==nil then dest.marginX=src.marginX end
+		if dest.marginY==nil then dest.marginY=src.marginY end
+		if dest.strokeColor==nil then dest.strokeColor=src.strokeColor end
+		if dest.strokeWidth==nil then dest.strokeWidth=src.strokeWidth end
+		if dest.textColor==nil then dest.textColor=src.textColor end
 
 	end
 
@@ -243,29 +264,17 @@ end
 --
 function TextStyle.copyExistingSrcProperties( dest, src, params )
 	-- print( "TextStyle.copyExistingSrcProperties", dest, src )
-	if not dest or not src then return end
+	assert( dest )
+	if not src then return end
 	params = params or {}
 	if params.force==nil then params.force=false end
 	--==--
 	local force=params.force
 
-	if (src.debugOn~=nil and dest.debugOn==nil) or force then
-		dest.debugOn=src.debugOn
-	end
-	if (src.width~=nil and dest.width==nil) or force then
-		dest.width=src.width
-	end
-	if (src.height~=nil and dest.height==nil) or force then
-		dest.height=src.height
-	end
+	BaseStyle.copyExistingSrcProperties( dest, src, params )
+
 	if (src.align~=nil and dest.align==nil) or force then
 		dest.align=src.align
-	end
-	if (src.anchorX~=nil and dest.anchorX==nil) or force then
-		dest.anchorX=src.anchorX
-	end
-	if (src.anchorY~=nil and dest.anchorY==nil) or force then
-		dest.anchorY=src.anchorY
 	end
 	if (src.fillColor~=nil and dest.fillColor==nil) or force then
 		dest.fillColor=src.fillColor
@@ -296,22 +305,14 @@ function TextStyle.copyExistingSrcProperties( dest, src, params )
 end
 
 
--- _verifyClassProperties()
+-- _verifyStyleProperties()
 --
-function TextStyle._verifyClassProperties( src )
-	-- print( "TextStyle._verifyClassProperties", src )
-	assert( src )
-	--==--
-	local emsg = "Style: requires property '%s'"
+function TextStyle._verifyStyleProperties( src )
+	-- print( "TextStyle._verifyStyleProperties", src )
+	local emsg = "Style (Text) requires property '%s'"
 
-	local is_valid = BaseStyle._verifyClassProperties( src, {width=true,height=true} )
-
-	--[[
-	we don't check for width/height because nil is valid value
-	sometimes we just use width/height of the text object
-	-- if not self.width then print(sformat(emsg,'width')) ; is_valid=false end
-	-- if not self.height then print(sformat(emsg,'height')) ; is_valid=false end
-	--]]
+	-- exclude width/height because nil is valid value
+	local is_valid = BaseStyle._verifyStyleProperties( src, {width=true, height=true} )
 
 	if not src.align then
 		print(sformat(emsg,'align')) ; is_valid=false
@@ -350,20 +351,11 @@ end
 --== Public Methods
 
 
---== updateStyle
+--== verifyProperties
 
--- force is used when making exact copy of data, incl 'nil's
---
-function TextStyle:updateStyle( src, params )
-	-- print( "TextStyle:updateStyle" )
-	TextStyle.copyExistingSrcProperties( self, src, params )
-end
-
---== verifyClassProperties
-
-function TextStyle:verifyClassProperties()
-	-- print( "TextStyle:verifyClassProperties" )
-	return TextStyle._verifyClassProperties( self )
+function TextStyle:verifyProperties()
+	-- print( "TextStyle:verifyProperties" )
+	return TextStyle._verifyStyleProperties( self )
 end
 
 
@@ -372,20 +364,7 @@ end
 --== Private Methods
 
 
--- clear any local modifications on style class
--- called by clearProperties()
---
-function TextStyle:_clearProperties()
-	-- print( "TextStyle:_clearProperties" )
-	self:superCall( '_clearProperties' )
-	self.align=nil
-	self.fillColor=nil
-	self.font=nil
-	self.fontSize=nil
-	self.marginX=nil
-	self.marginY=nil
-	self.textColor=nil
-end
+-- none
 
 
 

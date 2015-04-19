@@ -65,6 +65,7 @@ local widget_find = dmc_widget_func.find
 
 local Widgets = nil -- set later
 
+local BaseStyle = require( widget_find( 'widget_style.base_style' ) )
 local Rectangle = require( widget_find( 'widget_background.rectangle_style' ) )
 local Rounded = require( widget_find( 'widget_background.rounded_style' ) )
 
@@ -82,24 +83,29 @@ local sformat = string.format
 --== Support Functions
 
 
-local function initializeFactory( manager )
+local function initializeFactory( manager, params )
 	-- print( "StyleFactory.initializeFactory" )
 	Widgets = manager
 
-	Rectangle.initialize( manager )
-	Rounded.initialize( manager )
+	Rectangle.initialize( manager, params )
+	Rounded.initialize( manager, params )
 end
 
 
-local function createStyle( style_type, params )
-	-- print( "StyleFactory.createStyle", style_type )
-	if style_type==Rectangle.TYPE then
-		return Rectangle:new( params )
-	elseif style_type==Rounded.TYPE then
-		return Rounded:new( params )
-	else
-		error( sformat( "StyleFactory: Unknown style type '%s'", tostring( style_type )))
-	end
+local function getStyleNames()
+	-- print( "StyleFactory.getStyleNames" )
+	return {
+		Rectangle.TYPE,
+		Rounded.TYPE
+	}
+end
+
+local function getStyleClasses()
+	-- print( "StyleFactory.getStyleClasses" )
+	return {
+		Rectangle,
+		Rounded
+	}
 end
 
 
@@ -115,6 +121,13 @@ local function getStyleClass( style_type )
 end
 
 
+local function createStyle( style_type, params )
+	-- print( "StyleFactory.createStyle", style_type )
+	local StyleClass = getStyleClass( style_type )
+	return StyleClass:new( params )
+end
+
+
 
 --====================================================================--
 --== Background Style Factory Facade
@@ -123,11 +136,20 @@ end
 
 return {
 
-	initialize = initializeFactory,
+	initialize=initializeFactory,
 
-	Rectangle = Rectangle,
-	Rounded = Rounded,
+	Style={
+		Base=BaseStyle,
+		Rectangle=Rectangle,
+		Rounded=Rounded,
+	},
 
-	create = createStyle,
-	getClass = getStyleClass
+	Rectangle=Rectangle,
+	Rounded=Rounded,
+
+	create=createStyle,
+	getClass=getStyleClass,
+
+	getStyleNames=getStyleNames,
+	getStyleClasses=getStyleClasses
 }

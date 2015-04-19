@@ -59,7 +59,7 @@ local VERSION = "1.2.2"
 local assert, type, rawget, rawset = assert, type, rawget, rawset
 local getmetatable, setmetatable = getmetatable, setmetatable
 
-local sformat = string.format
+local sfmt = string.format
 local tinsert = table.insert
 local tremove = table.remove
 
@@ -180,7 +180,7 @@ local function superCall( self, ... )
 	-- @params name name of method to look for, string
 	-- @params lock Class object with which to constrain searching
 	--
-	function findMethod( classes, name, lock )
+	local function findMethod( classes, name, lock )
 		if not classes then return end -- when using mixins, etc
 		local cls = nil
 		for _, class in ipairs( classes ) do
@@ -389,7 +389,9 @@ local function blessObject( inheritance, params )
 	o.__getters = {}
 
 	-- copy down all getters/setters of parents
-	for _, cls in ipairs( inheritance ) do
+	-- do in reverse order, to match order of property lookup
+	for i = #inheritance, 1, -1 do
+		local cls = inheritance[i]
 		if cls.__getters then
 			o.__getters = Utils.extend( cls.__getters, o.__getters )
 		end
@@ -482,7 +484,7 @@ end
 
 
 function ClassBase:__tostring__( id )
-	return sformat( "%s (%s)", self.NAME, id )
+	return sfmt( "%s (%s)", self.NAME, id )
 end
 
 
@@ -523,7 +525,6 @@ end
 
 
 function ClassBase:isa( the_class )
-
 	local isa = false
 	local cur_class = self.class
 
@@ -535,7 +536,7 @@ function ClassBase:isa( the_class )
 	else
 		local parents = self.__parents
 		for i=1, #parents do
-			local parent, isa = parents[i], false
+			local parent = parents[i]
 			if parent.isa then
 				isa = parent:isa( the_class )
 			end
