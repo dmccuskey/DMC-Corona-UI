@@ -64,7 +64,9 @@ local ui_find = dmc_ui_func.find
 --== Imports
 
 
-local LuaPatch = require 'lib.dmc_lua.lua_patch'
+local EventsMixModule = require 'dmc_events_mix'
+local Patch = require 'dmc_patch'
+local Path = require 'dmc_path'
 
 
 
@@ -72,9 +74,11 @@ local LuaPatch = require 'lib.dmc_lua.lua_patch'
 --== Setup, Constants
 
 
-LuaPatch.addPatch( 'table-pop' )
+Patch.addPatch( { 'table-pop', 'print-output' } )
 
 local sfmt = string.format
+local smatch = string.match
+local tinsert = table.insert
 local tpop = table.pop
 
 --== To be set in initialize()
@@ -95,6 +99,7 @@ local Style = nil
 
 local StyleMgr = {}
 
+EventsMixModule.patch( StyleMgr )
 
 --[[
 keyed on Style/dUI type, then name
@@ -108,6 +113,9 @@ keyed on Style/dUI type, then name
 }
 --]]
 StyleMgr._style = {}
+
+-- references the theme structure
+StyleMgr._activeTheme = nil
 
 -- keyed on theme name
 StyleMgr._theme = {}
@@ -123,6 +131,9 @@ StyleMgr._theme = {}
 StyleMgr._registered = {}
 
 
+StyleMgr.EVENT = 'style-mgr-event'
+StyleMgr.THEME = 'theme-update'
+
 
 --====================================================================--
 --== Static Functions
@@ -137,12 +148,20 @@ function StyleMgr.initialize( manager, params )
 	--== Add API calls
 
 	Style.addStyle = StyleMgr.addStyle
-	Style.addThemeStyle = StyleMgr.addThemeStyle
-	Style.createTheme = StyleMgr.createTheme
 	Style.getStyle = StyleMgr.getStyle
 	Style.purgeStyles = StyleMgr.purgeStyles
 	Style.registerWidget = StyleMgr.registerWidget
 	Style.removeStyle = StyleMgr.removeStyle
+
+	-- Theme Functions
+
+	Style.activateTheme = StyleMgr.activateTheme
+	Style.createTheme = StyleMgr.createTheme
+	Style.getActiveThemeId = StyleMgr.getActiveThemeId
+	Style.getActiveThemeName = StyleMgr.getActiveThemeName
+	Style.getAvailableThemeIds = StyleMgr.getAvailableThemeIds
+	Style.loadTheme = StyleMgr.loadTheme
+	Style.loadThemes = StyleMgr.loadThemes
 
 end
 
@@ -171,15 +190,15 @@ function StyleMgr.addStyle( style )
 	local styles
 
 	if type(sType)~='string' then
-		print( sfmt( "[NOTICE] StyleMgr.addStyle improper TYPE on Style, got '%s'", tostring( type(sType) ) ))
+		pnotice( sfmt( "StyleMgr.addStyle improper TYPE on Style, got '%s'", tostring( type(sType) ) ))
 		return
 	end
 	if type(name)~='string' then
-		print( sfmt( "[NOTICE] StyleMgr.addStyle expected string name, got '%s'", tostring( type(name) ) ))
+		pnotice( sfmt( "StyleMgr.addStyle expected string name, got '%s'", tostring( type(name) ) ))
 		return
 	end
 	if #name==0 then
-		print( sfmt( "[NOTICE] StyleMgr.addStyle name too short '%s'", tostring(name) ))
+		pnotice( sfmt( "StyleMgr.addStyle name too short '%s'", tostring(name) ))
 		return
 	end
 
@@ -190,7 +209,7 @@ function StyleMgr.addStyle( style )
 	end
 
 	if styles[ name ] then
-		print( sfmt( "[NOTICE] StyleMgr.addStyle already have style with name '%s'", name ))
+		pnotice( sfmt( "StyleMgr.addStyle already have style with name '%s'", name ))
 		return
 	end
 
@@ -210,8 +229,8 @@ function StyleMgr.getStyle( style, name )
 		assert( type(style.TYPE)=='string', sfmt("StyleMgr:getStyle arg 'name' must be a string, got '%s'", tostring(name) ) )
 		sType = style.TYPE
 	end
-	local styles = StyleMgr._style[ sType ] or {}
-	return styles[ name ]
+	local collection = StyleMgr._activeTheme.style[ sType ] or {}
+	return collection[ name ]
 end
 
 
@@ -237,17 +256,103 @@ end
 --======================================================--
 -- Theme Methods
 
-function StyleMgr.addThemeStyle( theme_id, style, name )
-	-- print( "StyleMgr.addThemeStyle", theme_id, style, name )
-	assert( style, "StyleMgr:addThemeStyle missing arg 'style'" )
-	assert( style.isa and style:isa(Style.Base), "StyleMgr:addThemeStyle wrong type for 'style'" )
-	--==--
 
+function StyleMgr.activateTheme( themeId )
+	-- print( "StyleMgr.activateTheme", themeId )
+	local themes = StyleMgr._theme
+	local currTheme = StyleMgr._activeTheme
+	if currTheme~=nil then
+		currTheme.isActive=false
+	end
+	currTheme = themes[ themeId ]
+	currTheme.isActive=true
+
+	StyleMgr._activeTheme = currTheme
+	StyleMgr:dispatchEvent( StyleMgr.THEME )
+end
+
+function StyleMgr.createTheme( themeId, params )
+	params = params or {}
+	-- print( "StyleMgr.createTheme", params.name )
+	params.id = themeId
+	local struct = StyleMgr._createThemeStruct( params )
+	StyleMgr._theme[ themeId ] = struct
+	return StyleMgr._createThemeInterface( struct )
 end
 
 
+function StyleMgr.getAvailableThemeIds()
+	local themes = StyleMgr._theme
+	local list = {}
+	for k,_ in pairs( themes ) do
+		tinsert( list, k )
+	end
+	return list
+end
 
-function StyleMgr.createTheme( theme_id, style, name )
+function StyleMgr.getActiveThemeId()
+	return StyleMgr._activeTheme and StyleMgr._activeTheme.id
+end
+
+function StyleMgr.getActiveThemeName()
+	return StyleMgr._activeTheme and StyleMgr._activeTheme.name
+end
+
+local lfs = require 'lfs'
+
+
+-- path: 'one/two/three/file.lua'
+-- path: 'one\two\three\file.lua'
+--
+-- parse(path)
+-- buildRequire(parts)
+-- buildPath(parts)
+function StyleMgr.loadTheme( filePath )
+	-- print( "StyleMgr.loadTheme", filePath )
+	local pathInfo = Path.parse( filePath )
+	local reqPath = Path.buildRequire( pathInfo )
+	local t = require( reqPath )
+	t.initialize( Style )
+end
+
+-- local p = path.buildPath( parse )
+-- local p = path.buildRequire( parse )
+
+--- loadThemes requires a directory.
+--
+function StyleMgr.loadThemes( directory )
+	-- print( "StyleMgr.loadThemes", directory )
+	local dirInfo = Path.parse( directory )
+
+	local resPath, resInfo
+	local themePath
+
+	-- resPath = system.pathForFile( '', system.ResourceDirectory )
+	--== START TEMP fix for bug in corona ==--
+	resPath = system.pathForFile( 'main.lua', system.ResourceDirectory )
+	resPath = smatch( resPath, '^(.+)main.lua' )
+	--== END TEMP fix for bug in corona ==--
+	local resInfo = Path.parse( resPath )
+	dirInfo.dir = resInfo.path
+	dirInfo.isAbs = resInfo.isAbs
+	themePath = Path.buildPath( dirInfo )
+
+	-- reset
+	dirInfo.dir = {}
+	dirInfo.isAbs = false
+
+	for file in lfs.dir( themePath ) do
+		local name = smatch( file, '^(.+)%.lua$' )
+		if name then
+			dirInfo.name = name
+			local reqPath = Path.buildRequire( dirInfo )
+			local pathInfo = Path.parse( directory )
+			pathInfo.dir = pathInfo.path
+			pathInfo.path = {}
+			local t = require( reqPath )
+			t.initialize( Style, pathInfo )
+		end
+	end
 
 end
 
@@ -320,8 +425,45 @@ end
 --== Private Functions
 
 
--- none
 
+function StyleMgr._addThemeStyle( struct, style, name )
+	-- print( "StyleMgr._addThemeStyle", struct, style, name )
+	assert( style, "StyleMgr:_addThemeStyle missing arg 'style'" )
+	assert( style.isa and style:isa(Style.Base), "StyleMgr:_addThemeStyle wrong type for 'style'" )
+	--==--
+	local sType = style.TYPE
+	local styles = struct.style
+	local collection = styles[sType]
+	collection[ name ] = style
+end
+
+
+function StyleMgr._createThemeInterface( struct )
+	-- print( "StyleMgr._createThemeInterface", struct )
+	return {
+		addStyle=function( name, style )
+			StyleMgr._addThemeStyle( struct, style, name )
+		end
+	}
+end
+
+
+function StyleMgr._createThemeStruct( params )
+	-- print( "StyleMgr._createThemeStruct" )
+
+	return {
+		id=params.id,
+		name=params.name,
+		root=params.root,
+		file=params.file,
+		isActive=false,
+		style = {
+			Text={
+				-- 'home-text'= style
+			}
+		}
+	}
+end
 
 
 --====================================================================--

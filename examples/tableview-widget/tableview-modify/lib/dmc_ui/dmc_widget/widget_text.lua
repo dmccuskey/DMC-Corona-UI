@@ -435,10 +435,11 @@ from text object after creation
 function Text.__getters:width()
 	-- print( 'Text.__getters:width' )
 	local style = self.curr_style
-	local mX = style.marginX*2
+	-- local mX = style.marginX*2
 	local w, t = style.width, self._txtText
 	if w==nil and t then w=t.width end
-	return w+mX
+	-- return w+mX
+	return w
 end
 function Text.__setters:width( value )
 	-- print( 'Text.__setters:width', value )
@@ -530,11 +531,11 @@ function Text:_createText()
 	local w, h = style.width, style.height
 	local text = self._text
 	if w ~= nil then
+		w = w - style.marginX*2
 		text = testTextLength( text, {
 			width=w, font=style.font, fontSize=style.fontSize
 		})
 	end
-
 	o = display.newText{
 		x=0, y=0,
 
@@ -680,15 +681,22 @@ function Text:__commitProperties__()
 
 	if self._textX_dirty then
 		local align = style.align
+		local w = style.width
 		local width = self.width -- use getter, it's smart
 		local offset
 		if align == self.LEFT then
 			txt.anchorX = 0
-			offset = -width*(style.anchorX)+style.marginX
+			offset = -width*(style.anchorX)
+			if w~=nil then
+				offset = offset+style.marginX
+			end
 			txt.x=offset
 		elseif align == self.RIGHT then
 			txt.anchorX = 1
-			offset = width*(1-style.anchorX)-style.marginX
+			offset = width*(1-style.anchorX)
+			if w~=nil then
+				offset = offset-style.marginX
+			end
 			txt.x=offset
 		else
 			txt.anchorX = 0.5

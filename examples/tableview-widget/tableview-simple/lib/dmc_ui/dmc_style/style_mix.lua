@@ -173,6 +173,7 @@ function StyleMix.resetStyle( self, params )
 	self.__curr_style = nil -- <style obj>
 	self.__default_style = nil
 	self.__curr_style_f = nil
+	self.__theme_f = nil -- theme callback
 	self.__styles = {}
 	self.__debug_on = params.debug_on
 end
@@ -221,10 +222,24 @@ function StyleMix.__getters:style()
 end
 function StyleMix.__setters:style( value )
 	-- print( "StyleMix.__setters:style", value, self )
+	if self.__theme_f then
+		StyleMgr:removeEventListener( StyleMgr.EVENT, self.__theme_f )
+		self.__theme_f = nil
+	end
 	if type(value)=='string' then
 		-- get named style from Style Mgr
 		-- will be Style instance or 'nil'
-		value = StyleMgr.getStyle( self.STYLE_TYPE, value )
+		local name = value
+		value = StyleMgr.getStyle( self.STYLE_TYPE, name )
+		if value then
+			local f = function(e)
+				timer.performWithDelay( 1, function()
+					StyleMix.__setters.style( self, name )
+				end)
+			end
+			StyleMgr:addEventListener( StyleMgr.EVENT, f )
+			self.__theme_f = f
+		end
 	end
 	self:setActiveStyle( value )
 end
