@@ -190,15 +190,15 @@ function StyleMgr.addStyle( style )
 	local styles
 
 	if type(sType)~='string' then
-		print( sfmt( "[NOTICE] StyleMgr.addStyle improper TYPE on Style, got '%s'", tostring( type(sType) ) ))
+		pnotice( sfmt( "StyleMgr.addStyle improper TYPE on Style, got '%s'", tostring( type(sType) ) ))
 		return
 	end
 	if type(name)~='string' then
-		print( sfmt( "[NOTICE] StyleMgr.addStyle expected string name, got '%s'", tostring( type(name) ) ))
+		pnotice( sfmt( "StyleMgr.addStyle expected string name, got '%s'", tostring( type(name) ) ))
 		return
 	end
 	if #name==0 then
-		print( sfmt( "[NOTICE] StyleMgr.addStyle name too short '%s'", tostring(name) ))
+		pnotice( sfmt( "StyleMgr.addStyle name too short '%s'", tostring(name) ))
 		return
 	end
 
@@ -209,7 +209,7 @@ function StyleMgr.addStyle( style )
 	end
 
 	if styles[ name ] then
-		print( sfmt( "[NOTICE] StyleMgr.addStyle already have style with name '%s'", name ))
+		pnotice( sfmt( "StyleMgr.addStyle already have style with name '%s'", name ))
 		return
 	end
 

@@ -67,6 +67,7 @@ local ui_find = dmc_ui_func.find
 local AxisMotion = require( ui_find( 'dmc_widget.widget_scrollview.axis_motion' ) )
 local Gesture = require 'dmc_gestures'
 local Objects = require 'dmc_objects'
+local Patch = require 'dmc_patch'
 local ScaleMotion = require( ui_find( 'dmc_widget.widget_scrollview.scale_motion' ) )
 local TouchMgr = require 'dmc_touchmanager'
 local Utils = require 'dmc_utils'
@@ -81,6 +82,8 @@ local Scroller = require( ui_find( 'dmc_widget.widget_scrollview.scroller' ) )
 --====================================================================--
 --== Setup, Constants
 
+
+Patch.addPatch( 'print-output' )
 
 local newClass = Objects.newClass
 
