@@ -321,7 +321,12 @@ end
 --== Private Methods
 
 
--- none
+function RoundedStyle:setFillColor( ... )
+	self.fillColor = {...}
+end
+function RoundedStyle:setStrokeColor( ... )
+	self.strokeColor = {...}
+end
 
 
 
