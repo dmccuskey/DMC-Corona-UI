@@ -65,12 +65,10 @@ local ui_find = dmc_ui_func.find
 
 
 local Objects = require 'dmc_objects'
-local LifecycleMixModule = require 'dmc_lifecycle_mix'
-local StyleMixModule = require( ui_find( 'dmc_style.style_mix' ) )
+
 local uiConst = require( ui_find( 'ui_constants' ) )
 
---== To be set in initialize()
-local dUI = nil
+local WidgetBase = require( ui_find( 'core.widget' ) )
 
 
 
@@ -79,10 +77,9 @@ local dUI = nil
 
 
 local newClass = Objects.newClass
-local ComponentBase = Objects.ComponentBase
 
-local LifecycleMix = LifecycleMixModule.LifecycleMix
-local StyleMix = StyleMixModule.StyleMix
+--== To be set in initialize()
+local dUI = nil
 
 
 
@@ -91,18 +88,11 @@ local StyleMix = StyleMixModule.StyleMix
 --====================================================================--
 
 
-local RoundedView = newClass(
-	{ StyleMix, ComponentBase, LifecycleMix },
-	{name="Rounded Background View"}
-)
+local RoundedView = newClass( WidgetBase, {name="Rounded Background View"} )
 
 --== Class Constants
 
 RoundedView.TYPE = uiConst.ROUNDED
-
-RoundedView.LEFT = 'left'
-RoundedView.CENTER = 'center'
-RoundedView.RIGHT = 'right'
 
 --== Theme Constants
 
@@ -116,10 +106,6 @@ RoundedView.STYLE_TYPE = uiConst.RECTANGLE
 -- 	RoundedView.DEFAULT,
 -- }
 
---== Event Constants
-
-RoundedView.EVENT = 'rounded-background-view-event'
-
 
 --======================================================--
 -- Start: Setup DMC Objects
@@ -129,29 +115,13 @@ RoundedView.EVENT = 'rounded-background-view-event'
 function RoundedView:__init__( params )
 	-- print( "RoundedView:__init__", params )
 	params = params or {}
-	if params.x==nil then params.x=0 end
-	if params.y==nil then params.y=0 end
 
-	self:superCall( LifecycleMix, '__init__', params )
-	self:superCall( ComponentBase, '__init__', params )
-	self:superCall( StyleMix, '__init__', params )
+	self:superCall( '__init__', params )
 	--==--
 
 	--== Create Properties ==--
 
-	-- properties stored in Class
-
-	self._x = params.x
-	self._x_dirty = true
-	self._y = params.y
-	self._y_dirty = true
-
 	-- properties stored in Style
-
-	self._width_dirty=true
-	self._height_dirty=true
-	self._anchorX_dirty=true
-	self._anchorY_dirty=true
 
 	self._cornerRadius_dirty = true
 	self._fillColor_dirty = true
@@ -160,25 +130,23 @@ function RoundedView:__init__( params )
 
 	--== Object References ==--
 
-	self._tmp_style = params.style -- save
-
 	self._rndBg = nil -- our rounded rect object
 
 end
 
+--[[
 function RoundedView:__undoInit__()
 	-- print( "RoundedView:__undoInit__" )
 	--==--
-	self:superCall( StyleMix, '__undoInit__' )
-	self:superCall( ComponentBase, '__undoInit__' )
-	self:superCall( LifecycleMix, '__undoInit__' )
+	self:superCall( '__undoInit__' )
 end
+--]]
 
 --== createView
 
 function RoundedView:__createView__()
 	-- print( "RoundedView:__createView__" )
-	self:superCall( ComponentBase, '__createView__' )
+	self:superCall( '__createView__' )
 	--==--
 	local o = display.newRoundedRect( 0,0,0,0,1 )
 	self:insert( o )
@@ -190,24 +158,24 @@ function RoundedView:__undoCreateView__()
 	self._rndBg:removeSelf()
 	self._rndBg=nil
 	--==--
-	self:superCall( ComponentBase, '__undoCreateView__' )
+	self:superCall( '__undoCreateView__' )
 end
 
 --== initComplete
 
+--[[
 function RoundedView:__initComplete__()
 	-- print( "RoundedView:__initComplete__" )
-	self:superCall( ComponentBase, '__initComplete__' )
+	self:superCall( '__initComplete__' )
 	--==--
-	self.style = self._tmp_style
 end
 
 function RoundedView:__undoInitComplete__()
 	--print( "RoundedView:__undoInitComplete__" )
-	self.style = nil
 	--==--
-	self:superCall( ComponentBase, '__undoInitComplete__' )
+	self:superCall( '__undoInitComplete__' )
 end
+--]]
 
 -- END: Setup DMC Objects
 --======================================================--
@@ -235,35 +203,7 @@ end
 --== Public Methods
 
 
---== X
-
-function RoundedView.__getters:x()
-	return self._x
-end
-function RoundedView.__setters:x( value )
-	-- print( 'RoundedView.__setters:x', value )
-	assert( type(value)=='number' )
-	--==--
-	if self._x == value then return end
-	self._x = value
-	self._x_dirty=true
-	self:__invalidateProperties__()
-end
-
---== Y
-
-function RoundedView.__getters:y()
-	return self._y
-end
-function RoundedView.__setters:y( value )
-	-- print( 'RoundedView.__setters:y', value )
-	assert( type(value)=='number' )
-	--==--
-	if self._y == value then return end
-	self._y = value
-	self._y_dirty=true
-	self:__invalidateProperties__()
-end
+-- none
 
 
 

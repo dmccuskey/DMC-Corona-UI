@@ -65,12 +65,10 @@ local ui_find = dmc_ui_func.find
 
 
 local Objects = require 'dmc_objects'
-local LifecycleMixModule = require 'dmc_lifecycle_mix'
-local StyleMixModule = require( ui_find( 'dmc_style.style_mix' ) )
+
 local uiConst = require( ui_find( 'ui_constants' ) )
 
---== To be set in initialize()
-local dUI = nil
+local WidgetBase = require( ui_find( 'core.widget' ) )
 
 
 
@@ -79,10 +77,9 @@ local dUI = nil
 
 
 local newClass = Objects.newClass
-local ComponentBase = Objects.ComponentBase
 
-local LifecycleMix = LifecycleMixModule.LifecycleMix
-local StyleMix = StyleMixModule.StyleMix
+--== To be set in initialize()
+local dUI = nil
 
 
 
@@ -91,18 +88,18 @@ local StyleMix = StyleMixModule.StyleMix
 --====================================================================--
 
 
-local RectangleView = newClass(
-	{ StyleMix, ComponentBase, LifecycleMix },
-	{ name="Rectangle Background View" }
-)
+--- Rectangle Background View Module.
+--
+-- @classmod Widget.RectangleView
+-- @usage
+-- local dUI = require 'dmc_ui'
+-- local widget = dUI.newText()
+
+local RectangleView = newClass( WidgetBase, {name="Rectangle Background View" } )
 
 --== Class Constants
 
 RectangleView.TYPE = uiConst.RECTANGLE
-
-RectangleView.LEFT = 'left'
-RectangleView.CENTER = 'center'
-RectangleView.RIGHT = 'right'
 
 --== Style/Theme Constants
 
@@ -116,10 +113,6 @@ RectangleView.STYLE_TYPE = uiConst.RECTANGLE
 -- 	RectangleView.DEFAULT,
 -- }
 
---== Event Constants
-
-RectangleView.EVENT = 'rectangle-background-view-event'
-
 
 --======================================================--
 -- Start: Setup DMC Objects
@@ -129,29 +122,13 @@ RectangleView.EVENT = 'rectangle-background-view-event'
 function RectangleView:__init__( params )
 	-- print( "RectangleView:__init__", params )
 	params = params or {}
-	if params.x==nil then params.x=0 end
-	if params.y==nil then params.y=0 end
 
-	self:superCall( LifecycleMix, '__init__', params )
-	self:superCall( ComponentBase, '__init__', params )
-	self:superCall( StyleMix, '__init__', params )
+	self:superCall( '__init__', params )
 	--==--
 
 	--== Create Properties ==--
 
-	-- properties stored in Class
-
-	self._x = params.x
-	self._x_dirty = true
-	self._y = params.y
-	self._y_dirty = true
-
 	-- properties stored in Style
-
-	self._width_dirty=true
-	self._height_dirty=true
-	self._anchorX_dirty=true
-	self._anchorY_dirty=true
 
 	self._fillColor_dirty = true
 	self._strokeColor_dirty=true
@@ -159,29 +136,27 @@ function RectangleView:__init__( params )
 
 	--== Object References ==--
 
-	self._tmp_style = params.style -- save
-
 	self._rectBg = nil -- our rectangle object
 
 end
 
+--[[
 function RectangleView:__undoInit__()
 	-- print( "RectangleView:__undoInit__" )
 	--==--
-	self:superCall( StyleMix, '__undoInit__' )
-	self:superCall( ComponentBase, '__undoInit__' )
-	self:superCall( LifecycleMix, '__undoInit__' )
+	self:superCall( '__undoInit__' )
 end
+--]]
 
 --== createView
 
 function RectangleView:__createView__()
 	-- print( "RectangleView:__createView__" )
-	self:superCall( ComponentBase, '__createView__' )
+	self:superCall( '__createView__' )
 	--==--
 	local o = display.newRect( 0,0,0,0 )
 	o.anchorX, o.anchorY = 0.5, 0.5
-	self:insert( o )
+	self._dgBg:insert( o )
 	self._rectBg = o
 end
 
@@ -190,24 +165,25 @@ function RectangleView:__undoCreateView__()
 	self._rectBg:removeSelf()
 	self._rectBg=nil
 	--==--
-	self:superCall( ComponentBase, '__undoCreateView__' )
+	self:superCall( '__undoCreateView__' )
 end
 
 --== initComplete
 
+--[[
 function RectangleView:__initComplete__()
 	-- print( "RectangleView:__initComplete__" )
-	self:superCall( ComponentBase, '__initComplete__' )
+	self:superCall( '__initComplete__' )
 	--==--
-	self.style = self._tmp_style
 end
 
 function RectangleView:__undoInitComplete__()
 	--print( "RectangleView:__undoInitComplete__" )
 	self.style = nil
 	--==--
-	self:superCall( ComponentBase, '__undoInitComplete__' )
+	self:superCall( '__undoInitComplete__' )
 end
+--]]
 
 -- END: Setup DMC Objects
 --======================================================--
@@ -235,35 +211,7 @@ end
 --== Public Methods
 
 
---== X
-
-function RectangleView.__getters:x()
-	return self._x
-end
-function RectangleView.__setters:x( value )
-	-- print( 'RectangleView.__setters:x', value )
-	assert( type(value)=='number' )
-	--==--
-	if self._x == value then return end
-	self._x = value
-	self._x_dirty=true
-	self:__invalidateProperties__()
-end
-
---== Y
-
-function RectangleView.__getters:y()
-	return self._y
-end
-function RectangleView.__setters:y( value )
-	-- print( 'RectangleView.__setters:y', value )
-	assert( type(value)=='number' )
-	--==--
-	if self._y == value then return end
-	self._y = value
-	self._y_dirty=true
-	self:__invalidateProperties__()
-end
+-- none
 
 
 

@@ -73,10 +73,10 @@ local Rounded = require( ui_find( 'dmc_widget.widget_background.rounded_view' ) 
 --== Setup, Constants
 
 
+local sfmt = string.format
+
 --== To be set in initialize()
 local Widgets = nil
-
-local sfmt = string.format
 
 
 
@@ -96,12 +96,12 @@ end
 
 local function createView( style_type, params )
 	-- print( "ViewFactory.createView", style_type )
-	if style_type==Rectangle.TYPE then
+	if style_type==NineSlice.TYPE then
+		return NineSlice:new( params )
+	elseif style_type==Rectangle.TYPE then
 		return Rectangle:new( params )
 	elseif style_type==Rounded.TYPE then
 		return Rounded:new( params )
-	elseif style_type==NineSlice.TYPE then
-		return NineSlice:new( params )
 	else
 		error( sfmt( "ViewFactory: Unknown style type '%s'", tostring( style_type )))
 	end
@@ -110,12 +110,12 @@ end
 
 local function getViewClass( style_type )
 	-- print( "ViewFactory.getViewClass", style_type )
-	if style_type==Rectangle.TYPE then
+	if style_type==NineSlice.TYPE then
+		return NineSlice
+	elseif style_type==Rectangle.TYPE then
 		return Rectangle
 	elseif style_type==Rounded.TYPE then
 		return Rounded
-	elseif style_type==NineSlice.TYPE then
-		return NineSlice
 	else
 		error( sfmt( "ViewFactory: Unknown style type '%s'", tostring( style_type )))
 	end

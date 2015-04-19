@@ -51,6 +51,7 @@ local VERSION = "0.1.0"
 local dmc_ui_data = _G.__dmc_ui
 local dmc_ui_func = dmc_ui_data.func
 local ui_find = dmc_ui_func.find
+local ui_file = dmc_ui_func.file
 
 
 
@@ -113,7 +114,6 @@ NineSliceStyle._VALID_PROPERTIES = {
 	offsetBottom=true,
 	sheetInfo=true,
 	sheetImage=true,
-
 }
 
 NineSliceStyle._EXCLUDE_PROPERTY_CHECK = nil
@@ -141,9 +141,9 @@ NineSliceStyle._STYLE_DEFAULTS = {
 	offsetTop=0,
 	offsetBottom=0,
 
-	-- @TODO: make path for widget area
-	sheetInfo='{widgetRoot}/dmc_widget/asset/nine_slice/button-sheet.lua',
-	sheetImage='{widgetRoot}/dmc_widget/asset/nine_slice/button-sheet.jpg',
+	-- @TODO: make sprite sheet
+	sheetInfo=ui_find('theme.default.background.nine_slice-sheet'),
+	sheetImage=ui_file('theme/default/background/nice_slice-sheet.jpg'),
 }
 
 NineSliceStyle._TEST_DEFAULTS = {
