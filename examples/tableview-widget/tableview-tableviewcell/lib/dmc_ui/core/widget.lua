@@ -125,8 +125,6 @@ function View:__init__( params )
 	if params.x==nil then params.x=0 end
 	if params.y==nil then params.y=0 end
 	if params.id==nil then params.id='' end
-	if params.width==nil then params.width=dUI.WIDTH end
-	if params.height==nil then params.height=dUI.HEIGHT end
 	if params.autoMask==nil then params.autoMask=false end
 	if params.autoResizeSubViews==nil then params.autoResizeSubViews=true end
 	if params.layoutMargins==nil then params.layoutMargins=uiConst.VIEW_LAYOUT_MARGINS end
@@ -245,10 +243,6 @@ function View:__initComplete__()
 	self.delegate = tmp.delegate
 
 	self.style = tmp.style
-
-	-- do these after style update
-	self.width=tmp.width
-	self.height=tmp.height
 
 	self:_loadViews()
 end

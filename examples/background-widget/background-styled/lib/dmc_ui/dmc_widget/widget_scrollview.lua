@@ -67,6 +67,7 @@ local ui_find = dmc_ui_func.find
 local AxisMotion = require( ui_find( 'dmc_widget.widget_scrollview.axis_motion' ) )
 local Gesture = require 'dmc_gestures'
 local Objects = require 'dmc_objects'
+local Patch = require 'dmc_patch'
 local ScaleMotion = require( ui_find( 'dmc_widget.widget_scrollview.scale_motion' ) )
 local TouchMgr = require 'dmc_touchmanager'
 local Utils = require 'dmc_utils'
@@ -81,6 +82,8 @@ local Scroller = require( ui_find( 'dmc_widget.widget_scrollview.scroller' ) )
 --====================================================================--
 --== Setup, Constants
 
+
+Patch.addPatch( 'print-output' )
 
 local newClass = Objects.newClass
 
@@ -695,7 +698,7 @@ function ScrollView.__setters:scrollWidth( value )
 	-- print( "ScrollView.__setters:scrollWidth", value )
 	assert( type(value)=='number' and value>=0 )
 	--==--
-	local width = self._width
+	local width = self.width
 	if value < width then value=width end
 	if self._scrollWidth==value then return end
 	self._scrollWidth = value
@@ -724,7 +727,7 @@ function ScrollView.__setters:scrollHeight( value )
 	-- print( "ScrollView.__setters:scrollHeight", value )
 	assert( type(value)=='number' and value>=0 )
 	--==--
-	local height = self._height
+	local height = self.height
 	if value < height then value=height end
 	if self._scrollHeight==value then return end
 	self._scrollHeight = value
@@ -736,8 +739,8 @@ end
 
 
 function ScrollView:_calculateMinScale()
-	local scaleW = self._width / self._scrollWidth
-	local scaleH = self._height / self._scrollHeight
+	local scaleW = self.width / self._scrollWidth
+	local scaleH = self.height / self._scrollHeight
 	local minScale = mmin( scaleW, scaleH )
 
 	self._minScale = minScale
@@ -984,7 +987,7 @@ function ScrollView:_createAxisMotionX()
 	self:_removeAxisMotionX()
 	local o = AxisMotion:new{
 		id='x',
-		length=self._width,
+		length=self.width,
 		scrollLength=self._actualScrollW,
 		callback=self._axis_f
 	}
@@ -1005,7 +1008,7 @@ function ScrollView:_createAxisMotionY()
 	self:_removeAxisMotionY()
 	local o = AxisMotion:new{
 		id='y',
-		length=self._height,
+		length=self.height,
 		scrollLength=self._actualScrollH,
 		callback=self._axis_f
 	}
@@ -1091,11 +1094,11 @@ function ScrollView:__commitProperties__()
 
 	if self._width_dirty then
 		-- print("width", self._width)
-		bg.width = self._width
+		bg.width = self.width
 		self._width_dirty=false
 	end
 	if self._height_dirty then
-		bg.height = self._height
+		bg.height = self.height
 		self._height_dirty=false
 	end
 
@@ -1193,11 +1196,13 @@ function ScrollView:__commitProperties__()
 	-- textColor/fillColor
 
 	if self._fillColor_dirty or self._debugOn_dirty then
-		if style.debugOn==true then
+		local debug = style.debugOn
+		if debug==true then
 			bg:setFillColor( 1,0,0,0.2 )
 		else
 			bg:setFillColor( unpack( style.fillColor ))
 		end
+		scr.debugOn = debug
 		self._fillColor_dirty=false
 		self._debugOn_dirty=false
 	end
@@ -1229,7 +1234,7 @@ function ScrollView:stylePropertyChangeHandler( event )
 	local property= event.property
 	local value = event.value
 
-	-- print( "Style Changed", etype, property, value )
+	-- print( "Style Changed", self, etype, property, value )
 
 	if etype==style.STYLE_RESET then
 		self._debugOn_dirty = true

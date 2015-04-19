@@ -115,7 +115,6 @@ RoundedStyle._VALID_PROPERTIES = {
 RoundedStyle._EXCLUDE_PROPERTY_CHECK = nil
 
 RoundedStyle._STYLE_DEFAULTS = {
-	name='rounded-background-default-style',
 	debugOn=false,
 	width=76,
 	height=30,
@@ -322,7 +321,12 @@ end
 --== Private Methods
 
 
--- none
+function RoundedStyle:setFillColor( ... )
+	self.fillColor = {...}
+end
+function RoundedStyle:setStrokeColor( ... )
+	self.strokeColor = {...}
+end
 
 
 

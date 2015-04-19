@@ -70,9 +70,6 @@ local uiConst = require( ui_find( 'ui_constants' ) )
 
 local WidgetBase = require( ui_find( 'core.widget' ) )
 
---== To be set in initialize()
-local dUI = nil
-
 
 
 --====================================================================--
@@ -80,6 +77,10 @@ local dUI = nil
 
 
 local newClass = Objects.newClass
+
+--== To be set in initialize()
+local dUI = nil
+
 
 
 --====================================================================--

@@ -125,8 +125,8 @@ function Widget.initialize( manager, params )
 
 	dUI.newBackground = Widget.newBackground
 	dUI.new9SliceBackground = Widget.new9SliceBackground
-	dUI.newRectangleBackground = Widget.newRoundedBackground
-	dUI.newRoundedBackground = Widget.newRectangleBackground
+	dUI.newRectangleBackground = Widget.newRectangleBackground
+	dUI.newRoundedBackground = Widget.newRoundedBackground
 	dUI.newButton = Widget.newButton
 	dUI.newPushButton = Widget.newPushButton
 	dUI.newRadioButton = Widget.newRadioButton

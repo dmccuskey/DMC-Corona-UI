@@ -279,7 +279,12 @@ end
 --== Public Methods
 
 
--- none
+function RectangleStyle:setFillColor( ... )
+	self.fillColor = {...}
+end
+function RectangleStyle:setStrokeColor( ... )
+	self.strokeColor = {...}
+end
 
 
 

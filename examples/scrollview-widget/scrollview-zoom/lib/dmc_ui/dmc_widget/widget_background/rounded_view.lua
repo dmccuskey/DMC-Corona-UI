@@ -97,7 +97,7 @@ RoundedView.TYPE = uiConst.ROUNDED
 --== Theme Constants
 
 RoundedView.STYLE_CLASS = nil -- added later
-RoundedView.STYLE_TYPE = uiConst.RECTANGLE
+RoundedView.STYLE_TYPE = uiConst.ROUNDED
 
 -- TODO: hook up later
 -- RoundedView.DEFAULT = 'default'

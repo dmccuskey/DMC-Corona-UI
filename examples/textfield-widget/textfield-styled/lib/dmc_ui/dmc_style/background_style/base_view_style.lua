@@ -156,6 +156,12 @@ function ViewStyle.__getters:type()
 end
 
 
+function ViewStyle:setFillColor()
+end
+function ViewStyle:setStrokeColor()
+end
+
+
 
 --====================================================================--
 --== Private Methods

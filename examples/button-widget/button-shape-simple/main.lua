@@ -172,18 +172,19 @@ function run_example2()
 			offsetX=0,
 			offsetY=0,
 
-			label={
-				text="hello",
-				fontColor={1,0,1},
-			},
+			-- label={
+			-- 	text="hello",
+			-- 	fontColor={1,0,1},
+			-- },
 
-			background = {
-			 view={
+			-- background = {
+			--  view={
 
-				}
-			},
+			-- 	}
+			-- },
 
 			inactive = {
+				width=100,
 				label = {
 					align='center',
 					textColor={0,0,0},
@@ -243,6 +244,9 @@ function run_example2()
 		-- btn1.strokeColor={0,0,0}
 
 		btn1.hitMarginY=20
+
+		-- btn1.width=100
+		-- btn1.height=50
 
 		btn1.anchorX=1
 		btn1.anchorY=0

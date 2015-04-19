@@ -76,8 +76,8 @@ function run_example1a()
 	bw1 = dUI.newBackground{}
 	bw1.x, bw1.y = H_CENTER, V_CENTER-50
 
-	bw1:setViewFillColor( 1, 1, 0 )
-	bw1:setViewStrokeColor( 1, 0, 0 )
+	bw1.viewStyle:setFillColor( 1, 1, 0 )
+	bw1.viewStyle:setStrokeColor( 1, 0, 0 )
 	bw1.viewStrokeWidth = 5
 
 	timer.performWithDelay( 1000, function()
@@ -165,8 +165,8 @@ function run_example2()
 		bw2:setAnchor( {0.5,0.5} )
 		bw2:setAnchor( {1,1} )
 		bw2.viewStrokeWidth = 1
-		bw2:setViewFillColor( 1,0,0,1 )
-		bw2:setViewStrokeColor( 0,1,0,1 )
+		bw2.viewStyle:setFillColor( 1,0,0,1 )
+		bw2.viewStyle:setStrokeColor( 0,1,0,1 )
 
 		-- bw2.width=100
 		-- bw2.height=40
@@ -239,8 +239,8 @@ function run_example3()
 		-- bw3:setAnchor( {0.5,0.5})
 		-- bw3:setAnchor( {1,1})
 		-- bw3.viewStrokeWidth = 1
-		bw3:setViewFillColor( 1,0,0,1)
-		bw3:setViewStrokeColor( 0,1,0,1)
+		bw3.viewStyle:setFillColor( 1,0,0,1)
+		bw3.viewStyle:setStrokeColor( 0,1,0,1)
 		bw3.cornerRadius = 20
 
 		-- bw3.width=100
