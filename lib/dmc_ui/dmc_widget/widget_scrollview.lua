@@ -1196,11 +1196,13 @@ function ScrollView:__commitProperties__()
 	-- textColor/fillColor
 
 	if self._fillColor_dirty or self._debugOn_dirty then
-		if style.debugOn==true then
+		local debug = style.debugOn
+		if debug==true then
 			bg:setFillColor( 1,0,0,0.2 )
 		else
 			bg:setFillColor( unpack( style.fillColor ))
 		end
+		scr.debugOn = debug
 		self._fillColor_dirty=false
 		self._debugOn_dirty=false
 	end
@@ -1232,7 +1234,7 @@ function ScrollView:stylePropertyChangeHandler( event )
 	local property= event.property
 	local value = event.value
 
-	-- print( "Style Changed", etype, property, value )
+	-- print( "Style Changed", self, etype, property, value )
 
 	if etype==style.STYLE_RESET then
 		self._debugOn_dirty = true
