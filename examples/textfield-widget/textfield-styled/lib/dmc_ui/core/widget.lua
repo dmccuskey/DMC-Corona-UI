@@ -64,8 +64,8 @@ local ui_find = dmc_ui_func.find
 --== Imports
 
 
-local LuaPatch = require 'lib.dmc_lua.lua_patch'
 local Objects = require 'dmc_objects'
+local Patch = require 'dmc_patch'
 
 local uiConst = require( ui_find( 'ui_constants' ) )
 
@@ -78,7 +78,7 @@ local StyleMixModule = require( ui_find( 'dmc_style.style_mix' ) )
 --== Setup, Constants
 
 
-LuaPatch.addPatch( 'table-pop' )
+Patch.addPatch( 'table-pop' )
 
 local newClass = Objects.newClass
 local ComponentBase = Objects.ComponentBase

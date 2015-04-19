@@ -104,7 +104,7 @@ local function addLuaPatch( input )
 	elseif type(input)=='string' then
 		input = { input }
 	elseif type(input)=='nil' then
-		input = { PATCH_TABLE_POP, PATCH_STRING_FORMAT }
+		input = { PATCH_TABLE_POP, PATCH_STRING_FORMAT, PATCH_PRINT_OUTPUT }
 	else
 		error( sfmt( "Lua Patch:: unknown patch type '%s'", type(input) ) )
 	end
