@@ -56,25 +56,8 @@ local function setupBackground()
 end
 
 
-local function widgetOnPropertyEvent_handler( event )
-	print( 'Main: widgetOnPropertyEvent_handler', event.id, event.phase )
-	local etype= event.type
-	local property= event.property
-	local value = event.value
-
-	print( "Widget Property Changed", etype, property, value )
-
-end
-
-local function widgetEvent_handler( event )
-	print( 'Main: widgetEvent_handler', event.id, event.phase )
-	local etype= event.type
-
-	print( "Widget Event", etype )
-
-end
-
-
+--======================================================--
+-- Button Handlers
 
 local function onPress_handler( event )
 	print( 'Main: onPress_handler: id', event.id )
@@ -99,7 +82,7 @@ setupBackground()
 
 
 --======================================================--
---== Example 1: create textfield widget, default style
+--== Example 1: create button widget, default style
 
 function run_example1()
 
@@ -156,7 +139,7 @@ end
 
 
 --======================================================--
---== Example 2: create textfield widget, default style
+--== Example 2: create button widget, default style
 
 function run_example2()
 

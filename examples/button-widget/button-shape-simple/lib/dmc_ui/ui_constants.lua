@@ -54,6 +54,7 @@ local VERSION = "0.1.0"
 
 
 local PLATFORM = system.getInfo( 'platformName' )
+local MODEL = system.getInfo( 'model' )
 
 
 
@@ -73,6 +74,8 @@ local Constant = {}
 Constant.RUN_MODE = 'run'
 Constant.TEST_MODE = 'test'
 
+Constant.PLATFORM = PLATFORM
+Constant.MODEL = MODEL
 
 
 --====================================================================--
@@ -112,6 +115,7 @@ function Constant.getSystemSeparator()
 		return '\\'
 	end
 end
+
 
 
 --====================================================================--
@@ -199,6 +203,7 @@ Constant.TABLEVIEW_TOUCH_THRESHOLD = 10
 
 Constant.POPOVER = 'popover'
 Constant.POPOVER_PREFERRED_SIZE = {width=320,height=600}
+
 
 
 
