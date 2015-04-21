@@ -67,7 +67,7 @@ setupBackground()
 
 
 --======================================================--
---== create widget, default style
+--== create widget
 
 function run_example1()
 
@@ -122,4 +122,43 @@ function run_example1()
 
 end
 
-run_example1()
+-- run_example1()
+
+
+--======================================================--
+--== shrink and expand
+
+function run_example2()
+
+	local txt1
+
+	txt1 = dUI.newText{
+		text = "hello there Kangaroo !!",
+		style={
+			width=225,
+			height=35,
+
+			align='right',
+			fontSize=13,
+			marginX=5,
+			fillColor={0.5,0,0.25},
+			textColor={1,1,0.5},
+		}
+	}
+	txt1.x, txt1.y = H_CENTER, V_CENTER
+
+	local narrow, wide
+
+	wide = function()
+		transition.to( txt1, {time=2000, width=225, onComplete=narrow} )
+	end
+	narrow = function()
+		transition.to( txt1, {time=2000, width=40, onComplete=wide} )
+	end
+
+	narrow()
+
+end
+
+run_example2()
+
