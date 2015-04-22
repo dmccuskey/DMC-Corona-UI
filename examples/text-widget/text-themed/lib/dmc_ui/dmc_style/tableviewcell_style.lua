@@ -177,7 +177,7 @@ TableViewCell._STYLE_DEFAULTS = {
 			type='rectangle',
 			view={
 				fillColor={1,1,1,1},
-				strokeWidth=1,
+				strokeWidth=0,
 				strokeColor={0,0,0,1},
 			}
 		}
@@ -199,21 +199,21 @@ TableViewCell._STYLE_DEFAULTS = {
 		detailY=22,
 		label={
 			align='left',
-			textColor={0.1,0.1,0.1,1},
+			textColor={0.1,0.4,0.1,1},
 			font=native.systemFontBold,
 			fontSize=11
 		},
 		detail={
 			align='left',
-			textColor={0.6,0.6,0.6,1},
+			textColor={0.6,0.8,0.6,1},
 			font=native.systemFont,
 			fontSize=9
 		},
 		background={
 			type='rectangle',
 			view={
-				fillColor={1,1,1,1},
-				strokeWidth=1,
+				fillColor={0.9,0.9,0.9,1},
+				strokeWidth=0,
 				strokeColor={0,0,0,1},
 			}
 		}
@@ -524,6 +524,7 @@ function TableViewCell:_prepareData( data, dataSrc, params )
 	-- print("TableViewCell:_prepareData", data, self )
 	params = params or {}
 	--==--
+
 	-- local inherit = params.inherit
 	local StyleClass
 	local src, dest, tmp

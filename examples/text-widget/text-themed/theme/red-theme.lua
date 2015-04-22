@@ -20,9 +20,13 @@ local function initializeTheme( Style, Path )
 
 	-- add styles to Theme
 
+	-- https://color.adobe.com/Dark-Sunset-color-theme-2629114
+
 	Theme.addStyle( 'home-text', Style.newTextStyle{
-		textColor='#ff0000',
-		fontSize=40
+		fillColor='#160a47',
+		textColor='#f2671f',
+		font='HelveticaNeue-Bold',
+		fontSize=30
 	})
 
 	-- activating here is optional
