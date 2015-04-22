@@ -113,7 +113,6 @@ RectangleStyle._VALID_PROPERTIES = {
 RectangleStyle._EXCLUDE_PROPERTY_CHECK = nil
 
 RectangleStyle._STYLE_DEFAULTS = {
-	name='rectangle-background-default-style',
 	debugOn=false,
 	width=76,
 	height=30,
@@ -280,7 +279,12 @@ end
 --== Public Methods
 
 
--- none
+function RectangleStyle:setFillColor( ... )
+	self.fillColor = {...}
+end
+function RectangleStyle:setStrokeColor( ... )
+	self.strokeColor = {...}
+end
 
 
 

@@ -127,8 +127,6 @@ Background._DEFAULT_VIEWTYPE = uiConst.DEFAULT_BACKGROUND_TYPE
 function Background:__init__( params )
 	-- print( "Background:__init__", params )
 	params = params or {}
-	if params.x==nil then params.x=0 end
-	if params.y==nil then params.y=0 end
 	if params.viewType==nil then params.viewType=uiConst._DEFAULT_VIEWTYPE end
 
 	self:superCall( '__init__', params )
