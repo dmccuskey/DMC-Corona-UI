@@ -129,6 +129,64 @@ function run_example1a()
 
 end
 
-run_example1a()
+-- run_example1a()
+
+
+
+
+--======================================================--
+--== create 9slice example, width move
+
+function run_example2()
+
+	local bw1
+
+	bw1 = dUI.newPushButton{
+
+		id='9-slice-button',
+		labelText="Press Here for Fun",
+
+		data="your data",
+		onPress=onPress_handler,
+
+		style={
+			anchorX=0.5,
+			anchorY=1,
+			hitMarginX=10,
+			hitMarginY=10,
+			marginX=10,
+
+			inactive = {
+				background = {
+					type=dUI.NINE_SLICE,
+					view = {
+						sheetInfo='asset.image.cloud_button.button-sheet',
+						sheetImage='asset/image/cloud_button/button-sheet.png',
+						offsetLeft=8,
+						offsetRight=7,
+						offsetTop=4,
+						offsetBottom=12,
+					}
+				}
+			}
+		}
+	}
+	bw1.width, bw1.height = 200, 100
+	bw1.x, bw1.y = H_CENTER, V_CENTER+0
+
+	local narrow, wide
+
+	wide = function()
+		transition.to( bw1, {time=2000, width=225, height=100, onComplete=narrow} )
+	end
+	narrow = function()
+		transition.to( bw1, {time=2000, width=60, height=40, onComplete=wide} )
+	end
+
+	narrow()
+
+end
+
+run_example2()
 
 
