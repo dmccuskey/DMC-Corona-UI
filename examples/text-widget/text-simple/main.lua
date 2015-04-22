@@ -29,7 +29,7 @@ local dUI = require 'lib.dmc_ui'
 local W, H = display.contentWidth, display.contentHeight
 local H_CENTER, V_CENTER = W*0.5, H*0.5
 
-
+local mrandom = math.random
 
 --===================================================================--
 -- Support Functions
@@ -56,6 +56,20 @@ local function setupBackground()
 	o.x, o.y = H_CENTER, V_CENTER
 end
 
+
+local function getIter( list, dir, idx )
+	idx = idx or 0
+	dir = dir or 1
+	return function()
+		if idx==#list then
+			dir = -1
+		elseif idx==1 then
+			dir = 1
+		end
+		idx=idx+dir
+		return list[idx]
+	end
+end
 
 
 --===================================================================--
@@ -135,7 +149,7 @@ function run_example2()
 	txt1 = dUI.newText{
 		text = "hello there Kangaroo !!",
 		style={
-			width=225,
+			width=250,
 			height=35,
 
 			align='right',
@@ -145,15 +159,19 @@ function run_example2()
 			textColor={1,1,0.5},
 		}
 	}
-	txt1.x, txt1.y = H_CENTER, V_CENTER
+	txt1.x, txt1.y = H_CENTER, V_CENTER-75
 
-	local narrow, wide
+	local narrow, wide, pause
+
+	pause = function( f )
+		timer.performWithDelay( 1000, f )
+	end
 
 	wide = function()
-		transition.to( txt1, {time=2000, width=225, onComplete=narrow} )
+		transition.to( txt1, {time=2000, width=250, onComplete=function() pause(narrow) end } )
 	end
 	narrow = function()
-		transition.to( txt1, {time=2000, width=40, onComplete=wide} )
+		transition.to( txt1, {time=2000, width=40, onComplete=function() pause(wide) end } )
 	end
 
 	narrow()
@@ -161,4 +179,100 @@ function run_example2()
 end
 
 run_example2()
+
+
+
+--======================================================--
+--== shrink and expand
+
+function run_example3()
+
+	local txt1
+	local maxW, minW = 250, 80
+	local maxT, minT = 3000, 1000
+
+	local narrow, wide, pause
+	local chooseAnchor, chooseAlign
+	local chooseFont, chooseColor
+	local fontNames = native.getFontNames()
+
+	local anchorIter = getIter( {
+			{ 0, H_CENTER-maxW*0.5 },
+			{ 0.5, H_CENTER },
+			{ 1, H_CENTER+maxW*0.5 }
+		} )
+	local sizeIter = getIter( { 12, 16, 20, 24, 30 } )
+	local alignIter = getIter(  {'left','center','right'} )
+	local fillIter = getIter( {
+		'#ebe3e0','#edd5d1','#e3d6c6','#dde0cd','#f9a646',
+		'#fff2e7','#d0cabf', '#f0f0f0','#92dce0'
+	})
+	local textIter = getIter( {
+		'#393939','#ff5a09','#f3843e','#ff9900','#e9bc1b',
+		'#e05151','#75a3d1','#0092d7','#57102c','#b08b0d'
+	})
+
+	chooseAnchor = function(o)
+		local v = anchorIter()
+		o.anchorX = v[1]
+		o.x = v[2]
+	end
+	chooseAlign = function(o)
+		o.align = alignIter()
+	end
+	chooseFont = function(o)
+		o.font = fontNames[mrandom(#fontNames)]
+		o.fontSize = sizeIter()
+	end
+	chooseColor = function(o)
+		local s = { 16, 20, 24, 30 }
+		local font = fontNames[mrandom(#fontNames)]
+		local fontSize =s[mrandom(#s)]
+		o:setTextColor( textIter() )
+		o:setFillColor( fillIter() )
+	end
+
+	txt1 = dUI.newText{
+		text = "Marsupial Madness",
+		style={
+			width=maxW,
+			-- height=35,
+
+			align=alignIter(),
+			fontSize=sizeIter(),
+			marginX=5,
+			fillColor={0.5,0,0.25},
+			textColor={1,1,0.5},
+		}
+	}
+	txt1.x, txt1.y = H_CENTER, V_CENTER+75
+
+	pause = function( f )
+		timer.performWithDelay( minT, f )
+	end
+
+	wide = function()
+		transition.to( txt1, {time=maxT, width=maxW, onComplete=function()
+			chooseAnchor(txt1)
+			chooseFont(txt1)
+			pause(narrow)
+		end } )
+	end
+	narrow = function()
+		transition.to( txt1, {time=maxT, width=minW, onComplete=function()
+			chooseAlign(txt1)
+			pause(wide)
+		end } )
+	end
+
+	timer.performWithDelay( minT/2, function()
+		chooseColor(txt1)
+		chooseFont(txt1)
+	end, 0 )
+
+	narrow()
+
+end
+
+run_example3()
 
