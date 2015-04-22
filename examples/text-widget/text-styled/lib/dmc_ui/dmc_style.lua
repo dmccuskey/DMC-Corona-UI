@@ -147,6 +147,7 @@ function Style.initialize( manager, params )
 	dUI.newRectangleBackgroundStyle = Style.newRectangleBackgroundStyle
 	dUI.newRoundedBackgroundStyle = Style.newRoundedBackgroundStyle
 	dUI.newTableViewStyle = Style.newTableViewStyle
+	dUI.newTableViewCellStyle = Style.newTableViewCellStyle
 	dUI.newTextFieldStyle = Style.newTextFieldStyle
 	dUI.newTextStyle = Style.newTextStyle
 
@@ -231,7 +232,7 @@ function Style.newBackgroundStyle( style_info, params )
 end
 
 function Style.newNineSliceBackgroundStyle( style_info, params )
-	print("Style.newNineSliceBackgroundStyle")
+	-- print("Style.newNineSliceBackgroundStyle")
 	style_info = style_info or {}
 	params = params or {}
 	--==--
@@ -453,7 +454,7 @@ end
 
 
 --======================================================--
--- newTableViewCell Support
+-- newTableViewCellStyle Support
 
 function Style.loadTableViewCellStyleSupport( params )
 	-- print( "Style.loadTableViewCellStyleSupport" )
@@ -490,8 +491,8 @@ function Style.loadTableViewCellStyleSupport( params )
 	)
 end
 
-function Style.newTableViewCell( style_info, params )
-	-- print( "Style.newTableViewCell" )
+function Style.newTableViewCellStyle( style_info, params )
+	-- print( "Style.newTableViewCellStyle" )
 	style_info = style_info or {}
 	params = params or {}
 	--==--
