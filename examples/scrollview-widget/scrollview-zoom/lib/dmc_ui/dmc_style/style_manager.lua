@@ -229,7 +229,15 @@ function StyleMgr.getStyle( style, name )
 		assert( type(style.TYPE)=='string', sfmt("StyleMgr:getStyle arg 'name' must be a string, got '%s'", tostring(name) ) )
 		sType = style.TYPE
 	end
-	local collection = StyleMgr._activeTheme.style[ sType ] or {}
+	-- look for style in theme collection or style collection
+	local cType, collection
+	if StyleMgr._activeTheme then
+		cType = StyleMgr._activeTheme.style[ sType ]
+	end
+	if not cType then
+		cType = StyleMgr._style[ sType ]
+	end
+	collection = cType or {}
 	return collection[ name ]
 end
 
@@ -434,6 +442,11 @@ function StyleMgr._addThemeStyle( struct, style, name )
 	local sType = style.TYPE
 	local styles = struct.style
 	local collection = styles[sType]
+	if not collection then
+		-- need to create container for this style TYPE
+		collection = {}
+		styles[ sType ] = collection
+	end
 	collection[ name ] = style
 end
 
