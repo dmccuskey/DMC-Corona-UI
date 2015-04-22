@@ -40,10 +40,11 @@ local tremove = table.remove
 local tstr = tostring
 
 local OFFSET = 100
-local DIMS = {w=200,h=30} -- dimensions of a row item
-local SHOW = 10 -- how many items to display (for masking)
+local DIMS = {w=280,h=30} -- dimensions of a row item
+local SHOW = 14 -- how many items to display (for masking)
 
 local tableData = nil -- later
+local tableStyle = nil
 
 local cellCache = {}
 
@@ -156,7 +157,7 @@ local function onRender( self, event )
 		tc = tremove( cellCache, 1 )
 		tc.isVisible = true
 	else
-		tc = dUI.newTableViewCell{ width=w, height=h }
+		tc = dUI.newTableViewCell{ width=w, height=h, style=tableStyle }
 	end
 
 	tc.textLabel.text = rowData.title
@@ -235,6 +236,20 @@ end
 
 tableData = createDataArray()
 
+tableStyle = dUI.newTableViewCellStyle{
+	width=DIMS.w,
+	inactive={
+		background={
+			type='rectangle'
+		}
+	},
+	active={
+		background={
+			type='rectangle'
+		}
+	}
+}
+
 -- setup tableview delegate/datasource helpers
 
 local delegate = {
@@ -259,7 +274,7 @@ local tV = dUI.newTableView{
 	estimatedRowHeight=DIMS.h,
 	autoMask=true
 }
-tV.x, tV.y = OFFSET*0.5, OFFSET*0.5+50
+tV.x, tV.y = H_CENTER-DIMS.w*0.5, V_CENTER-(DIMS.h*SHOW)*0.5
 
 tV:addEventListener( tV.EVENT, onEvent )
 
