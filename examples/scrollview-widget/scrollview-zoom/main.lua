@@ -117,7 +117,7 @@ local widget = dUI.newScrollView{
 }
 widget.x, widget.y = H_CENTER-w/2, V_CENTER-h/2
 
-widget.minimumZoom=0.1
+widget.minimumZoom=0.2
 widget.maximumZoom=1
 
 
@@ -138,7 +138,7 @@ tdelay( 500, function()
 	local function callback()
 		print( "here in motion callback" )
 	end
-	widget:setZoomScale( 0.9 )
+	widget:setZoomScale( 0.5 )
 	-- widget:setContentPosition{
 	-- 	-- x=-40, y=0, onComplete=callback
 	-- }
