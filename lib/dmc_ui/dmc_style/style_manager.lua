@@ -229,7 +229,15 @@ function StyleMgr.getStyle( style, name )
 		assert( type(style.TYPE)=='string', sfmt("StyleMgr:getStyle arg 'name' must be a string, got '%s'", tostring(name) ) )
 		sType = style.TYPE
 	end
-	local collection = StyleMgr._activeTheme.style[ sType ] or {}
+	-- look for style in theme collection or style collection
+	local cType, collection
+	if StyleMgr._activeTheme then
+		cType = StyleMgr._activeTheme.style[ sType ]
+	end
+	if not cType then
+		cType = StyleMgr._style[ sType ]
+	end
+	collection = cType or {}
 	return collection[ name ]
 end
 
