@@ -44,7 +44,7 @@ local function setupBackground()
 	local o
 
 	o = display.newRect(0,0,W,H)
-	o:setFillColor(0.5,0.5,0.5)
+	o:setFillColor(1,1,1)
 	o.x, o.y = H_CENTER, V_CENTER
 
 	o = display.newRect(0,0,width+4,height+4)
@@ -232,7 +232,7 @@ function run_example2()
 
 end
 
-run_example2()
+-- run_example2()
 
 
 
@@ -489,4 +489,95 @@ function run_example4()
 end
 
 -- run_example4()
+
+
+
+
+function run_example5()
+
+	local w1, w2, w3
+
+
+	w1 = dUI.newTextField{
+		text="",
+		hintText="Username:",
+		style = {
+			width=270,
+			height=40,
+			marginX=10,
+			align='left',
+			fontSize=16,
+			textColor='#663366',
+			font='Optima-Italic',
+			background={
+				type='9-slice',
+				view={
+					sheetInfo='asset.textfield-pink-sheet',
+					sheetImage='asset/textfield-pink-sheet.png',
+				}
+			},
+			display={
+				font='Optima-Bold',
+			}
+
+		}
+	}
+	w1.x, w1.y = H_CENTER, V_CENTER-150
+
+	w2 = dUI.newTextField{
+		text="",
+		hintText="Email",
+		style = {
+			width=280,
+			marginX=15,
+			height=45,
+			fontSize=16,
+			align='left',
+			background={
+				type='9-slice',
+				view={
+					sheetInfo='asset.textfield-nice-sheet',
+					sheetImage='asset/textfield-nice-sheet.png',
+				}
+			},
+			hint={
+				align='right',
+				textColor='#999999',
+			},
+			display={
+				align='left',
+				textColor='#444444',
+			}
+		}
+	}
+	w2.x, w2.y = H_CENTER, V_CENTER-90
+
+
+	w3 = dUI.newTextField{
+		text="",
+		hintText="Address",
+	}
+	w3.x, w3.y = H_CENTER, V_CENTER
+
+
+
+	local narrow, wide, pause
+
+	pause = function( f )
+		timer.performWithDelay( 1000, f )
+	end
+
+	wide = function()
+		transition.to( w1, {time=3000, width=270, onComplete=function() pause(narrow) end } )
+	end
+	narrow = function()
+		transition.to( w1, {time=3000, width=60, onComplete=function() pause(wide) end} )
+	end
+
+	narrow()
+
+
+end
+
+run_example5()
 

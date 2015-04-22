@@ -143,7 +143,7 @@ TextFieldStyle._STYLE_DEFAULTS = {
 	inputType='default',
 	isHitActive=true,
 	isSecure=false,
-	marginX=10,
+	marginX=15,
 	marginY=5,
 	returnKey='done',
 
@@ -172,7 +172,7 @@ TextFieldStyle._STYLE_DEFAULTS = {
 		fillColor={0,0,0,0},
 		font=native.systemFont,
 		fontSize=18,
-		marginX=15,
+		-- marginX=15,
 		textColor={0.3,0.3,0.3,1},
 	},
 	display={
@@ -187,7 +187,7 @@ TextFieldStyle._STYLE_DEFAULTS = {
 		fillColor={0,0,0,0},
 		font=native.systemFont,
 		fontSize=18,
-		marginX=15,
+		-- marginX=15,
 		textColor={0.1,0.1,0.1,1},
 	},
 
