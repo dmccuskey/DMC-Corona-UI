@@ -66,7 +66,9 @@ local ui_find = dmc_ui_func.find
 
 local Kolor = require 'dmc_kolor'
 local Objects = require 'dmc_objects'
+local Patch = require 'dmc_patch'
 local Utils = require 'dmc_utils'
+
 local uiConst = require( ui_find( 'ui_constants' ) )
 
 
@@ -74,6 +76,8 @@ local uiConst = require( ui_find( 'ui_constants' ) )
 --====================================================================--
 --== Setup, Constants
 
+
+Patch.addPatch( 'print-output' )
 
 local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
@@ -1129,8 +1133,8 @@ function BaseStyle:_parseData( data )
 	for prop, value in pairs( data ) do
 		-- print( prop, value )
 		if DEF[ prop ]==nil and not EXCL[ prop ] then
-			print( sfmt("[WARNING] Skipping invalid style property '%s'", tostring(prop) ))
-			print( sfmt("[WARNING] located in style definition for '%s'", tostring(self.NAME) ))
+			pnotice( sfmt("Skipping invalid style property '%s'", tostring(prop)), {newline=false})
+			pnotice( sfmt("located in style definition for '%s'", tostring(self.NAME)), {newline=false})
 		end
 		if not self:isChild( prop ) then
 			self[ prop ]=value

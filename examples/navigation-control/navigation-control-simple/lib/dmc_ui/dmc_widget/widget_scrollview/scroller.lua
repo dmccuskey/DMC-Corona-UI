@@ -150,6 +150,21 @@ end
 --======================================================--
 
 
+
+--====================================================================--
+--== Public Methods
+
+
+function Scroller.__setters:debugOn( value )
+	-- print( "Scroller.__setters:debugOn" )
+	if value then
+		self._rectBg:setFillColor( 1,1,1,0.1 )
+	else
+		self._rectBg:setFillColor( 0,0,0,0 )
+	end
+end
+
+
 function Scroller.__getters:width()
 	-- print( "Scroller.__getters:width" )
 	return self._width
