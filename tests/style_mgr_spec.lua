@@ -285,10 +285,9 @@ function test_addStyleToTheme()
 	local t1, tId
 
 	tId = 'red-theme'
-	t1 = dUI.createTheme{
-		id = tId,
+	t1 = dUI.createTheme( tId, {
 		name='Red Theme',
-	}
+	})
 
 	n1 = 'home-background-style'
 	s1 = dUI.newRoundedBackgroundStyle{
@@ -299,7 +298,7 @@ function test_addStyleToTheme()
 		}
 	}
 
-	dUI.addThemeStyle( tId, s1, n1 )
+	t1.addStyle( n1, s1 )
 
 end
 
