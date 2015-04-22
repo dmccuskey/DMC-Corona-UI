@@ -442,6 +442,11 @@ function StyleMgr._addThemeStyle( struct, style, name )
 	local sType = style.TYPE
 	local styles = struct.style
 	local collection = styles[sType]
+	if not collection then
+		-- need to create container for this style TYPE
+		collection = {}
+		styles[ sType ] = collection
+	end
 	collection[ name ] = style
 end
 
