@@ -1,1 +1,5 @@
+# hide any generated files from Snakemake 
 .snakemake
+
+# hide generated doc files
+docs/*
