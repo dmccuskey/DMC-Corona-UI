@@ -177,6 +177,9 @@ function ScrollView:__init__( params )
 
 	-- properties in this class
 
+	self._width = params.width
+	self._height = params.height
+
 	self._contentPosition = {x=0,y=0}
 	self._contentPosition_dirty=true
 
@@ -385,6 +388,33 @@ function ScrollView.initialize( manager, params )
 
 	Style.registerWidget( ScrollView )
 end
+
+
+
+
+--== width
+
+function ScrollView.__getters:width()
+	-- print( 'StyleMix.__getters:width' )
+	return self._width
+end
+function ScrollView.__setters:width( value )
+	-- print( 'StyleMix.__setters:width', value )
+	self._width = value
+end
+
+--== height
+
+function ScrollView.__getters:height()
+	-- print( 'StyleMix.__getters:height' )
+	return self._height
+end
+function ScrollView.__setters:height( value )
+	-- print( 'StyleMix.__setters:height', value )
+	self._height = value
+end
+
+
 
 
 
