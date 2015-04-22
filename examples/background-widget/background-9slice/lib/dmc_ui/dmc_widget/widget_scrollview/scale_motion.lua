@@ -143,7 +143,7 @@ function ScaleMotion:__init__( params )
 	params = params or {}
 	if params.bounceIsActive==nil then params.bounceIsActive = true end
 	if params.zoomScale==nil then params.zoomScale=1.0 end
-	if params.zoomBackLimit==nil then params.zoomBackLimit = 0.2 end
+	if params.zoomBackLimit==nil then params.zoomBackLimit = 0.8 end
 
 	self:superCall( '__init__', params )
 	--==--
@@ -276,6 +276,7 @@ end
 
 
 function ScaleMotion.__setters:zoomBackLimit( value )
+	-- print("ScaleMotion.__setters:zoomBackLimit", value)
 	assert( type(value)=='number' )
 	--==--
 	self._zoomBackLimit = value
@@ -403,7 +404,7 @@ function ScaleMotion:_constrainScale( value, delta )
 	-- print( "ScaleMotion:_constrainScale", value, delta )
 	local isBounceActive = self._bounceIsActive
 	local LIMIT = self._zoomBackLimit
-	local scaleLimit, calcs, factor, newVal
+	local scaleLimit, calcs, factor, newVal, s
 
 	newVal = value + delta
 	calcs = self:_checkScaleBounds( newVal )
@@ -413,7 +414,8 @@ function ScaleMotion:_constrainScale( value, delta )
 		if not isBounceActive then
 			newVal=calcs.max
 		else
-			factor = 1 - (newVal/(self._maxZoom+LIMIT))
+			local s = self._maxZoom/LIMIT
+			factor = 1 - (newVal/s)
 			if factor < 0 then factor = 0 end
 			newVal = value + ( delta * factor )
 			self:_checkScaleBounds( newVal )
@@ -423,7 +425,8 @@ function ScaleMotion:_constrainScale( value, delta )
 		if not isBounceActive then
 			newVal=calcs.min
 		else
-			factor = 1 - ((self._minZoom-LIMIT)/newVal)
+			s = self._minZoom*LIMIT
+			factor = 1 - (s/newVal)
 			if factor < 0 then factor = 0 end
 			newVal = value + ( delta * factor )
 			self:_checkScaleBounds( newVal )

@@ -216,8 +216,6 @@ TableViewCell.EVENT = 'tableviewcell-widget-event'
 function TableViewCell:__init__( params )
 	-- print( "TableViewCell:__init__", params )
 	params = params or {}
-	if params.x==nil then params.x=0 end
-	if params.y==nil then params.y=0 end
 	if params.labelText==nil then params.labelText="" end
 	if params.detailText==nil then params.detailText="" end
 
@@ -264,9 +262,10 @@ function TableViewCell:__init__( params )
 	self._textDetailY_dirty=true
 	self._textDetailWidth_dirty=true
 
-	--== Object References ==--
+	self._widgetStyle_dirty=true
+	self._wgtBgStyle_dirty=true
 
-	self._tmp_style = params.style -- save
+	--== Object References ==--
 
 	self._wgtTextLabel = nil -- text widget (for both hint and value display)
 	self._wgtTextLabel_f = nil -- widget handler
@@ -278,7 +277,8 @@ function TableViewCell:__init__( params )
 
 	-- @TODO: add background object
 
-	self._rectBg = nil -- our background object
+	self._wgtBg = nil -- background widget
+	self._wgtBg_dirty=true
 
 end
 
@@ -293,23 +293,19 @@ end
 
 --== createView
 
+--[[
 function TableViewCell:__createView__()
 	-- print( "TableViewCell:__createView__" )
 	self:superCall( '__createView__' )
 	--==--
-	local o = display.newRect( 0,0,0,0 )
-	o.anchorX, o.anchorY = 0.5, 0.5
-	self._dgBg:insert( o )
-	self._rectBg = o
 end
 
 function TableViewCell:__undoCreateView__()
 	-- print( "TableViewCell:__undoCreateView__" )
-	self._rectBg:removeSelf()
-	self._rectBg=nil
 	--==--
 	self:superCall( '__undoCreateView__' )
 end
+--]]
 
 
 --== initComplete
@@ -320,13 +316,15 @@ function TableViewCell:__initComplete__()
 	--==--
 	self:_createTextLabel()
 	self:_createTextDetail()
+
 	self:setAnchor( self.TopLeftReferencePoint )
 end
 
 function TableViewCell:__undoInitComplete__()
 	--print( "TableViewCell:__undoInitComplete__" )
 	self:_removeTextLabel()
-
+	self:_removeTextDetail()
+	self:_removeBackground()
 	--==--
 	self:superCall( '__undoInitComplete__' )
 end
@@ -497,8 +495,33 @@ end
 
 
 
+--======================================================--
+-- Theme Methods
+
+-- afterAddStyle()
+--
+function TableViewCell:afterAddStyle()
+	-- print( "TableViewCell:afterAddStyle", self )
+	self._widgetStyle_dirty=true
+	self:__invalidateProperties__()
+end
+
+-- beforeRemoveStyle()
+--
+function TableViewCell:beforeRemoveStyle()
+	-- print( "TableViewCell:beforeRemoveStyle", self )
+	self._widgetStyle_dirty=true
+	self:__invalidateProperties__()
+end
+
+
+
+
+
+
 --====================================================================--
 --== Private Methods
+
 
 
 function TableViewCell:_removeAccessory( obj )
@@ -516,6 +539,35 @@ function TableViewCell:_loadAccessory( name, obj )
 	local img = display.newImageRect( info.file, info.w*scale, info.h*scale )
 	return img
 end
+
+
+--== Create/Destroy Background Widget
+
+function TableViewCell:_removeBackground()
+	-- print( "TableViewCell:_removeBackground" )
+	local o = self._wgtBg
+	if not o then return end
+	o:removeSelf()
+	self._wgtBg = nil
+end
+
+function TableViewCell:_createBackground()
+	-- print( "TableViewCell:_createBackground" )
+
+	self:_removeBackground()
+
+	local o = Widget.newBackground{
+		defaultStyle = self.defaultStyle.background
+	}
+	self._dgBg:insert( o.view )
+	self._wgtBg = o
+
+	--== Reset properties
+
+	self._wgtBgStyle_dirty=true
+end
+
+
 
 
 function TableViewCell:_removeTextDetail()
@@ -584,14 +636,22 @@ end
 function TableViewCell:__commitProperties__()
 	-- print( 'TableViewCell:__commitProperties__' )
 
+	--== Update Widget Components ==--
+
+	if self._wgtBg_dirty then
+		self:_createBackground()
+		self._wgtBg_dirty = false
+	end
+
+
 	local view = self.view
-	local bg = self._rectBg
+	local bg = self._wgtBg
 	local imageView = self._imageView
 	local textLabel = self._wgtTextLabel
 	local textDetail = self._wgtTextDetail
 
-	local height = self._height
-	local width = self._width
+	local height = self.height
+	local width = self.width
 
 	--== position sensitive
 
@@ -605,7 +665,7 @@ function TableViewCell:__commitProperties__()
 		end
 		textLabel:setActiveStyle( style.label, {copy=false} )
 		textDetail:setActiveStyle( style.detail, {copy=false} )
-		-- bg:setActiveStyle( style.background, {copy=false} )
+		bg:setActiveStyle( style.background, {copy=false} )
 		self._activeStateStyle = style
 		self._highlightIsActive_dirty=false
 
@@ -635,7 +695,6 @@ function TableViewCell:__commitProperties__()
 	end
 
 	if self._width_dirty then
-		bg.width = self._width
 		self._width_dirty=false
 
 		self._rectBgWidth_dirty=true
@@ -643,7 +702,6 @@ function TableViewCell:__commitProperties__()
 		self._textDetailWidth_dirty=true
 	end
 	if self._height_dirty then
-		bg.height = self._height
 		self._height_dirty=false
 
 		self._anchorY_dirty=true
@@ -653,14 +711,14 @@ function TableViewCell:__commitProperties__()
 	-- anchorX/anchorY
 
 	if self._anchorX_dirty then
-		bg.anchorX = style.anchorX
+		-- bg.anchorX = style.anchorX
 		self._anchorX_dirty=false
 
 		self._x_dirty=true
 		self._textLabelX_dirty=true
 	end
 	if self._anchorY_dirty then
-		bg.anchorY = style.anchorY
+		-- bg.anchorY = style.anchorY
 		self._anchorY_dirty=false
 
 		self._y_dirty=true
@@ -668,6 +726,12 @@ function TableViewCell:__commitProperties__()
 	end
 
 	-- Virtual
+
+	if self._widgetStyle_dirty then
+		self._widgetStyle_dirty=false
+
+		self._wgtBgStyle_dirty=true
+	end
 
 	if self._cellMargin_dirty then
 		self._cellMargin_dirty=false
@@ -694,6 +758,14 @@ function TableViewCell:__commitProperties__()
 		self._textDetailX_dirty=true
 		self._accessoryX_dirty=true
 	end
+
+	--== Set Styles
+
+	if self._wgtBgStyle_dirty then
+		-- bg:setActiveStyle( style.inactive.background, {copy=false} )
+		self._wgtBgStyle_dirty=false
+	end
+
 
 	-- bg width/height
 
@@ -745,7 +817,7 @@ function TableViewCell:__commitProperties__()
 	-- imageViewX
 
 	if self._imageViewX_dirty and imageView then
-		local height = self._height -- use getter
+		local height = self.height -- use getter
 		local offset = height/2
 		imageView.x = cellMargin
 		imageView.y = offset
@@ -816,9 +888,9 @@ function TableViewCell:__commitProperties__()
 
 	if self._debugOn_dirty then
 		if style.debugOn==true then
-			bg:setFillColor( 1,0,0,0.2 )
+			-- bg:setFillColor( 1,0,0,0.2 )
 		else
-			bg:setFillColor( 0,0,0,0 )
+			-- bg:setFillColor( 0,0,0,0 )
 		end
 		self._fillColor_dirty=false
 		self._debugOn_dirty=false
