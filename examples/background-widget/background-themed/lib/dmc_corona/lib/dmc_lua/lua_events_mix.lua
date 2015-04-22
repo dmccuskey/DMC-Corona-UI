@@ -50,6 +50,8 @@ local VERSION = "0.2.2"
 local Events
 local Utils = {} -- make copying from Utils easier
 
+local sfmt = string.format
+
 
 
 --====================================================================--
@@ -134,6 +136,8 @@ local function _patch( obj )
 
 	obj.setDebug = Events.setDebug
 	obj.setEventFunc = Events.setEventFunc
+
+	obj._dispatchEvent = Events._dispatchEvent
 
 	return obj
 end
@@ -229,7 +233,9 @@ end
 -- addEventListener()
 --
 function Events.addEventListener( self, e_name, listener )
-	-- print( "Events.addEventListener", e_name, listener );
+	-- print( "Events.addEventListener", e_name, listener )
+	assert( type(e_name)=='string', sfmt( "Events.addEventListener event name should be a string, received '%s'", tostring(e_name)) )
+	assert( type(listener)=='function' or type(listener)=='table', sfmt( "Events.addEventListener callback should be function or object, received '%s'", tostring(listener) ))
 
 	-- Sanity Check
 
