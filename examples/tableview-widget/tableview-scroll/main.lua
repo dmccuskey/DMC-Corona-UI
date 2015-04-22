@@ -33,8 +33,8 @@ local tinsert = table.insert
 local tremove = table.remove
 
 local OFFSET = 100
-local DIMS = {w=200,h=30} -- dimensions of a row item
-local SHOW = 10 -- how many items to display (for masking)
+local DIMS = {w=280,h=30} -- dimensions of a row item
+local SHOW = 14 -- how many items to display (for masking)
 
 local tableData = nil -- later
 
@@ -60,7 +60,7 @@ end
 --
 local function createDataArray()
 	local list = {}
-	for i = 1, 100000 do
+	for i = 1, 250000 do
 		local row_template = createRowStructure( i )
 		tinsert( list, row_template )
 	end
@@ -136,7 +136,7 @@ local tV = dUI.newTableView{
 	estimatedRowHeight=DIMS.h,
 	autoMask=true
 }
-tV.x, tV.y = OFFSET*0.5, OFFSET*0.5+50
+tV.x, tV.y = H_CENTER-DIMS.w*0.5, V_CENTER-(DIMS.h*SHOW)*0.5
 
 tV:reloadData()
 
@@ -157,7 +157,7 @@ tV:reloadData()
 
 timer.performWithDelay( 1500, function()
 	-- delete table row
-	local index = 49000
-	tV:scrollToRowAt( index, {position='top', time=1000} )
+	local index = 179431
+	tV:scrollToRowAt( index, {position='middle', time=3000} )
 end)
 
