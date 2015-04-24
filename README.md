@@ -94,12 +94,10 @@ The library has been designed to give a lot of flexibility where it is stored in
 ## Current Controls ##
 
 
-* TextField
+* Navigation Control
 
-  No-fuss, all action text input widget.
-
-  Advanced widget for slide carousels.
-
+  Builds on NavBar to deliver precise page navigation.
+  
 
 
 ## License ##
