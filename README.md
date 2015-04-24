@@ -14,8 +14,8 @@ There are examples and documentation available for the modules. Look in the `exa
 
 If you have questions or comments you can either (preferred order):
 * send me an email: corona-lib at davidmccuskey com
-* send a PM @ coronalabs.com: @dmccuskey
 * post an issue here on github
+* send a PM @ coronalabs.com: @dmccuskey
 * post to the Corona forums: http://forums.coronalabs.com
 
 
