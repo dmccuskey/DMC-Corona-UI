@@ -14,8 +14,8 @@ There are examples and documentation available for the modules. Look in the `exa
 
 If you have questions or comments you can either (preferred order):
 * send me an email: corona-lib at davidmccuskey com
-* send a PM @ coronalabs.com: @dmccuskey
 * post an issue here on github
+* send a PM @ coronalabs.com: @dmccuskey
 * post to the Corona forums: http://forums.coronalabs.com
 
 
@@ -32,10 +32,10 @@ For easy installation, copy the following items to the same location anywhere in
 
 * The entire `dmc_corona` folder
 * The entire `dmc_ui` folder
-* `dmc_widgets.lua`
+* The `dmc_ui.lua` file
 
 
-If you placed both items at the root-level, the widgets module would be imported like so:
+As in the examples, if you placed both items inside of a directory `lib`, the widgets module would be imported like so:
 
 ```lua
 local dUI = require 'lib.dmc_ui'
@@ -45,7 +45,7 @@ local button = dUI.newPushButton( params )
 ```
 
 
-The library has been designed to give a lot of flexibility where it is stored in your project. For more information regarding the library and individual widgets, visit [DMC Corona Widgets](http://docs.davidmccuskey.com/dmc+corona+ui).
+The library has been designed to give a lot of flexibility where it is stored in your project. For more information regarding the library and individual widgets, visit [DMC Corona UI](http://docs.davidmccuskey.com/dmc+corona+ui).
 
 
 
@@ -94,12 +94,10 @@ The library has been designed to give a lot of flexibility where it is stored in
 ## Current Controls ##
 
 
-* TextField
+* Navigation Control
 
-  No-fuss, all action text input widget.
-
-  Advanced widget for slide carousels.
-
+  Builds on NavBar to deliver precise page navigation.
+  
 
 
 ## License ##
