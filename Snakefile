@@ -1,13 +1,13 @@
-# DMC-Corona-Widgets
+# DMC-Corona-UI
 
 try:
 	if not gSTARTED: print( gSTARTED )
 except:
-	MODULE = "DMC-Corona-Widgets"
-	include: "../DMC-Corona-Widgets/snakemake/Snakefile"
+	MODULE = "DMC-Corona-UI"
+	include: "../DMC-Corona-UI/snakemake/Snakefile"
 
 module_config = {
-	"name": "DMC-Corona-Widgets",
+	"name": "DMC-Corona-UI",
 	"module": {
 		"dir": "lib",
 		"files": [
@@ -349,6 +349,6 @@ module_config = {
 	}
 }
 
-register( "DMC-Corona-Widgets", module_config )
+register( "DMC-Corona-UI", module_config )
 
 

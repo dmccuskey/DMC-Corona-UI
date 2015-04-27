@@ -2,7 +2,7 @@
 gSTARTED = True
 DEBUG = False
 
-configfile: "../DMC-Corona-Widgets/snakemake/snakeconfig.json"
+configfile: "../DMC-Corona-UI/snakemake/snakeconfig.json"
 
 # vars
 #
