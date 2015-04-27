@@ -31,14 +31,6 @@ SOFTWARE.
 --]]
 
 
---- Long Press Gesture Module
--- @module LongPressGesture
--- @usage local Gesture = require 'dmc_gestures'
--- local view = display.newRect( 100, 100, 200, 200 )
--- local g = Gesture.newLongPressGesture( view )
--- g:addEventListener( g.EVENT, gHandler )
-
-
 
 --====================================================================--
 --== DMC Corona Library : Long Press Gesture
@@ -86,11 +78,16 @@ local tdelay = timer.performWithDelay
 --====================================================================--
 
 
---- Tap Gesture Recognizer Class.
--- gestures to recognize tap motions
+--- Long-Press Gesture Recognizer Class.
+-- gestures to recognize long presses, multiple touches and taps.
 --
--- @type LongPressGesture
+-- **Inherits from:**
 --
+-- * @{Gesture.Gesture}
+-- * @{Gesture.Continuous}
+--
+-- @classmod Gesture.LongPress
+
 local LongPressGesture = newClass( Continuous, { name="Long Press Gesture" } )
 
 --== Class Constants
@@ -175,40 +172,6 @@ end
 -- @section getters-setters
 
 
---======================================================--
--- START: bogus methods, copied from super class
-
---- the id (string).
--- this is useful to differentiate between
--- different gestures attached to the same view object
---
--- @function .id
--- @usage print( gesture.id )
--- @usage gesture.id = "myid"
---
-function LongPressGesture.__gs_id() end
-
---- the target view (Display Object).
---
--- @function .view
--- @usage print( gesture.view )
--- @usage gesture.view = DisplayObject
---
-function LongPressGesture.__gs_view() end
-
---- a gesture delegate (object/table)
---
--- @function .delegate
--- @usage print( gesture.delegate )
--- @usage gesture.delegate = DisplayObject
---
-function LongPressGesture.__gs_delegate() end
-
--- END: bogus methods, copied from super class
---======================================================--
-
-
-
 --- the maximum finger-movement allowed (number).
 -- the limit of movement for a gesture to be recognized, radius in pixels.
 -- value must be greater than zero. default is 10.
@@ -216,7 +179,7 @@ function LongPressGesture.__gs_delegate() end
 -- @function .accuracy
 -- @usage print( gesture.accuracy )
 -- @usage gesture.accuracy = 10
---
+
 function LongPressGesture.__getters:accuracy()
 	return self._min_accuracy
 end
@@ -233,7 +196,7 @@ end
 -- @function .duration
 -- @usage print( gesture.duration )
 -- @usage gesture.duration = 400
---
+
 function LongPressGesture.__getters:duration()
 	return self._min_duration
 end
@@ -251,7 +214,7 @@ end
 -- @function .taps
 -- @usage print( gesture.taps )
 -- @usage gesture.taps = 2
---
+
 function LongPressGesture.__getters:taps()
 	return self._req_taps
 end
@@ -269,7 +232,7 @@ end
 -- @function .touches
 -- @usage print( gesture.touches )
 -- @usage gesture.touches = 2
---
+
 function LongPressGesture.__getters:touches()
 	return self._req_touches
 end
@@ -342,17 +305,22 @@ function LongPressGesture:touch( event )
 		local r_taps = self._req_taps
 		local taps = self._tap_count
 
-		self:_startFailTimer()
-		self._gesture_attempt=true
+		if state==Continuous.STATE_POSSIBLE then
+			self:_startFailTimer()
+			self._gesture_attempt=true
 
-		if is_touch_ok and taps==r_taps then
-			self:_addMultitouchToQueue( Continuous.BEGAN )
-			self:_startPressTimer()
+			if is_touch_ok and taps==r_taps then
+				self:_addMultitouchToQueue( Continuous.BEGAN )
+				self:_startPressTimer()
 
-		elseif is_touch_ok then
-			self:_startGestureTimer()
+			elseif is_touch_ok then
+				self:_startGestureTimer()
 
-		elseif touch_count>r_touches then
+			elseif touch_count>r_touches then
+				self:gotoState( Continuous.STATE_FAILED )
+			end
+
+		elseif state==Continuous.STATE_BEGAN or state==Continuous.STATE_CHANGED then
 			self:gotoState( Continuous.STATE_FAILED )
 		end
 
@@ -361,8 +329,10 @@ function LongPressGesture:touch( event )
 		local accuracy = self._min_accuracy
 
 		if state==Continuous.STATE_POSSIBLE then
-			if _mabs(event.xStart-event.x)>accuracy or _mabs(event.yStart-event.y)>accuracy then
-				self:gotoState( Continuous.STATE_FAILED )
+			if is_touch_ok then
+				if _mabs(event.xStart-event.x)>accuracy or _mabs(event.yStart-event.y)>accuracy then
+					self:gotoState( Continuous.STATE_FAILED )
+				end
 			end
 
 		elseif state==Continuous.STATE_BEGAN or state==Continuous.STATE_CHANGED then
@@ -377,7 +347,7 @@ function LongPressGesture:touch( event )
 	elseif phase=='cancelled' then
 		self:gotoState( Continuous.STATE_FAILED )
 
-	else -- ended
+	else -- phase='ended'
 
 		if state==Continuous.STATE_POSSIBLE then
 			local r_taps = self._req_taps
