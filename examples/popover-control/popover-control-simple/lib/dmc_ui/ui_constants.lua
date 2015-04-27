@@ -94,7 +94,7 @@ Constant.WINDOWS = 'WinPhone'
 
 Constant.IS_IOS = ( PLATFORM=='iPhone OS' or PLATFORM=='Mac OS X' )
 Constant.IS_ANDROID = ( PLATFORM=='Android' )
-Constant.IS_WINDOWS = ( PLATFORM=='WinPhone' )
+Constant.IS_WINDOWS = ( PLATFORM=='WinPhone' or PLATFORM=='Win' )
 Constant.IS_SIMULATOR = ( PLATFORM=='Mac OS X' or PLATFORM=='Win' )
 
 Constant.ANDROID_KEYBOARD = 80
@@ -109,10 +109,10 @@ function Constant.getKeyboardHeight()
 end
 
 function Constant.getSystemSeparator()
-	if Constant.IS_IOS then
-		return '/'
-	else
+	if Constant.IS_WINDOWS then
 		return '\\'
+	else
+		return '/'
 	end
 end
 
