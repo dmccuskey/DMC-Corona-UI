@@ -101,8 +101,12 @@ local SlideView = newClass( ScrollerViewBase, {name="Slide View Widget"} )
 SlideView.STATE_MOVE_TO_NEAREST_SLIDE = 'move_to_nearest_slide'
 SlideView.STATE_MOVE_TO_NEXT_SLIDE = 'move_to_next_slide'
 
+SlideView.STATE_SCROLL_TO_SLIDE = 'scroll_to_slide'
+
 SlideView.STATE_MOVE_TO_NEAREST_SLIDE_TRANS_TIME = 250
 SlideView.STATE_MOVE_TO_NEXT_SLIDE_TRANS_TIME = 250
+SlideView.STATE_SCROLL_TO_SLIDE_TRANS_TIME = 250
+SlideView.STATE_SCROLL_TO_DISTANT_SLIDE_TRANS_TIME = 750
 
 
 --== Event Constants
@@ -118,7 +122,7 @@ SlideView.SLIDE_UNRENDER = ScrollerViewBase.ITEM_UNRENDER
 -- Start: Setup DMC Objects
 
 function SlideView:__init__( params )
-	-- print( "SlideView:__init__" )
+	-- print( "SlideView::__init__" )
 	params = params or { }
 	self:superCall( '__init__', params )
 	--==--
@@ -171,12 +175,19 @@ function SlideView:__init__( params )
 
 	self._h_scroll_enabled = true
 	self._v_scroll_enabled = false
+	
+	self._timerhandle = nil
+	self._autoAdvanceTime = params.autoAdvanceTime
+	self._autoAdvanceState = params.autoAdvanceState and (tonumber(params.autoAdvanceTime) > 0)
 
 end
 
 function SlideView:__undoInit__()
-	-- print( "SlideView:__undoInit__" )
-
+	--print( "SlideView::__undoInit__" )
+	
+	-- Stop the auto advance timer
+	self:stop_auto_advance()
+	
 	--==--
 	self:superCall( '__undoInit__' )
 end
@@ -186,7 +197,7 @@ end
 -- __createView__()
 --
 function SlideView:__createView__()
-	-- print( "SlideView:__createView__" )
+	-- print( "SlideView::__createView__" )
 	self:superCall( '__createView__' )
 	--==--
 
@@ -198,7 +209,7 @@ function SlideView:__createView__()
 end
 
 function SlideView:__undoCreateView__()
-	-- print( "SlideView:__undoCreateView__" )
+	-- print( "SlideView::__undoCreateView__" )
 
 	local o
 
@@ -210,20 +221,25 @@ end
 -- __initComplete__()
 --
 function SlideView:__initComplete__()
-	--print( "SlideView:__initComplete__" )
+	--print( "SlideView::__initComplete__" )
 
 	local o, f
 
 
 	self:setState( self.STATE_CREATE )
 	self:gotoState( self.STATE_AT_REST )
+	
+	if ( self._autoAdvanceState ) then
+		self:start_auto_advance()
+	end
 
+	
 	--==--
 	self:superCall( '__initComplete__' )
 end
 
 function SlideView:__undoInitComplete__()
-	--print( "SlideView:__undoInitComplete__" )
+	--print( "SlideView::__undoInitComplete__" )
 
 	--==--
 	self:superCall( '__undoInitComplete__' )
@@ -250,7 +266,7 @@ SlideView.deleteAllSlides = ScrollerViewBase.deleteAllItems
 
 
 function SlideView:gotoSlide( index )
-	-- print( "SlideView:gotoSlide", index )
+	-- print( "SlideView::gotoSlide", index )
 
 	local scr = self._dg_scroller
 	local items = self._item_data_recs
@@ -262,12 +278,14 @@ function SlideView:gotoSlide( index )
 	ScrollerViewBase.gotoItem( self, item_data )
 
 	self.index = index
-	self.slide = self._rendered_items[ self.index ]
-
+	-- Wrong:
+	--self.slide = self._rendered_items[ self.index ]
+	self.slide = self:_findRenderedItem( index )
 	local data = {
 		index = index,
 		slide = self.slide
 	}
+	
 	if data.index and data.slide then
 		self:dispatchEvent( self.SLIDE_IN_FOCUS, data )
 	else
@@ -280,7 +298,7 @@ end
 -- return data portion of what user gave us
 --
 function SlideView:getSlideData( index )
-	-- print( "SlideView:getSlideData", index )
+	-- print( "SlideView::getSlideData", index )
 
 	local items = self._item_data_recs
 	local idx = index or self.index
@@ -301,7 +319,7 @@ end
 
 
 function SlideView:_reindexItems( index, record )
-	-- print( "SlideView:_reindexItems", index, record )
+	-- print( "SlideView::_reindexItems", index, record )
 
 	local items = self._item_data_recs
 	local item_data, view, w
@@ -320,7 +338,7 @@ function SlideView:_reindexItems( index, record )
 end
 
 function SlideView:_updateBackground()
-	-- print( "SlideView:_updateBackground" )
+	-- print( "SlideView::_updateBackground" )
 
 	local items = self._item_data_recs
 	local o = self._bg
@@ -357,7 +375,7 @@ end
 -- calculate horizontal direction
 --
 function SlideView:_updateDimensions( item_info, item_data )
-	-- print( "SlideView:_updateDimensions", item_info )
+	-- print( "SlideView::_updateDimensions", item_info )
 
 	local total_dim = self._total_item_dimension
 
@@ -402,7 +420,7 @@ end
 
 
 function SlideView:_isBounded( scroller, item )
-	-- print( "SlideView:_isBounded", scroller, item )
+	-- print( "SlideView::_isBounded", scroller, item )
 
 	local result = false
 
@@ -426,7 +444,7 @@ end
 
 
 function SlideView:_findClosestSlide()
-	-- print( "SlideView:_findClosestSlide" )
+	-- print( "SlideView::_findClosestSlide" )
 
 	local item, pos, idx  = nil, 999, 0
 	local rendered = self._rendered_items
@@ -447,10 +465,28 @@ function SlideView:_findClosestSlide()
 	return item, (item.xMin + scr.x), idx
 end
 
+-- @return item, distance, item ID
+function SlideView:_findDistanceToSlide(index)
+	-- print( "SlideView::_findDistanceToSlide" )
 
+	local item, pos, idx  = nil, 999, 0
+	local rendered = self._rendered_items
+	local bounds = self:_viewportBounds()
+	local scr = self._dg_scroller
+	
+	local item = self._item_data_recs[index]
 
-function SlideView:_findNextSlide()
-	-- print( "SlideView:_findNextSlide" )
+	local dist = math.abs( item.xMin + scr.x )
+	pos = dist
+	idx = index
+
+	return item, (item.xMin + scr.x), idx
+end
+
+-- direction: "right" | "left"
+-- If direction is set, we look that way for the next slide.
+function SlideView:_findNextSlide( direction )
+	--print( "SlideView::_findNextSlide (",direction,")" )
 
 	local scr = self._dg_scroller
 	local v = self._h_velocity
@@ -458,9 +494,17 @@ function SlideView:_findNextSlide()
 
 	local close, dist, index = self:_findClosestSlide()
 
-	local idx, item
+	local idx, item, vv
+	
+	if (direction == "right") then
+		vv = -1
+	elseif ( direction == "left" ) then
+		vv = 1
+	else
+		vv =v.vector
+	end
 
-	if v.vector == -1 then
+	if vv == -1 then
 		idx = index + 1
 	else
 		idx = index - 1
@@ -476,7 +520,7 @@ end
 
 
 function SlideView:_do_item_tap()
-	-- print( "SlideView:_do_item_tap" )
+	-- print( "SlideView::_do_item_tap" )
 	local data = {
 		index=self.index,
 		slide=self.slide,
@@ -492,7 +536,7 @@ end
 
 
 function SlideView:_getNextState( params )
-	-- print( "SlideView:_getNextState" )
+	-- print( "SlideView::_getNextState" )
 
 	params = params or {}
 
@@ -531,7 +575,7 @@ end
 --]]
 
 function SlideView:state_touch( next_state, params )
-	-- print( "SlideView:state_touch: >> ", next_state )
+	-- print( "SlideView::state_touch: >> ", next_state )
 
 	if next_state == self.STATE_RESTORE then
 		self:do_state_restore( params )
@@ -557,7 +601,7 @@ end
 -- we scroll to closest slide
 --
 function SlideView:do_move_to_nearest_slide( params )
-	-- print( "SlideView:do_move_to_nearest_slide" )
+	-- print( "SlideView::do_move_to_nearest_slide" )
 
 	params = params or {}
 	local evt_start = params.event
@@ -574,7 +618,7 @@ function SlideView:do_move_to_nearest_slide( params )
 
 
 	local enterFrameFunc = function( e )
-		-- print( "SlideView: enterFrameFunc: do_move_to_nearest_slide" )
+		-- print( "SlideView:: enterFrameFunc: do_move_to_nearest_slide" )
 
 		local evt_frame = self._event_tmp
 
@@ -612,7 +656,7 @@ function SlideView:do_move_to_nearest_slide( params )
 end
 
 function SlideView:move_to_nearest_slide( next_state, params )
-	-- print( "SlideView:move_to_nearest_slide: >> ", next_state, params )
+	-- print( "SlideView::move_to_nearest_slide: >> ", next_state, params )
 
 	if next_state == self.STATE_TOUCH then
 		self:do_state_touch( params )
@@ -627,17 +671,180 @@ function SlideView:move_to_nearest_slide( next_state, params )
 end
 
 
+-- Go to slide gracefully.
+-- @param	index	[integer] index of slide to go to, [string] "left" | "right" to go prev/next slide.
+
+function SlideView:scroll_one_slide( direction )
+	--print( "Widget_SlideView:scroll_one_slide", direction )
+
+	direction = direction or "right" -- or "left"
+
+	params = params or {}
+	local evt_start = params.event or { time = system.getTimer(), }
+
+	local TIME = self.STATE_MOVE_TO_NEAREST_SLIDE_TRANS_TIME
+	local ease_f = easingx.easeOut
+
+	local scr = self._dg_scroller
+	local pos = scr.x
+	
+	local item, dist = self:_findNextSlide( direction )
+	
+	local delta = -dist
+
+
+	local enterFrameFunc = function( e )
+		--print( "SlideView:: enterFrameFunc: scroll_one_slide" )
+
+		local evt_frame = self._event_tmp
+
+		local start_time_delta = e.time - evt_start.time -- total
+
+		local x_delta
+
+		--== Calculation
+
+		x_delta = ease_f( start_time_delta, TIME, pos, delta )
+
+
+		--== Action
+
+		if start_time_delta < TIME then
+			scr.x = x_delta
+
+		else
+			-- final state
+			scr.x = pos + delta
+			self._has_moved = true
+			self:gotoState( self.STATE_AT_REST, item )
+		end
+	end
+
+	-- start animation
+
+	if self._enterFrameIterator == nil then
+		Runtime:addEventListener( 'enterFrame', self )
+	end
+	self._enterFrameIterator = enterFrameFunc
+
+	-- set current state
+	self:setState( self.STATE_SCROLL_TO_SLIDE )
+	
+end
+
+
+-- *** DIG ***
+function SlideView:do_scroll_to_slide( index )
+	--print( "Widget_SlideView:do_scroll_to_slide" )
+	local direction = "left"
+	
+	if (type(index) == "integer") then
+		index = math.min( math.max(1, index), #self._item_data_recs)
+		if (index > self.index ) then
+			direction = "right"
+		end
+	elseif (index == "first") then
+		index = 1
+		direction = "left"
+	elseif (index == "last") then
+		index = #self._item_data_recs
+		direction = "right"
+	end
+
+	--print( "Widget_SlideView:do_scroll_to_slide: Go to index = ", index )
+	
+
+	-- ======
+
+	local evt_start_time = system.getTimer()
+
+	local ease_f = easingx.easeOut
+
+	local scr = self._dg_scroller
+	local pos = scr.x
+	
+	-- Be sure the destination is rendered
+	local items = self._item_data_recs
+	local item_data = items[ index ]
+	ScrollerViewBase._renderItem( self, item_data )
+
+	-- Get distance to destination
+	local item, dist, index = self:_findDistanceToSlide(index)
+
+	local delta = -dist
+
+	local TIME = self.STATE_SCROLL_TO_DISTANT_SLIDE_TRANS_TIME
+
+	local enterFrameFunc = function( e )
+		--print( "SlideView:: enterFrameFunc: scroll_one_slide" )
+
+		local evt_frame = self._event_tmp
+
+		local start_time_delta = e.time - evt_start_time -- total
+
+		local x_delta
+
+		--== Calculation
+
+		x_delta = ease_f( start_time_delta, TIME, pos, delta )
+
+
+		--== Action
+
+		if start_time_delta < TIME then
+			scr.x = x_delta
+
+		else
+			-- final state
+			scr.x = pos + delta
+			self._has_moved = true
+			self:gotoState( self.STATE_AT_REST, item )
+
+		end
+	end
+
+	-- start animation
+
+	if self._enterFrameIterator == nil then
+		Runtime:addEventListener( 'enterFrame', self )
+	end
+	self._enterFrameIterator = enterFrameFunc
+
+	-- set current state
+	self:setState( self.STATE_SCROLL_TO_SLIDE )
+
+
+end
+
+
+function SlideView:scroll_to_slide ( next_state, params )
+
+	--print( "SlideView::scroll_to_slide: >> ", next_state )
+	
+	if next_state == self.STATE_TOUCH then
+		self:do_state_touch( params )
+
+	elseif next_state == self.STATE_AT_REST then
+		self:do_state_at_rest( params )
+
+	else
+		print( "WARNING :: SlideView:scroll_to_slide > " .. tostring( next_state ) )
+	end
+
+end
+
 
 -- when object has neither velocity nor limit
 -- we scroll to closest slide
 --
 function SlideView:do_move_to_next_slide( params )
-	-- print( "SlideView:do_move_to_next_slide" )
+	--print( "SlideView::do_move_to_next_slide" )
 
 	params = params or {}
-	local evt_start = params.event
+	-- DIG: If this is called directly, the time won't be in the params.
+	local evt_start = params.event or { time = system.getTimer(), }
 
-	local TIME = self.STATE_MOVE_TO_NEXT_SLIDE_TRANS_TIME
+	local TIME = self.STATE_SCROLL_TO_SLIDE_TRANS_TIME
 	local ease_f = easingx.easeOut
 
 	local scr = self._dg_scroller
@@ -649,7 +856,7 @@ function SlideView:do_move_to_next_slide( params )
 
 
 	local enterFrameFunc = function( e )
-		-- print( "SlideView: enterFrameFunc: do_move_to_next_slide" )
+		-- print( "SlideView:: enterFrameFunc: do_move_to_next_slide" )
 
 		local evt_frame = self._event_tmp
 
@@ -687,7 +894,7 @@ function SlideView:do_move_to_next_slide( params )
 end
 
 function SlideView:move_to_next_slide( next_state, params )
-	-- print( "SlideView:move_to_next_slide: >> ", next_state )
+	--print( "SlideView::move_to_next_slide: >> ", next_state )
 
 	if next_state == self.STATE_TOUCH then
 		self:do_state_touch( params )
@@ -707,7 +914,7 @@ end
 -- we constrain its motion away from limit
 --
 function SlideView:do_state_restraint( params )
-	-- print( "SlideView:do_state_restraint" )
+	-- print( "SlideView::do_state_restraint" )
 
 	params = params or {}
 	local evt_start = params.event
@@ -723,7 +930,7 @@ function SlideView:do_state_restraint( params )
 
 
 	local enterFrameFunc = function( e )
-		-- print( "SlideView: enterFrameFunc: do_state_restraint" )
+		-- print( "SlideView:: enterFrameFunc: do_state_restraint" )
 
 		local evt_frame = self._event_tmp
 		local limit = self._v_scroll_limit
@@ -764,7 +971,7 @@ function SlideView:do_state_restraint( params )
 end
 
 function SlideView:state_restraint( next_state, params )
-	-- print( "SlideView:state_restraint: >> ", next_state )
+	-- print( "SlideView::state_restraint: >> ", next_state )
 
 	if next_state == self.STATE_TOUCH then
 		self:do_state_touch( params )
@@ -786,7 +993,7 @@ end
 -- we scroll to closest slide
 --
 function SlideView:do_state_restore( params )
-	-- print( "SlideView:do_state_restore" )
+	-- print( "SlideView::do_state_restore" )
 
 	params = params or {}
 	local evt_start = params.event
@@ -817,7 +1024,7 @@ function SlideView:do_state_restore( params )
 
 
 	local enterFrameFunc = function( e )
-		-- print( "SlideView: enterFrameFunc: do_state_restore" )
+		-- print( "SlideView:: enterFrameFunc: do_state_restore" )
 
 		local evt_frame = self._event_tmp
 
@@ -857,7 +1064,7 @@ function SlideView:do_state_restore( params )
 end
 
 function SlideView:state_restore( next_state, params )
-	-- print( "SlideView:state_restore: >> ", next_state )
+	-- print( "SlideView::state_restore: >> ", next_state )
 
 	if next_state == self.STATE_TOUCH then
 		self:do_state_touch( params )
@@ -872,8 +1079,39 @@ function SlideView:state_restore( next_state, params )
 end
 
 
+function SlideView:start_auto_advance ()
+	--print ("SlideView::start_auto_advance() : Auto Advance, timing = ", self._autoAdvanceTime)
+	if (self._autoAdvanceTime) then
+		self._timerhandle = timer.performWithDelay( 
+							self._autoAdvanceTime, 
+							function() 
+								local item, dist = self:_findNextSlide( "right" )
+								-- at end?
+								if (dist == 0) then
+									self:do_scroll_to_slide( "first" )
+								else
+									self.scroll_one_slide(self, "right")
+								end
+							end,
+							0 )
+	self._autoAdvanceState = true
+	end
+end
+
+function SlideView:stop_auto_advance ()
+	-- Remove any timers associated with the object
+	if ( self._timerhandle ) then
+		timer.cancel(self._timerhandle)
+		self._timerhandle = nil
+	end
+	self._autoAdvanceState = false
+	--print( "SlideView::do_state_at_rest: >> Remove timer handle, autoadvance = ", self._autoAdvanceState)
+end
+
+
+
 function SlideView:do_state_at_rest( slide )
-	-- print( "SlideView:do_state_at_rest: >> ", slide )
+	--print( "SlideView::do_state_at_rest: >> ", slide )
 
 	params = params or {}
 	-- TODO: figure out why this doesn't work
@@ -900,6 +1138,24 @@ function SlideView:do_state_at_rest( slide )
 	end
 
 end
+
+
+-- Flip the value of the auto slide advance.
+-- If the slideshow is autoadvancing, stop it; and if it is on manual,
+-- then start it.
+function SlideView:flip_auto_advance( )
+	self._autoAdvanceState = not self._autoAdvanceState
+	
+	-- If auto-advance is on, and no timer running, then start the clock
+	if ( self._autoAdvanceState ) then
+		self:start_auto_advance()
+	else
+		self:stop_auto_advance()
+	end
+
+end
+
+
 
 
 -- function SlideView:
