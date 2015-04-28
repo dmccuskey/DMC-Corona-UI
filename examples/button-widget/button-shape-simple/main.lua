@@ -56,25 +56,8 @@ local function setupBackground()
 end
 
 
-local function widgetOnPropertyEvent_handler( event )
-	print( 'Main: widgetOnPropertyEvent_handler', event.id, event.phase )
-	local etype= event.type
-	local property= event.property
-	local value = event.value
-
-	print( "Widget Property Changed", etype, property, value )
-
-end
-
-local function widgetEvent_handler( event )
-	print( 'Main: widgetEvent_handler', event.id, event.phase )
-	local etype= event.type
-
-	print( "Widget Event", etype )
-
-end
-
-
+--======================================================--
+-- Button Handlers
 
 local function onPress_handler( event )
 	print( 'Main: onPress_handler: id', event.id )
@@ -99,7 +82,7 @@ setupBackground()
 
 
 --======================================================--
---== Example 1: create textfield widget, default style
+--== Example 1: create button widget, default style
 
 function run_example1()
 
@@ -152,11 +135,11 @@ function run_example1()
 
 end
 
-run_example1()
+-- run_example1()
 
 
 --======================================================--
---== Example 2: create textfield widget, default style
+--== Example 2: create button widget, default style
 
 function run_example2()
 
@@ -189,18 +172,19 @@ function run_example2()
 			offsetX=0,
 			offsetY=0,
 
-			label={
-				text="hello",
-				fontColor={1,0,1},
-			},
+			-- label={
+			-- 	text="hello",
+			-- 	fontColor={1,0,1},
+			-- },
 
-			background = {
-			 view={
+			-- background = {
+			--  view={
 
-				}
-			},
+			-- 	}
+			-- },
 
 			inactive = {
+				width=100,
 				label = {
 					align='center',
 					textColor={0,0,0},
@@ -261,6 +245,9 @@ function run_example2()
 
 		btn1.hitMarginY=20
 
+		-- btn1.width=100
+		-- btn1.height=50
+
 		btn1.anchorX=1
 		btn1.anchorY=0
 
@@ -287,7 +274,7 @@ function run_example2()
 
 end
 
--- run_example2()
+run_example2()
 
 
 

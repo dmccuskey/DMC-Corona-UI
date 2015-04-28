@@ -40,48 +40,49 @@ local tremove = table.remove
 local tstr = tostring
 
 local OFFSET = 100
-local DIMS = {w=200,h=30} -- dimensions of a row item
-local SHOW = 10 -- how many items to display (for masking)
+local DIMS = {w=280,h=30} -- dimensions of a row item
+local SHOW = 14 -- how many items to display (for masking)
 
 local tableData = nil -- later
+local tableStyle = nil
 
 local cellCache = {}
 
 local images = {
-	'./assets/flag/Arabia.png',
-	'./assets/flag/Argentina.png',
-	'./assets/flag/Australia.png',
-	'./assets/flag/Brasil.png',
-	'./assets/flag/Canada.png',
-	'./assets/flag/Catalunya-Catalonia.png',
-	'./assets/flag/Chile.png',
-	'./assets/flag/Colombia.png',
-	'./assets/flag/Danmark-Denmark.png',
-	'./assets/flag/Deutschland-Germany.png',
-	'./assets/flag/Eire-Ireland.png',
-	'./assets/flag/Ellas-Greece.png',
-	'./assets/flag/Espanya-Spain.png',
-	'./assets/flag/Extremadura.png',
-	'./assets/flag/France.png',
-	'./assets/flag/Guatemala.png',
-	'./assets/flag/Island.png',
-	'./assets/flag/Italia.png',
-	'./assets/flag/Libya.png',
-	'./assets/flag/Masr-Egypt.png',
-	'./assets/flag/Mexico.png',
-	'./assets/flag/Nederlands-Netherlands.png',
-	'./assets/flag/NewZealand.png',
-	'./assets/flag/Nihon-Japan.png',
-	'./assets/flag/Norge-Norway.png',
-	'./assets/flag/Polska-Poland.png',
-	'./assets/flag/Rossiya-Russia.png',
-	'./assets/flag/Suomi-Finland.png',
-	'./assets/flag/Sverige-Sweden.png',
-	'./assets/flag/UK.png',
-	'./assets/flag/USA.png',
-	'./assets/flag/Venezuela.png',
-	'./assets/flag/Zambia.png',
-	'./assets/flag/Zhongguo-China.png'
+	'assets/flag/Arabia.png',
+	'assets/flag/Argentina.png',
+	'assets/flag/Australia.png',
+	'assets/flag/Brasil.png',
+	'assets/flag/Canada.png',
+	'assets/flag/Catalunya-Catalonia.png',
+	'assets/flag/Chile.png',
+	'assets/flag/Colombia.png',
+	'assets/flag/Danmark-Denmark.png',
+	'assets/flag/Deutschland-Germany.png',
+	'assets/flag/Eire-Ireland.png',
+	'assets/flag/Ellas-Greece.png',
+	'assets/flag/Espanya-Spain.png',
+	'assets/flag/Extremadura.png',
+	'assets/flag/France.png',
+	'assets/flag/Guatemala.png',
+	'assets/flag/Island.png',
+	'assets/flag/Italia.png',
+	'assets/flag/Libya.png',
+	'assets/flag/Masr-Egypt.png',
+	'assets/flag/Mexico.png',
+	'assets/flag/Nederlands-Netherlands.png',
+	'assets/flag/NewZealand.png',
+	'assets/flag/Nihon-Japan.png',
+	'assets/flag/Norge-Norway.png',
+	'assets/flag/Polska-Poland.png',
+	'assets/flag/Rossiya-Russia.png',
+	'assets/flag/Suomi-Finland.png',
+	'assets/flag/Sverige-Sweden.png',
+	'assets/flag/UK.png',
+	'assets/flag/USA.png',
+	'assets/flag/Venezuela.png',
+	'assets/flag/Zambia.png',
+	'assets/flag/Zhongguo-China.png'
 }
 
 
@@ -156,7 +157,7 @@ local function onRender( self, event )
 		tc = tremove( cellCache, 1 )
 		tc.isVisible = true
 	else
-		tc = dUI.newTableViewCell{ width=w, height=h }
+		tc = dUI.newTableViewCell{ width=w, height=h, style=tableStyle }
 	end
 
 	tc.textLabel.text = rowData.title
@@ -235,20 +236,32 @@ end
 
 tableData = createDataArray()
 
+tableStyle = dUI.newTableViewCellStyle{
+	width=DIMS.w,
+	inactive={
+		background={
+			type='rectangle'
+		}
+	},
+	active={
+		background={
+			type='rectangle'
+		}
+	}
+}
+
 -- setup tableview delegate/datasource helpers
 
 local delegate = {
+	numberOfRows=getRows,
+	onRowRender=onRender,
+	onRowUnrender=onUnrender,
+
 	shouldHighlightRow=onEvent,
 	didHighlightRow=onEvent,
 	didUnhighlightRow=onEvent,
 	willSelectRow=onEvent,
 	didSelectRow=onEvent,
-}
-
-local dataSource = {
-	numberOfRows=getRows,
-	onRowRender=onRender,
-	onRowUnrender=onUnrender,
 }
 
 
@@ -258,11 +271,10 @@ local tV = dUI.newTableView{
 	width=DIMS.w,
 	height=DIMS.h*SHOW,
 	delegate=delegate,
-	dataSource=dataSource,
 	estimatedRowHeight=DIMS.h,
 	autoMask=true
 }
-tV.x, tV.y = OFFSET*0.5, OFFSET*0.5+50
+tV.x, tV.y = H_CENTER-DIMS.w*0.5, V_CENTER-(DIMS.h*SHOW)*0.5
 
 tV:addEventListener( tV.EVENT, onEvent )
 

@@ -130,14 +130,24 @@ function Style.initialize( manager, params )
 	dUI.registerWidget = Style.registerWidget
 	dUI.removeStyle = Style.removeStyle
 
+	dUI.activateTheme = Style.activateTheme
+	dUI.createTheme = Style.createTheme
+	dUI.getActiveThemeId = Style.getActiveThemeId
+	dUI.getAvailableThemeIds = Style.getAvailableThemeIds
+	dUI.loadTheme = Style.loadTheme
+	dUI.loadThemes = Style.loadThemes
+
 	-- Style Interface
 
 	dUI.newBackgroundStyle = Style.newBackgroundStyle
 	dUI.newButtonStyle = Style.newButtonStyle
 	dUI.newNavBarStyle = Style.newNavBarStyle
 	dUI.newNavItemStyle = Style.newNavItemStyle
+	dUI.newNineSliceBackgroundStyle = Style.newNineSliceBackgroundStyle
 	dUI.newRectangleBackgroundStyle = Style.newRectangleBackgroundStyle
 	dUI.newRoundedBackgroundStyle = Style.newRoundedBackgroundStyle
+	dUI.newTableViewStyle = Style.newTableViewStyle
+	dUI.newTableViewCellStyle = Style.newTableViewCellStyle
 	dUI.newTextFieldStyle = Style.newTextFieldStyle
 	dUI.newTextStyle = Style.newTextStyle
 
@@ -163,7 +173,7 @@ function Style.loadBaseStyleSupport( params )
 		kmode = Kolor.hRGBA
 	end
 
-	local BaseStyle = require( ui_find( 'dmc_style.base_style' ) )
+	local BaseStyle = require( ui_find( 'core.style' ) )
 	Style.Base=BaseStyle
 	initKolors(
 		function()
@@ -219,6 +229,16 @@ function Style.newBackgroundStyle( style_info, params )
 	params.data = style_info
 	if not Style.Background then Style._loadBackgroundStyleSupport() end
 	return Style.Background:createStyleFrom( params )
+end
+
+function Style.newNineSliceBackgroundStyle( style_info, params )
+	-- print("Style.newNineSliceBackgroundStyle")
+	style_info = style_info or {}
+	params = params or {}
+	--==--
+	if not Style.Background then Style._loadBackgroundStyleSupport() end
+	style_info.type = Style.BackgroundFactory.NineSlice.TYPE
+	return Style.newBackgroundStyle( style_info, params )
 end
 
 function Style.newRectangleBackgroundStyle( style_info, params )
@@ -389,7 +409,6 @@ function Style.newScrollView( style_info, params )
 end
 
 
-
 --======================================================--
 -- newTableView Support
 
@@ -410,6 +429,7 @@ function Style.loadTableViewStyleSupport( params )
 
 	--== Components
 
+	local TableViewStyle = require( ui_find( 'dmc_style.tableview_style' ) )
 	local TableViewStyle = require( ui_find( 'dmc_style.tableview_style' ) )
 
 	Style.TableView=TableViewStyle
@@ -433,7 +453,53 @@ function Style.newTableView( style_info, params )
 end
 
 
+--======================================================--
+-- newTableViewCellStyle Support
 
+function Style.loadTableViewCellStyleSupport( params )
+	-- print( "Style.loadTableViewCellStyleSupport" )
+	if Style.TableViewCell then return end
+	params = params or {}
+	if params.mode==nil then params.mode=uiConst.RUN_MODE end
+	--==--
+	local kmode
+	if params.mode==uiConst.TEST_MODE then
+		kmode = Kolor.hRGBA
+	end
+
+	--== Dependencies
+
+	Style.loadBaseStyleSupport( params )
+	Style._loadBackgroundStyleSupport( params )
+	Style._loadTextStyleSupport( params )
+
+	--== Components
+
+	local TableViewCellStyle = require( ui_find( 'dmc_style.tableviewcell_style' ) )
+	local TableViewCellStateStyle = require( ui_find( 'dmc_style.tableviewcell_style.tableviewcell_state' ) )
+
+	Style.TableViewCell=TableViewCellStyle
+	Style.TableViewCellState=TableViewCellStateStyle
+
+	initKolors(
+		function()
+			-- reverse order
+			TableViewCellStateStyle.initialize( Style, params )
+			TableViewCellStyle.initialize( Style, params )
+		end,
+		kmode
+	)
+end
+
+function Style.newTableViewCellStyle( style_info, params )
+	-- print( "Style.newTableViewCellStyle" )
+	style_info = style_info or {}
+	params = params or {}
+	--==--
+	params.data = style_info
+	if not Style.TableViewCell then Style.loadTableViewCellStyleSupport() end
+	return Style.TableViewCell:createStyleFrom( params )
+end
 
 
 --======================================================--
@@ -529,6 +595,8 @@ end
 --== Private Functions
 
 
+-- none
+
 
 
 --====================================================================--
@@ -536,6 +604,7 @@ end
 
 
 -- none
+
 
 
 

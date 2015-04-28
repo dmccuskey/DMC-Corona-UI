@@ -92,7 +92,25 @@ local FontMgr = nil
 --====================================================================--
 
 
+--- TableViewCell Widget.
+-- a widget to be used as the view in a TableView row.
+--
+-- **Inherits from:** <br>
+-- * @{Core.Widget}
+--
+-- **Style Object:** <br>
+-- * @{Style.TableViewCellStyle}
+-- * @{Style.TableViewCellStateStyle}
+--
+-- @classmod Widget.TableViewCell
+-- @usage
+-- local dUI = require 'dmc_ui'
+-- local widget = dUI.newTableViewCell()
+
 local TableViewCell = newClass( WidgetBase, { name="TableViewCell" } )
+
+--- Class Constants.
+-- @section
 
 --== Class Constants
 
@@ -100,15 +118,63 @@ TableViewCell.LEFT = 'left'
 TableViewCell.CENTER = 'center'
 TableViewCell.RIGHT = 'right'
 
--- tableviewcell layouts
-TableViewCell.DEFAULT = 'default-layout'
-TableViewCell.SUBTITLE = 'subtitle-layout'
 
--- tableviewcell accessories
-TableViewCell.NONE = 'no-accessory'
-TableViewCell.CHECKMARK = 'checkmark-accessory'
-TableViewCell.DETAIL_BUTTON = 'detail-button-accessory'
-TableViewCell.DISCLOSURE_INDICATOR = 'disclosure-indicator-accessory'
+--== tableviewcell layouts
+
+--- Layout Constant to specify the Default layout.
+-- single row of text. this is usually defined in the @{Style.TableViewCellStyle}.
+--
+-- @field HELLO
+--
+-- @usage
+-- widget.cellLayout = TableViewCell.DEFAULT
+
+TableViewCell.DEFAULT = uiConst.TABLEVIEWCELL_DEFAULT_LAYOUT
+
+--- Layout Constant to specify the Subtitle layout.
+-- layout with two rows of text – Label and Detail. this is usually defined in the .
+--
+-- @field HELLO
+--
+-- @usage
+-- widget.cellLayout = TableViewCell.SUBTITLE
+
+TableViewCell.SUBTITLE = uiConst.TABLEVIEWCELL_SUBTITLE_LAYOUT
+
+--== tableviewcell accessories
+
+--- Accessory Constant to specify the Checkmark accessory.
+-- this is usually defined in the @{Style.TableViewCellStyle}.
+--
+-- @usage
+-- widget.accessory = TableViewCell.CHECKMARK
+
+TableViewCell.CHECKMARK = uiConst.TABLEVIEWCELL_CHECKMARK
+
+--- Accessory Constant to specify the Detail Button accessory.
+-- this is usually defined in the @{Style.TableViewCellStyle}.
+--
+-- @usage
+-- widget.accessory = TableViewCell.DETAIL_BUTTON
+
+TableViewCell.DETAIL_BUTTON = uiConst.TABLEVIEWCELL_DETAIL_BUTTON
+
+--- Accessory Constant to specify the Disclosure Indicator accessory.
+-- this is usually defined in the @{Style.TableViewCellStyle}.
+--
+-- @usage
+-- widget.accessory = TableViewCell.DISCLOSURE_INDICATOR
+
+TableViewCell.DISCLOSURE_INDICATOR = uiConst.TABLEVIEWCELL_DISCLOSURE_INDICATOR
+
+--- Accessory Constant to specify the no accessory.
+-- this is usually defined in the @{Style.TableViewCellStyle}.
+--
+-- @usage
+-- widget.accessory = TableViewCell.NONE
+
+TableViewCell.NONE = uiConst.TABLEVIEWCELL_NONE
+
 
 TableViewCell.ACCESSORY = {
 	[ TableViewCell.CHECKMARK ] = {
@@ -150,8 +216,6 @@ TableViewCell.EVENT = 'tableviewcell-widget-event'
 function TableViewCell:__init__( params )
 	-- print( "TableViewCell:__init__", params )
 	params = params or {}
-	if params.x==nil then params.x=0 end
-	if params.y==nil then params.y=0 end
 	if params.labelText==nil then params.labelText="" end
 	if params.detailText==nil then params.detailText="" end
 
@@ -161,11 +225,6 @@ function TableViewCell:__init__( params )
 	--== Create Properties ==--
 
 	-- properties in this class
-
-	self._x = params.x
-	self._x_dirty = true
-	self._y = params.y
-	self._y_dirty = true
 
 	self._textLabel = params.labelText
 	self._textLabel_dirty=true
@@ -180,17 +239,12 @@ function TableViewCell:__init__( params )
 
 	-- properties from style
 
-	-- self._width_dirty=true
-	self._height_dirty=true
-
-	self._anchorX_dirty=true
-	self._anchorY_dirty=true
 	self._cellMargin_dirty=true
 
 	self._detailY_dirty=true
 	self._labelY_dirty=true
 
-	self._accessory_dirty=true
+	self._cellAccessory_dirty=true
 	self._cellLayout_dirty = true
 	self._contentMargin_dirty=true
 
@@ -208,9 +262,10 @@ function TableViewCell:__init__( params )
 	self._textDetailY_dirty=true
 	self._textDetailWidth_dirty=true
 
-	--== Object References ==--
+	self._widgetStyle_dirty=true
+	self._wgtBgStyle_dirty=true
 
-	self._tmp_style = params.style -- save
+	--== Object References ==--
 
 	self._wgtTextLabel = nil -- text widget (for both hint and value display)
 	self._wgtTextLabel_f = nil -- widget handler
@@ -222,7 +277,8 @@ function TableViewCell:__init__( params )
 
 	-- @TODO: add background object
 
-	self._rectBg = nil -- our background object
+	self._wgtBg = nil -- background widget
+	self._wgtBg_dirty=true
 
 end
 
@@ -237,23 +293,19 @@ end
 
 --== createView
 
+--[[
 function TableViewCell:__createView__()
 	-- print( "TableViewCell:__createView__" )
 	self:superCall( '__createView__' )
 	--==--
-	local o = display.newRect( 0,0,0,0 )
-	o.anchorX, o.anchorY = 0.5, 0.5
-	self:insert( o )
-	self._rectBg = o
 end
 
 function TableViewCell:__undoCreateView__()
 	-- print( "TableViewCell:__undoCreateView__" )
-	self._rectBg:removeSelf()
-	self._rectBg=nil
 	--==--
 	self:superCall( '__undoCreateView__' )
 end
+--]]
 
 
 --== initComplete
@@ -264,13 +316,15 @@ function TableViewCell:__initComplete__()
 	--==--
 	self:_createTextLabel()
 	self:_createTextDetail()
+
 	self:setAnchor( self.TopLeftReferencePoint )
 end
 
 function TableViewCell:__undoInitComplete__()
 	--print( "TableViewCell:__undoInitComplete__" )
 	self:_removeTextLabel()
-
+	self:_removeTextDetail()
+	self:_removeBackground()
 	--==--
 	self:superCall( '__undoInitComplete__' )
 end
@@ -299,86 +353,87 @@ end
 
 
 
-
-
 --====================================================================--
 --== Public Methods
 
 
---== X
+--- set/get the accessory for the TableViewCell.
+-- this is just a convience property to the style object.
+--
+-- @within Properties
+-- @function .accessory
+--
+-- @usage widget.accessory = TableViewCell.DISCLOSURE_INDICATOR
+-- @usage print( widget.accessory )
 
-function TableViewCell.__getters:x()
-	return self._x
+function TableViewCell.__getters:accessory()
+	return self.curr_style.accessory
 end
-function TableViewCell.__setters:x( value )
-	-- print( 'TableViewCell.__setters:x', value )
-	assert( type(value)=='number' )
-	--==--
-	if self._x == value then return end
-	self._x = value
-	self._x_dirty=true
-	self:__invalidateProperties__()
-end
-
---== Y
-
-function TableViewCell.__getters:y()
-	return self._y
-end
-function TableViewCell.__setters:y( value )
-	-- print( 'TableViewCell.__setters:y', value )
-	assert( type(value)=='number' )
-	--==--
-	if self._y == value then return end
-	self._y = value
-	self._y_dirty=true
-	self:__invalidateProperties__()
+function TableViewCell.__setters:accessory( value )
+	self.curr_style.accessory = value
 end
 
 
---[[
-we use custom getters for width/height
-without width/height, we just use dimensions
-from text object after creation
---]]
+--- set/get the layout for the TableViewCell.
+-- this is just a convience property to the style object.
+--
+-- @within Properties
+-- @function .cellLayout
+--
+-- @usage widget.cellLayout = TableViewCell.SUBTITLE
+-- @usage print( widget.cellLayout )
 
---== width (custom)
-
-
-function TableViewCell.__getters:width()
-	-- print( 'TableViewCell.__getters:width' )
-	local w, t = self.curr_style.width, self._txt_text
-	if w==nil and t then w=t.width end
-	return w
+function TableViewCell.__getters:cellLayout()
+	return self.curr_style.cellLayout
 end
-function TableViewCell.__setters:width( value )
-	-- print( 'TableViewCell.__setters:width', value )
-	self.curr_style.width = value
+function TableViewCell.__setters:cellLayout( value )
+	self.curr_style.cellLayout = value
 end
 
---== height (custom)
 
-function TableViewCell.__getters:height()
-	-- print( 'TableViewCell.__getters:height' )
-	local h, t = self.curr_style.height, self._txt_text
-	if h==nil and t then h=t.height end
-	return h
-end
-function TableViewCell.__setters:height( value )
-	-- print( 'TableViewCell.__setters:height', value )
-	self.curr_style.height = value
-end
+--- set/get the horizontal margin of the TableViewCell.
+-- this sets both the left and right side.
+-- this is just a convience property to the style object.
+--
+-- @within Properties
+-- @function .cellMargin
+--
+-- @usage widget.cellMargin=10
+-- @usage print( widget.cellMargin )
 
--- get just the text height
-function TableViewCell:getTextHeight()
-	-- print( "TableViewCell:getTextHeight", self._txt_text )
-	local val = 0
-	if self._txt_text then
-		val = self._txt_text.height
-	end
-	return val
+function TableViewCell.__getters:cellMargin()
+	return self.curr_style.cellMargin
+end
+function TableViewCell.__setters:cellMargin( value )
+	self.curr_style.cellMargin = value
 end
 
+
+--- set/get the horizontal margin between the content.
+-- this is just a convience property to the style object.
+--
+-- @within Properties
+-- @function .contentMargin
+--
+-- @usage widget.contentMargin=10
+-- @usage print( widget.contentMargin )
+
+function TableViewCell.__getters:contentMargin()
+	return self.curr_style.contentMargin
+end
+function TableViewCell.__setters:contentMargin( value )
+	self.curr_style.contentMargin = value
+end
+
+
+--- set/get active highlight.
+-- specify whether row is highlighted or not. requires `boolean`.
+--
+-- @within Properties
+-- @function .highlight
+--
+-- @usage widget.highlight = true
+-- @usage print( widget.highlight )
 
 function TableViewCell.__getters:highlight()
 	return self._highlightIsActive
@@ -394,20 +449,13 @@ function TableViewCell.__setters:highlight( value )
 end
 
 
--- function TableViewCell.__getters:cellLayout()
--- 	return self._cellLayout
--- end
--- function TableViewCell.__setters:cellLayout( value )
--- 	-- print( "TableViewCell.__setters:cellLayout", value )
--- 	assert( type(value)=='string' )
--- 	--==--
--- 	if self._cellLayout == value then return end
--- 	self._cellLayout = value
--- 	self._cellLayout_dirty=true
--- 	self:__invalidateProperties__()
--- end
-
-
+--- set the Image View on the TableViewCell object.
+-- this is a Corona Image. it is the developers responsibility to size the image, recommended to fit within 26x26. Can be any width. The TableViewCell will position the image, ensure proper anchor points.
+--
+-- @within Properties
+-- @function .imageView
+--
+-- @usage widget.imageView = display.newImageRect( 'image.jpg', 26, 26 )
 
 function TableViewCell.__getters:imageView()
 	return self._imageView
@@ -419,46 +467,61 @@ function TableViewCell.__setters:imageView( value )
 	self:__invalidateProperties__()
 end
 
--- function TableViewCell.__getters:accessory()
--- 	return self._accessory
--- end
--- function TableViewCell.__setters:accessory( value )
--- 	assert( value )
--- 	self._accessory = value
--- 	self._accessory_dirty=true
--- 	self:__invalidateProperties__()
--- end
 
-
+--- get a reference to the Text Label object.
+-- this is a @{Widget.Text} object.
+--
+-- @within Properties
+-- @function .textLabel
+--
+-- @usage print( widget.textLabel )
 
 function TableViewCell.__getters:textLabel()
 	return self._wgtTextLabel
 end
+
+
+--- get a reference to the Text Detail object.
+-- this is a @{Widget.Text} object. the Text Detail is only visible with the SUBTITLE layout.
+--
+-- @within Properties
+-- @function .textDetail
+--
+-- @usage print( widget.textDetail )
 
 function TableViewCell.__getters:textDetail()
 	return self._wgtTextDetail
 end
 
 
---- set margin of table view cell.
--- this sets left and right side
--- @integer value
--- @usage cell.cellMargin=10
+
+--======================================================--
+-- Theme Methods
+
+-- afterAddStyle()
 --
-function TableViewCell.__setters:cellMargin( value )
-	-- print( 'TableViewCell.__setters:cellMargin', value )
-	assert( type(value)=='number' )
-	--==--
-	if self._cellMargin == value then return end
-	self._cellMargin = value
-	self._cellMargin_dirty=true
+function TableViewCell:afterAddStyle()
+	-- print( "TableViewCell:afterAddStyle", self )
+	self._widgetStyle_dirty=true
+	self:__invalidateProperties__()
+end
+
+-- beforeRemoveStyle()
+--
+function TableViewCell:beforeRemoveStyle()
+	-- print( "TableViewCell:beforeRemoveStyle", self )
+	self._widgetStyle_dirty=true
 	self:__invalidateProperties__()
 end
 
 
 
+
+
+
 --====================================================================--
 --== Private Methods
+
 
 
 function TableViewCell:_removeAccessory( obj )
@@ -476,6 +539,35 @@ function TableViewCell:_loadAccessory( name, obj )
 	local img = display.newImageRect( info.file, info.w*scale, info.h*scale )
 	return img
 end
+
+
+--== Create/Destroy Background Widget
+
+function TableViewCell:_removeBackground()
+	-- print( "TableViewCell:_removeBackground" )
+	local o = self._wgtBg
+	if not o then return end
+	o:removeSelf()
+	self._wgtBg = nil
+end
+
+function TableViewCell:_createBackground()
+	-- print( "TableViewCell:_createBackground" )
+
+	self:_removeBackground()
+
+	local o = Widget.newBackground{
+		defaultStyle = self.defaultStyle.background
+	}
+	self._dgBg:insert( o.view )
+	self._wgtBg = o
+
+	--== Reset properties
+
+	self._wgtBgStyle_dirty=true
+end
+
+
 
 
 function TableViewCell:_removeTextDetail()
@@ -544,14 +636,22 @@ end
 function TableViewCell:__commitProperties__()
 	-- print( 'TableViewCell:__commitProperties__' )
 
+	--== Update Widget Components ==--
+
+	if self._wgtBg_dirty then
+		self:_createBackground()
+		self._wgtBg_dirty = false
+	end
+
+
 	local view = self.view
-	local bg = self._rectBg
+	local bg = self._wgtBg
 	local imageView = self._imageView
 	local textLabel = self._wgtTextLabel
 	local textDetail = self._wgtTextDetail
 
-	local height = self._height
-	local width = self._width
+	local height = self.height
+	local width = self.width
 
 	--== position sensitive
 
@@ -565,11 +665,11 @@ function TableViewCell:__commitProperties__()
 		end
 		textLabel:setActiveStyle( style.label, {copy=false} )
 		textDetail:setActiveStyle( style.detail, {copy=false} )
-		-- bg:setActiveStyle( style.background, {copy=false} )
+		bg:setActiveStyle( style.background, {copy=false} )
 		self._activeStateStyle = style
 		self._highlightIsActive_dirty=false
 
-		self._accessory_dirty=true
+		self._cellAccessory_dirty=true
 		self._textLabelX_dirty=true
 		self._textLabelY_dirty=true
 		self._textLabelWidth_dirty=true
@@ -595,7 +695,6 @@ function TableViewCell:__commitProperties__()
 	end
 
 	if self._width_dirty then
-		bg.width = self._width
 		self._width_dirty=false
 
 		self._rectBgWidth_dirty=true
@@ -603,7 +702,6 @@ function TableViewCell:__commitProperties__()
 		self._textDetailWidth_dirty=true
 	end
 	if self._height_dirty then
-		bg.height = self._height
 		self._height_dirty=false
 
 		self._anchorY_dirty=true
@@ -613,14 +711,14 @@ function TableViewCell:__commitProperties__()
 	-- anchorX/anchorY
 
 	if self._anchorX_dirty then
-		bg.anchorX = style.anchorX
+		-- bg.anchorX = style.anchorX
 		self._anchorX_dirty=false
 
 		self._x_dirty=true
 		self._textLabelX_dirty=true
 	end
 	if self._anchorY_dirty then
-		bg.anchorY = style.anchorY
+		-- bg.anchorY = style.anchorY
 		self._anchorY_dirty=false
 
 		self._y_dirty=true
@@ -628,6 +726,12 @@ function TableViewCell:__commitProperties__()
 	end
 
 	-- Virtual
+
+	if self._widgetStyle_dirty then
+		self._widgetStyle_dirty=false
+
+		self._wgtBgStyle_dirty=true
+	end
 
 	if self._cellMargin_dirty then
 		self._cellMargin_dirty=false
@@ -655,6 +759,14 @@ function TableViewCell:__commitProperties__()
 		self._accessoryX_dirty=true
 	end
 
+	--== Set Styles
+
+	if self._wgtBgStyle_dirty then
+		-- bg:setActiveStyle( style.inactive.background, {copy=false} )
+		self._wgtBgStyle_dirty=false
+	end
+
+
 	-- bg width/height
 
 	if self._rectBgWidth_dirty then
@@ -666,7 +778,7 @@ function TableViewCell:__commitProperties__()
 
 	-- accessory / accessoryX
 
-	if self._accessory_dirty then
+	if self._cellAccessory_dirty then
 		local accessory = style.accessory
 		local accessObj = self._accessoryObject
 
@@ -689,7 +801,7 @@ function TableViewCell:__commitProperties__()
 			self._accessoryX_dirty=true
 		end
 		self._accessoryObject = accessObj
-		self._accessory_dirty=false
+		self._cellAccessory_dirty=false
 
 		self._textLabelWidth_dirty=true
 		self._textDetailWidth_dirty=true
@@ -705,7 +817,7 @@ function TableViewCell:__commitProperties__()
 	-- imageViewX
 
 	if self._imageViewX_dirty and imageView then
-		local height = self._height -- use getter
+		local height = self.height -- use getter
 		local offset = height/2
 		imageView.x = cellMargin
 		imageView.y = offset
@@ -776,9 +888,9 @@ function TableViewCell:__commitProperties__()
 
 	if self._debugOn_dirty then
 		if style.debugOn==true then
-			bg:setFillColor( 1,0,0,0.2 )
+			-- bg:setFillColor( 1,0,0,0.2 )
 		else
-			bg:setFillColor( 0,0,0,0 )
+			-- bg:setFillColor( 0,0,0,0 )
 		end
 		self._fillColor_dirty=false
 		self._debugOn_dirty=false
@@ -809,7 +921,7 @@ function TableViewCell:stylePropertyChangeHandler( event )
 		self._anchorX_dirty=true
 		self._anchorY_dirty=true
 
-		self._accessory_dirty = true
+		self._cellAccessory_dirty = true
 		self._cellLayout_dirty=true
 		self._cellMargin_dirty=true
 		self._contentMargin_dirty=true
@@ -831,7 +943,7 @@ function TableViewCell:stylePropertyChangeHandler( event )
 				self._anchorY_dirty=true
 
 		elseif property=='accessory' then
-			self._accessory_dirty=true
+			self._cellAccessory_dirty=true
 		elseif property=='cellLayout' then
 			self._cellLayout_dirty=true
 		elseif property=='cellMargin' then

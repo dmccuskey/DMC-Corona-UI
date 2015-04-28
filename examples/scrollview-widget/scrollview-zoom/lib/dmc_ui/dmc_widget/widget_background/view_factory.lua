@@ -63,6 +63,7 @@ local ui_find = dmc_ui_func.find
 --== Imports
 
 
+local NineSlice = require( ui_find( 'dmc_widget.widget_background.nine_slice_view' ) )
 local Rectangle = require( ui_find( 'dmc_widget.widget_background.rectangle_view' ) )
 local Rounded = require( ui_find( 'dmc_widget.widget_background.rounded_view' ) )
 
@@ -72,10 +73,10 @@ local Rounded = require( ui_find( 'dmc_widget.widget_background.rounded_view' ) 
 --== Setup, Constants
 
 
+local sfmt = string.format
+
 --== To be set in initialize()
 local Widgets = nil
-
-local sfmt = string.format
 
 
 
@@ -87,6 +88,7 @@ local function initializeFactory( manager )
 	-- print( "ViewFactory.initializeFactory" )
 	Widgets = manager
 
+	NineSlice.initialize( manager )
 	Rectangle.initialize( manager )
 	Rounded.initialize( manager )
 end
@@ -94,7 +96,9 @@ end
 
 local function createView( style_type, params )
 	-- print( "ViewFactory.createView", style_type )
-	if style_type==Rectangle.TYPE then
+	if style_type==NineSlice.TYPE then
+		return NineSlice:new( params )
+	elseif style_type==Rectangle.TYPE then
 		return Rectangle:new( params )
 	elseif style_type==Rounded.TYPE then
 		return Rounded:new( params )
@@ -106,7 +110,9 @@ end
 
 local function getViewClass( style_type )
 	-- print( "ViewFactory.getViewClass", style_type )
-	if style_type==Rectangle.TYPE then
+	if style_type==NineSlice.TYPE then
+		return NineSlice
+	elseif style_type==Rectangle.TYPE then
 		return Rectangle
 	elseif style_type==Rounded.TYPE then
 		return Rounded
@@ -127,6 +133,7 @@ return {
 
 	initialize = initializeFactory,
 
+	NineSlice = NineSlice,
 	Rectangle = Rectangle,
 	Rounded = Rounded,
 

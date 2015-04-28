@@ -42,7 +42,7 @@ local VERSION = "0.1.0"
 
 
 --- TableView Delegate Interface.
--- the interface for controlling a TableView via a delegate. currently all are optional, so it's only necessary to implement those which are needed.
+-- the interface for controlling a TableView via a delegate.
 --
 -- @classmod Delegate.TableView
 -- @usage
@@ -50,6 +50,16 @@ local VERSION = "0.1.0"
 --
 -- -- setup delegate object
 -- local delegate = {
+--   numberOfRows=function(self, tableview, section)
+--     -- return row data here
+--   end,
+--   onRowRender=function(self, event)
+--     -- create row view
+--   end,
+--   onRowUnrender=function(self, event)
+--     -- destroy row view
+--   end,
+--
 --   shouldHighlightRow=function(self, event)
 --     return true
 --   end,
@@ -57,15 +67,63 @@ local VERSION = "0.1.0"
 --     return event.index
 --   end,
 -- }
+--
 -- @usage
--- local widget = dUI.newTableView()
+-- local widget = dUI.newTableView()x
 -- widget.delegate = <delgate object>
+--
 -- @usage
 -- local dUI = require 'dmc_ui'
 -- local widget = dUI.newTableView{
 --   delegate=<delegate object>
 -- }
 
+
+
+
+--- description of methods for a row object.
+-- the row object within the onRender/onUnrender has methods which can be used to modify some of the row attributes.
+-- @within Row-Object
+-- @tfield function setBackgroundColor sets the background color of the row
+-- @tfield function setLineColor sets the line color of the row
+-- @table .rowObjectMethods
+
+
+--- (required) asks the delegate to return the number of rows to be rendered.
+--
+-- @within Methods
+-- @function :numberOfRows
+-- @param tableview the @{Widget.TableView} object
+-- @param section the section in question (not yet implemented)
+-- @treturn number
+
+
+--- (required) asks the delegate to render the view for the row to be added to the display.
+--
+-- @within Methods
+-- @function :onRowRender
+-- @param event the event table
+-- @tparam string event.name the event name (`TableView.EVENT`)
+-- @tparam string event.type the event type (`TableView.RENDER_ROW`)
+-- @object event.target the @{Widget.TableView} object
+-- @object event.row the row object @{rowObjectMethods}
+-- @object event.view the row's Display Group, for visual items
+-- @tparam number event.index the index of the row inside of the TableView
+-- @tab event.data a table for general data storage for the row.
+
+
+--- (required) asks the delegate to unrender the view for the row to be removed from the display.
+--
+-- @within Methods
+-- @function :onRowUnrender
+-- @param event the event table
+-- @tparam string event.name the event name (`TableView.EVENT`)
+-- @tparam string event.type the event type (`TableView.UNRENDER_ROW`)
+-- @object event.target the @{Widget.TableView} object
+-- @object event.row the row object @{rowObjectMethods}
+-- @object event.view the row's Display Group, for visual items
+-- @tparam number event.index the index of the row inside of the TableView
+-- @tab event.data a table for general data storage for the row.
 
 
 --- (optional) asks delegate if specified row should be highlighted.

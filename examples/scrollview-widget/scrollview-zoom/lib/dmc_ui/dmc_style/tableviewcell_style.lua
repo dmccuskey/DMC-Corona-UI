@@ -66,9 +66,10 @@ local ui_find = dmc_ui_func.find
 
 local Objects = require 'dmc_objects'
 local Utils = require 'dmc_utils'
+
 local uiConst = require( ui_find( 'ui_constants' ) )
 
-local BaseStyle = require( ui_find( 'dmc_style.base_style' ) )
+local BaseStyle = require( ui_find( 'core.style' ) )
 
 
 
@@ -91,6 +92,16 @@ local Style = nil
 --== TableViewCell Style Class
 --====================================================================--
 
+--- TableViewCell Style.
+-- A style object for a TableViewCell.
+--
+-- **Inherits from:** <br>
+-- * @{Core.Style}
+--
+-- @classmod Style.TableViewCell
+-- @usage
+-- local dUI = require 'dmc_ui'
+-- local widget = dUI.newTableViewCellStyle()
 
 local TableViewCell = newClass( BaseStyle, {name="TableViewCell Style"} )
 
@@ -128,8 +139,8 @@ TableViewCell._STYLE_DEFAULTS = {
 	anchorX=0,
 	anchorY=1,
 
-	accessory='disclosure-indicator-accessory',
-	cellLayout='subtitle-layout',
+	accessory=uiConst.TABLEVIEWCELL_DISCLOSURE_INDICATOR,
+	cellLayout=uiConst.TABLEVIEWCELL_SUBTITLE_LAYOUT,
 	cellMargin=5,
 	contentMargin=5,
 
@@ -166,7 +177,7 @@ TableViewCell._STYLE_DEFAULTS = {
 			type='rectangle',
 			view={
 				fillColor={1,1,1,1},
-				strokeWidth=1,
+				strokeWidth=0,
 				strokeColor={0,0,0,1},
 			}
 		}
@@ -188,21 +199,21 @@ TableViewCell._STYLE_DEFAULTS = {
 		detailY=22,
 		label={
 			align='left',
-			textColor={0.1,0.1,0.1,1},
+			textColor={0.1,0.4,0.1,1},
 			font=native.systemFontBold,
 			fontSize=11
 		},
 		detail={
 			align='left',
-			textColor={0.6,0.6,0.6,1},
+			textColor={0.6,0.8,0.6,1},
 			font=native.systemFont,
 			fontSize=9
 		},
 		background={
 			type='rectangle',
 			view={
-				fillColor={1,1,1,1},
-				strokeWidth=1,
+				fillColor={0.9,0.9,0.9,1},
+				strokeWidth=0,
 				strokeColor={0,0,0,1},
 			}
 		}
@@ -513,6 +524,7 @@ function TableViewCell:_prepareData( data, dataSrc, params )
 	-- print("TableViewCell:_prepareData", data, self )
 	params = params or {}
 	--==--
+
 	-- local inherit = params.inherit
 	local StyleClass
 	local src, dest, tmp

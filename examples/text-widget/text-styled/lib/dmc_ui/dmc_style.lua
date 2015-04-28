@@ -130,15 +130,24 @@ function Style.initialize( manager, params )
 	dUI.registerWidget = Style.registerWidget
 	dUI.removeStyle = Style.removeStyle
 
+	dUI.activateTheme = Style.activateTheme
+	dUI.createTheme = Style.createTheme
+	dUI.getActiveThemeId = Style.getActiveThemeId
+	dUI.getAvailableThemeIds = Style.getAvailableThemeIds
+	dUI.loadTheme = Style.loadTheme
+	dUI.loadThemes = Style.loadThemes
+
 	-- Style Interface
 
 	dUI.newBackgroundStyle = Style.newBackgroundStyle
 	dUI.newButtonStyle = Style.newButtonStyle
 	dUI.newNavBarStyle = Style.newNavBarStyle
 	dUI.newNavItemStyle = Style.newNavItemStyle
+	dUI.newNineSliceBackgroundStyle = Style.newNineSliceBackgroundStyle
 	dUI.newRectangleBackgroundStyle = Style.newRectangleBackgroundStyle
 	dUI.newRoundedBackgroundStyle = Style.newRoundedBackgroundStyle
 	dUI.newTableViewStyle = Style.newTableViewStyle
+	dUI.newTableViewCellStyle = Style.newTableViewCellStyle
 	dUI.newTextFieldStyle = Style.newTextFieldStyle
 	dUI.newTextStyle = Style.newTextStyle
 
@@ -164,7 +173,7 @@ function Style.loadBaseStyleSupport( params )
 		kmode = Kolor.hRGBA
 	end
 
-	local BaseStyle = require( ui_find( 'dmc_style.base_style' ) )
+	local BaseStyle = require( ui_find( 'core.style' ) )
 	Style.Base=BaseStyle
 	initKolors(
 		function()
@@ -220,6 +229,16 @@ function Style.newBackgroundStyle( style_info, params )
 	params.data = style_info
 	if not Style.Background then Style._loadBackgroundStyleSupport() end
 	return Style.Background:createStyleFrom( params )
+end
+
+function Style.newNineSliceBackgroundStyle( style_info, params )
+	-- print("Style.newNineSliceBackgroundStyle")
+	style_info = style_info or {}
+	params = params or {}
+	--==--
+	if not Style.Background then Style._loadBackgroundStyleSupport() end
+	style_info.type = Style.BackgroundFactory.NineSlice.TYPE
+	return Style.newBackgroundStyle( style_info, params )
 end
 
 function Style.newRectangleBackgroundStyle( style_info, params )
@@ -435,7 +454,7 @@ end
 
 
 --======================================================--
--- newTableViewCell Support
+-- newTableViewCellStyle Support
 
 function Style.loadTableViewCellStyleSupport( params )
 	-- print( "Style.loadTableViewCellStyleSupport" )
@@ -472,8 +491,8 @@ function Style.loadTableViewCellStyleSupport( params )
 	)
 end
 
-function Style.newTableViewCell( style_info, params )
-	-- print( "Style.newTableViewCell" )
+function Style.newTableViewCellStyle( style_info, params )
+	-- print( "Style.newTableViewCellStyle" )
 	style_info = style_info or {}
 	params = params or {}
 	--==--

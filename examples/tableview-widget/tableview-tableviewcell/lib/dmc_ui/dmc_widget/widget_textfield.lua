@@ -66,6 +66,7 @@ local ui_find = dmc_ui_func.find
 
 local Objects = require 'dmc_objects'
 local Utils = require 'dmc_utils'
+local wUtils = require( ui_find( 'ui_utils' ) )
 
 local uiConst = require( ui_find( 'ui_constants' ) )
 
@@ -79,6 +80,9 @@ local WidgetBase = require( ui_find( 'core.widget' ) )
 
 local newClass = Objects.newClass
 
+local tcancel = timer.cancel
+local tdelay = timer.performWithDelay
+
 --== To be set in initialize()
 local dUI = nil
 local Widget = nil
@@ -91,6 +95,13 @@ local Widget = nil
 
 
 --- TextField Widget Module.
+-- a widget used to collect text from user.
+--
+-- **Inherits from:** <br>
+-- * @{Core.Widget}
+--
+-- **Style Object:** <br>
+-- * @{Style.TextField}
 --
 -- @classmod Widget.TextField
 -- @usage
@@ -99,10 +110,15 @@ local Widget = nil
 
 local TextField = newClass( WidgetBase, {name="TextField"} )
 
---- Class Constants.
+--- Constants
 -- @section
 
 --== Class Constants
+
+TextField._START_FOCUS_TIMER = nil
+TextField._STOP_FOCUS_TIMER = nil
+TextField._FOCUS_COUNT = 0
+
 
 -- alignment
 TextField.LEFT = 'left'
@@ -116,8 +132,21 @@ TextField.BORDER_STYLE_ROUNDED = 'border-style-rounded'
 TextField.BORDER_IMAGE = 'border-style-rounded'
 
 -- keyboard
+
+--- defines default Keyboard input type.
+-- set input type using styles (inline, style, or direct)
+-- @usage
+-- widget.style.inputType = widget.INPUT_DEFAULT
+
 TextField.INPUT_DEFAULT = 'default'
+
+--- defines decimal Keyboard input type.
+-- set input type using styles (inline, style, or direct)
+-- @usage
+-- widget.style.inputType = widget.INPUT_DECIMAL
+
 TextField.INPUT_DECIMAL = 'decimal'
+
 TextField.INPUT_EMAIL = 'email'
 TextField.INPUT_NUMBER = 'number'
 TextField.INPUT_PASSWORD = 'password'
@@ -191,7 +220,7 @@ function TextField:__init__( params )
 
 	self._isWidgetEnabled = true
 
-	self._isEditActive = { state=false, set_focus=nil }
+	self._isEditActive = { state=false, setFocus=nil }
 	self._isEditActive_dirty = true
 
 	self._clearOnBeginEdit = false
@@ -208,7 +237,6 @@ function TextField:__init__( params )
 	self._backgroundStyle_dirty=true
 	self._inputType_dirty=true
 	self._isHitActive_dirty=true
-	self._isHitTestable_dirty=true
 	self._isSecure_dirty=true
 	self._marginX_dirty=true
 	self._marginY_dirty=true
@@ -231,7 +259,9 @@ function TextField:__init__( params )
 	self._inputFieldAlign_dirty=true
 	self._inputFieldFont_dirty=true
 	self._inputFieldFontSize_dirty=true
+	self._inputFieldWidth_dirty=true
 	self._inputFieldHeight_dirty=true
+	self._inputFieldMarginX_dirty=true
 	self._inputFieldIsSecure_dirty=true
 	self._inputFieldStyle_dirty=true
 	self._inputFieldText_dirty=true
@@ -348,57 +378,9 @@ end
 -- Local Properties
 
 
-
 --[[
 Inherited Methods
 --]]
-
---- set/get x position.
---
--- @within Properties
--- @function .x
--- @usage widget.x = 5
--- @usage print( widget.x )
-
---- set/get y position.
---
--- @within Properties
--- @function .y
--- @usage widget.y = 5
--- @usage print( widget.y )
-
---- set/get anchorX.
---
--- @within Properties
--- @function .anchorX
--- @usage widget.anchorX = 5
--- @usage print( widget.anchorX )
-
---- set/get anchorY.
---
--- @within Properties
--- @function .anchorY
--- @usage widget.anchorY = 5
--- @usage print( widget.anchorY )
-
---- set/get widget style.
--- style can be a style name or a Style Object.
--- Style Object must be appropriate style for Widget, eg style for Background widget comes from dUI.newBackgroundStyle().
--- @within Properties
--- @function .style
--- @usage widget.style = 'widget-home-page'
--- @usage
--- local wStyle = dUI.newTextStyle()
--- widget.style = wStyle
-
-
---- clear any local properties on style.
--- convenience method, calls clearProperties() on active style.
---
--- @within Methods
--- @function :clearStyle
--- @usage widget:clearStyle()
-
 
 --- set/get align.
 -- values are 'left', 'center', 'right'
@@ -407,15 +389,6 @@ Inherited Methods
 -- @function .align
 -- @usage widget.align = 'center'
 -- @usage print( widget.align )
-
---- set/get marginX.
--- set the margin inset of the widget. this value is *subtracted* from the widget width.
---
--- @within Properties
--- @function .marginX
--- @usage widget.marginX = 18
--- @usage print( widget.marginX )
-
 
 --== .hintText
 
@@ -438,6 +411,7 @@ function TextField.__setters:hintText( value )
 	self:__invalidateProperties__()
 end
 
+
 --== .isEditing
 
 --- get editing state for TextField.
@@ -455,13 +429,12 @@ end
 
 --== .isHitActive
 
---- get state of touch-activity.
--- returns true if the TextField is currently enabled.
+--- set state of touch-activity.
+-- set true if the TextField editing is enabled.
 --
--- @within isHitActive
+-- @within Properties
 -- @function .isHitActive
--- @treturn bool
--- @usage print( widget.isHitActive )
+-- @usage widget.isHitActive = true
 
 function TextField.__setters:isHitActive( value, params )
 	-- print( "TextField.__setters:isHitActive", value )
@@ -487,27 +460,26 @@ function TextField.__setters:isSecure( value )
 	self.curr_style.isSecure = value
 end
 
---== .text
 
---- set/get input text for TextWidget.
+--== .marginX
+
+--- set/get marginX.
+-- set the margin inset of the widget. this value is *subtracted* from the widget width.
 --
 -- @within Properties
--- @function .text
--- @usage widget.text = true
--- @usage print( widget.text )
+-- @function .marginX
+-- @usage widget.marginX = 18
+-- @usage print( widget.marginX )
 
-function TextField.__getters:text()
-	return self._displayText
-end
-function TextField.__setters:text( value )
-	-- print( "TextField.__setters:text", value )
-	assert( type(value)=='string' )
-	--==--
-	if value == self._displayText then return end
-	self._displayText = value
-	self._displayText_dirty=true
-	self:__invalidateProperties__()
-end
+--== .marginY
+
+--- set/get marginY.
+-- set the margin inset of the widget. this value is *subtracted* from the widget width.
+--
+-- @within Properties
+-- @function .marginY
+-- @usage widget.marginY = 18
+-- @usage print( widget.marginY )
 
 
 --== :setEditActive()
@@ -516,14 +488,16 @@ end
 --
 -- @within Properties
 -- @function :setEditActive
+--
 -- @tparam bool value true if
 -- @tab[opt] params table of optional parameters
--- @usage widget:setEditActive( true, { set_focus=true })
+-- @tparam[opt=true] bool params.setFocus set focus on the text field
+-- @usage widget:setEditActive( true, { setFocus=true })
 
 function TextField:setEditActive( value, params )
 	-- print( "TextField:setEditActive", value )
 	params = params or {}
-	if params.set_focus==nil then params.set_focus=true end
+	if params.setFocus==nil then params.setFocus=true end
 	assert( type(value)=='boolean' )
 	--==--
 	params.state=value
@@ -532,12 +506,15 @@ function TextField:setEditActive( value, params )
 	self:__invalidateProperties__()
 end
 
+
 --== :setKeyboardFocus()
 
 --- set keyboard cursor-focus on this TextField.
+-- this will show the keyboard.
 --
 -- @within Properties
 -- @function :setKeyboardFocus
+-- @usage widget:setKeyboardFocus()
 
 function TextField:setKeyboardFocus()
 	-- print( "TextField:setKeyboardFocus" )
@@ -549,6 +526,7 @@ end
 --== :unsetKeyboardFocus()
 
 --- remove keyboard cursor-focus on this TextField.
+-- this will hide the keyboard.
 --
 -- @within Properties
 -- @function :unsetKeyboardFocus
@@ -579,6 +557,30 @@ function TextField:setReturnKey( value )
 end
 
 
+--== .text
+
+--- set/get input text for TextWidget.
+--
+-- @within Properties
+-- @function .text
+-- @usage widget.text = "input field text"
+-- @usage print( widget.text )
+
+function TextField.__getters:text()
+	return self._displayText
+end
+function TextField.__setters:text( value )
+	-- print( "TextField.__setters:text", value )
+	assert( type(value)=='string' )
+	--==--
+	if value == self._displayText then return end
+	self._displayText = value
+	self._displayText_dirty=true
+	self:__invalidateProperties__()
+end
+
+
+
 --======================================================--
 -- Background Style Properties
 
@@ -588,21 +590,21 @@ function TextField.__getters:backgroundStrokeWidth()
 	return self.curr_style.backgroundStrokeWidth
 end
 function TextField.__setters:backgroundStrokeWidth( value )
-	-- print( 'TextField.__setters:backgroundStrokeWidth', value )
+	-- print( "TextField.__setters:backgroundStrokeWidth", value )
 	self.curr_style.backgroundStrokeWidth = value
 end
 
 -- setBackgroundFillColor()
 --
 function TextField:setBackgroundFillColor( ... )
-	-- print( 'TextField:setBackgroundFillColor' )
+	-- print( "TextField:setBackgroundFillColor" )
 	self.curr_style.backgroundFillColor = {...}
 end
 
 -- setBackgroundStrokeColor()
 --
 function TextField:setBackgroundStrokeColor( ... )
-	-- print( 'TextField:setBackgroundStrokeColor' )
+	-- print( "TextField:setBackgroundStrokeColor" )
 	self.curr_style.backgroundStrokeColor = {...}
 end
 
@@ -613,21 +615,21 @@ end
 -- .hintFont  TODO: move to style
 --
 function TextField.__setters:hintFont( value )
-	-- print( 'TextField.__setters:hintFont', value )
+	-- print( "TextField.__setters:hintFont", value )
 	self.curr_style.hint.font = value
 end
 
 -- .hintFontSize
 --
 function TextField.__setters:hintFontSize( value )
-	-- print( 'TextField.__setters:hintFontSize', value )
+	-- print( "TextField.__setters:hintFontSize", value )
 	self.curr_style.hint.fontSize = value
 end
 
 -- setHintTextColor()
 --
 function TextField:setHintTextColor( ... )
-	-- print( 'TextField:setHintTextColor' )
+	-- print( "TextField:setHintTextColor" )
 	self.curr_style.hintTextColor = {...}
 end
 
@@ -638,21 +640,21 @@ end
 -- .displayFont -- TODO move to stlye
 --
 function TextField.__setters:displayFont( value )
-	-- print( 'TextField.__setters:displayFont', value )
+	-- print( "TextField.__setters:displayFont", value )
 	self.curr_style.displayFont = value
 end
 
 -- .displayFontSize
 --
 function TextField.__setters:displayFontSize( value )
-	-- print( 'TextField.__setters:displayFontSize', value )
+	-- print( "TextField.__setters:displayFontSize", value )
 	self.curr_style.displayFontSize = value
 end
 
 -- setDisplayTextColor()
 --
 function TextField:setDisplayTextColor( ... )
-	-- print( 'TextField:setDisplayTextColor' )
+	-- print( "TextField:setDisplayTextColor" )
 	self.curr_style.displayTextColor = {...}
 end
 
@@ -863,6 +865,7 @@ function TextField:_createTextField()
 
 	o = native.newTextField(0,0,w,h)
 	self:insert( o )
+	o.isFontSizeScaled=true
 	o:addEventListener( 'userInput', self._inputField_f )
 	self._inputField = o
 
@@ -886,7 +889,7 @@ end
 
 
 function TextField:__commitProperties__()
-	-- print( 'TextField:__commitProperties__' )
+	-- print( "TextField:__commitProperties__" )
 
 	--== Update Widget Components ==--
 
@@ -934,10 +937,10 @@ function TextField:__commitProperties__()
 	if self._width_dirty then
 		local width = style.width
 		hit.width = width
-		input.width = width
 		self._width_dirty=false
 
 		self._inputFieldX_dirty=true
+		self._inputFieldWidth_dirty=true
 	end
 	if self._height_dirty then
 		local height = style.height
@@ -976,6 +979,7 @@ function TextField:__commitProperties__()
 		self._marginX_dirty = false
 
 		self._inputFieldX_dirty=true
+		self._inputFieldMarginX_dirty=true
 	end
 	if self._marginY_dirty then
 		self._marginY_dirty = false
@@ -1040,13 +1044,18 @@ function TextField:__commitProperties__()
 
 	if self._isEditActive_dirty then
 		local is_editing = self._isEditActive
-		local edit, set_focus = is_editing.state, is_editing.set_focus
+		local edit, setFocus = is_editing.state, is_editing.setFocus
 		text.isVisible=not edit
 		input.isVisible=edit
-		if set_focus then
+		if setFocus then
 			local focus = input
 			if not edit then focus=nil end
-			native.setKeyboardFocus( focus )
+			if focus then
+				self:_startKeyboardFocus( focus )
+			else
+				self:_stopKeyboardFocus()
+			end
+			-- native.setKeyboardFocus( focus )
 		end
 		self._isEditActive_dirty=false
 	end
@@ -1076,11 +1085,6 @@ function TextField:__commitProperties__()
 
 	--== Hit
 
-	if self._isHitTestable_dirty then
-		hit.isHitTestable=style.isHitTestable
-		self._isHitTestable_dirty=false
-	end
-
 	if self._wgtTextHeight_dirty then
 		self._wgtTextHeight_dirty=false
 
@@ -1097,9 +1101,17 @@ function TextField:__commitProperties__()
 		self._inputFieldStyle_dirty=false
 	end
 
+	if self._inputFieldWidth_dirty or self._inputFieldMarginX_dirty then
+		local width = style.width
+		local marginX = style.marginX
+		input.width = width - marginX*2
+		self._inputFieldWidth_dirty=false
+		self._inputFieldMarginX_dirty=false
+	end
+
 	if self._inputFieldHeight_dirty then
 		input.height = text:getTextHeight()
-		self._inputFieldHeight_dirty=true
+		self._inputFieldHeight_dirty=false
 	end
 
 	-- X/Y
@@ -1139,7 +1151,10 @@ function TextField:__commitProperties__()
 	-- font
 
 	if self._inputFieldFont_dirty or self._inputFieldFontSize_dirty then
-		input.font=native.newFont( style.display.font, style.display.fontSize )
+		local font = style.display.font
+		local fontSize = style.display.fontSize
+		local sFontSize = wUtils.getNativeFontSize( font, fontSize )
+		input.font=native.newFont( font, sFontSize )
 		self._inputFieldFont_dirty=false
 		self._inputFieldFontSize_dirty=false
 	end
@@ -1149,7 +1164,7 @@ function TextField:__commitProperties__()
 	if self._hasBackground_dirty then
 		-- hard-code, no background
 		-- TEST – false/(true)
-		input.hasBackground=true
+		input.hasBackground=false
 		self._hasBackground_dirty = false
 	end
 
@@ -1160,7 +1175,11 @@ function TextField:__commitProperties__()
 		if self._keyboardFocus==true then
 			focus = input
 		end
-		self:_startKeyboardFocus( focus )
+		if focus then
+			self:_startKeyboardFocus( focus )
+		else
+			self:_stopKeyboardFocus()
+		end
 		self._keyboardFocus_dirty=false
 	end
 
@@ -1196,35 +1215,68 @@ end
 -- sets keyboard focus, after a small timer delay
 --
 function TextField:_startKeyboardFocus( focus )
-	self:_stopKeyboardFocus()
+	-- print( "TextField:_startKeyboardFocus", self.id )
+	self:_cancelStopKeyboardFocus()
+	self:_cancelStartKeyboardFocus()
+	local count = TextField._FOCUS_COUNT
+	count = count + 1
 	local f = function()
 		native.setKeyboardFocus( focus )
-		self._keyboardFocus_timer=nil
+		TextField._START_FOCUS_TIMER=nil
 	end
-	self._keyboardFocus_timer = timer.performWithDelay( 1, f )
+	TextField._FOCUS_COUNT = count
+	TextField._START_FOCUS_TIMER = tdelay( 2, f )
+end
+
+function TextField:_cancelStartKeyboardFocus()
+	-- print( "TextField:_cancelStartKeyboardFocus", self.id )
+	local t = TextField._START_FOCUS_TIMER
+	if not t then return end
+	tcancel( t )
+	TextField._START_FOCUS_TIMER = nil
 end
 
 function TextField:_stopKeyboardFocus()
-	if not self._keyboardFocus_timer then return end
-	timer.cancel( self._keyboardFocus_timer )
-	self._keyboardFocus_timer = nil
+	-- print( "TextField:_stopKeyboardFocus", self.id )
+	self:_cancelStopKeyboardFocus()
+	local count = TextField._FOCUS_COUNT
+	if count > 0 then count = count-1 end
+	local f = function()
+		if TextField._FOCUS_COUNT==0 then
+			native.setKeyboardFocus( nil )
+		end
+		TextField._STOP_FOCUS_TIMER=nil
+	end
+	TextField._FOCUS_COUNT = count
+	TextField._STOP_FOCUS_TIMER = tdelay( 2, f )
+end
+function TextField:_cancelStopKeyboardFocus()
+	-- print( "TextField:_cancelStopKeyboardFocus", self.id )
+	local t = TextField._STOP_FOCUS_TIMER
+	if not t then return end
+	tcancel( t )
+	TextField._STOP_FOCUS_TIMER = nil
 end
 
 
-function TextField:_startEdit( set_focus )
-	-- print( 'TextField:_startEdit' )
-	self:setEditActive( true, {set_focus=set_focus} )
+
+function TextField:_startEdit( setFocus )
+	-- print( "TextField:_startEdit", setFocus, self.id )
+	if setFocus==nil then setFocus=true end
+	--==--
+	self:setEditActive( true, {setFocus=setFocus} )
 end
 
-function TextField:_stopEdit( set_focus )
-	-- print( 'TextField:_stopEdit' )
-	self:setEditActive( false, {set_focus=set_focus} )
+function TextField:_stopEdit( setFocus )
+	-- print( "TextField:_stopEdit", setFocus, self.id )
+	if setFocus==nil then setFocus=false end
+	--==--
+	self:setEditActive( false, {setFocus=setFocus} )
 end
 
 
 function TextField:_dispatchStateBegan( event )
-	-- print( 'TextField:_dispatchStateBegan', event )
-	self:_startEdit( false )
+	-- print( "TextField:_dispatchStateBegan", event )
 
 	self._tmp_text = self._displayText -- start last ok state
 
@@ -1234,7 +1286,7 @@ function TextField:_dispatchStateBegan( event )
 end
 
 function TextField:_dispatchStateEditing( event )
-	-- print( 'TextField:_dispatchStateEditing', event )
+	-- print( "TextField:_dispatchStateEditing", event )
 
 	self._tmp_text = event.text -- save for last ok state
 
@@ -1243,9 +1295,7 @@ function TextField:_dispatchStateEditing( event )
 end
 
 function TextField:_dispatchStateEnded( event )
-	-- print( 'TextField:_dispatchStateEnded', event )
-	self:_stopEdit( false )
-
+	-- print( "TextField:_dispatchStateEnded", event )
 	self._tmp_text = nil
 
 	event.target=self
@@ -1260,7 +1310,7 @@ end
 
 
 function TextField:_hitAreaTouch_handler( e )
-	-- print( "TextField:_hitAreaTouch_handler", e.phase )
+	-- print( "TextField:_hitAreaTouch_handler", e.phase, self.id )
 	local phase = e.phase
 	local background = e.target
 
@@ -1269,11 +1319,12 @@ function TextField:_hitAreaTouch_handler( e )
 	if phase=='began' then
 		display.getCurrentStage():setFocus( background )
 		self._has_focus = true
-
 		self:dispatchEvent( self.PRESSED, {isWithinBounds=true}, {merge=true} )
+		return true
 	end
 
 	if not self._has_focus then return false end
+
 
 	local bgCb = background.contentBounds
 	local isWithinBounds =
@@ -1301,8 +1352,6 @@ function TextField:_textFieldEvent_handler( event )
 	local phase = event.phase
 	local textfield = event.target -- Corona TextField
 
-	-- Utils.print( event )
-
 	if phase==TextField.BEGAN then
 		-- print( "text", event.text )
 		self:_dispatchStateBegan( event )
@@ -1323,6 +1372,8 @@ function TextField:_textFieldEvent_handler( event )
 	elseif phase==TextField.ENDED or phase==TextField.SUBMITTED then
 		if self:_delegateShouldEndEditing( event ) then
 			self.text = textfield.text -- << Use Setter
+			self:_stopEdit( false )
+			self:unsetKeyboardFocus()
 			self:_dispatchStateEnded( event )
 		else
 			self:setKeyboardFocus()
@@ -1446,7 +1497,7 @@ function TextField:stylePropertyChangeHandler( event )
 
 	-- Utils.print( event )
 
-	-- print( "Style Changed", etype, property, value )
+	-- print( "TF Style Changed", etype, property, value )
 
 	if etype==style.STYLE_RESET then
 		self._debugOn_dirty = true
@@ -1459,7 +1510,6 @@ function TextField:stylePropertyChangeHandler( event )
 		self._backgroundStyle_dirty=true
 		self._inputType_dirty=true
 		self._isHitActive_dirty=true
-		self._isHitTestable_dirty=true
 		self._isSecure_dirty=true
 		self._marginX_dirty=true
 		self._marginY_dirty=true
@@ -1490,8 +1540,6 @@ function TextField:stylePropertyChangeHandler( event )
 			self._inputType_dirty=true
 		elseif property=='isHitActive' then
 			self._isHitActive_dirty=true
-		elseif property=='isHitTestable' then
-			self._isHitTestable_dirty=true
 		elseif property=='isSecure' then
 			self._isSecure_dirty=true
 		elseif property=='marginX' then

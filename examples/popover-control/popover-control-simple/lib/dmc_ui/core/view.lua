@@ -137,6 +137,8 @@ function View:__init__( params )
 	self._y = params.y
 	self._y_dirty = true
 
+	self._isRendered = false
+
 	-- properties from style
 
 	self._width=params.width
@@ -146,8 +148,9 @@ function View:__init__( params )
 	self._anchorX_dirty=true
 	self._anchorY_dirty=true
 
-	self._autoMask_dirty=true
+	self._autoResizeSubViews = params.autoResizeSubViews
 	self._autoResizeSubViews_dirty=true
+
 	self._layoutMargins_dirty=true
 
 
@@ -155,7 +158,6 @@ function View:__init__( params )
 	references to main View/Control objects, not their property 'view'
 	--]]
 	self._subViews = {}
-	self._autoResizeSubViews = params.autoResizeSubViews
 
 	--[[
 	{width=0,height=0}
@@ -225,6 +227,8 @@ function View:__initComplete__()
 	self:superCall( StyleMix, '__initComplete__' )
 	self:superCall( ComponentBase, '__initComplete__' )
 	--==--
+	self._isRendered = true
+
 	self.style = self._tmp_style
 
 	self:_loadViews()
@@ -233,6 +237,7 @@ end
 function View:__undoInitComplete__()
 	-- print( "View:__undoInitComplete__" )
 	self.style = nil
+	self._isRendered = false
 	--==--
 	self:superCall( ComponentBase, '__undoInitComplete__' )
 	self:superCall( StyleMix, '__undoInitComplete__' )

@@ -226,8 +226,11 @@ UI._VALID_OS_VERSION = {
 UI.RUN_MODE = uiConst.RUN_MODE
 UI.TEST_MODE = uiConst.TEST_MODE
 
-UI.ROUNDED = uiConst.ROUNDED
+-- background types
+
+UI.NINE_SLICE = uiConst.NINE_SLICE
 UI.RECTANGLE = uiConst.RECTANGLE
+UI.ROUNDED = uiConst.ROUNDED
 
 -- Control Modal Types
 
@@ -267,13 +270,21 @@ Documentation items should be copied in manually
 -- @table newBackgroundParams
 
 
---- contructor for Rectangle Background widgets.
+--- convenience function for Rectangle Background widgets.
+--
+-- @function new9SliceBackground
+-- @tab options parameters used to create Background
+-- @param options.sheet newImageSheet the image sheet
+-- @param options.frames table of frames
+-- @treturn object @{Widget.Background}
+-- @usage local widget = dUI.new9SliceBackground()
+
+--- convenience function for Rectangle Background widgets.
 --
 -- @function newRectangleBackground
 -- @tab[opt] options parameters used to create Background
 -- @treturn object @{Widget.Background}
 -- @usage local widget = dUI.newRectangleBackground()
---
 
 --- convenience function for Rounded Background widgets.
 --

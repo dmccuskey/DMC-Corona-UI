@@ -64,11 +64,13 @@ local ui_find = dmc_ui_func.find
 --== Imports
 
 
-local LifecycleMixModule = require 'dmc_lifecycle_mix'
-local LuaPatch = require 'lib.dmc_lua.lua_patch'
 local Objects = require 'dmc_objects'
-local StyleMixModule = require( ui_find( 'dmc_style.style_mix' ) )
+local Patch = require 'dmc_patch'
+
 local uiConst = require( ui_find( 'ui_constants' ) )
+
+local LifecycleMixModule = require 'dmc_lifecycle_mix'
+local StyleMixModule = require( ui_find( 'dmc_style.style_mix' ) )
 
 
 
@@ -76,7 +78,7 @@ local uiConst = require( ui_find( 'ui_constants' ) )
 --== Setup, Constants
 
 
-LuaPatch.addPatch( 'table-pop' )
+Patch.addPatch( 'table-pop' )
 
 local newClass = Objects.newClass
 local ComponentBase = Objects.ComponentBase
@@ -93,9 +95,14 @@ local dUI = nil
 
 
 --====================================================================--
---== View Control Base Class
+--== Widget Base Class
 --====================================================================--
 
+
+--- Widget Base Class.
+-- The base class used for all Widgets.
+--
+-- @classmod Core.Widget
 
 local View = newClass(
 	{ StyleMix, ComponentBase, LifecycleMix },
@@ -117,8 +124,7 @@ function View:__init__( params )
 	params = params or {}
 	if params.x==nil then params.x=0 end
 	if params.y==nil then params.y=0 end
-	if params.width==nil then params.width=dUI.WIDTH end
-	if params.height==nil then params.height=dUI.HEIGHT end
+	if params.id==nil then params.id='' end
 	if params.autoMask==nil then params.autoMask=false end
 	if params.autoResizeSubViews==nil then params.autoResizeSubViews=true end
 	if params.layoutMargins==nil then params.layoutMargins=uiConst.VIEW_LAYOUT_MARGINS end
@@ -140,6 +146,8 @@ function View:__init__( params )
 	self._y = params.y
 	self._y_dirty = true
 
+	self._id = ''
+
 	self._isRendered = false
 
 	-- properties from style
@@ -154,6 +162,7 @@ function View:__init__( params )
 	self._autoResizeSubViews_dirty=true
 
 	self._layoutMargins_dirty=true
+
 
 	--[[
 	references to main View/Control objects, not their property 'view'
@@ -177,7 +186,7 @@ function View:__init__( params )
 	self._parentView = params.parentView
 
 	if params.autoMask == true then
-		self:_setView( display.newContainer( self._width, self._height ) )
+		self:_setView( display.newContainer( params.width, params.height ) )
 		self.view.anchorChildren = false
 		self.view.anchorX, self.view.anchorY = 0, 0
 	end
@@ -216,7 +225,6 @@ function View:__undoCreateView__()
 
 	self._dgBg:removeSelf()
 	self._dgBg=nil
-
 	--==--
 	self:superCall( ComponentBase, '__undoCreateView__' )
 end
@@ -231,8 +239,9 @@ function View:__initComplete__()
 	local tmp = self._wc_tmp_params
 
 	self._isRendered = true
-
+	self.id = tmp.id
 	self.delegate = tmp.delegate
+
 	self.style = tmp.style
 
 	self:_loadViews()
@@ -287,13 +296,48 @@ Inherited Methods
 -- @usage print( widget.y )
 
 
+--- set/get anchorX.
+--
+-- @within Properties
+-- @function .anchorX
+-- @usage widget.anchorX = 5
+-- @usage print( widget.anchorX )
+
+--- set/get anchorY.
+--
+-- @within Properties
+-- @function .anchorY
+-- @usage widget.anchorY = 5
+-- @usage print( widget.anchorY )
+
+--- set/get widget style.
+-- style can be a style name or a Style Object.
+-- Style Object must be appropriate style for Widget, eg style for Background widget comes from dUI.newBackgroundStyle().
+-- @within Properties
+-- @function .style
+-- @usage widget.style = 'widget-home-page'
+-- @usage
+-- local wStyle = dUI.newTextStyle()
+-- widget.style = wStyle
+
+
+--- clear any local properties on style.
+-- convenience method, calls clearProperties() on active style.
+--
+-- @within Methods
+-- @function :clearStyle
+-- @usage widget:clearStyle()
+
+
+
+
 --== .X
 
 function View.__getters:x()
 	return self._x
 end
 function View.__setters:x( value )
-	-- print( 'View.__setters:x', value )
+	-- print( "View.__setters:x", value )
 	assert( type(value)=='number' )
 	--==--
 	if self._x == value then return end
@@ -308,7 +352,7 @@ function View.__getters:y()
 	return self._y
 end
 function View.__setters:y( value )
-	-- print( 'View.__setters:y', value )
+	-- print( "View.__setters:y", value )
 	assert( type(value)=='number' )
 	--==--
 	if self._y == value then return end
@@ -316,6 +360,20 @@ function View.__setters:y( value )
 	self._y_dirty=true
 	self:__invalidateProperties__()
 end
+
+--== .id
+
+function View.__getters:id()
+	return self._id
+end
+function View.__setters:id( value )
+	-- print( "View.__setters:id", value )
+	assert( type(value)=='string' )
+	--==--
+	if self._id == value then return end
+	self._id = value
+end
+
 
 --== .delegate
 
@@ -337,34 +395,25 @@ end
 
 --== .width
 
--- function View:_widthChanged()
--- 	-- print( "OVERRIDE View:_widthChanged" )
--- end
--- function View.__getters:width()
--- 	return self._width
--- end
--- function View.__setters:width( value )
--- 	self._width = value
--- 	self:_widthChanged()
--- 	self._width_dirty=true
--- 	self:__invalidateProperties__()
--- end
+function View:_widthChanged()
+	-- print( "OVERRIDE View:_widthChanged" )
+end
+function View.__setters:width( value )
+	-- print("View.__setters:width", value)
+	StyleMix.__setters.width( self, value )
+	self:_widthChanged()
+end
 
 --== .height
 
--- function View:_heightChanged()
--- 	-- print( "OVERRIDE View:_heightChanged" )
--- end
--- -- function View.__getters:height()
--- -- 	return self._height
--- -- end
--- function View.__setters:height( value )
--- 	-- print( "View.__setters:height", value )
--- 	self._height = value
--- 	self:_heightChanged()
--- 	self._height_dirty=true
--- 	self:__invalidateProperties__()
--- end
+function View:_heightChanged()
+	-- print( "OVERRIDE View:_heightChanged" )
+end
+function View.__setters:height( value )
+	-- print( "View.__setters:height", value )
+	StyleMix.__setters.height( self, value )
+	self:_heightChanged()
+end
 
 
 --== _addSubView()
@@ -398,22 +447,6 @@ function View.__setters:preferredContentSize( value )
 	--==--
 	self._preferredContentSize = value
 end
-
-
-
---[[
-function View:viewIsVisible( value )
-	-- print( "View:viewIsVisible" )
-	local o = self._current_view
-	if o and o.viewIsVisible then o:viewIsVisible( value ) end
-end
-
-function View:viewInMotion( value )
-	-- print( "View:viewInMotion" )
-	local o = self._current_view
-	if o and o.viewInMotion then o:viewInMotion( value ) end
-end
---]]
 
 
 

@@ -26,6 +26,7 @@ module_config = {
 			"dmc_ui/dmc_style.lua",
 			"dmc_ui/dmc_style/background_style.lua",
 			"dmc_ui/dmc_style/background_style/base_view_style.lua",
+			"dmc_ui/dmc_style/background_style/nine_slice_style.lua",
 			"dmc_ui/dmc_style/background_style/rectangle_style.lua",
 			"dmc_ui/dmc_style/background_style/rounded_style.lua",
 			"dmc_ui/dmc_style/background_style/style_factory.lua",
@@ -47,6 +48,8 @@ module_config = {
 			"dmc_ui/dmc_widget/font_manager.lua",
 			"dmc_ui/dmc_widget/lib/easingx.lua",
 			"dmc_ui/dmc_widget/widget_background.lua",
+			#"dmc_ui/dmc_widget/widget_background/image_view.lua",
+			"dmc_ui/dmc_widget/widget_background/nine_slice_view.lua",
 			"dmc_ui/dmc_widget/widget_background/rectangle_view.lua",
 			"dmc_ui/dmc_widget/widget_background/rounded_view.lua",
 			"dmc_ui/dmc_widget/widget_background/view_factory.lua",
@@ -55,10 +58,6 @@ module_config = {
 			"dmc_ui/dmc_widget/widget_button/button_push.lua",
 			"dmc_ui/dmc_widget/widget_button/button_radio.lua",
 			"dmc_ui/dmc_widget/widget_button/button_toggle.lua",
-			"dmc_ui/dmc_widget/widget_button/view_9slice.lua",
-			"dmc_ui/dmc_widget/widget_button/view_base.lua",
-			"dmc_ui/dmc_widget/widget_button/view_image.lua",
-			"dmc_ui/dmc_widget/widget_button/view_shape.lua",
 			"dmc_ui/dmc_widget/widget_navbar.lua",
 			"dmc_ui/dmc_widget/widget_navbar/delegate_navbar.lua",
 			"dmc_ui/dmc_widget/widget_navitem.lua",
@@ -76,7 +75,20 @@ module_config = {
 			"dmc_ui/dmc_widget/widget_text.lua",
 			"dmc_ui/dmc_widget/widget_textfield.lua",
 			"dmc_ui/dmc_widget/widget_textfield/delegate_textfield.lua",
-			"dmc_ui/dmc_widget/widget_viewpager.lua"
+			"dmc_ui/dmc_widget/widget_viewpager.lua",
+
+			"dmc_ui/theme/default/textfield/01-TL.png",
+			"dmc_ui/theme/default/textfield/02-TM.png",
+			"dmc_ui/theme/default/textfield/03-TR.png",
+			"dmc_ui/theme/default/textfield/04-ML.png",
+			"dmc_ui/theme/default/textfield/05-MM.png",
+			"dmc_ui/theme/default/textfield/06-MR.png",
+			"dmc_ui/theme/default/textfield/07-BL.png",
+			"dmc_ui/theme/default/textfield/08-BM.png",
+			"dmc_ui/theme/default/textfield/09-BR.png",
+			"dmc_ui/theme/default/textfield/textfield-sheet.lua",
+			"dmc_ui/theme/default/textfield/textfield-sheet.png",
+
 		],
 		"requires": [
 			"dmc-corona-boot",
@@ -88,6 +100,36 @@ module_config = {
 	"examples": {
 		"base_dir": "examples",
 		"apps": [
+			{
+				"exp_dir": "background-widget/background-9slice",
+				"requires": [],
+				"mod_dir_map": {
+					"default_dir": "",
+					"libs": {
+						"dmc-corona-boot":""
+					}
+				}
+			},
+			{
+				"exp_dir": "background-widget/background-rectangle",
+				"requires": [],
+				"mod_dir_map": {
+					"default_dir": "",
+					"libs": {
+						"dmc-corona-boot":""
+					}
+				}
+			},
+			{
+				"exp_dir": "background-widget/background-rounded",
+				"requires": [],
+				"mod_dir_map": {
+					"default_dir": "",
+					"libs": {
+						"dmc-corona-boot":""
+					}
+				}
+			},
 			{
 				"exp_dir": "background-widget/background-styled",
 				"requires": [],
@@ -169,16 +211,6 @@ module_config = {
 				}
 			},
 			{
-				"exp_dir": "navbar-widget/navbar-styled",
-				"requires": [],
-				"mod_dir_map": {
-					"default_dir": "",
-					"libs": {
-						"dmc-corona-boot":""
-					}
-				}
-			},
-			{
 				"exp_dir": "navigation-control/navigation-control-simple",
 				"requires": [],
 				"mod_dir_map": {
@@ -199,7 +231,7 @@ module_config = {
 				}
 			},
 			{
-				"exp_dir": "scrollview-widget/scrollview-widget-simple",
+				"exp_dir": "scrollview-widget/scrollview-simple",
 				"requires": [],
 				"mod_dir_map": {
 					"default_dir": "",
@@ -210,16 +242,6 @@ module_config = {
 			},
 			{
 				"exp_dir": "scrollview-widget/scrollview-zoom",
-				"requires": [],
-				"mod_dir_map": {
-					"default_dir": "",
-					"libs": {
-						"dmc-corona-boot":""
-					}
-				}
-			},
-			{
-				"exp_dir": "slide_view-simple",
 				"requires": [],
 				"mod_dir_map": {
 					"default_dir": "",
@@ -280,6 +302,16 @@ module_config = {
 			},
 			{
 				"exp_dir": "text-widget/text-styled",
+				"requires": [],
+				"mod_dir_map": {
+					"default_dir": "",
+					"libs": {
+						"dmc-corona-boot":""
+					}
+				}
+			},
+			{
+				"exp_dir": "text-widget/text-themed",
 				"requires": [],
 				"mod_dir_map": {
 					"default_dir": "",

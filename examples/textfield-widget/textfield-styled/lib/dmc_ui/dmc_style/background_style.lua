@@ -68,7 +68,7 @@ local Objects = require 'dmc_objects'
 local Utils = require 'dmc_utils'
 local uiConst = require( ui_find( 'ui_constants' ) )
 
-local BaseStyle = require( ui_find( 'dmc_style.base_style' ) )
+local BaseStyle = require( ui_find( 'core.style' ) )
 
 
 
@@ -127,7 +127,6 @@ BackgroundStyle._EXCLUDE_PROPERTY_CHECK = {
 }
 
 BackgroundStyle._STYLE_DEFAULTS = {
-	name='background-default-style',
 	debugOn=false,
 	width=76,
 	height=30,
@@ -418,7 +417,6 @@ function BackgroundStyle:getDefaultStyleValues( data )
 
 	return style
 end
-
 
 
 -- copyProperties()
