@@ -69,15 +69,13 @@ local Utils = require 'dmc_utils'
 local uiConst = require( ui_find( 'ui_constants' ) )
 
 local BaseStyle = require( ui_find( 'core.style' ) )
+local StyleHelp = require( ui_find( 'core.style_help' ) )
 
 
 
 --====================================================================--
 --== Setup, Constants
 
-
-local newClass = Objects.newClass
-local ObjectBase = Objects.ObjectBase
 
 local sfmt = string.format
 local tinsert = table.insert
@@ -91,6 +89,16 @@ local Style = nil
 --== Text Style Class
 --====================================================================--
 
+--- Text Style Class.
+-- a style object for a Text widget.
+--
+-- **Inherits from:** <br>
+-- * @{Core.Style}
+--
+-- @classmod Style.Text
+-- @usage
+-- local dUI = require 'dmc_ui'
+-- local widget = dUI.newTextStyle()
 
 local TextStyle = newClass( BaseStyle, {name="Text Style"} )
 
@@ -350,6 +358,116 @@ end
 
 --====================================================================--
 --== Public Methods
+
+
+--== align
+
+--- [**style**] set/get Style value for Widget text alignment.
+-- values are 'left', 'center', 'right'
+--
+-- @within Properties
+-- @function .align
+-- @usage widget.align = 'center'
+-- @usage print( widget.align )
+
+TextStyle.__getters.align = StyleHelp.__getters.align
+TextStyle.__setters.align = StyleHelp.__setters.align
+
+--== fillColor
+
+--- [**style**] set/get Style value for Widget fill color.
+--
+-- @within Properties
+-- @function .fillColor
+-- @usage widget.fillColor = 'center'
+-- @usage print( widget.fillColor )
+
+TextStyle.__getters.fillColor = StyleHelp.__getters.fillColor
+TextStyle.__setters.fillColor = StyleHelp.__setters.fillColor
+
+--== font
+
+--- [**style**] set/get Style value for Widget font.
+--
+-- @within Properties
+-- @function .font
+-- @usage style.font = native.systemFontBold
+-- @usage print( style.font )
+
+TextStyle.__getters.font = StyleHelp.__getters.font
+TextStyle.__setters.font = StyleHelp.__setters.font
+
+--== fontSize
+
+--- [**style**] set/get Style value for Widget font size.
+--
+-- @within Properties
+-- @function .fontSize
+-- @usage style.fontSize = 12
+-- @usage print( style.fontSize )
+
+TextStyle.__getters.fontSize = StyleHelp.__getters.fontSize
+TextStyle.__setters.fontSize = StyleHelp.__setters.fontSize
+
+--== marginX
+
+--- [**style**] set/get Style value for Widget X-axis margin.
+--
+-- @within Properties
+-- @function .marginX
+-- @usage style.marginX = 10
+-- @usage print( style.marginX )
+
+TextStyle.__getters.marginX = StyleHelp.__getters.marginX
+TextStyle.__setters.marginX = StyleHelp.__setters.marginX
+
+--== marginY
+
+--- [**style**] set/get Style value for Widget Y-axis margin.
+--
+-- @within Properties
+-- @function .marginY
+-- @usage style.marginY = 10
+-- @usage print( style.marginY )
+
+TextStyle.__getters.marginY = StyleHelp.__getters.marginY
+TextStyle.__setters.marginY = StyleHelp.__setters.marginY
+
+--== strokeColor
+
+--- [**style**] set/get Style value for Widget border color.
+--
+-- @within Properties
+-- @function .strokeColor
+-- @usage style.strokeColor = {1,1,1,1}
+-- @usage print( style.strokeColor )
+
+TextStyle.__getters.strokeColor = StyleHelp.__getters.strokeColor
+TextStyle.__setters.strokeColor = StyleHelp.__setters.strokeColor
+
+--== strokeWidth
+
+--- [**style**] set/get Style value for Widget border thickness.
+--
+-- @within Properties
+-- @function .strokeWidth
+-- @usage style.strokeWidth = 2
+-- @usage print( style.strokeWidth )
+
+TextStyle.__getters.strokeWidth = StyleHelp.__getters.strokeWidth
+TextStyle.__setters.strokeWidth = StyleHelp.__setters.strokeWidth
+
+--== textColor
+
+--- [**style**] set/get Style value for Widget text color.
+--
+-- @within Properties
+-- @function .textColor
+-- @usage style.textColor = {0,0,1,0.5}
+-- @usage print( style.textColor )
+
+TextStyle.__getters.textColor = StyleHelp.__getters.textColor
+TextStyle.__setters.textColor = StyleHelp.__setters.textColor
 
 
 --== verifyProperties
