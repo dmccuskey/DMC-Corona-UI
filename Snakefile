@@ -12,8 +12,10 @@ module_config = {
 		"dir": "lib",
 		"files": [
 			"dmc_ui.lua",
-			"dmc_ui/core/widget.lua",
 			"dmc_ui/core/style.lua",
+			"dmc_ui/core/style_helper.lua",
+			"dmc_ui/core/widget.lua",
+			"dmc_ui/core/widget_helper.lua",
 			"dmc_ui/ui_constants.lua",
 			"dmc_ui/ui_utils.lua",
 
