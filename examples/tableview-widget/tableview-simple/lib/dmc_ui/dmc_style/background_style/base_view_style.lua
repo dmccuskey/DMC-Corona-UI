@@ -75,7 +75,7 @@ local BaseStyle = require( ui_find( 'core.style' ) )
 --== Setup, Constants
 
 
-local newClass = Objects.newClass
+-- none
 
 
 

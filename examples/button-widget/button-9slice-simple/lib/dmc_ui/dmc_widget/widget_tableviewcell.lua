@@ -78,8 +78,6 @@ local WidgetBase = require( ui_find( 'core.widget' ) )
 --== Setup, Constants
 
 
-local newClass = Objects.newClass
-
 -- these are set later
 local dUI = nil
 local Widget = nil
@@ -99,13 +97,12 @@ local FontMgr = nil
 -- * @{Core.Widget}
 --
 -- **Style Object:** <br>
--- * @{Style.TableViewCellStyle}
--- * @{Style.TableViewCellStateStyle}
+-- * @{Style.TableViewCell}
 --
 -- @classmod Widget.TableViewCell
 -- @usage
--- local dUI = require 'dmc_ui'
--- local widget = dUI.newTableViewCell()
+-- dUI = require 'dmc_ui'
+-- widget = dUI.newTableViewCell()
 
 local TableViewCell = newClass( WidgetBase, { name="TableViewCell" } )
 
@@ -122,7 +119,7 @@ TableViewCell.RIGHT = 'right'
 --== tableviewcell layouts
 
 --- Layout Constant to specify the Default layout.
--- single row of text. this is usually defined in the @{Style.TableViewCellStyle}.
+-- single row of text. this is usually defined in the @{Style.TableViewCell}.
 --
 -- @field HELLO
 --
@@ -144,7 +141,7 @@ TableViewCell.SUBTITLE = uiConst.TABLEVIEWCELL_SUBTITLE_LAYOUT
 --== tableviewcell accessories
 
 --- Accessory Constant to specify the Checkmark accessory.
--- this is usually defined in the @{Style.TableViewCellStyle}.
+-- this is usually defined in the @{Style.TableViewCell}.
 --
 -- @usage
 -- widget.accessory = TableViewCell.CHECKMARK
@@ -152,7 +149,7 @@ TableViewCell.SUBTITLE = uiConst.TABLEVIEWCELL_SUBTITLE_LAYOUT
 TableViewCell.CHECKMARK = uiConst.TABLEVIEWCELL_CHECKMARK
 
 --- Accessory Constant to specify the Detail Button accessory.
--- this is usually defined in the @{Style.TableViewCellStyle}.
+-- this is usually defined in the @{Style.TableViewCell}.
 --
 -- @usage
 -- widget.accessory = TableViewCell.DETAIL_BUTTON
@@ -160,7 +157,7 @@ TableViewCell.CHECKMARK = uiConst.TABLEVIEWCELL_CHECKMARK
 TableViewCell.DETAIL_BUTTON = uiConst.TABLEVIEWCELL_DETAIL_BUTTON
 
 --- Accessory Constant to specify the Disclosure Indicator accessory.
--- this is usually defined in the @{Style.TableViewCellStyle}.
+-- this is usually defined in the @{Style.TableViewCell}.
 --
 -- @usage
 -- widget.accessory = TableViewCell.DISCLOSURE_INDICATOR
@@ -168,7 +165,7 @@ TableViewCell.DETAIL_BUTTON = uiConst.TABLEVIEWCELL_DETAIL_BUTTON
 TableViewCell.DISCLOSURE_INDICATOR = uiConst.TABLEVIEWCELL_DISCLOSURE_INDICATOR
 
 --- Accessory Constant to specify the no accessory.
--- this is usually defined in the @{Style.TableViewCellStyle}.
+-- this is usually defined in the @{Style.TableViewCell}.
 --
 -- @usage
 -- widget.accessory = TableViewCell.NONE

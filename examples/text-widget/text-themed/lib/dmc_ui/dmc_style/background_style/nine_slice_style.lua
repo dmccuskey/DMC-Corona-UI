@@ -99,7 +99,7 @@ local Style = nil
 -- **Child style of:** <br>
 -- * @{Style.Background}
 --
--- @classmod Style.NineSliceView
+-- @classmod Style.BackgroundView.9Slice
 -- @usage
 -- local dUI = require 'dmc_ui'
 -- local widget = dUI.newBackgroundStyle{

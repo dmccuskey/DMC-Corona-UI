@@ -196,6 +196,14 @@ end
 
 --== .marginY
 
+--- [**style**] set/get marginY.
+-- set the margin inset of the widget. this value is *subtracted* from the widget width.
+--
+-- @within Properties
+-- @function .marginX
+-- @usage widget.marginX = 18
+-- @usage print( widget.marginX )
+
 -- CLASS.__getters.marginY = WidgetHelp.__getters.marginY
 -- CLASS.__setters.marginY = WidgetHelp.__setters.marginY
 

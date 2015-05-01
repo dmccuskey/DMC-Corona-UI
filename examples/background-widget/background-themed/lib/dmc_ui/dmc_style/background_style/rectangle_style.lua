@@ -98,7 +98,7 @@ local Style = nil
 -- **Child style of:** <br>
 -- * @{Style.Background}
 --
--- @classmod Style.RectangleView
+-- @classmod Style.BackgroundView.Rectangle
 -- @usage
 -- local dUI = require 'dmc_ui'
 -- local widget = dUI.newBackgroundStyle{

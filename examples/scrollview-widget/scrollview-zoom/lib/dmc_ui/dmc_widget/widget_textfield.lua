@@ -103,8 +103,8 @@ local Widget = nil
 --
 -- @classmod Widget.TextField
 -- @usage
--- local dUI = require 'dmc_ui'
--- local widget = dUI.newTextField()
+-- dUI = require 'dmc_ui'
+-- widget = dUI.newTextField()
 
 local TextField = newClass( WidgetBase, {name="TextField"} )
 

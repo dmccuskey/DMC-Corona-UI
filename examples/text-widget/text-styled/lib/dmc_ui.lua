@@ -331,17 +331,6 @@ Documentation items should be copied in manually
 --== Button Group
 
 
---== Formatter
-
---- constructor for Field Formatter delegates.
--- formatting delegates for use with Text Field
---
--- @function newFormatter
--- @tab[opt] options parameters used to create a data Formatter
--- @treturn object @{Widget.Formatter}
--- @usage local widget = dUI.newFormatter()
---
-
 --== Nav Bar
 
 --- constructor for Nav Bar widgets.
