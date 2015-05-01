@@ -44,6 +44,14 @@ local VERSION = "0.1.0"
 
 
 --====================================================================--
+--== Imports
+
+
+local Kolor = require 'dmc_kolor'
+
+
+
+--====================================================================--
 --== Widget Help Table
 --====================================================================--
 
@@ -54,8 +62,7 @@ local WidgetHelp = {
 }
 
 
-
---== align
+--== .align
 
 --- [**style**] set/get Style value for Widget text alignment.
 -- values are 'left', 'center', 'right'
@@ -77,7 +84,6 @@ function WidgetHelp.__setters:align( value )
 end
 
 
-
 --== .delegate
 
 --- set/get delegate for item.
@@ -86,6 +92,9 @@ end
 -- @function .delegate
 -- @usage widget.delegate = <delegate object>
 -- @usage print( widget.delegate )
+
+-- CLASS.__getters.delegate = WidgetHelp.__getters.delegate
+-- CLASS.__setters.delegate = WidgetHelp.__setters.delegate
 
 function WidgetHelp.__getters:delegate()
 	-- print( "WidgetHelp.__getters:delegate" )
@@ -97,7 +106,7 @@ function WidgetHelp.__setters:delegate( value )
 end
 
 
---== fillColor
+--== .fillColor
 
 --- [**style**] set/get Style value for Widget fill color.
 --
@@ -111,22 +120,15 @@ end
 
 function WidgetHelp.__getters:fillColor()
 	-- print( "WidgetHelp.__getters:fillColor", self, self._fillColor )
-	local value = self._fillColor
-	if value==nil and self._inherit then
-		value = self._inherit.fillColor
-	end
-	return value
+	return self.curr_style.fillColor
 end
 function WidgetHelp.__setters:fillColor( value )
 	-- print( "WidgetHelp.__setters:fillColor", self._fillColor, value, self._isClearing )
-	assert( value or (value==nil and (self._inherit or self._isClearing)) )
-	--==--
-	self._fillColor = Kolor.translateColor( value )
-	self:_dispatchChangeEvent( 'fillColor', value )
+	self.curr_style.fillColor = value
 end
 
 
---== font
+--== .font
 
 -- CLASS.__getters.font = WidgetHelp.__getters.font
 -- CLASS.__setters.font = WidgetHelp.__setters.font
@@ -139,7 +141,8 @@ function WidgetHelp.__setters:font( value )
 	self.curr_style.font = value
 end
 
---== fontSize
+
+--== .fontSize
 
 -- CLASS.__getters.fontSize = WidgetHelp.__getters.fontSize
 -- CLASS.__setters.fontSize = WidgetHelp.__setters.fontSize
@@ -152,7 +155,8 @@ function WidgetHelp.__setters:fontSize( value )
 	self.curr_style.fontSize = value
 end
 
---== marginX
+
+--== .marginX
 
 -- CLASS.__getters.marginX = WidgetHelp.__getters.marginX
 -- CLASS.__setters.marginX = WidgetHelp.__setters.marginX
@@ -165,7 +169,8 @@ function WidgetHelp.__setters:marginX( value )
 	self.curr_style.marginX = value
 end
 
---== marginY
+
+--== .marginY
 
 -- CLASS.__getters.marginY = WidgetHelp.__getters.marginY
 -- CLASS.__setters.marginY = WidgetHelp.__setters.marginY
@@ -178,7 +183,8 @@ function WidgetHelp.__setters:marginY( value )
 	self.curr_style.marginY = value
 end
 
---== strokeWidth
+
+--== .strokeWidth
 
 -- CLASS.__getters.strokeWidth = WidgetHelp.__getters.strokeWidth
 -- CLASS.__setters.strokeWidth = WidgetHelp.__setters.strokeWidth
@@ -192,7 +198,7 @@ function WidgetHelp.__setters:strokeWidth( value )
 end
 
 
---== setFillColor
+--== .setFillColor
 
 -- CLASS.setFillColor = WidgetHelp.setFillColor
 -- CLASS.setFillColor = WidgetHelp.setFillColor
@@ -202,7 +208,8 @@ function WidgetHelp:setFillColor( ... )
 	self.curr_style.fillColor = {...}
 end
 
---== setStrokeColor
+
+--== .setStrokeColor
 
 -- CLASS.setStrokeColor = WidgetHelp.setStrokeColor
 -- CLASS.setStrokeColor = WidgetHelp.setStrokeColor
@@ -212,7 +219,8 @@ function WidgetHelp:setStrokeColor( ... )
 	self.curr_style.strokeColor = {...}
 end
 
---== setTextColor
+
+--== .setTextColor
 
 -- CLASS.setTextColor = WidgetHelp.setTextColor
 -- CLASS.setTextColor = WidgetHelp.setTextColor
@@ -223,5 +231,6 @@ function WidgetHelp:setTextColor( ... )
 end
 
 
-return WidgetHelp
 
+
+return WidgetHelp

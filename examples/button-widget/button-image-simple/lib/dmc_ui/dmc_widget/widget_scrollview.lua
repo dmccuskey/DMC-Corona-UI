@@ -525,6 +525,19 @@ end
 ScrollView.__getters.delegate = WidgetHelp.__getters.delegate
 ScrollView.__setters.delegate = WidgetHelp.__setters.delegate
 
+--== .fillColor
+
+--- [**style**] set/get Style value for Widget fill color.
+--
+-- @within Properties
+-- @function .fillColor
+-- @usage style.fillColor = '#ff0000'
+-- @usage print( style.fillColor )
+
+ScrollView.__getters.fillColor = WidgetHelp.__getters.fillColor
+ScrollView.__setters.fillColor = WidgetHelp.__setters.fillColor
+
+
 --== .lowerHorizontalOffset
 
 --- set/get the lower horizontal offset for the ScrollView.
@@ -718,6 +731,13 @@ function ScrollView.__getters:pinchGesture()
 	-- print( "ScrollView.__setters:pinchGesture" )
 	return self._pinchGesture
 end
+
+
+--== .setFillColor
+
+ScrollView.setFillColor = WidgetHelp.setFillColor
+ScrollView.setFillColor = WidgetHelp.setFillColor
+
 
 
 --== .scrollWidth

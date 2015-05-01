@@ -76,8 +76,6 @@ local BaseStyle = require( ui_find( 'core.style' ) )
 --== Setup, Constants
 
 
-local ObjectBase = Objects.ObjectBase
-
 local sfmt = string.format
 local tinsert = table.insert
 
@@ -99,8 +97,8 @@ local StyleFactory = nil
 --
 -- @classmod Style.Background
 -- @usage
--- local dUI = require 'dmc_ui'
--- local widget = dUI.newBackgroundStyle()
+-- dUI = require 'dmc_ui'
+-- widget = dUI.newBackgroundStyle()
 
 local BackgroundStyle = newClass( BaseStyle, {name="Background Style"} )
 

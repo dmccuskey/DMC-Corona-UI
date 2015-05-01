@@ -71,14 +71,13 @@ local Utils = require 'dmc_utils'
 local uiConst = require( ui_find( 'ui_constants' ) )
 
 local ScrollView = require( ui_find( 'dmc_widget.widget_scrollview' ) )
+local WidgetHelp = require( ui_find( 'core.widget_helper' ) )
 
 
 
 --====================================================================--
 --== Setup, Constants
 
-
-local newClass = Objects.newClass
 
 local mabs = math.abs
 local mfloor = math.floor
@@ -164,6 +163,13 @@ end
 
 --- TableView Widget.
 -- a widget for scrolling items in a list.
+--
+-- **Inherits from:** <br>
+-- * @{Core.Widget}
+-- * @{Core.ScrollView}
+--
+-- **Style Object:** <br>
+-- * @{Style.TableView}
 --
 -- @classmod Widget.TableView
 -- @usage
@@ -389,59 +395,6 @@ Inherited Methods
 -- @usage widget.height = 5
 -- @usage print( widget.height )
 
---- set/get anchorX.
---
--- @within Properties
--- @function .anchorX
--- @usage widget.anchorX = 5
--- @usage print( widget.anchorX )
-
---- set/get anchorY.
---
--- @within Properties
--- @function .anchorY
--- @usage widget.anchorY = 5
--- @usage print( widget.anchorY )
-
---- set/get widget style.
--- style can be a style name or a Style Object.
--- Style Object must be appropriate style for Widget, eg style for Background widget comes from dUI.newBackgroundStyle().
--- @within Properties
--- @function .style
--- @usage widget.style = 'widget-home-page'
--- @usage
--- local wStyle = dUI.newBackgroundStyle()
--- widget.style = wStyle
-
-
---- clear any local properties on style.
--- convenience method, calls clearProperties() on active style.
---
--- @within Methods
--- @function clearStyle
--- @usage widget:clearStyle()
-
-
-
---[[
-Inherited - ScrollView
---]]
-
---- set/get activate rebound action when hitting a scroll-limit.
--- defaults to true.
---
--- @within Properties
--- @function .bounceIsActive
--- @usage widget.bounceIsActive = true
--- @usage print( widget.bounceIsActive )
-
---- set/get delegate for item.
---
--- @within Properties
--- @function .delegate
--- @usage widget.delegate = <delegate object>
--- @usage print( widget.delegate )
-
 
 
 -- block horizontal motion change
@@ -495,6 +448,16 @@ function TableView.__setters:lowerOffset( value )
 	-- print( "TableView.__setters:lowerOffset", value )
 	self.lowerVerticalOffset = value
 end
+
+--== .marginX
+
+ScrollView.__getters.marginX = WidgetHelp.__getters.marginX
+ScrollView.__setters.marginX = WidgetHelp.__setters.marginX
+
+--== .marginY
+
+ScrollView.__getters.marginY = WidgetHelp.__getters.marginY
+ScrollView.__setters.marginY = WidgetHelp.__setters.marginY
 
 --== .scrollEnabled
 
@@ -1071,7 +1034,7 @@ function TableView:_renderTableCell( record, options )
 
 	if record._view then --[[ print("already rendered") ; --]] return end
 
-	local width = self._width
+	local width = self.width
 	local renderedCells = self._renderedTableCells
 	local view, hit
 	local bg, line, o
@@ -1299,13 +1262,13 @@ function TableView:_calculateScrollPosition( record, position )
 		offset = 0+self.upperVerticalOffset
 		value = offset-record._yMin
 	elseif position=='middle' then
-		offset = self._height/2
+		offset = self.height/2
 		value = offset-record._yMin
 	elseif position=='bottom' then
-		offset = self._height-self.lowerVerticalOffset
+		offset = self.height-self.lowerVerticalOffset
 		value = offset-(record._yMin+record._height)
 	else
-		offset = self._height/2
+		offset = self.height/2
 		value = offset-record._yMin
 	end
 

@@ -139,7 +139,7 @@ local tV = dUI.newTableView{
 	delegate=delegate,
 	estimatedRowHeight=DIMS.h
 }
-tV.x, tV.y = OFFSET*0.5, OFFSET*0.5+50
+tV.x, tV.y = H_CENTER-(DIMS.w)*0.5, V_CENTER-(DIMS.h*SHOW)*0.5
 
 tV:reloadData()
 
@@ -148,6 +148,7 @@ timer.performWithDelay( 1000, function()
 	local pos = 5
 	tinsert( tableData, pos, createRowTemplate( pos ) )
 	tV:insertRowAt( pos )
+	tV.fillColor = {1,1,1,1}
 end)
 
 timer.performWithDelay( 2000, function()

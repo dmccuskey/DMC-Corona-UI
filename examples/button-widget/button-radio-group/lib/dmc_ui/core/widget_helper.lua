@@ -44,6 +44,14 @@ local VERSION = "0.1.0"
 
 
 --====================================================================--
+--== Imports
+
+
+local Kolor = require 'dmc_kolor'
+
+
+
+--====================================================================--
 --== Widget Help Table
 --====================================================================--
 
@@ -112,18 +120,11 @@ end
 
 function WidgetHelp.__getters:fillColor()
 	-- print( "WidgetHelp.__getters:fillColor", self, self._fillColor )
-	local value = self._fillColor
-	if value==nil and self._inherit then
-		value = self._inherit.fillColor
-	end
-	return value
+	return self.curr_style.fillColor
 end
 function WidgetHelp.__setters:fillColor( value )
 	-- print( "WidgetHelp.__setters:fillColor", self._fillColor, value, self._isClearing )
-	assert( value or (value==nil and (self._inherit or self._isClearing)) )
-	--==--
-	self._fillColor = Kolor.translateColor( value )
-	self:_dispatchChangeEvent( 'fillColor', value )
+	self.curr_style.fillColor = value
 end
 
 
@@ -228,6 +229,7 @@ function WidgetHelp:setTextColor( ... )
 	-- print( 'WidgetHelp:setTextColor' )
 	self.curr_style.textColor = {...}
 end
+
 
 
 
