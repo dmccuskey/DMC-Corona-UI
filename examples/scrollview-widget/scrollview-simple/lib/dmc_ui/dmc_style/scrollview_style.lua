@@ -69,6 +69,7 @@ local Objects = require 'dmc_objects'
 local uiConst = require( ui_find( 'ui_constants' ) )
 
 local BaseStyle = require( ui_find( 'core.style' ) )
+local StyleHelp = require( ui_find( 'core.style_helper' ) )
 
 
 
@@ -114,6 +115,7 @@ ScrollView._VALID_PROPERTIES = {
 	height=true,
 	anchorX=true,
 	anchorY=true,
+	fillColor=true
 }
 
 ScrollView._EXCLUDE_PROPERTY_CHECK = {}
@@ -124,6 +126,7 @@ ScrollView._STYLE_DEFAULTS = {
 	height=nil,
 	anchorX=0.5,
 	anchorY=0.5,
+	fillColor={1,1,1,1}
 }
 
 ScrollView._TEST_DEFAULTS = {
@@ -132,6 +135,7 @@ ScrollView._TEST_DEFAULTS = {
 	height=nil,
 	anchorX=101,
 	anchorY=102,
+	fillColor={102,103,104}
 }
 
 ScrollView.MODE = uiConst.RUN_MODE
@@ -164,6 +168,8 @@ function ScrollView:__init__( params )
 	-- self._height
 	-- self._anchorX
 	-- self._anchorY
+
+	self._fillColor = nil
 end
 
 -- END: Setup DMC Objects
@@ -201,6 +207,11 @@ function ScrollView.addMissingDestProperties( dest, src )
 
 	dest = BaseStyle.addMissingDestProperties( dest, src )
 
+	for i=1,#srcs do
+		local src = srcs[i]
+		if dest.fillColor==nil then dest.fillColor=src.fillColor end
+	end
+
 	return dest
 end
 
@@ -218,6 +229,10 @@ function ScrollView.copyExistingSrcProperties( dest, src, params )
 
 	BaseStyle.copyExistingSrcProperties( dest, src, params )
 
+	if (src.fillColor~=nil and dest.fillColor==nil) or force then
+		dest.fillColor=src.fillColor
+	end
+
 	return dest
 end
 
@@ -231,6 +246,10 @@ function ScrollView._verifyStyleProperties( src )
 	-- exclude width/height because nil is valid value
 	local is_valid = BaseStyle._verifyStyleProperties( src, {width=true, height=true} )
 
+	if not src.fillColor then
+		print(sfmt(emsg,'fillColor')) ; is_valid=false
+	end
+
 	return is_valid
 end
 
@@ -238,6 +257,19 @@ end
 
 --====================================================================--
 --== Public Methods
+
+
+--== .fillColor
+
+--- [**style**] set/get Style value for Widget fill color.
+--
+-- @within Properties
+-- @function .fillColor
+-- @usage widget.fillColor = 'center'
+-- @usage print( widget.fillColor )
+
+ScrollView.__getters.fillColor = StyleHelp.__getters.fillColor
+ScrollView.__setters.fillColor = StyleHelp.__setters.fillColor
 
 
 --== verifyProperties

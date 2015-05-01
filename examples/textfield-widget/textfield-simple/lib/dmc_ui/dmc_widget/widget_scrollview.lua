@@ -75,6 +75,7 @@ local Utils = require 'dmc_utils'
 local uiConst = require( ui_find( 'ui_constants' ) )
 
 local WidgetBase = require( ui_find( 'core.widget' ) )
+local WidgetHelp = require( ui_find( 'core.widget_helper' ) )
 local Scroller = require( ui_find( 'dmc_widget.widget_scrollview.scroller' ) )
 
 
@@ -103,13 +104,16 @@ local dUI = nil
 --== ScrollView Widget Class
 --====================================================================--
 
---- Scroll View Widget.
+--- ScrollView Widget.
 -- a container view which can scroll independently on two axis (X/Y).
+--
+-- **Inherits from:** <br>
+-- * @{Core.Widget}
 --
 -- @classmod Widget.ScrollView
 -- @usage
--- local dUI = require 'dmc_ui'
--- local widget = dUI.newScrollView()
+-- dUI = require 'dmc_ui'
+-- widget = dUI.newScrollView()
 
 local ScrollView = newClass( WidgetBase, { name="ScrollView" } )
 
@@ -160,8 +164,10 @@ function ScrollView:__init__( params )
 	if params.horizontalScrollEnabled==nil then params.horizontalScrollEnabled=true end
 	if params.lowerHorizontalOffset==nil then params.lowerHorizontalOffset = 0 end
 	if params.lowerVerticalOffset==nil then params.lowerVerticalOffset = 0 end
-	if params.scrollWidth==nil then params.scrollWidth=dUI.WIDTH end
-	if params.scrollHeight==nil then params.scrollHeight=dUI.HEIGHT end
+	if params.width==nil then params.width=dUI.WIDTH end
+	if params.height==nil then params.height=dUI.HEIGHT end
+	if params.scrollWidth==nil then params.scrollWidth=params.width end
+	if params.scrollHeight==nil then params.scrollHeight=params.height end
 	if params.upperHorizontalOffset==nil then params.upperHorizontalOffset = 0 end
 	if params.upperVerticalOffset==nil then params.upperVerticalOffset = 0 end
 	if params.verticalScrollEnabled==nil then params.verticalScrollEnabled=true end
@@ -177,8 +183,8 @@ function ScrollView:__init__( params )
 
 	-- properties in this class
 
-	self._width = params.width
-	self._height = params.height
+	-- self._width = params.width
+	-- self._height = params.height
 
 	self._contentPosition = {x=0,y=0}
 	self._contentPosition_dirty=true
@@ -314,6 +320,8 @@ function ScrollView:__initComplete__()
 	self._gesture_f = f
 
 	-- before axis creation
+	self.width = tmp.width
+	self.height = tmp.height
 	self.scrollWidth = tmp.scrollWidth
 	self.scrollHeight = tmp.scrollHeight
 
@@ -391,7 +399,7 @@ end
 
 
 
-
+--[[
 --== width
 
 function ScrollView.__getters:width()
@@ -413,6 +421,7 @@ function ScrollView.__setters:height( value )
 	-- print( 'StyleMix.__setters:height', value )
 	self._height = value
 end
+--]]
 
 
 
@@ -504,7 +513,6 @@ function ScrollView.__setters:decelerateTransitionTime( value )
 	self._axisY.decelerateTransitionTime = value
 end
 
-
 --== .delegate
 
 --- set/get delegate for item.
@@ -513,6 +521,9 @@ end
 -- @function .delegate
 -- @usage widget.delegate = <delegate object>
 -- @usage print( widget.delegate )
+
+ScrollView.__getters.delegate = WidgetHelp.__getters.delegate
+ScrollView.__setters.delegate = WidgetHelp.__setters.delegate
 
 --== .lowerHorizontalOffset
 
