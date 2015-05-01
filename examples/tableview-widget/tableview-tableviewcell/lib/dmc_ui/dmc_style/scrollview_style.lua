@@ -65,7 +65,7 @@ local ui_find = dmc_ui_func.find
 
 
 local Objects = require 'dmc_objects'
-local Utils = require 'dmc_utils'
+
 local uiConst = require( ui_find( 'ui_constants' ) )
 
 local BaseStyle = require( ui_find( 'core.style' ) )
@@ -75,9 +75,6 @@ local BaseStyle = require( ui_find( 'core.style' ) )
 --====================================================================--
 --== Setup, Constants
 
-
-local newClass = Objects.newClass
-local ObjectBase = Objects.ObjectBase
 
 local sfmt = string.format
 local tinsert = table.insert
@@ -91,6 +88,17 @@ local Style = nil
 --== ScrollView Style Class
 --====================================================================--
 
+
+--- ScrollView Style Class.
+-- a Style object for a ScrollView Widget.
+--
+-- **Inherits from:** <br>
+-- * @{Core.Style}
+--
+-- @classmod Style.ScrollView
+-- @usage
+-- local dUI = require 'dmc_ui'
+-- local widget = dUI.newScrollViewStyle()
 
 local ScrollView = newClass( BaseStyle, {name="ScrollView Style"} )
 
@@ -106,38 +114,16 @@ ScrollView._VALID_PROPERTIES = {
 	height=true,
 	anchorX=true,
 	anchorY=true,
-
-	align=true,
-	fillColor=true,
-	font=true,
-	fontSize=true,
-	marginX=true,
-	marginY=true,
-	textColor=true,
-
-	strokeColor=true,
-	strokeWidth=true,
 }
 
 ScrollView._EXCLUDE_PROPERTY_CHECK = {}
 
 ScrollView._STYLE_DEFAULTS = {
-	debugOn=true,
+	debugOn=false,
 	width=nil,
 	height=nil,
 	anchorX=0.5,
 	anchorY=0.5,
-
-	align='center',
-	fillColor={0,0,0,0},
-	font=native.systemFont,
-	fontSize=16,
-	marginX=0,
-	marginY=0,
-	textColor={0,0,0,1},
-
-	strokeColor={0,0,0,0},
-	strokeWidth=0,
 }
 
 ScrollView._TEST_DEFAULTS = {
@@ -146,17 +132,6 @@ ScrollView._TEST_DEFAULTS = {
 	height=nil,
 	anchorX=101,
 	anchorY=102,
-
-	align='test-center',
-	fillColor={101,102,103,104},
-	font=native.systemFont,
-	fontSize=101,
-	marginX=102,
-	marginY=103,
-	textColor={111,112,113,114},
-
-	strokeColor={121,122,123,124},
-	strokeWidth=111,
 }
 
 ScrollView.MODE = uiConst.RUN_MODE
@@ -189,16 +164,6 @@ function ScrollView:__init__( params )
 	-- self._height
 	-- self._anchorX
 	-- self._anchorY
-
-	self._align = nil
-	self._fillColor = nil
-	self._font = nil
-	self._fontSize = nil
-	self._marginX = nil
-	self._marginY = nil
-	self._strokeColor = nil
-	self._strokeWidth = nil
-	self._textColor = nil
 end
 
 -- END: Setup DMC Objects
@@ -236,21 +201,6 @@ function ScrollView.addMissingDestProperties( dest, src )
 
 	dest = BaseStyle.addMissingDestProperties( dest, src )
 
-	for i=1,#srcs do
-		local src = srcs[i]
-
-		if dest.align==nil then dest.align=src.align end
-		if dest.fillColor==nil then dest.fillColor=src.fillColor end
-		if dest.font==nil then dest.font=src.font end
-		if dest.fontSize==nil then dest.fontSize=src.fontSize end
-		if dest.marginX==nil then dest.marginX=src.marginX end
-		if dest.marginY==nil then dest.marginY=src.marginY end
-		if dest.strokeColor==nil then dest.strokeColor=src.strokeColor end
-		if dest.strokeWidth==nil then dest.strokeWidth=src.strokeWidth end
-		if dest.textColor==nil then dest.textColor=src.textColor end
-
-	end
-
 	return dest
 end
 
@@ -268,34 +218,6 @@ function ScrollView.copyExistingSrcProperties( dest, src, params )
 
 	BaseStyle.copyExistingSrcProperties( dest, src, params )
 
-	if (src.align~=nil and dest.align==nil) or force then
-		dest.align=src.align
-	end
-	if (src.fillColor~=nil and dest.fillColor==nil) or force then
-		dest.fillColor=src.fillColor
-	end
-	if (src.font~=nil and dest.font==nil) or force then
-		dest.font=src.font
-	end
-	if (src.fontSize~=nil and dest.fontSize==nil) or force then
-		dest.fontSize=src.fontSize
-	end
-	if (src.marginX~=nil and dest.marginX==nil) or force then
-		dest.marginX=src.marginX
-	end
-	if (src.marginY~=nil and dest.marginY==nil) or force then
-		dest.marginY=src.marginY
-	end
-	if (src.strokeColor~=nil and dest.strokeColor==nil) or force then
-		dest.strokeColor=src.strokeColor
-	end
-	if (src.strokeWidth~=nil and dest.strokeWidth==nil) or force then
-		dest.strokeWidth=src.strokeWidth
-	end
-	if (src.textColor~=nil and dest.textColor==nil) or force then
-		dest.textColor=src.textColor
-	end
-
 	return dest
 end
 
@@ -308,34 +230,6 @@ function ScrollView._verifyStyleProperties( src )
 
 	-- exclude width/height because nil is valid value
 	local is_valid = BaseStyle._verifyStyleProperties( src, {width=true, height=true} )
-
-	if not src.align then
-		print(sfmt(emsg,'align')) ; is_valid=false
-	end
-	if not src.fillColor then
-		print(sfmt(emsg,'fillColor')) ; is_valid=false
-	end
-	if not src.font then
-		print(sfmt(emsg,'font')) ; is_valid=false
-	end
-	if not src.fontSize then
-		print(sfmt(emsg,'fontSize')) ; is_valid=false
-	end
-	if not src.marginX then
-		print(sfmt(emsg,'marginX')) ; is_valid=false
-	end
-	if not src.marginY then
-		print(sfmt(emsg,'marginY')) ; is_valid=false
-	end
-	if not src.strokeColor then
-		print(sfmt(emsg,'strokeColor')) ; is_valid=false
-	end
-	if not src.strokeWidth then
-		print(sfmt(emsg,'strokeWidth')) ; is_valid=false
-	end
-	if not src.textColor then
-		print(sfmt(emsg,'textColor')) ; is_valid=false
-	end
 
 	return is_valid
 end
