@@ -63,7 +63,7 @@ local StyleHelp = {
 
 
 
---== align
+--== .align
 
 --- [**style**] set/get Style value for Widget text alignment.
 -- values are 'left', 'center', 'right'
@@ -94,7 +94,7 @@ function StyleHelp.__setters:align( value )
 end
 
 
---== fillColor
+--== .fillColor
 
 --- [**style**] set/get Style value for Widget fill color.
 --
@@ -123,7 +123,7 @@ function StyleHelp.__setters:fillColor( value )
 end
 
 
---== font
+--== .font
 
 --- [**style**] set/get Style value for Widget font.
 --
@@ -151,7 +151,7 @@ function StyleHelp.__setters:font( value )
 end
 
 
---== fontSize
+--== .fontSize
 
 --- [**style**] set/get Style value for Widget font size.
 --
@@ -179,7 +179,7 @@ function StyleHelp.__setters:fontSize( value )
 end
 
 
---== marginX
+--== .marginX
 
 --- [**style**] set/get Style value for Widget X-axis margin.
 --
@@ -207,7 +207,7 @@ function StyleHelp.__setters:marginX( value )
 end
 
 
---== marginY
+--== .marginY
 
 --- [**style**] set/get Style value for Widget Y-axis margin.
 --
@@ -235,7 +235,7 @@ function StyleHelp.__setters:marginY( value )
 end
 
 
---== strokeColor
+--== .strokeColor
 
 --- [**style**] set/get Style value for Widget border color.
 --
