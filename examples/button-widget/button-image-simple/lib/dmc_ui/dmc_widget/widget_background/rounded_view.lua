@@ -88,7 +88,17 @@ local dUI = nil
 --====================================================================--
 
 
+--- Rounded Background View Class.
+--
+-- @classmod Widget.Background.Rounded
+-- @usage
+-- local dUI = require 'dmc_ui'
+-- local widget = dUI.newRoundedBackground()
+
 local RoundedView = newClass( WidgetBase, {name="Rounded Background View"} )
+
+--- Class Constants.
+-- @section
 
 --== Class Constants
 

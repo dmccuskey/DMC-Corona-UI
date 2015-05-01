@@ -234,7 +234,7 @@ Inherited Methods, from Style Mix
 -- Local Properties
 
 
---- get a reference to view's Style object.nd.
+--- get a reference to view's Style object.
 --
 -- @within Properties
 -- @function .viewStyle

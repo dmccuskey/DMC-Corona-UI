@@ -128,6 +128,9 @@ end
 
 --== font
 
+-- CLASS.__getters.font = WidgetHelp.__getters.font
+-- CLASS.__setters.font = WidgetHelp.__setters.font
+
 function WidgetHelp.__getters:font()
 	return self.curr_style.font
 end
@@ -137,6 +140,9 @@ function WidgetHelp.__setters:font( value )
 end
 
 --== fontSize
+
+-- CLASS.__getters.fontSize = WidgetHelp.__getters.fontSize
+-- CLASS.__setters.fontSize = WidgetHelp.__setters.fontSize
 
 function WidgetHelp.__getters:fontSize()
 	return self.curr_style.fontSize
@@ -148,6 +154,9 @@ end
 
 --== marginX
 
+-- CLASS.__getters.marginX = WidgetHelp.__getters.marginX
+-- CLASS.__setters.marginX = WidgetHelp.__setters.marginX
+
 function WidgetHelp.__getters:marginX()
 	return self.curr_style.marginX
 end
@@ -158,6 +167,9 @@ end
 
 --== marginY
 
+-- CLASS.__getters.marginY = WidgetHelp.__getters.marginY
+-- CLASS.__setters.marginY = WidgetHelp.__setters.marginY
+
 function WidgetHelp.__getters:marginY()
 	return self.curr_style.marginY
 end
@@ -167,6 +179,9 @@ function WidgetHelp.__setters:marginY( value )
 end
 
 --== strokeWidth
+
+-- CLASS.__getters.strokeWidth = WidgetHelp.__getters.strokeWidth
+-- CLASS.__setters.strokeWidth = WidgetHelp.__setters.strokeWidth
 
 function WidgetHelp.__getters:strokeWidth()
 	return self.curr_style.strokeWidth
@@ -179,6 +194,9 @@ end
 
 --== setFillColor
 
+-- CLASS.setFillColor = WidgetHelp.setFillColor
+-- CLASS.setFillColor = WidgetHelp.setFillColor
+
 function WidgetHelp:setFillColor( ... )
 	-- print( 'WidgetHelp:setFillColor' )
 	self.curr_style.fillColor = {...}
@@ -186,12 +204,18 @@ end
 
 --== setStrokeColor
 
+-- CLASS.setStrokeColor = WidgetHelp.setStrokeColor
+-- CLASS.setStrokeColor = WidgetHelp.setStrokeColor
+
 function WidgetHelp:setStrokeColor( ... )
 	-- print( 'WidgetHelp:setStrokeColor' )
 	self.curr_style.strokeColor = {...}
 end
 
 --== setTextColor
+
+-- CLASS.setTextColor = WidgetHelp.setTextColor
+-- CLASS.setTextColor = WidgetHelp.setTextColor
 
 function WidgetHelp:setTextColor( ... )
 	-- print( 'WidgetHelp:setTextColor' )
