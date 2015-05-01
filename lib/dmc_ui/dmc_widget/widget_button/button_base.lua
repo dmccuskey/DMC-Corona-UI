@@ -78,8 +78,6 @@ local WidgetBase = require( ui_find( 'core.widget' ) )
 --== Setup, Constants
 
 
-local newClass = Objects.newClass
-
 --== To be set in initialize()
 local dUI = nil
 
@@ -90,9 +88,25 @@ local dUI = nil
 --====================================================================--
 
 
+--- Base Class for Button Widgets.
+--
+-- **Inherits from:** <br>
+-- * @{Core.Widget}
+--
+-- **Style Object:** <br>
+-- * @{Style.Button}
+--
+-- @classmod Widget.Button.Base
+-- @usage
+-- dUI = require 'dmc_ui'
+-- widget = dUI.newButton()
+
 local ButtonBase = newClass( WidgetBase, { name="Button Base" } )
 
 StatesMixModule.patch( ButtonBase )
+
+--- Class Constants.
+-- @section
 
 --== Class Constants
 
@@ -283,120 +297,64 @@ end
 --== Public Methods
 
 
---======================================================--
--- Inherited Properties
-
---[[
-Inherited - copied from dmc_widget.core.widget
---]]
-
---- set/get x position.
---
--- @within Properties
--- @function .x
--- @usage widget.x = 5
--- @usage print( widget.x )
-
---- set/get y position.
---
--- @within Properties
--- @function .y
--- @usage widget.y = 5
--- @usage print( widget.y )
-
---- set/get width.
---
--- @within Properties
--- @function .width
--- @usage widget.width = 5
--- @usage print( widget.width )
-
---- set/get height.
---
--- @within Properties
--- @function .height
--- @usage widget.height = 5
--- @usage print( widget.height )
-
---- set/get anchorX.
---
--- @within Properties
--- @function .anchorX
--- @usage widget.anchorX = 5
--- @usage print( widget.anchorX )
-
---- set/get anchorY.
---
--- @within Properties
--- @function .anchorY
--- @usage widget.anchorY = 5
--- @usage print( widget.anchorY )
-
-
---======================================================--
--- Local Properties
-
---[[
-Inherited - from dmc_ui.dmc_widget.widget_button
---]]
-
---- set/get strokeWidth on background style.
--- this is a convenience method for calling on background style.
--- @within Properties
--- @function .backgroundStrokeWidth
--- @usage widget.backgroundStrokeWidth = 10
--- @usage print( widget.backgroundStrokeWidth )
--- @usage
--- (same as)
--- print( widget.style.background.strokeWidth = 10 )
-
---- set/get user data for button.
--- convenient storage area for user data. this property is availble within button events.
--- @within Properties
--- @function .data
--- @usage widget.data = 5
--- @usage print( widget.data )
+--== hitMarginX
 
 --- set/get x-axis hit margin.
 -- increases horizontal hit area for button, useful when button area is small. value must be greater or equal to 0.
+--
 -- @within Properties
 -- @function .hitMarginX
 -- @usage widget.hitMarginX = 5
 -- @usage print( widget.hitMarginX )
 
+function ButtonBase.__getters:hitMarginX()
+	-- print( "ButtonBase.__getters:hitMarginX" )
+	return self.curr_style.hitMarginX
+end
+function ButtonBase.__setters:hitMarginX( value )
+	-- print( "ButtonBase.__setters:hitMarginX", value )
+	self.curr_style.hitMarginX = value
+end
+
+--== hitMarginY
+
 --- set/get y-axis hit margin.
 -- increases vertical hit area for button, useful when button area is small. value must be greater or equal to 0.
+--
 -- @within Properties
 -- @function .hitMarginY
 -- @usage widget.hitMarginY = 5
 -- @usage print( widget.hitMarginY )
 
---- set/get button id.
--- optional id value for button. this value is passed in during button events, making it easy to differentiate buttons.
--- @within Properties
--- @function .id
--- @usage widget.id = 'left-button'
--- @usage print( widget.id )
+function ButtonBase.__getters:hitMarginY()
+	-- print( "ButtonBase.__getters:hitMarginY" )
+	return self.curr_style.hitMarginY
+end
+function ButtonBase.__setters:hitMarginY( value )
+	-- print( "ButtonBase.__setters:hitMarginY", value, self )
+	self.curr_style.hitMarginY = value
+end
 
---- get button 'active' state.
--- check whether button is in 'active' state.
--- @within Properties
--- @function .isActive
--- @usage print( widget.isActive )
-
---- set/get whether button is 'disabled' or can be pressed/activated.
--- property to set button disabled state or to see if it's enabled. this sets both the *look* of the button and the button action. setting .isEnabled will also set .isHitActive accordingly.
--- @within Properties
--- @function .isEnabled
--- @usage widget.isEnabled = false
--- @usage print( widget.isEnabled )
+--== .isHitActive
 
 --- set/get button press *action*.
 -- this gets the *action* of the button, whether a press is handled or not. this property is also controlled by changes to .isEnabled.
+--
 -- @within Properties
 -- @function .isHitActive
 -- @usage widget.isHitActive = false
 -- @usage print( widget.isHitActive )
+
+function ButtonBase.__getters:isHitActive()
+	-- print( "ButtonBase.__getters:isHitActive" )
+	return self.curr_style.isHitActive
+end
+function ButtonBase.__setters:isHitActive( value )
+	-- print( "ButtonBase.__setters:isHitActive", value )
+	self.curr_style.isHitActive = value
+end
+
+--== .labelText
 
 --- set/get text for button label.
 --
@@ -405,77 +363,6 @@ Inherited - from dmc_ui.dmc_widget.widget_button
 -- @usage widget.labelText = "Press"
 -- @usage print( widget.labelText )
 
---- set font to use for button label.
---
--- @within Properties
--- @function .labelFont
--- @usage widget.labelFont = native.systemFont
--- @usage
--- equivalent to:
--- widget.style.label.font = native.systemFont
-
---- set font size to use for button label.
---
--- @within Properties
--- @function .labelFontSize
--- @usage widget.labelFontSize = 12
--- @usage
--- equivalent to:
--- widget.style.label.fontSize = 12
-
---- set callback for onPress events.
---
--- @within Properties
--- @function .onPress
--- @usage widget.onPress = <function>
-
---- set callback for onRelease events.
---
--- @within Properties
--- @function .onRelease
--- @usage widget.onRelease = <function>
-
---- set callback for onEvent events.
---
--- @within Properties
--- @function .onEvent
--- @usage widget.onEvent = <function>
-
-
-
---- programmatically "press" a button.
--- this will fire both 'began' and 'ended' events.
--- @within Methods
--- @function press
--- @usage widget:press()
-
---- set/get strokeWidth on background style.
--- this is a convenience method for calling on background style.
--- @within Methods
--- @function setBackgroundFillColor
--- @usage widget:setBackgroundFillColor( 1, 1, 1, 1 )
--- @usage
--- equivalent to:
--- widget.style.background.fillColor = { 1,1,1,1 }
-
---- set hit margin for button.
--- this is a convenience method to set hit margins at same time. args can be two integers or a table as array. (there is no difference with this or the properties)
--- @within Methods
--- @function setHitMargin
--- @usage print( widget:setHitMargin( 5, 0 ) )
--- @usage print( widget:setHitMargin( { 2, 3 } ) )
-
---- set text color for button label.
--- this is a convenience method to set the text color of the label
--- @within Methods
--- @function setLabelTextColor
--- @usage widget:setLabelTextColor( 1, 1, 1, 1 )
--- equivalent to:
--- widget.style.label.textColor = { 1,1,1,1 }
-
-
--- .labelText
---
 function ButtonBase.__getters:labelText()
 	return self._labelText
 end
@@ -489,27 +376,49 @@ function ButtonBase.__setters:labelText( value )
 	self:__invalidateProperties__()
 end
 
-function ButtonBase.__getters:hitMarginX()
-	-- print( "ButtonBase.__getters:hitMarginX" )
-	return self.curr_style.hitMarginX
-end
-function ButtonBase.__setters:hitMarginX( value )
-	-- print( "ButtonBase.__setters:hitMarginX", value )
-	self.curr_style.hitMarginX = value
+
+--======================================================--
+-- Children Style Accessors
+
+--- get Style object for Active state.
+--
+-- @within Properties
+-- @function .activeStyle
+-- @usage print( widget.activeStyle )
+
+function ButtonBase.__getters:activeStyle()
+	return self.curr_style.active
 end
 
---== hitMarginY
+--- get Style object for Disabled state.
+--
+-- @within Properties
+-- @function .disabledStyle
+-- @usage print( widget.disabledStyle )
 
-function ButtonBase.__getters:hitMarginY()
-	-- print( "ButtonBase.__getters:hitMarginY" )
-	return self.curr_style.hitMarginY
-end
-function ButtonBase.__setters:hitMarginY( value )
-	-- print( "ButtonBase.__setters:hitMarginY", value, self )
-	self.curr_style.hitMarginY = value
+function ButtonBase.__getters:disabledStyle()
+	return self.curr_style.disabled
 end
 
---== setHitMargin
+--- get Style object for Inactive state.
+--
+-- @within Properties
+-- @function .inactiveStyle
+-- @usage print( widget.inactiveStyle )
+
+function ButtonBase.__getters:inactiveStyle()
+	return self.curr_style.inactive
+end
+
+
+--== :setHitMargin
+
+--- set hit margin for button.
+-- this is a convenience method to set hit margins at same time. args can be two integers or a table as array. (there is no difference with this or the properties)
+-- @within Methods
+-- @function setHitMargin
+-- @usage print( widget:setHitMargin( 5, 0 ) )
+-- @usage print( widget:setHitMargin( { 2, 3 } ) )
 
 function ButtonBase:setHitMargin( ... )
 	-- print( 'ButtonBase:setHitMargin' )
@@ -526,68 +435,129 @@ function ButtonBase:setHitMargin( ... )
 	end
 end
 
---== isHitActive
 
-function ButtonBase.__getters:isHitActive()
-	-- print( "ButtonBase.__getters:isHitActive" )
-	return self.curr_style.isHitActive
+--======================================================--
+-- Button Methods
+
+--- set/get button id.
+-- optional id value for button. this value is passed in during button events, making it easy to differentiate buttons.
+-- @within Properties
+-- @function .id
+-- @usage widget.id = 'left-button'
+-- @usage print( widget.id )
+
+function ButtonBase.__getters:id()
+	return self._id
 end
-function ButtonBase.__setters:isHitActive( value )
-	-- print( "ButtonBase.__setters:isHitActive", value )
+function ButtonBase.__setters:id( value )
+	assert( type(value)=='string' or type(value)=='nil', "Button.id expected string or nil for button id")
+	self._id = value
+end
+
+--- get button 'active' state.
+-- check whether button is in 'active' state.
+-- @within Properties
+-- @function .isActive
+-- @usage print( widget.isActive )
+
+function ButtonBase.__getters:isActive()
+	return ( self:getState() == self.STATE_ACTIVE )
+end
+
+--- set/get whether button is 'disabled' or can be pressed/activated.
+-- property to set button disabled state or to see if it's enabled. this sets both the *look* of the button and the button action. setting .isEnabled will also set .isHitActive accordingly.
+-- @within Properties
+-- @function .isEnabled
+-- @usage widget.isEnabled = false
+-- @usage print( widget.isEnabled )
+
+function ButtonBase.__getters:isEnabled()
+	return ( self:getState() ~= ButtonBase.STATE_DISABLED )
+end
+function ButtonBase.__setters:isEnabled( value )
+	assert( type(value)=='boolean', "newButton: expected boolean for property 'enabled'")
+	--==--
+	if self.curr_style.isHitActive == value then return end
+
 	self.curr_style.isHitActive = value
+
+	if value == true then
+		self:gotoState( ButtonBase.STATE_INACTIVE, { isEnabled=value } )
+	else
+		self:gotoState( ButtonBase.STATE_DISABLED, { isEnabled=value } )
+	end
 end
 
-
---======================================================--
--- Background Style Properties
-
--- .backgroundStrokeWidth
+--- set callback for onPress events.
 --
-function ButtonBase.__getters:backgroundStrokeWidth()
-	return self.curr_style.background.strokeWidth
-end
-function ButtonBase.__setters:backgroundStrokeWidth( value )
-	-- print( 'ButtonBase.__setters:backgroundStrokeWidth', value )
-	self.curr_style.background.strokeWidth = value
+-- @within Properties
+-- @function .onPress
+-- @usage widget.onPress = <function>
+
+function ButtonBase.__setters:onPress( value )
+	assert( type(value)=='function' or type(value)=='nil', "expected function or nil for onPress")
+	self._callbacks.onPress = value
 end
 
--- setBackgroundFillColor()
+--- set callback for onRelease events.
 --
-function ButtonBase:setBackgroundFillColor( ... )
-	-- print( 'ButtonBase:setBackgroundFillColor' )
-	self.curr_style.background.fillColor = {...}
+-- @within Properties
+-- @function .onRelease
+-- @usage widget.onRelease = <function>
+
+function ButtonBase.__setters:onRelease( value )
+	assert( type(value)=='function' or type(value)=='nil', "expected function or nil for onRelease")
+	self._callbacks.onRelease = value
 end
 
--- setBackgroundStrokeColor()
+--- set callback for onEvent events.
 --
-function ButtonBase:setBackgroundStrokeColor( ... )
-	-- print( 'ButtonBase:setBackgroundStrokeColor' )
-	self.curr_style.background.strokeColor = {...}
+-- @within Properties
+-- @function .onEvent
+-- @usage widget.onEvent = <function>
+
+function ButtonBase.__setters:onEvent( value )
+	assert( type(value)=='function' or type(value)=='nil', "expected function or nil for onEvent")
+	self._callbacks.onEvent = value
+end
+
+--== .data
+
+--- set/get user data for button.
+-- convenient storage area for user data. this property is availble within button events.
+-- @within Properties
+-- @function .data
+-- @usage widget.data = 5
+-- @usage print( widget.data )
+
+function ButtonBase.__getters:data()
+	return self._data
+end
+function ButtonBase.__setters:data( value )
+	self._data = value
 end
 
 
---======================================================--
--- Label Style Properties
-
--- .hintFont
+--- programmatically "press" a button.
+-- this will fire both 'began' and 'ended' events.
+-- @within Methods
 --
-function ButtonBase.__setters:labelFont( value )
-	-- print( 'ButtonBase.__setters:labelFont', value )
-	self.curr_style.label.font = value
-end
+-- @function press
+-- @usage widget:press()
 
--- .labelFontSize
---
-function ButtonBase.__setters:labelFontSize( value )
-	-- print( 'ButtonBase.__setters:labelFontSize', value )
-	self.curr_style.label.fontSize = value
-end
+function ButtonBase:press()
+	local bounds = self.contentBounds
+	-- setup fake touch event
+	local evt = {
+		target=self.view,
+		x=bounds.xMin,
+		y=bounds.yMin,
+	}
 
--- setLabelColor()
---
-function ButtonBase:setLabelTextColor( ... )
-	-- print( 'ButtonBase:setLabelTextColor' )
-	self.curr_style.label.textColor = {...}
+	evt.phase = 'began'
+	self:_hitAreaTouch_handler( evt )
+	evt.phase = 'ended'
+	self:_hitAreaTouch_handler( evt )
 end
 
 
@@ -608,82 +578,6 @@ function ButtonBase:beforeRemoveStyle()
 	-- print( "ButtonBase:beforeRemoveStyle", self )
 	self._widgetStyle_dirty=true
 	self:__invalidateProperties__()
-end
-
-
---======================================================--
--- Button Methods
-
-
-function ButtonBase.__getters:id()
-	return self._id
-end
-function ButtonBase.__setters:id( value )
-	assert( type(value)=='string' or type(value)=='nil', "Button.id expected string or nil for button id")
-	self._id = value
-end
-
-
-function ButtonBase.__getters:isActive()
-	return ( self:getState() == self.STATE_ACTIVE )
-end
-
-
-function ButtonBase.__getters:isEnabled()
-	return ( self:getState() ~= ButtonBase.STATE_DISABLED )
-end
-function ButtonBase.__setters:isEnabled( value )
-	assert( type(value)=='boolean', "newButton: expected boolean for property 'enabled'")
-	--==--
-	if self.curr_style.isHitActive == value then return end
-
-	self.curr_style.isHitActive = value
-
-	if value == true then
-		self:gotoState( ButtonBase.STATE_INACTIVE, { isEnabled=value } )
-	else
-		self:gotoState( ButtonBase.STATE_DISABLED, { isEnabled=value } )
-	end
-end
-
-
-function ButtonBase.__setters:onPress( value )
-	assert( type(value)=='function' or type(value)=='nil', "expected function or nil for onPress")
-	self._callbacks.onPress = value
-end
-function ButtonBase.__setters:onRelease( value )
-	assert( type(value)=='function' or type(value)=='nil', "expected function or nil for onRelease")
-	self._callbacks.onRelease = value
-end
-function ButtonBase.__setters:onEvent( value )
-	assert( type(value)=='function' or type(value)=='nil', "expected function or nil for onEvent")
-	self._callbacks.onEvent = value
-end
-
-
-function ButtonBase.__getters:data()
-	return self._data
-end
-function ButtonBase.__setters:data( value )
-	self._data = value
-end
-
-
--- Method to programmatically press the button
---
-function ButtonBase:press()
-	local bounds = self.contentBounds
-	-- setup fake touch event
-	local evt = {
-		target=self.view,
-		x=bounds.xMin,
-		y=bounds.yMin,
-	}
-
-	evt.phase = 'began'
-	self:_hitAreaTouch_handler( evt )
-	evt.phase = 'ended'
-	self:_hitAreaTouch_handler( evt )
 end
 
 
