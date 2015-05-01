@@ -280,20 +280,6 @@ end
 Inherited Methods
 --]]
 
---- set/get x position.
---
--- @within Properties
--- @function .x
--- @usage widget.x = 5
--- @usage print( widget.x )
-
-
---- set/get y position.
---
--- @within Properties
--- @function .y
--- @usage widget.y = 5
--- @usage print( widget.y )
 
 
 --- set/get anchorX.
@@ -333,6 +319,13 @@ Inherited Methods
 
 --== .X
 
+--- set/get x position.
+--
+-- @within Properties
+-- @function .x
+-- @usage widget.x = 5
+-- @usage print( widget.x )
+
 function View.__getters:x()
 	return self._x
 end
@@ -347,6 +340,13 @@ function View.__setters:x( value )
 end
 
 --== .Y
+
+--- set/get y position.
+--
+-- @within Properties
+-- @function .y
+-- @usage widget.y = 5
+-- @usage print( widget.y )
 
 function View.__getters:y()
 	return self._y
@@ -363,6 +363,13 @@ end
 
 --== .id
 
+--- set/get widget id.
+--
+-- @within Properties
+-- @function .id
+-- @usage widget.id = 'button-widget'
+-- @usage print( widget.id )
+
 function View.__getters:id()
 	return self._id
 end
@@ -375,23 +382,53 @@ function View.__setters:id( value )
 end
 
 
---== .delegate
+--== anchorX
 
---- set/get delegate for item.
+--- set/get anchorX.
 --
--- @within Properties
--- @function .delegate
--- @usage widget.delegate = <delegate object>
--- @usage print( widget.delegate )
+-- @within Inherited
+-- @function .anchorX
+-- @usage widget.anchorX = 5
+-- @usage print( widget.anchorX )
+--
+function StyleMix.__getters:anchorX()
+	return self.curr_style.anchorX
+end
+function StyleMix.__setters:anchorX( value )
+	-- print( 'StyleMix.__setters:anchorX', value, self )
+	self.curr_style.anchorX = value
+end
 
-function View.__getters:delegate()
-	-- print( "View.__getters:delegate" )
-	return self._delegate
+--== anchorY
+
+--- set/get anchorY.
+--
+-- @within Inherited
+-- @function .anchorY
+-- @usage widget.anchorY = 5
+-- @usage print( widget.anchorY )
+--
+function StyleMix.__getters:anchorY()
+	return self.curr_style.anchorY
 end
-function View.__setters:delegate( value )
-	-- print( "View.__setters:delegate", value )
-	self._delegate = value
+function StyleMix.__setters:anchorY( value )
+	-- print( 'StyleMix.__setters:anchorY', value )
+	self.curr_style.anchorY = value
 end
+
+
+
+--== debugOn
+
+function StyleMix.__getters:debugOn()
+	return self.curr_style.debugOn
+end
+function StyleMix.__setters:debugOn( value )
+	-- print( 'StyleMix.__setters:debugOn', value )
+	self.curr_style.debugOn = value
+end
+
+
 
 --== .width
 
@@ -400,7 +437,7 @@ function View:_widthChanged()
 end
 function View.__setters:width( value )
 	-- print("View.__setters:width", value)
-	StyleMix.__setters.width( self, value )
+	self.curr_style.width = value
 	self:_widthChanged()
 end
 
@@ -411,9 +448,46 @@ function View:_heightChanged()
 end
 function View.__setters:height( value )
 	-- print( "View.__setters:height", value )
-	StyleMix.__setters.height( self, value )
+	self.curr_style.height = value
 	self:_heightChanged()
 end
+
+
+--== .preferredContentSize
+
+function View.__getters:preferredContentSize()
+	-- print( "View.__getters:preferredContentSize" )
+	return self._preferredContentSize
+end
+function View.__setters:preferredContentSize( value )
+	-- print( "View.__setters:preferredContentSize" )
+	value = value or {}
+	assert( value.width and value.height )
+	--==--
+	self._preferredContentSize = value
+end
+
+
+--== setAnchor
+
+function StyleMix:setAnchor( ... )
+	-- print( 'StyleMix:setAnchor' )
+	local args = {...}
+
+	if type( args[1] ) == 'table' then
+		self.anchorX, self.anchorY = unpack( args[1] )
+	end
+	if type( args[1] ) == 'number' then
+		self.anchorX = args[1]
+	end
+	if type( args[2] ) == 'number' then
+		self.anchorY = args[2]
+	end
+end
+
+
+--====================================================================--
+--== Private Methods
 
 
 --== _addSubView()
@@ -433,25 +507,6 @@ function View:_removeSubView( View, params )
 	params = params or {}
 	--==--
 end
-
---== .preferredContentSize
-
-function View.__getters:preferredContentSize()
-	-- print( "View.__getters:preferredContentSize" )
-	return self._preferredContentSize
-end
-function View.__setters:preferredContentSize( value )
-	-- print( "View.__setters:preferredContentSize" )
-	value = value or {}
-	assert( value.width and value.height )
-	--==--
-	self._preferredContentSize = value
-end
-
-
-
---====================================================================--
---== Private Methods
 
 
 --[[

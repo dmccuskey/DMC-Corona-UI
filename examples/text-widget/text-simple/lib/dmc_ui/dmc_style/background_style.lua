@@ -76,7 +76,6 @@ local BaseStyle = require( ui_find( 'core.style' ) )
 --== Setup, Constants
 
 
-local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
 
 local sfmt = string.format
@@ -92,8 +91,21 @@ local StyleFactory = nil
 --== Background Style Class
 --====================================================================--
 
+--- Background Style Class.
+-- a style object for a Background Widget.
+--
+-- **Inherits from:** <br>
+-- * @{Core.Style}
+--
+-- @classmod Style.Background
+-- @usage
+-- local dUI = require 'dmc_ui'
+-- local widget = dUI.newBackgroundStyle()
 
 local BackgroundStyle = newClass( BaseStyle, {name="Background Style"} )
+
+--- Class Constants.
+-- @section
 
 --== Class Constants
 
@@ -436,6 +448,16 @@ end
 
 --======================================================--
 -- Access to sub-styles
+
+
+--== .view
+
+--- get Style object for view.
+-- the value will be one of @{Style.RoundedView}, @{Style.RectangleView}, @{Style.NineSliceView}
+--
+-- @within Properties
+-- @function .view
+-- @usage print( style.view )
 
 function BackgroundStyle.__getters:view()
 	-- print( 'BackgroundStyle.__getters:view', self._view )

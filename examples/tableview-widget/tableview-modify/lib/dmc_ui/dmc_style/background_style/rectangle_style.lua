@@ -68,14 +68,13 @@ local Utils = require 'dmc_utils'
 local uiConst = require( ui_find( 'ui_constants' ) )
 
 local ViewStyle = require( ui_find( 'dmc_style.background_style.base_view_style' ) )
+local StyleHelp = require( ui_find( 'core.style_helper' ) )
 
 
 
 --====================================================================--
 --== Setup, Constants
 
-
-local newClass = Objects.newClass
 
 local sfmt = string.format
 local tinsert = table.insert
@@ -90,7 +89,28 @@ local Style = nil
 --====================================================================--
 
 
+--- Rectangle View Style Class.
+-- a style object for a Rectangle Background View.
+--
+-- **Inherits from:** <br>
+-- * @{Core.Style}
+--
+-- **Child style of:** <br>
+-- * @{Style.Background}
+--
+-- @classmod Style.RectangleView
+-- @usage
+-- local dUI = require 'dmc_ui'
+-- local widget = dUI.newBackgroundStyle{
+--   type='rectangle',
+-- }
+--
+-- local widget = dUI.newRectangleBackgroundStyle()
+
 local RectangleStyle = newClass( ViewStyle, {name="Rectangle Background Style"} )
+
+--- Class Constants.
+-- @section
 
 --== Class Constants
 
@@ -277,6 +297,49 @@ end
 
 --====================================================================--
 --== Public Methods
+
+
+
+--======================================================--
+-- Access to style properties
+
+--== fillColor
+
+--- [**style**] set/get Style value for Widget fill color.
+--
+-- @within Properties
+-- @function .fillColor
+-- @usage widget.fillColor = 'center'
+-- @usage print( widget.fillColor )
+
+RectangleStyle.__getters.fillColor = StyleHelp.__getters.fillColor
+RectangleStyle.__setters.fillColor = StyleHelp.__setters.fillColor
+
+--== strokeColor
+
+--- [**style**] set/get Style value for Widget border color.
+--
+-- @within Properties
+-- @function .strokeColor
+-- @usage style.strokeColor = {1,1,1,1}
+-- @usage print( style.strokeColor )
+
+RectangleStyle.__getters.strokeColor = StyleHelp.__getters.strokeColor
+RectangleStyle.__setters.strokeColor = StyleHelp.__setters.strokeColor
+
+--== strokeWidth
+
+--- [**style**] set/get Style value for Widget border thickness.
+--
+-- @within Properties
+-- @function .strokeWidth
+-- @usage style.strokeWidth = 2
+-- @usage print( style.strokeWidth )
+
+RectangleStyle.__getters.strokeWidth = StyleHelp.__getters.strokeWidth
+RectangleStyle.__setters.strokeWidth = StyleHelp.__setters.strokeWidth
+
+
 
 
 function RectangleStyle:setFillColor( ... )

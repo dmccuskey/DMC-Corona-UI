@@ -92,6 +92,12 @@ local ViewFactory = nil
 --- Background Widget Module.
 -- a background widget is a graphical element, normally used as a background. the background graphics can be from a Shape, Image, 9-Slice.
 --
+-- **Inherits from:** <br>
+-- * @{Core.Widget}
+--
+-- **Style Object:** <br>
+-- * @{Style.Background}
+--
 -- @classmod Widget.Background
 -- @usage
 -- local dUI = require 'dmc_ui'
@@ -99,9 +105,8 @@ local ViewFactory = nil
 
 local Background = newClass( WidgetBase, { name="Background Widget" } )
 
---- Class Constants
---
--- @section class-constants
+--- Class Constants.
+-- @section
 
 --== Style/Theme Constants
 
@@ -219,74 +224,21 @@ end
 --== Public Methods
 
 --[[
-Inherited
+Inherited Methods, from Style Mix
 --]]
 
---- set/get x position.
---
--- @within Properties
--- @function .x
--- @usage widget.x = 5
--- @usage print( widget.x )
-
---- set/get y position.
---
--- @within Properties
--- @function .y
--- @usage widget.y = 5
--- @usage print( widget.y )
-
---- set/get width.
---
--- @within Properties
--- @function .width
--- @usage widget.width = 5
--- @usage print( widget.width )
-
---- set/get height.
---
--- @within Properties
--- @function .height
--- @usage widget.height = 5
--- @usage print( widget.height )
-
---- set/get anchorX.
---
--- @within Properties
--- @function .anchorX
--- @usage widget.anchorX = 5
--- @usage print( widget.anchorX )
-
---- set/get anchorY.
---
--- @within Properties
--- @function .anchorY
--- @usage widget.anchorY = 5
--- @usage print( widget.anchorY )
-
---- set/get widget style.
--- style can be a style name or a Style Object.
--- Style Object must be appropriate style for Widget, eg style for Background widget comes from dUI.newBackgroundStyle().
--- @within Properties
--- @function .style
--- @usage widget.style = 'widget-home-page'
--- @usage
--- local wStyle = dUI.newBackgroundStyle()
--- widget.style = wStyle
-
-
---- clear any local properties on style.
--- convenience method, calls clearProperties() on active style.
---
--- @within Methods
--- @function clearStyle
--- @usage widget:clearStyle()
 
 
 
 --======================================================--
 -- Local Properties
 
+
+--- get a reference to view's Style object.nd.
+--
+-- @within Properties
+-- @function .viewStyle
+-- @usage print( widget.viewStyle )
 
 function Background.__getters:viewStyle()
 	return self.curr_style.view

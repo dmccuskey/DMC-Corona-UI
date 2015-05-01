@@ -77,8 +77,6 @@ local ViewStyle = require( ui_find( 'dmc_style.background_style.base_view_style'
 --== Setup, Constants
 
 
-local newClass = Objects.newClass
-
 local sfmt = string.format
 local tinsert = table.insert
 
@@ -88,11 +86,32 @@ local Style = nil
 
 
 --====================================================================--
---== Rounded Background Style Class
+--== 9-Slice Background Style Class
 --====================================================================--
 
 
+--- 9-Slice View Style Class.
+-- a style object for a 9-Slice Background View.
+--
+-- **Inherits from:** <br>
+-- * @{Core.Style}
+--
+-- **Child style of:** <br>
+-- * @{Style.Background}
+--
+-- @classmod Style.NineSliceView
+-- @usage
+-- local dUI = require 'dmc_ui'
+-- local widget = dUI.newBackgroundStyle{
+--   type='9-slice',
+-- }
+--
+-- local widget = dUI.new9SliceBackgroundStyle()
+
 local NineSliceStyle = newClass( ViewStyle, {name="9-Slice Background Style"} )
+
+--- Class Constants.
+-- @section
 
 --== Class Constants
 

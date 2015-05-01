@@ -71,14 +71,13 @@ local Utils = require 'dmc_utils'
 local uiConst = require( ui_find( 'ui_constants' ) )
 
 local BaseStyle = require( ui_find( 'core.style' ) )
+local StyleHelp = require( ui_find( 'core.style_helper' ) )
 
 
 
 --====================================================================--
 --== Setup, Constants
 
-
-local newClass = Objects.newClass
 
 local sfmt = string.format
 local tinsert = table.insert
@@ -93,7 +92,21 @@ local Style = nil
 --====================================================================--
 
 
+--- TextField Style Class.
+-- a style object for a TextField View.
+--
+-- **Inherits from:** <br>
+-- * @{Core.Style}
+--
+-- @classmod Style.TextField
+-- @usage
+-- local dUI = require 'dmc_ui'
+-- local widget = dUI.newTextFieldStyle()
+
 local TextFieldStyle = newClass( BaseStyle, {name="TextField Style"} )
+
+--- Class Constants.
+-- @section
 
 --== Class Constants
 
@@ -143,7 +156,7 @@ TextFieldStyle._STYLE_DEFAULTS = {
 	inputType='default',
 	isHitActive=true,
 	isSecure=false,
-	marginX=15,
+	marginX=10,
 	marginY=5,
 	returnKey='done',
 
@@ -172,7 +185,7 @@ TextFieldStyle._STYLE_DEFAULTS = {
 		fillColor={0,0,0,0},
 		font=native.systemFont,
 		fontSize=18,
-		-- marginX=15,
+		marginX=15,
 		textColor={0.3,0.3,0.3,1},
 	},
 	display={
@@ -187,7 +200,7 @@ TextFieldStyle._STYLE_DEFAULTS = {
 		fillColor={0,0,0,0},
 		font=native.systemFont,
 		fontSize=18,
-		-- marginX=15,
+		marginX=15,
 		textColor={0.1,0.1,0.1,1},
 	},
 
@@ -629,6 +642,13 @@ end
 
 --== font
 
+--- [**style**] set/get Style value for Widget's Hint font.
+--
+-- @within Style-Helpers
+-- @function .hintFont
+-- @usage style.hintFont = 'helvetica-bold'
+-- @usage print( style.hintFont )
+
 function TextFieldStyle.__getters:hintFont()
 	-- print( "TextFieldStyle.__getters:hintFont" )
 	return self._hint.font
@@ -701,7 +721,29 @@ end
 --======================================================--
 -- Access to style properties
 
---== backgroundStyle
+
+--== .align
+
+--- [**style**] set/get Style value for Widget text alignment.
+-- values are 'left', 'center', 'right'
+--
+-- @within Properties
+-- @function .align
+-- @usage style.align = 'center'
+-- @usage print( style.align )
+
+TextFieldStyle.__getters.align = StyleHelp.__getters.align
+TextFieldStyle.__setters.align = StyleHelp.__setters.align
+
+--== .backgroundStyle
+
+-- [**style**] set/get Style value for Widget background style.
+-- values are 'none', ...
+--
+-- @within Properties
+-- @function .backgroundStyle
+-- @usage style.backgroundStyle = 'none'
+-- @usage print( style.backgroundStyle )
 
 function TextFieldStyle.__getters:backgroundStyle()
 	-- print( "TextFieldStyle.__getters:backgroundStyle" )
@@ -720,7 +762,7 @@ function TextFieldStyle.__setters:backgroundStyle( value )
 	self:_dispatchChangeEvent( 'backgroundStyle', value )
 end
 
---== inputType
+--== .inputType
 
 function TextFieldStyle.__getters:inputType()
 	-- print( "TextFieldStyle.__getters:inputType" )
@@ -739,7 +781,7 @@ function TextFieldStyle.__setters:inputType( value )
 	self:_dispatchChangeEvent( 'inputType', value )
 end
 
---== isHitActive
+--== .isHitActive
 
 function TextFieldStyle.__getters:isHitActive()
 	-- print( "TextFieldStyle.__getters:isHitActive" )
@@ -758,7 +800,7 @@ function TextFieldStyle.__setters:isHitActive( value )
 	self:_dispatchChangeEvent( 'isHitActive', value )
 end
 
---== isSecure
+--== .isSecure
 
 function TextFieldStyle.__getters:isSecure()
 	-- print( "TextFieldStyle.__getters:isSecure" )
@@ -777,7 +819,32 @@ function TextFieldStyle.__setters:isSecure( value )
 	self:_dispatchChangeEvent( 'isSecure', value )
 end
 
---== returnKey
+--== .marginX
+
+--- [**style**] set/get Style value for Widget X-axis margin.
+--
+-- @within Properties
+-- @function .marginX
+-- @usage style.marginX = 10
+-- @usage print( style.marginX )
+
+TextFieldStyle.__getters.marginX = StyleHelp.__getters.marginX
+TextFieldStyle.__setters.marginX = StyleHelp.__setters.marginX
+
+--== .marginY
+
+--- [**style**] set/get Style value for Widget Y-axis margin.
+--
+-- @within Properties
+-- @function .marginY
+-- @usage style.marginY = 10
+-- @usage print( style.marginY )
+
+TextFieldStyle.__getters.marginY = StyleHelp.__getters.marginY
+TextFieldStyle.__setters.marginY = StyleHelp.__setters.marginY
+
+
+--== .returnKey
 
 function TextFieldStyle.__getters:returnKey()
 	-- print( "TextFieldStyle.__getters:returnKey" )

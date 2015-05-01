@@ -94,17 +94,22 @@ local Style = nil
 --====================================================================--
 
 
+--- Style Base Class.
+-- The base class used for all Styles.
+--
+-- @classmod Core.Style
+
 local BaseStyle = newClass( ObjectBase, {name="Style Base"}  )
 
 --== Class Constants
 
---- the main style instance for the class.
+-- the main style instance for the class.
 -- is is the root style for the class, all styles
 -- inherit from this one. set later in setup.
 --
 BaseStyle.__base_style__ = nil  -- <instance of class>
 
---- table (hash) of valid style properties.
+-- table (hash) of valid style properties.
 -- used to check properties when updates come from Parent Style
 -- It's highly possible for Parent to have properties not available in
 -- a Child Style, so those should be skipped for propagation
@@ -116,7 +121,7 @@ BaseStyle._VALID_PROPERTIES = {}
 --
 BaseStyle._EXCLUDE_PROPERTY_CHECK = {}
 
---- table (hash) of children styles.
+-- table (hash) of children styles.
 -- this allows data (structures) for children
 -- to be processed separately.
 -- key/value should be name of child set to true, eg
@@ -306,8 +311,6 @@ function BaseStyle.createStyleStructure( src )
 	--==--
 	return {}
 end
-
-
 
 
 -- addMissingDestProperties()
@@ -768,9 +771,14 @@ override these getters/setters/methods if necesary
 
 --== name
 
---- get/set name of Style.
--- nil or a string
+--- [**style**] get/set name of Style.
+-- nil or a string.
 -- will put in Style Manager to reference.
+--
+-- @within Properties
+-- @function .name
+-- @usage style.name = 'home-images'
+-- @usage print( style.name )
 
 function BaseStyle.__getters:name()
 	-- print( "BaseStyle.__getters:name", self._inherit )
@@ -794,7 +802,7 @@ end
 
 --== debugOn
 
---- [**style**] set/get debug mode.
+--- [**style**] set/get value for debug mode.
 -- implementation depends on Widget.
 --
 -- @within Properties
@@ -858,7 +866,7 @@ end
 
 --== width
 
---- [**style**] set/get width for Widget.
+--- [**style**] set/get Style value for Widget width.
 --
 -- @within Properties
 -- @function .width
@@ -884,7 +892,7 @@ end
 
 --== height
 
---- [**style**] set/get height for Widget.
+--- [**style**] set/get Style value for Widget height.
 --
 -- @within Properties
 -- @function .height
@@ -909,7 +917,7 @@ end
 
 --== anchorX
 
---- [**style**] set/get X-anchor for Widget.
+--- [**style**] set/get Style value for Widget anchorX.
 --
 -- @within Properties
 -- @function .anchorX
@@ -934,7 +942,7 @@ end
 
 --== anchorY
 
---- [**style**] set/get Y-anchor for Widget.
+--- [**style**] set/get Style value for Widget anchorY.
 --
 -- @within Properties
 -- @function .anchorY

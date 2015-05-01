@@ -78,8 +78,6 @@ local WidgetBase = require( ui_find( 'core.widget' ) )
 --== Setup, Constants
 
 
-local newClass = Objects.newClass
-
 local tcancel = timer.cancel
 local tdelay = timer.performWithDelay
 
@@ -95,7 +93,7 @@ local Widget = nil
 
 
 --- TextField Widget Module.
--- a widget used to collect text from user.
+-- a widget used to allow input from a user.
 --
 -- **Inherits from:** <br>
 -- * @{Core.Widget}
@@ -106,7 +104,7 @@ local Widget = nil
 -- @classmod Widget.TextField
 -- @usage
 -- local dUI = require 'dmc_ui'
--- local widget = dUI.TextField()
+-- local widget = dUI.newTextField()
 
 local TextField = newClass( WidgetBase, {name="TextField"} )
 

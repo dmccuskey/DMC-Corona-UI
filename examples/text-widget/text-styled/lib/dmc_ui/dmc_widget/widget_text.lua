@@ -76,8 +76,6 @@ local WidgetBase = require( ui_find( 'core.widget' ) )
 --== Setup, Constants
 
 
-local newClass = Objects.newClass
-
 local ssub = string.sub
 
 --== To be set in initialize()
@@ -131,7 +129,13 @@ end
 
 
 --- Text Widget Module.
--- at the core, the DMC Text Widget wraps a Corona Text widget to provide its functionality. this gives us more consistent behavior! (w00t!)
+-- displays text content. this widget wraps the a Corona OpenGL Text component to provide its core functionality.
+--
+-- **Inherits from:** <br>
+-- * @{Core.Widget}
+--
+-- **Style Object:** <br>
+-- * @{Style.Text}
 --
 -- @classmod Widget.Text
 -- @usage
@@ -145,9 +149,15 @@ local Text = newClass( WidgetBase, { name="Text Widget" } )
 
 --== Class Constants
 
+--- Constant for 'left'
 Text.LEFT = 'left'
+
+--- Constant for 'center'
 Text.CENTER = 'center'
+
+--- Constant for 'right'
 Text.RIGHT = 'right'
+
 
 --== Style/Theme Constants
 
@@ -291,57 +301,10 @@ end
 
 
 --[[
-Inherited Methods
+Inherited Methods, from Style Mix
 --]]
 
---- set/get x position.
---
--- @within Properties
--- @function .x
--- @usage widget.x = 5
--- @usage print( widget.x )
-
---- set/get y position.
---
--- @within Properties
--- @function .y
--- @usage widget.y = 5
--- @usage print( widget.y )
-
---- set/get anchorX.
---
--- @within Properties
--- @function .anchorX
--- @usage widget.anchorX = 5
--- @usage print( widget.anchorX )
-
---- set/get anchorY.
---
--- @within Properties
--- @function .anchorY
--- @usage widget.anchorY = 5
--- @usage print( widget.anchorY )
-
---- set/get widget style.
--- style can be a style name or a Style Object.
--- Style Object must be appropriate style for Widget, eg style for Background widget comes from dUI.newBackgroundStyle().
--- @within Properties
--- @function .style
--- @usage widget.style = 'widget-home-page'
--- @usage
--- local wStyle = dUI.newTextStyle()
--- widget.style = wStyle
-
-
---- clear any local properties on style.
--- convenience method, calls clearProperties() on active style.
---
--- @within Methods
--- @function :clearStyle
--- @usage widget:clearStyle()
-
-
---- set/get align.
+--- [**style**] set/get align.
 -- values are 'left', 'center', 'right'
 --
 -- @within Properties
@@ -349,7 +312,7 @@ Inherited Methods
 -- @usage widget.align = 'center'
 -- @usage print( widget.align )
 
---- set/get font.
+--- [**style**] set/get font.
 -- can either be Corona font (eg, native.systemFont) or one installed in system (eg, 'Helvetica-Grande')
 --
 -- @within Properties
@@ -357,7 +320,7 @@ Inherited Methods
 -- @usage widget.font = native.systemFont
 -- @usage print( widget.font )
 
---- set/get fontSize.
+--- [**style**] set/get fontSize.
 -- set the font size of the text.
 --
 -- @within Properties
@@ -365,7 +328,7 @@ Inherited Methods
 -- @usage widget.fontSize = 18
 -- @usage print( widget.fontSize )
 
---- set/get marginX.
+--- [**style**] set/get marginX.
 -- set the margin inset of the widget. this value is *subtracted* from the widget width.
 --
 -- @within Properties
@@ -374,45 +337,13 @@ Inherited Methods
 -- @usage print( widget.marginX )
 
 
---- set/get strokeWidth.
+--- [**style**] set/get strokeWidth.
 -- set stroke width for the simple background.
 --
 -- @within Properties
 -- @function .strokeWidth
 -- @usage widget.strokeWidth = 18
 -- @usage print( widget.strokeWidth )
-
-
---- set the fill color of the simple background.
---
--- @within Methods
--- @function :setFillColor
--- @usage
--- widget:setFillColor( grey )
--- widget:setFillColor( grey, a )
--- widget:setFillColor( r, g, b, a )
--- widget:setFillColor( gradient )
-
---- set stroke color of the simple background.
---
--- @within Methods
--- @function :setStrokeColor
--- @usage
--- widget:setStrokeColor( grey )
--- widget:setStrokeColor( grey, a )
--- widget:setStrokeColor( r, g, b, a )
--- widget:setStrokeColor( gradient )
-
---- set color of text.
---
--- @within Methods
--- @function :setTextColor
--- @usage
--- widget:setTextColor( grey )
--- widget:setTextColor( grey, a )
--- widget:setTextColor( r, g, b, a )
--- widget:setTextColor( gradient )
-
 
 
 
@@ -424,7 +355,7 @@ from text object after creation
 
 --== .width (custom)
 
---- set/get width.
+--- [**style**] set/get width.
 -- Note: this property changes both the width of the DMC Text Widget and the encapsulated Corona Text widget. If the style is unset, then the width value is the width of the encapsulated Corona Text widget. If the style value is set, then then the width for both will change to that value.
 --
 -- @within Properties
@@ -448,7 +379,7 @@ end
 
 --== .height (custom)
 
---- set/get height.
+--- [**style**] set/get height.
 -- Note: this property *doesn't* change the height of the actual *Corona Text widget*, that remains constant. If the style is unset, then the height value is the height of the encapsulated Corona Text widget. If the style value is set, then then the height is that value, even if the height of the Corona Text widget is different. (If the height of the Corona Text widget is set then it becomes a multi-line text widget.)
 --
 -- @within Properties
@@ -489,6 +420,39 @@ function Text.__setters:text( value )
 	self:__invalidateProperties__()
 end
 
+
+
+
+
+--- set the fill color of the simple background.
+--
+-- @within Methods
+-- @function :setFillColor
+-- @usage
+-- widget:setFillColor( grey )
+-- widget:setFillColor( grey, a )
+-- widget:setFillColor( r, g, b, a )
+-- widget:setFillColor( gradient )
+
+--- set stroke color of the simple background.
+--
+-- @within Methods
+-- @function :setStrokeColor
+-- @usage
+-- widget:setStrokeColor( grey )
+-- widget:setStrokeColor( grey, a )
+-- widget:setStrokeColor( r, g, b, a )
+-- widget:setStrokeColor( gradient )
+
+--- set color of text.
+--
+-- @within Methods
+-- @function :setTextColor
+-- @usage
+-- widget:setTextColor( grey )
+-- widget:setTextColor( grey, a )
+-- widget:setTextColor( r, g, b, a )
+-- widget:setTextColor( gradient )
 
 
 --- get height of Corona Text object.

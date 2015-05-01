@@ -1,5 +1,5 @@
 --====================================================================--
--- dmc_widget/widget_style_mix.lua
+-- dmc_ui/dmc_style/style_mix.lua
 --
 -- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
@@ -33,7 +33,7 @@ SOFTWARE.
 
 
 --====================================================================--
---== DMC Corona Widgets : Widget StyleMix Mixin
+--== DMC Corona Widgets : Widget Style Mixin
 --====================================================================--
 
 
@@ -95,19 +95,19 @@ end
 
 
 --====================================================================--
---== StyleMix Mixin
+--== Style Mixin
 --====================================================================--
 
 
 local StyleMix = {}
 
-StyleMix.NAME = "StyleMix Mixin"
+StyleMix.NAME = "Style Mixin"
 
 StyleMix.__getters = {}
 StyleMix.__setters = {}
 
 --======================================================--
--- START: Mixin Setup for DMC Objects
+-- START: Mixin Setup for Lua Objects
 
 function StyleMix.__init__( self, params )
 	-- print( 'StyleMix.__init__x', params )
@@ -152,7 +152,7 @@ function StyleMix.__undoInitComplete__( self )
 	self.__default_style = self:_destroyDefaultStyle( o )
 end
 
--- END: Mixin Setup for DMC Objects
+-- END: Mixin Setup for Lua Objects
 --======================================================--
 
 
@@ -315,179 +315,7 @@ end
 
 
 
-
---[[
-override these getters/setters/methods if necesary
---]]
-
---== debugOn
-
-function StyleMix.__getters:debugOn()
-	return self.curr_style.debugOn
-end
-function StyleMix.__setters:debugOn( value )
-	-- print( 'StyleMix.__setters:debugOn', value )
-	self.curr_style.debugOn = value
-end
-
-
---== width
-
-function StyleMix.__getters:width()
-	-- print( 'StyleMix.__getters:width' )
-	return self.curr_style.width
-end
-function StyleMix.__setters:width( value )
-	-- print( 'StyleMix.__setters:width', value )
-	self.curr_style.width = value
-end
-
---== height
-
-function StyleMix.__getters:height()
-	-- print( 'StyleMix.__getters:height' )
-	return self.curr_style.height
-end
-function StyleMix.__setters:height( value )
-	-- print( 'StyleMix.__setters:height', value )
-	self.curr_style.height = value
-end
-
---== align
-
-function StyleMix.__getters:align()
-	return self.curr_style.align
-end
-function StyleMix.__setters:align( value )
-	-- print( 'StyleMix.__setters:align', value )
-	self.curr_style.align = value
-end
-
---== anchorX
-
---- set/get anchorX.
---
--- @within Inherited
--- @function .anchorX
--- @usage widget.anchorX = 5
--- @usage print( widget.anchorX )
---
-function StyleMix.__getters:anchorX()
-	return self.curr_style.anchorX
-end
-function StyleMix.__setters:anchorX( value )
-	-- print( 'StyleMix.__setters:anchorX', value, self )
-	self.curr_style.anchorX = value
-end
-
---== anchorY
-
---- set/get anchorY.
---
--- @within Inherited
--- @function .anchorY
--- @usage widget.anchorY = 5
--- @usage print( widget.anchorY )
---
-function StyleMix.__getters:anchorY()
-	return self.curr_style.anchorY
-end
-function StyleMix.__setters:anchorY( value )
-	-- print( 'StyleMix.__setters:anchorY', value )
-	self.curr_style.anchorY = value
-end
-
---== font
-
-function StyleMix.__getters:font()
-	return self.curr_style.font
-end
-function StyleMix.__setters:font( value )
-	-- print( 'StyleMix.__setters:font', value )
-	self.curr_style.font = value
-end
-
---== fontSize
-
-function StyleMix.__getters:fontSize()
-	return self.curr_style.fontSize
-end
-function StyleMix.__setters:fontSize( value )
-	-- print( 'StyleMix.__setters:fontSize', value )
-	self.curr_style.fontSize = value
-end
-
---== marginX
-
-function StyleMix.__getters:marginX()
-	return self.curr_style.marginX
-end
-function StyleMix.__setters:marginX( value )
-	-- print( 'StyleMix.__setters:marginX', value )
-	self.curr_style.marginX = value
-end
-
---== marginY
-
-function StyleMix.__getters:marginY()
-	return self.curr_style.marginY
-end
-function StyleMix.__setters:marginY( value )
-	-- print( 'StyleMix.__setters:marginY', value )
-	self.curr_style.marginY = value
-end
-
---== strokeWidth
-
-function StyleMix.__getters:strokeWidth()
-	return self.curr_style.strokeWidth
-end
-function StyleMix.__setters:strokeWidth( value )
-	-- print( 'StyleMix.__setters:strokeWidth', value )
-	self.curr_style.strokeWidth = value
-end
-
-
-
 --== Style Methods ==--
-
---== setAnchor
-
-function StyleMix:setAnchor( ... )
-	-- print( 'StyleMix:setAnchor' )
-	local args = {...}
-
-	if type( args[1] ) == 'table' then
-		self.anchorX, self.anchorY = unpack( args[1] )
-	end
-	if type( args[1] ) == 'number' then
-		self.anchorX = args[1]
-	end
-	if type( args[2] ) == 'number' then
-		self.anchorY = args[2]
-	end
-end
-
---== setFillColor
-
-function StyleMix:setFillColor( ... )
-	-- print( 'StyleMix:setFillColor' )
-	self.curr_style.fillColor = {...}
-end
-
---== setStrokeColor
-
-function StyleMix:setStrokeColor( ... )
-	-- print( 'StyleMix:setStrokeColor' )
-	self.curr_style.strokeColor = {...}
-end
-
---== setTextColor
-
-function StyleMix:setTextColor( ... )
-	-- print( 'StyleMix:setTextColor' )
-	self.curr_style.textColor = {...}
-end
 
 
 function StyleMix.__getters:defaultStyle()
