@@ -425,7 +425,7 @@ from text object after creation
 --== .width (custom)
 
 --- set/get width.
--- Note: this property changes both the width of the DMC Text Widget and the encapsulated Corona Text widget. If the style is unset, then the width value is the width of the encapsulated Corona Text widget. If the style value is set, then then the width for both changes to that value.
+-- Note: this property changes both the width of the DMC Text Widget and the encapsulated Corona Text widget. If the style is unset, then the width value is the width of the encapsulated Corona Text widget. If the style value is set, then then the width for both will change to that value.
 --
 -- @within Properties
 -- @function .width
