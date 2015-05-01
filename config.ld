@@ -39,15 +39,22 @@ file = {
 	'lib/dmc_ui/dmc_style/button_style.lua',
 
 
+	'lib/dmc_ui/dmc_style/tableview_style.lua',
 	'lib/dmc_ui/dmc_style/tableviewcell_style.lua',
 	'lib/dmc_ui/dmc_style/tableviewcell_style/tableviewcell_state.lua',
 
 	'lib/dmc_ui/dmc_style/text_style.lua',
 
+	'lib/dmc_ui/dmc_style/textfield_style.lua',
+
 
 	-- Widgets 
 	
 	'lib/dmc_ui/dmc_widget/widget_background.lua',
+	--'lib/dmc_ui/dmc_widget/widget_background/nine_slice_view.lua',
+	--'lib/dmc_ui/dmc_widget/widget_background/rectangle_view.lua',
+	--'lib/dmc_ui/dmc_widget/widget_background/rounded_view.lua',
+	
 	'lib/dmc_ui/dmc_widget/widget_button.lua',
 	'lib/dmc_ui/dmc_widget/widget_button/button_push.lua',
 	'lib/dmc_ui/dmc_widget/widget_button/button_radio.lua',
