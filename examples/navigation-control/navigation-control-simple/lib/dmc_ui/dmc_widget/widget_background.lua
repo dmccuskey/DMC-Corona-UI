@@ -100,8 +100,8 @@ local ViewFactory = nil
 --
 -- @classmod Widget.Background
 -- @usage
--- local dUI = require 'dmc_ui'
--- local widget = dUI.newBackground()
+-- dUI = require 'dmc_ui'
+-- widget = dUI.newBackground()
 
 local Background = newClass( WidgetBase, { name="Background Widget" } )
 

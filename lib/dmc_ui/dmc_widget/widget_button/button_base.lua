@@ -495,7 +495,7 @@ end
 -- @usage widget.onPress = <function>
 
 function ButtonBase.__setters:onPress( value )
-	assert( type(value)=='function' or type(value)=='nil', "expected function or nil for onPress")
+	assert( type(value)=='function' or type(value)=='nil', "onPress expected function or nil")
 	self._callbacks.onPress = value
 end
 
@@ -506,7 +506,7 @@ end
 -- @usage widget.onRelease = <function>
 
 function ButtonBase.__setters:onRelease( value )
-	assert( type(value)=='function' or type(value)=='nil', "expected function or nil for onRelease")
+	assert( type(value)=='function' or type(value)=='nil', "onRelease expected function or nil")
 	self._callbacks.onRelease = value
 end
 
@@ -517,7 +517,7 @@ end
 -- @usage widget.onEvent = <function>
 
 function ButtonBase.__setters:onEvent( value )
-	assert( type(value)=='function' or type(value)=='nil', "expected function or nil for onEvent")
+	assert( type(value)=='function' or type(value)=='nil', "onEvent expected function or nil")
 	self._callbacks.onEvent = value
 end
 

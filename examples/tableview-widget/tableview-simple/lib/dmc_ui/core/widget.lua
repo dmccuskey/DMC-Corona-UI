@@ -421,6 +421,9 @@ end
 function View:_widthChanged()
 	-- print( "OVERRIDE View:_widthChanged" )
 end
+function View.__getters:width()
+	return self.curr_style.width
+end
 function View.__setters:width( value )
 	-- print("View.__setters:width", value)
 	self.curr_style.width = value
@@ -431,6 +434,9 @@ end
 
 function View:_heightChanged()
 	-- print( "OVERRIDE View:_heightChanged" )
+end
+function View.__getters:height()
+	return self.curr_style.height
 end
 function View.__setters:height( value )
 	-- print( "View.__setters:height", value )
