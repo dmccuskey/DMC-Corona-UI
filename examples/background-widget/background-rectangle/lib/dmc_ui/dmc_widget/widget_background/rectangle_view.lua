@@ -69,14 +69,13 @@ local Objects = require 'dmc_objects'
 local uiConst = require( ui_find( 'ui_constants' ) )
 
 local WidgetBase = require( ui_find( 'core.widget' ) )
+local WidgetHelp = require( ui_find( 'core.widget_helper' ) )
 
 
 
 --====================================================================--
 --== Setup, Constants
 
-
-local newClass = Objects.newClass
 
 --== To be set in initialize()
 local dUI = nil
@@ -93,7 +92,7 @@ local dUI = nil
 -- @classmod Widget.RectangleView
 -- @usage
 -- local dUI = require 'dmc_ui'
--- local widget = dUI.newText()
+-- local widget = dUI.newRectangleBackground()
 
 local RectangleView = newClass( WidgetBase, {name="Rectangle Background View" } )
 

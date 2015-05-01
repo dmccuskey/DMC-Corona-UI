@@ -168,7 +168,11 @@ end
 
 --== strokeWidth
 
+-- CLASS.__getters.strokeWidth = WidgetHelp.__getters.strokeWidth
+-- CLASS.__setters.strokeWidth = WidgetHelp.__setters.strokeWidth
+
 function WidgetHelp.__getters:strokeWidth()
+	print( 'WidgetHelp.__setters:strokeWidth', value )
 	return self.curr_style.strokeWidth
 end
 function WidgetHelp.__setters:strokeWidth( value )

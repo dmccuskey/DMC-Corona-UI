@@ -92,10 +92,12 @@ function run_example1a()
 	bw1.width, bw1.height = 150, 100
 	bw1.x, bw1.y = H_CENTER, V_CENTER+0
 
-	-- timer.performWithDelay( 1000, function()
-	-- 	bw1.width=100
-	-- 	bw1.anchorX=1
-	-- end)
+	timer.performWithDelay( 1000, function()
+		bw1.width=100
+		-- bw1.anchorX=0
+		-- bw1.anchorY=0
+		bw1:setAnchor( 0,0 )
+	end)
 
 end
 

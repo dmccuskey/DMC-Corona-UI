@@ -80,7 +80,6 @@ local StyleMixModule = require( ui_find( 'dmc_style.style_mix' ) )
 
 Patch.addPatch( 'table-pop' )
 
-local newClass = Objects.newClass
 local ComponentBase = Objects.ComponentBase
 
 local LifecycleMix = LifecycleMixModule.LifecycleMix
@@ -88,6 +87,8 @@ local StyleMix = StyleMixModule.StyleMix
 
 local tinsert = table.insert
 local tpop = table.pop
+local type = type
+local unpack = unpack
 
 --== To be set in initialize()
 local dUI = nil
@@ -281,21 +282,6 @@ Inherited Methods
 --]]
 
 
-
---- set/get anchorX.
---
--- @within Properties
--- @function .anchorX
--- @usage widget.anchorX = 5
--- @usage print( widget.anchorX )
-
---- set/get anchorY.
---
--- @within Properties
--- @function .anchorY
--- @usage widget.anchorY = 5
--- @usage print( widget.anchorY )
-
 --- set/get widget style.
 -- style can be a style name or a Style Object.
 -- Style Object must be appropriate style for Widget, eg style for Background widget comes from dUI.newBackgroundStyle().
@@ -391,11 +377,11 @@ end
 -- @usage widget.anchorX = 5
 -- @usage print( widget.anchorX )
 --
-function StyleMix.__getters:anchorX()
+function View.__getters:anchorX()
 	return self.curr_style.anchorX
 end
-function StyleMix.__setters:anchorX( value )
-	-- print( 'StyleMix.__setters:anchorX', value, self )
+function View.__setters:anchorX( value )
+	-- print( 'View.__setters:anchorX', value, self )
 	self.curr_style.anchorX = value
 end
 
@@ -408,11 +394,11 @@ end
 -- @usage widget.anchorY = 5
 -- @usage print( widget.anchorY )
 --
-function StyleMix.__getters:anchorY()
+function View.__getters:anchorY()
 	return self.curr_style.anchorY
 end
-function StyleMix.__setters:anchorY( value )
-	-- print( 'StyleMix.__setters:anchorY', value )
+function View.__setters:anchorY( value )
+	-- print( 'View.__setters:anchorY', value )
 	self.curr_style.anchorY = value
 end
 
@@ -420,11 +406,11 @@ end
 
 --== debugOn
 
-function StyleMix.__getters:debugOn()
+function View.__getters:debugOn()
 	return self.curr_style.debugOn
 end
-function StyleMix.__setters:debugOn( value )
-	-- print( 'StyleMix.__setters:debugOn', value )
+function View.__setters:debugOn( value )
+	-- print( 'View.__setters:debugOn', value )
 	self.curr_style.debugOn = value
 end
 
@@ -470,8 +456,8 @@ end
 
 --== setAnchor
 
-function StyleMix:setAnchor( ... )
-	-- print( 'StyleMix:setAnchor' )
+function View:setAnchor( ... )
+	-- print( 'View:setAnchor' )
 	local args = {...}
 
 	if type( args[1] ) == 'table' then

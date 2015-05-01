@@ -102,6 +102,9 @@ local Style = nil
 
 local TextStyle = newClass( BaseStyle, {name="Text Style"} )
 
+--- Class Constants.
+-- @section
+
 --== Class Constants
 
 TextStyle.TYPE = uiConst.TEXT
@@ -360,7 +363,7 @@ end
 --== Public Methods
 
 
---== align
+--== .align
 
 --- [**style**] set/get Style value for Widget text alignment.
 -- values are 'left', 'center', 'right'
@@ -373,7 +376,7 @@ end
 TextStyle.__getters.align = StyleHelp.__getters.align
 TextStyle.__setters.align = StyleHelp.__setters.align
 
---== fillColor
+--== .fillColor
 
 --- [**style**] set/get Style value for Widget fill color.
 --
@@ -385,7 +388,7 @@ TextStyle.__setters.align = StyleHelp.__setters.align
 TextStyle.__getters.fillColor = StyleHelp.__getters.fillColor
 TextStyle.__setters.fillColor = StyleHelp.__setters.fillColor
 
---== font
+--== .font
 
 --- [**style**] set/get Style value for Widget font.
 --
@@ -397,7 +400,7 @@ TextStyle.__setters.fillColor = StyleHelp.__setters.fillColor
 TextStyle.__getters.font = StyleHelp.__getters.font
 TextStyle.__setters.font = StyleHelp.__setters.font
 
---== fontSize
+--== .fontSize
 
 --- [**style**] set/get Style value for Widget font size.
 --
@@ -409,7 +412,7 @@ TextStyle.__setters.font = StyleHelp.__setters.font
 TextStyle.__getters.fontSize = StyleHelp.__getters.fontSize
 TextStyle.__setters.fontSize = StyleHelp.__setters.fontSize
 
---== marginX
+--== .marginX
 
 --- [**style**] set/get Style value for Widget X-axis margin.
 --
@@ -421,7 +424,7 @@ TextStyle.__setters.fontSize = StyleHelp.__setters.fontSize
 TextStyle.__getters.marginX = StyleHelp.__getters.marginX
 TextStyle.__setters.marginX = StyleHelp.__setters.marginX
 
---== marginY
+--== .marginY
 
 --- [**style**] set/get Style value for Widget Y-axis margin.
 --
@@ -433,7 +436,7 @@ TextStyle.__setters.marginX = StyleHelp.__setters.marginX
 TextStyle.__getters.marginY = StyleHelp.__getters.marginY
 TextStyle.__setters.marginY = StyleHelp.__setters.marginY
 
---== strokeColor
+--== .strokeColor
 
 --- [**style**] set/get Style value for Widget border color.
 --
@@ -445,7 +448,7 @@ TextStyle.__setters.marginY = StyleHelp.__setters.marginY
 TextStyle.__getters.strokeColor = StyleHelp.__getters.strokeColor
 TextStyle.__setters.strokeColor = StyleHelp.__setters.strokeColor
 
---== strokeWidth
+--== .strokeWidth
 
 --- [**style**] set/get Style value for Widget border thickness.
 --
@@ -457,7 +460,7 @@ TextStyle.__setters.strokeColor = StyleHelp.__setters.strokeColor
 TextStyle.__getters.strokeWidth = StyleHelp.__getters.strokeWidth
 TextStyle.__setters.strokeWidth = StyleHelp.__setters.strokeWidth
 
---== textColor
+--== .textColor
 
 --- [**style**] set/get Style value for Widget text color.
 --

@@ -76,8 +76,6 @@ local WidgetBase = require( ui_find( 'core.widget' ) )
 --== Setup, Constants
 
 
-local newClass = Objects.newClass
-
 --== To be set in initialize()
 local dUI = nil
 
@@ -91,6 +89,7 @@ local function loadSpriteSheet( info, image )
 	local spriteInfo = require( info )
 	return graphics.newImageSheet( image, spriteInfo:getSheet() )
 end
+
 
 
 --====================================================================--
