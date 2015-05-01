@@ -451,7 +451,7 @@ end
 --== .view
 
 --- get Style object for view.
--- the value will be one of @{Style.RoundedView}, @{Style.RectangleView}, @{Style.NineSliceView}
+-- the value will be one of @{Style.BackgroundView.Rounded}, @{Style.BackgroundView.Rounded}, @{Style.BackgroundView.9Slice}
 --
 -- @within Properties
 -- @function .view
