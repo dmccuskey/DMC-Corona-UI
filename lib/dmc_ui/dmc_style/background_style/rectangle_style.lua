@@ -68,7 +68,7 @@ local Utils = require 'dmc_utils'
 local uiConst = require( ui_find( 'ui_constants' ) )
 
 local ViewStyle = require( ui_find( 'dmc_style.background_style.base_view_style' ) )
-local StyleHelp = require( ui_find( 'core.style_help' ) )
+local StyleHelp = require( ui_find( 'core.style_helper' ) )
 
 
 
