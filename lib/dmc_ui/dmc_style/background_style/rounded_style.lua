@@ -69,14 +69,13 @@ local Utils = require 'dmc_utils'
 local uiConst = require( ui_find( 'ui_constants' ) )
 
 local ViewStyle = require( ui_find( 'dmc_style.background_style.base_view_style' ) )
+local StyleHelp = require( ui_find( 'core.style_help' ) )
 
 
 
 --====================================================================--
 --== Setup, Constants
 
-
-local newClass = Objects.newClass
 
 local sfmt = string.format
 local tinsert = table.insert
@@ -91,7 +90,28 @@ local Style = nil
 --====================================================================--
 
 
+--- Rounded View Style Class.
+-- a Style object for a Rounded Background View.
+--
+-- **Inherits from:** <br>
+-- * @{Core.Style}
+--
+-- **Child style of:** <br>
+-- * @{Style.Background}
+--
+-- @classmod Style.RoundedView
+-- @usage
+-- local dUI = require 'dmc_ui'
+-- local widget = dUI.newBackgroundStyle{
+--   type='rounded',
+-- }
+--
+-- local widget = dUI.newRoundedBackgroundStyle()
+
 local RoundedStyle = newClass( ViewStyle, {name="Rounded Background Style"} )
+
+--- Class Constants.
+-- @section
 
 --== Class Constants
 
@@ -315,11 +335,50 @@ function RoundedStyle.__setters:cornerRadius( value )
 	self:_dispatchChangeEvent( 'cornerRadius', value )
 end
 
+--== fillColor
+
+--- [**style**] set/get Style value for Widget fill color.
+--
+-- @within Properties
+-- @function .fillColor
+-- @usage widget.fillColor = 'center'
+-- @usage print( widget.fillColor )
+
+RoundedStyle.__getters.fillColor = StyleHelp.__getters.fillColor
+RoundedStyle.__setters.fillColor = StyleHelp.__setters.fillColor
+
+--== strokeColor
+
+--- [**style**] set/get Style value for Widget border color.
+--
+-- @within Properties
+-- @function .strokeColor
+-- @usage style.strokeColor = {1,1,1,1}
+-- @usage print( style.strokeColor )
+
+RoundedStyle.__getters.strokeColor = StyleHelp.__getters.strokeColor
+RoundedStyle.__setters.strokeColor = StyleHelp.__setters.strokeColor
+
+--== strokeWidth
+
+--- [**style**] set/get Style value for Widget border thickness.
+--
+-- @within Properties
+-- @function .strokeWidth
+-- @usage style.strokeWidth = 2
+-- @usage print( style.strokeWidth )
+
+RoundedStyle.__getters.strokeWidth = StyleHelp.__getters.strokeWidth
+RoundedStyle.__setters.strokeWidth = StyleHelp.__setters.strokeWidth
+
 
 
 --====================================================================--
 --== Private Methods
 
+
+--- method to set fill color
+--
 
 function RoundedStyle:setFillColor( ... )
 	self.fillColor = {...}
