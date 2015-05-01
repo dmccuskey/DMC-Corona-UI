@@ -97,8 +97,8 @@ local Style = nil
 --
 -- @classmod Style.Text
 -- @usage
--- local dUI = require 'dmc_ui'
--- local widget = dUI.newTextStyle()
+-- dUI = require 'dmc_ui'
+-- widget = dUI.newTextStyle()
 
 local TextStyle = newClass( BaseStyle, {name="Text Style"} )
 

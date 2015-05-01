@@ -134,9 +134,34 @@ function run_example1()
 	-- txt1:setTextColor( 1,0,0,0.5 )
 	-- txt1:setTextColor( 0,1,1,0.5 )
 
+	timer.performWithDelay( 1000, function()
+		txt1.align='left'
+		txt1.fillColor='#000000'
+		txt1.font=native.systemFontBold
+		txt1.fontSize=30
+		txt1.marginX=30
+		txt1.strokeWidth=20
+	end)
+
+	timer.performWithDelay( 2000, function()
+		txt1.align='center'
+		txt1:setFillColor( 1,1,0 )
+		txt1:setStrokeColor( 0,1,1 )
+		txt1:setTextColor( 1,0,0 )
+	end)
+
+	timer.performWithDelay( 3000, function()
+		txt1.align='right'
+		txt1.fillColor=nil
+		txt1.font=nil
+		txt1.fontSize=nil
+		txt1.marginX=nil
+		txt1.strokeWidth=nil
+	end)
+
 end
 
--- run_example1()
+run_example1()
 
 
 --======================================================--
@@ -178,7 +203,7 @@ function run_example2()
 
 end
 
-run_example2()
+-- run_example2()
 
 
 
@@ -274,5 +299,5 @@ function run_example3()
 
 end
 
-run_example3()
+-- run_example3()
 

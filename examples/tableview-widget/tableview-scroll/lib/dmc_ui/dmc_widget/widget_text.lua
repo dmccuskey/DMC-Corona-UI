@@ -69,6 +69,7 @@ local Objects = require 'dmc_objects'
 local uiConst = require( ui_find( 'ui_constants' ) )
 
 local WidgetBase = require( ui_find( 'core.widget' ) )
+local WidgetHelp = require( ui_find( 'core.widget_helper' ) )
 
 
 
@@ -139,8 +140,8 @@ end
 --
 -- @classmod Widget.Text
 -- @usage
--- local dUI = require 'dmc_ui'
--- local widget = dUI.newText()
+-- dUI = require 'dmc_ui'
+-- widget = dUI.newText()
 
 local Text = newClass( WidgetBase, { name="Text Widget" } )
 
@@ -300,9 +301,7 @@ end
 --== Public Methods
 
 
---[[
-Inherited Methods, from Style Mix
---]]
+--== .align
 
 --- [**style**] set/get align.
 -- values are 'left', 'center', 'right'
@@ -312,6 +311,23 @@ Inherited Methods, from Style Mix
 -- @usage widget.align = 'center'
 -- @usage print( widget.align )
 
+Text.__getters.align = WidgetHelp.__getters.align
+Text.__setters.align = WidgetHelp.__setters.align
+
+--== .fillColor
+
+--- [**style**] set/get Style value for Widget fill color.
+--
+-- @within Properties
+-- @function .fillColor
+-- @usage style.fillColor = '#ff0000'
+-- @usage print( style.fillColor )
+
+Text.__getters.fillColor = WidgetHelp.__getters.fillColor
+Text.__setters.fillColor = WidgetHelp.__setters.fillColor
+
+--== .font
+
 --- [**style**] set/get font.
 -- can either be Corona font (eg, native.systemFont) or one installed in system (eg, 'Helvetica-Grande')
 --
@@ -319,6 +335,11 @@ Inherited Methods, from Style Mix
 -- @function .font
 -- @usage widget.font = native.systemFont
 -- @usage print( widget.font )
+
+Text.__getters.font = WidgetHelp.__getters.font
+Text.__setters.font = WidgetHelp.__setters.font
+
+--== .fontSize
 
 --- [**style**] set/get fontSize.
 -- set the font size of the text.
@@ -328,6 +349,11 @@ Inherited Methods, from Style Mix
 -- @usage widget.fontSize = 18
 -- @usage print( widget.fontSize )
 
+Text.__getters.fontSize = WidgetHelp.__getters.fontSize
+Text.__setters.fontSize = WidgetHelp.__setters.fontSize
+
+--== .marginX
+
 --- [**style**] set/get marginX.
 -- set the margin inset of the widget. this value is *subtracted* from the widget width.
 --
@@ -336,6 +362,10 @@ Inherited Methods, from Style Mix
 -- @usage widget.marginX = 18
 -- @usage print( widget.marginX )
 
+Text.__getters.marginX = WidgetHelp.__getters.marginX
+Text.__setters.marginX = WidgetHelp.__setters.marginX
+
+--== .strokeWidth
 
 --- [**style**] set/get strokeWidth.
 -- set stroke width for the simple background.
@@ -345,6 +375,8 @@ Inherited Methods, from Style Mix
 -- @usage widget.strokeWidth = 18
 -- @usage print( widget.strokeWidth )
 
+Text.__getters.strokeWidth = WidgetHelp.__getters.strokeWidth
+Text.__setters.strokeWidth = WidgetHelp.__setters.strokeWidth
 
 
 --[[
@@ -422,39 +454,6 @@ end
 
 
 
-
-
---- set the fill color of the simple background.
---
--- @within Methods
--- @function :setFillColor
--- @usage
--- widget:setFillColor( grey )
--- widget:setFillColor( grey, a )
--- widget:setFillColor( r, g, b, a )
--- widget:setFillColor( gradient )
-
---- set stroke color of the simple background.
---
--- @within Methods
--- @function :setStrokeColor
--- @usage
--- widget:setStrokeColor( grey )
--- widget:setStrokeColor( grey, a )
--- widget:setStrokeColor( r, g, b, a )
--- widget:setStrokeColor( gradient )
-
---- set color of text.
---
--- @within Methods
--- @function :setTextColor
--- @usage
--- widget:setTextColor( grey )
--- widget:setTextColor( grey, a )
--- widget:setTextColor( r, g, b, a )
--- widget:setTextColor( gradient )
-
-
 --- get height of Corona Text object.
 -- return the height of the encapsulated Corona text object, not height of the DMC Text Widget. returns 0 if Corona Text has yet to be created.
 --
@@ -470,6 +469,53 @@ function Text:getTextHeight()
 	if o then val = o.height end
 	return val
 end
+
+
+
+--== .setFillColor
+
+--- set the fill color of the simple background.
+--
+-- @within Methods
+-- @function :setFillColor
+-- @usage
+-- widget:setFillColor( grey )
+-- widget:setFillColor( grey, a )
+-- widget:setFillColor( r, g, b, a )
+-- widget:setFillColor( gradient )
+
+Text.setFillColor = WidgetHelp.setFillColor
+Text.setFillColor = WidgetHelp.setFillColor
+
+--== .setStrokeColor
+
+--- set stroke color of the simple background.
+--
+-- @within Methods
+-- @function :setStrokeColor
+-- @usage
+-- widget:setStrokeColor( grey )
+-- widget:setStrokeColor( grey, a )
+-- widget:setStrokeColor( r, g, b, a )
+-- widget:setStrokeColor( gradient )
+
+Text.setStrokeColor = WidgetHelp.setStrokeColor
+Text.setStrokeColor = WidgetHelp.setStrokeColor
+
+--== .setTextColor
+
+--- set color of text.
+--
+-- @within Methods
+-- @function :setTextColor
+-- @usage
+-- widget:setTextColor( grey )
+-- widget:setTextColor( grey, a )
+-- widget:setTextColor( r, g, b, a )
+-- widget:setTextColor( gradient )
+
+Text.setTextColor = WidgetHelp.setTextColor
+Text.setTextColor = WidgetHelp.setTextColor
 
 
 

@@ -130,6 +130,14 @@ end
 
 --== .font
 
+--- [**style**] set/get font.
+-- can either be Corona font (eg, native.systemFont) or one installed in system (eg, 'Helvetica-Grande')
+--
+-- @within Properties
+-- @function .font
+-- @usage widget.font = native.systemFont
+-- @usage print( widget.font )
+
 -- CLASS.__getters.font = WidgetHelp.__getters.font
 -- CLASS.__setters.font = WidgetHelp.__setters.font
 
@@ -144,6 +152,14 @@ end
 
 --== .fontSize
 
+--- [**style**] set/get fontSize.
+-- set the font size of the text.
+--
+-- @within Properties
+-- @function .fontSize
+-- @usage widget.fontSize = 18
+-- @usage print( widget.fontSize )
+
 -- CLASS.__getters.fontSize = WidgetHelp.__getters.fontSize
 -- CLASS.__setters.fontSize = WidgetHelp.__setters.fontSize
 
@@ -157,6 +173,14 @@ end
 
 
 --== .marginX
+
+--- [**style**] set/get marginX.
+-- set the margin inset of the widget. this value is *subtracted* from the widget width.
+--
+-- @within Properties
+-- @function .marginX
+-- @usage widget.marginX = 18
+-- @usage print( widget.marginX )
 
 -- CLASS.__getters.marginX = WidgetHelp.__getters.marginX
 -- CLASS.__setters.marginX = WidgetHelp.__setters.marginX
@@ -186,6 +210,14 @@ end
 
 --== .strokeWidth
 
+--- [**style**] set/get strokeWidth.
+-- set stroke width for the simple background.
+--
+-- @within Properties
+-- @function .strokeWidth
+-- @usage widget.strokeWidth = 18
+-- @usage print( widget.strokeWidth )
+
 -- CLASS.__getters.strokeWidth = WidgetHelp.__getters.strokeWidth
 -- CLASS.__setters.strokeWidth = WidgetHelp.__setters.strokeWidth
 
@@ -200,6 +232,16 @@ end
 
 --== .setFillColor
 
+--- set the fill color of the background.
+--
+-- @within Methods
+-- @function :setFillColor
+-- @usage
+-- widget:setFillColor( grey )
+-- widget:setFillColor( grey, a )
+-- widget:setFillColor( r, g, b, a )
+-- widget:setFillColor( gradient )
+
 -- CLASS.setFillColor = WidgetHelp.setFillColor
 -- CLASS.setFillColor = WidgetHelp.setFillColor
 
@@ -211,6 +253,16 @@ end
 
 --== .setStrokeColor
 
+--- set stroke color of the background.
+--
+-- @within Methods
+-- @function :setStrokeColor
+-- @usage
+-- widget:setStrokeColor( grey )
+-- widget:setStrokeColor( grey, a )
+-- widget:setStrokeColor( r, g, b, a )
+-- widget:setStrokeColor( gradient )
+
 -- CLASS.setStrokeColor = WidgetHelp.setStrokeColor
 -- CLASS.setStrokeColor = WidgetHelp.setStrokeColor
 
@@ -221,6 +273,16 @@ end
 
 
 --== .setTextColor
+
+--- set color of text.
+--
+-- @within Methods
+-- @function :setTextColor
+-- @usage
+-- widget:setTextColor( grey )
+-- widget:setTextColor( grey, a )
+-- widget:setTextColor( r, g, b, a )
+-- widget:setTextColor( gradient )
 
 -- CLASS.setTextColor = WidgetHelp.setTextColor
 -- CLASS.setTextColor = WidgetHelp.setTextColor
