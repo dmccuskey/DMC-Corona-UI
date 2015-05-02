@@ -64,9 +64,9 @@ local ui_find = dmc_ui_func.find
 --== Imports
 
 
-local Objects = require 'dmc_objects'
-
 local uiConst = require( ui_find( 'ui_constants' ) )
+
+local Objects = require 'dmc_objects'
 
 local WidgetBase = require( ui_find( 'core.widget' ) )
 
@@ -76,7 +76,7 @@ local WidgetBase = require( ui_find( 'core.widget' ) )
 --== Setup, Constants
 
 
-local newClass = Objects.newClass
+local unpack = unpack
 
 --== To be set in initialize()
 local dUI = nil
@@ -159,7 +159,7 @@ function RoundedView:__createView__()
 	self:superCall( '__createView__' )
 	--==--
 	local o = display.newRoundedRect( 0,0,0,0,1 )
-	self:insert( o )
+	self._dgBg:insert( o )
 	self._rndBg = o
 end
 
