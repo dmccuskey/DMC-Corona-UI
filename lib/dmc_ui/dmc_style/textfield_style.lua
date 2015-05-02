@@ -601,53 +601,9 @@ end
 
 
 --======================================================--
--- Background Style Properties
-
---== fillColor
-
---- [**style**] set/get Style value for Background fill color.
---
--- @within Properties
--- @function .backgroundFillColor
--- @usage style.backgroundFillColor = '#ff0000'
--- @usage print( style.backgroundFillColor )
-
-function TextFieldStyle.__getters:backgroundFillColor()
-	-- print( "TextFieldStyle.__getters:backgroundFillColor" )
-	return self._background.fillColor
-end
-function TextFieldStyle.__setters:backgroundFillColor( value )
-	-- print( "TextFieldStyle.__setters:backgroundFillColor", value )
-	self._background.fillColor = value
-end
-
---== strokeColor
-
-function TextFieldStyle.__getters:backgroundStrokeColor()
-	-- print( "TextFieldStyle.__getters:backgroundStrokeColor" )
-	return self._background.strokeColor
-end
-function TextFieldStyle.__setters:backgroundStrokeColor( value )
-	-- print( "TextFieldStyle.__setters:backgroundStrokeColor", value )
-	self._background.strokeColor = value
-end
-
---== strokeWidth
-
-function TextFieldStyle.__getters:backgroundStrokeWidth()
-	-- print( "TextFieldStyle.__getters:backgroundStrokeWidth" )
-	return self._background.strokeWidth
-end
-function TextFieldStyle.__setters:backgroundStrokeWidth( value )
-	-- print( "TextFieldStyle.__setters:backgroundStrokeWidth", value )
-	self._background.strokeWidth = value
-end
-
-
---======================================================--
 -- Hint Style Properties
 
---== font
+--== .hintFont
 
 --- [**style**] set/get Style value for Widget's Hint font.
 --

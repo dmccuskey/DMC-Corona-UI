@@ -588,35 +588,6 @@ function TextField.__setters:text( value )
 end
 
 
-
---======================================================--
--- Background Style Properties
-
--- .backgroundStrokeWidth
---
-function TextField.__getters:backgroundStrokeWidth()
-	return self.curr_style.backgroundStrokeWidth
-end
-function TextField.__setters:backgroundStrokeWidth( value )
-	-- print( "TextField.__setters:backgroundStrokeWidth", value )
-	self.curr_style.backgroundStrokeWidth = value
-end
-
--- setBackgroundFillColor()
---
-function TextField:setBackgroundFillColor( ... )
-	-- print( "TextField:setBackgroundFillColor" )
-	self.curr_style.backgroundFillColor = {...}
-end
-
--- setBackgroundStrokeColor()
---
-function TextField:setBackgroundStrokeColor( ... )
-	-- print( "TextField:setBackgroundStrokeColor" )
-	self.curr_style.backgroundStrokeColor = {...}
-end
-
-
 --======================================================--
 -- Hint Style Properties
 
