@@ -376,10 +376,14 @@ end
 --== .backgroundStyle
 
 --- get a reference to Background Style object.
+-- use this reference to change properties for the Background substyle
 --
 -- @within Properties
 -- @function .backgroundStyle
--- @usage print( widget.backgroundStyle )
+--
+-- @usage
+-- style = widget.backgroundStyle
+-- style.anchorX = 0.5
 
 function TextField.__getters:backgroundStyle()
 	return self.curr_style.background
@@ -388,10 +392,14 @@ end
 --== .displayStyle
 
 --- get a reference to the Display Text Style object.
+-- use this reference to change properties for the Text substyle
 --
 -- @within Properties
 -- @function .displayStyle
--- @usage print( widget.displayStyle )
+--
+-- @usage
+-- style = widget.displayStyle
+-- style.anchorX = 0.5
 
 function TextField.__getters:displayStyle()
 	return self.curr_style.display
@@ -400,10 +408,14 @@ end
 --== .hintStyle
 
 --- get a reference to the Hint Text Style object.
+-- use this reference to change properties for the Text substyle
 --
 -- @within Properties
 -- @function .hintStyle
--- @usage print( widget.hintStyle )
+--
+-- @usage
+-- style = widget.hintStyle
+-- style.anchorX = 0.5
 
 function TextField.__getters:hintStyle()
 	return self.curr_style.hint
