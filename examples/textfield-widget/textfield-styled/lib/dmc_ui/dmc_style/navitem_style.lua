@@ -76,9 +76,6 @@ local BaseStyle = require( ui_find( 'core.style' ) )
 --== Setup, Constants
 
 
-local newClass = Objects.newClass
-local ObjectBase = Objects.ObjectBase
-
 local sfmt = string.format
 local tinsert = table.insert
 

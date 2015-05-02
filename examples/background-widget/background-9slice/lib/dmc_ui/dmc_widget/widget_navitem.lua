@@ -76,7 +76,6 @@ local uiConst = require( ui_find( 'ui_constants' ) )
 --== Setup, Constants
 
 
-local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
 
 local LifecycleMix = LifecycleMixModule.LifecycleMix
@@ -132,7 +131,7 @@ function NavItem:__init__( params )
 
 	-- properties stored in Class
 
-	self._title = params.title
+	self._title = ''
 
 	-- properties stored in Style
 
@@ -148,7 +147,6 @@ function NavItem:__init__( params )
 
 	--== Object References ==--
 
-	self._tmp_style = params.style -- save
 
 	self._wgtBtnBack = nil -- Back button widget
 	self._wgtBtnBack_dirty=true
@@ -163,8 +161,10 @@ function NavItem:__init__( params )
 	self._btnLeft = nil
 	self._btnLeftStyle_dirty=true
 
-	self._btnRight = params.rightButton
+	self._btnRight = nil
 	self._btnRightStyle_dirty=true
+
+	self._ni_tmp_params = params -- save
 
 end
 
@@ -184,15 +184,19 @@ function NavItem:__initComplete__()
 	self:superCall( StyleMix, '__initComplete__' )
 	self:superCall( ObjectBase, '__initComplete__' )
 	--==--
-	self.style = self._tmp_style
+	local tmp = self._ni_tmp_params
 
-	self.rightButton = self._btnRight -- setter
-	self.leftButton = self._btnLeft -- setter
+	self.style = tmp.style
+
+	self.rightButton = tmp.rightButton -- setter
+	self.leftButton = tmp.leftButton -- setter
 
 	self:_createText()
 	self:_createBackButton()
 
-	self.title = self._title
+	self.title = tmp.title
+
+	self._ni_tmp_params = nil
 
 end
 
@@ -253,6 +257,12 @@ end
 -- @function .backButton
 -- @usage print( widget.backButton )
 
+function NavItem.__getters:backButton()
+	-- print( "NavItem.__getters:backButton" )
+	return self._wgtBtnBack
+end
+
+
 --- set/get leftButton object.
 --
 -- @within Properties
@@ -260,33 +270,6 @@ end
 -- @usage widget.leftButton = <DMC PushButton>
 -- @usage print( widget.leftButton )
 
---- set/get rightButton object.
---
--- @within Properties
--- @function .rightButton
--- @usage widget.rightButton = <DMC PushButton>
--- @usage print( widget.rightButton )
-
---- set/get title of Nav Item.
--- value should be string
---
--- @within Properties
--- @function .title
--- @usage widget.title = "My Title"
--- @usage print( widget.title )
-
-
-
--- getter, back button
---
-function NavItem.__getters:backButton()
-	-- print( "NavItem.__getters:backButton" )
-	return self._wgtBtnBack
-end
-
-
--- getter/setter, left button
---
 function NavItem.__getters:leftButton()
 	-- print( "NavItem.__getters:leftButton" )
 	return self._btnLeft
@@ -305,8 +288,13 @@ function NavItem.__setters:leftButton( button )
 end
 
 
--- getter/setter, right button
+--- set/get rightButton object.
 --
+-- @within Properties
+-- @function .rightButton
+-- @usage widget.rightButton = <DMC PushButton>
+-- @usage print( widget.rightButton )
+
 function NavItem.__getters:rightButton()
 	-- print( "NavItem.__getters:rightButton" )
 	return self._btnRight
@@ -325,9 +313,14 @@ function NavItem.__setters:rightButton( button )
 end
 
 
-
--- getter/setter, title TODO (inside of buttons)
+--- set/get title of Nav Item.
+-- value should be string
 --
+-- @within Properties
+-- @function .title
+-- @usage widget.title = "My Title"
+-- @usage print( widget.title )
+
 function NavItem.__getters:title()
 	-- print( "NavItem.__getters:rightButton" )
 	return self._wgtText

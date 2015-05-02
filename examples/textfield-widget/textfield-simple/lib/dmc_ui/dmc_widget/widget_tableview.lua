@@ -343,6 +343,20 @@ end
 --== Public Methods
 
 
+--== .delegate
+
+--- set/get delegate for item.
+--
+-- @within Properties
+-- @function .delegate
+-- @usage widget.delegate = <delegate object>
+-- @usage print( widget.delegate )
+
+TableView.__getters.delegate = WidgetHelp.__getters.delegate
+TableView.__setters.delegate = WidgetHelp.__setters.delegate
+
+
+
 -- block horizontal motion change
 --
 function TableView.__setters:horizontalScrollEnabled( value )

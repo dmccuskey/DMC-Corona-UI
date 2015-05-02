@@ -71,6 +71,7 @@ local wUtils = require( ui_find( 'ui_utils' ) )
 local uiConst = require( ui_find( 'ui_constants' ) )
 
 local WidgetBase = require( ui_find( 'core.widget' ) )
+local WidgetHelp = require( ui_find( 'core.widget_helper' ) )
 
 
 
@@ -372,8 +373,17 @@ end
 --== Public Methods
 
 
---======================================================--
--- Local Properties
+--== .delegate
+
+--- set/get delegate for item.
+--
+-- @within Properties
+-- @function .delegate
+-- @usage widget.delegate = <delegate object>
+-- @usage print( widget.delegate )
+
+TextField.__getters.delegate = WidgetHelp.__getters.delegate
+TextField.__setters.delegate = WidgetHelp.__setters.delegate
 
 
 --[[

@@ -76,9 +76,6 @@ local BaseStyle = require( ui_find( 'core.style' ) )
 --== Setup, Constants
 
 
-local newClass = Objects.newClass
-local ObjectBase = Objects.ObjectBase
-
 local sfmt = string.format
 local tinsert = table.insert
 
@@ -118,7 +115,6 @@ NavBarStyle._EXCLUDE_PROPERTY_CHECK = {
 }
 
 NavBarStyle._STYLE_DEFAULTS = {
-	name='textfield-default-style',
 	debugOn=false,
 	width=nil, -- set in initialization()
 	height=40,
@@ -143,7 +139,7 @@ NavBarStyle._STYLE_DEFAULTS = {
 
 
 NavBarStyle._TEST_DEFAULTS = {
-	name='textfield-test-style',
+	name='navbar-test-style',
 	debugOn=false,
 	width=501,
 	height=502,
@@ -334,7 +330,14 @@ end
 --======================================================--
 -- Access to sub-styles
 
---== Background
+--== .background
+
+--- get Style object for background.
+-- the value will be one @{Style.Background}
+--
+-- @within Properties
+-- @function .background
+-- @usage print( style.background )
 
 function NavBarStyle.__getters:background()
 	-- print( 'NavBarStyle.__getters:background', self._background )
