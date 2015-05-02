@@ -106,10 +106,10 @@ function run_example1()
 
 	-- tf1.align='left'
 	tf1.hintFontSize=18
-	-- tf1:setBackgroundFillColor( 1,0.5,0.2,0.3 )
+	tf1:setBackgroundFillColor( 1,0.5,0.2,0.3 )
 
-	-- tf1.isSecure=true
-	-- tf1.isHitActive=true
+	tf1.isSecure=true
+	tf1.isHitActive=true
 
 	tf2 = dUI.newTextField{
 		text="",
@@ -120,42 +120,42 @@ function run_example1()
 
 	-- timer.performWithDelay( 1000, function()
 	-- 	print("\n\n Update Properties")
-		-- test background props
+	-- 	-- test background props
 
-		-- tf1.x = H_CENTER-50
-		-- tf1.y = V_CENTER+100
+	-- 	tf1.x = H_CENTER-50
+	-- 	tf1.y = V_CENTER+100
 
-		-- tf1.isSecure=false
+	-- 	tf1.isSecure=false
 
-		-- tf1.align='center'
-		-- tf1.text="hello"
-		-- tf1.marginX=10
+	-- 	tf1.align='center'
+	-- 	tf1.text="hello"
+	-- 	tf1.marginX=10
 
-		-- tf1.width=200
-		-- tf1.height=100
+	-- 	tf1.width=200
+	-- 	tf1.height=100
 
-		-- -- tf1.isHitActive=false
+	-- 	-- tf1.isHitActive=false
 
-		-- tf1:setHintTextColor( 1,1,0 )
-		-- tf1.hintFontSize = 18
+	-- 	tf1:setHintTextColor( 1,1,0 )
+	-- 	tf1.hintFontSize = 18
 
-		-- tf1:setAnchor( {0,0} )
+	-- 	tf1:setAnchor( {0,0} )
 
-		-- tf1:setBackgroundStrokeColor( 0.2,0.2,0.9,0.5 )
-		-- tf1:setBackgroundFillColor( 0.2,0.2,0.2,0.2 )
-		-- tf1.backgroundStrokeWidth = 10
+	-- 	tf1:setBackgroundStrokeColor( 0.2,0.2,0.9,0.5 )
+	-- 	tf1:setBackgroundFillColor( 0.2,0.2,0.2,0.2 )
+	-- 	tf1.backgroundStrokeWidth = 10
 
-		-- tf1:setBackgroundStrokeColor( 0.2,0.2,0.9,0.5 )
-		-- tf1:setBackgroundFillColor( 0.2,0.2,0.2,0.2 )
-		-- tf1.backgroundStrokeWidth = 10
+	-- 	tf1:setBackgroundStrokeColor( 0.2,0.2,0.9,0.5 )
+	-- 	tf1:setBackgroundFillColor( 0.2,0.2,0.2,0.2 )
+	-- 	tf1.backgroundStrokeWidth = 10
 
-		-- tf1.hintFont = native.systemFontBold
-		-- tf1.hintFontSize = 30
-		-- tf1:setHintTextColor(1,0,0,1)
+	-- 	tf1.hintFont = native.systemFontBold
+	-- 	tf1.hintFontSize = 30
+	-- 	tf1:setHintTextColor(1,0,0,1)
 
-		-- tf1.displayFont = native.systemFontBold
-		-- tf1.displayFontSize = 30
-		-- tf1:setDisplayTextColor(1,0,0,1)
+	-- 	tf1.displayFont = native.systemFontBold
+	-- 	tf1.displayFontSize = 30
+	-- 	tf1:setDisplayTextColor(1,0,0,1)
 
 	-- end)
 

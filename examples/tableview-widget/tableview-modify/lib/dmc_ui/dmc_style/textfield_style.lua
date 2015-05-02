@@ -100,8 +100,8 @@ local Style = nil
 --
 -- @classmod Style.TextField
 -- @usage
--- local dUI = require 'dmc_ui'
--- local widget = dUI.newTextFieldStyle()
+-- dUI = require 'dmc_ui'
+-- widget = dUI.newTextFieldStyle()
 
 local TextFieldStyle = newClass( BaseStyle, {name="TextField Style"} )
 
@@ -314,8 +314,8 @@ function TextFieldStyle:__init__( params )
 
 	-- these are other style objects
 	self._background = nil -- Background Style
-	self._hint = nil  -- Text Style
 	self._display = nil  -- Text Style
+	self._hint = nil  -- Text Style
 
 end
 
@@ -558,6 +558,26 @@ function TextFieldStyle.__setters:background( data )
 	}
 end
 
+--== Display
+
+function TextFieldStyle.__getters:display()
+	return self._display
+end
+function TextFieldStyle.__setters:display( data )
+	-- print( 'TextFieldStyle.__setters:display', data )
+	assert( data==nil or type( data )=='table' )
+	--==--
+	local StyleClass = Style.Text
+	local inherit = self._inherit and self._inherit._display or self._inherit
+
+	self._display = StyleClass:createStyleFrom{
+		name=TextFieldStyle.DISPLAY_NAME,
+		inherit=inherit,
+		parent=self,
+		data=data
+	}
+end
+
 --== Hint
 
 function TextFieldStyle.__getters:hint()
@@ -579,31 +599,18 @@ function TextFieldStyle.__setters:hint( data )
 	}
 end
 
---== Display
-
-function TextFieldStyle.__getters:display()
-	return self._display
-end
-function TextFieldStyle.__setters:display( data )
-	-- print( 'TextFieldStyle.__setters:display', data )
-	assert( data==nil or type( data )=='table' )
-	--==--
-	local StyleClass = Style.Text
-	local inherit = self._inherit and self._inherit._display or self._inherit
-
-	self._display = StyleClass:createStyleFrom{
-		name=TextFieldStyle.DISPLAY_NAME,
-		inherit=inherit,
-		parent=self,
-		data=data
-	}
-end
-
 
 --======================================================--
 -- Background Style Properties
 
 --== fillColor
+
+--- [**style**] set/get Style value for Background fill color.
+--
+-- @within Properties
+-- @function .backgroundFillColor
+-- @usage style.backgroundFillColor = '#ff0000'
+-- @usage print( style.backgroundFillColor )
 
 function TextFieldStyle.__getters:backgroundFillColor()
 	-- print( "TextFieldStyle.__getters:backgroundFillColor" )
@@ -906,11 +913,11 @@ function TextFieldStyle:_destroyChildren()
 	self._background:removeSelf()
 	self._background=nil
 
-	self._hint:removeSelf()
-	self._hint=nil
-
 	self._display:removeSelf()
 	self._display=nil
+
+	self._hint:removeSelf()
+	self._hint=nil
 end
 
 
@@ -939,13 +946,13 @@ function TextFieldStyle:_prepareData( data, dataSrc, params )
 	end
 
 	StyleClass = Style.Text
-	if not src.hint then
-		tmp = dataSrc and dataSrc.hint
-		src.hint = StyleClass.createStyleStructure( tmp )
-	end
 	if not src.display then
 		tmp = dataSrc and dataSrc.display
 		src.display = StyleClass.createStyleStructure( tmp )
+	end
+	if not src.hint then
+		tmp = dataSrc and dataSrc.hint
+		src.hint = StyleClass.createStyleStructure( tmp )
 	end
 
 	--== process children
@@ -953,11 +960,11 @@ function TextFieldStyle:_prepareData( data, dataSrc, params )
 	dest = src.background
 	src.background = StyleClass.copyExistingSrcProperties( dest, src )
 
-	dest = src.hint
-	src.hint = StyleClass.copyExistingSrcProperties( dest, src )
-
 	dest = src.display
 	src.display = StyleClass.copyExistingSrcProperties( dest, src )
+
+	dest = src.hint
+	src.hint = StyleClass.copyExistingSrcProperties( dest, src )
 
 	return data
 end
