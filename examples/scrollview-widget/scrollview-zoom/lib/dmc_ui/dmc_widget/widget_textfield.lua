@@ -467,6 +467,25 @@ function TextField.__setters:hintText( value )
 	self:__invalidateProperties__()
 end
 
+--== .inputType
+
+--- get editing state for TextField.
+-- returns true if the TextField is currently displaying the input field.
+--
+-- @within Properties
+-- @function .inputType
+-- @treturn string
+-- @usage widget.inputType = o.INPUT_EMAIL
+-- @usage print( widget.inputType )
+
+function TextField.__getters:inputType()
+	return self.curr_style.inputType
+end
+function TextField.__setters:inputType( value, params )
+	-- print( "TextField.__setters:inputType", value )
+	self.curr_style.inputType = value
+end
+
 --== .isEditing
 
 --- get editing state for TextField.
