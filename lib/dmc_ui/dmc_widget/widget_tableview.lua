@@ -633,7 +633,7 @@ end
 -- @string[opt='none'] params.position The location reference for scroll action – 'none', 'top', 'middle', 'bottom'.
 -- @int[opt=500] params.time the duration for scroll animation, in milliseconds. set to 0 for immediate transition
 -- @func[opt] params.onComplete a function to call when the animation is complete
--
+--
 -- @usage widget:scrollToRowAt( 5, { position='top' } )
 
 function TableView:scrollToRowAt( idx, params )
