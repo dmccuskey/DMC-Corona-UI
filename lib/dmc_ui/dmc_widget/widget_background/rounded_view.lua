@@ -239,11 +239,11 @@ function RoundedView:__commitProperties__()
 	end
 
 	if self._width_dirty then
-		bg.path.width=style.width
+		bg.width=style.width
 		self._width_dirty=false
 	end
 	if self._height_dirty then
-		bg.path.height=style.height
+		bg.height=style.height
 		self._height_dirty=false
 	end
 
