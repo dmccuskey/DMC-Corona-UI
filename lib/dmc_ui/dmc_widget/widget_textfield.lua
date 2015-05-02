@@ -373,6 +373,55 @@ end
 --== Public Methods
 
 
+--== .backgroundStyle
+
+--- get a reference to Background Style object.
+--
+-- @within Properties
+-- @function .backgroundStyle
+-- @usage print( widget.backgroundStyle )
+
+function TextField.__getters:backgroundStyle()
+	return self.curr_style.background
+end
+
+--== .displayStyle
+
+--- get a reference to the Display Text Style object.
+--
+-- @within Properties
+-- @function .displayStyle
+-- @usage print( widget.displayStyle )
+
+function TextField.__getters:displayStyle()
+	return self.curr_style.display
+end
+
+--== .hintStyle
+
+--- get a reference to the Hint Text Style object.
+--
+-- @within Properties
+-- @function .hintStyle
+-- @usage print( widget.hintStyle )
+
+function TextField.__getters:hintStyle()
+	return self.curr_style.hint
+end
+
+--== .align
+
+--- set/get align.
+-- values are 'left', 'center', 'right'
+--
+-- @within Properties
+-- @function .align
+-- @usage widget.align = 'center'
+-- @usage print( widget.align )
+
+TextField.__getters.align = WidgetHelp.__getters.align
+TextField.__setters.align = WidgetHelp.__setters.align
+
 --== .delegate
 
 --- set/get delegate for item.
@@ -384,19 +433,6 @@ end
 
 TextField.__getters.delegate = WidgetHelp.__getters.delegate
 TextField.__setters.delegate = WidgetHelp.__setters.delegate
-
-
---[[
-Inherited Methods
---]]
-
---- set/get align.
--- values are 'left', 'center', 'right'
---
--- @within Properties
--- @function .align
--- @usage widget.align = 'center'
--- @usage print( widget.align )
 
 --== .hintText
 
@@ -419,7 +455,6 @@ function TextField.__setters:hintText( value )
 	self:__invalidateProperties__()
 end
 
-
 --== .isEditing
 
 --- get editing state for TextField.
@@ -434,7 +469,6 @@ function TextField.__getters:isEditing()
 	return self._isEditActive.state
 end
 
-
 --== .isHitActive
 
 --- set state of touch-activity.
@@ -448,7 +482,6 @@ function TextField.__setters:isHitActive( value, params )
 	-- print( "TextField.__setters:isHitActive", value )
 	self.curr_style.isHitActive = value
 end
-
 
 --== .isSecure
 
@@ -468,7 +501,6 @@ function TextField.__setters:isSecure( value )
 	self.curr_style.isSecure = value
 end
 
-
 --== .marginX
 
 --- set/get marginX.
@@ -478,6 +510,9 @@ end
 -- @function .marginX
 -- @usage widget.marginX = 18
 -- @usage print( widget.marginX )
+
+TextField.__getters.marginX = WidgetHelp.__getters.marginX
+TextField.__setters.marginX = WidgetHelp.__setters.marginX
 
 --== .marginY
 
@@ -489,81 +524,8 @@ end
 -- @usage widget.marginY = 18
 -- @usage print( widget.marginY )
 
-
---== :setEditActive()
-
---- activate editing mode for TextField.
---
--- @within Properties
--- @function :setEditActive
---
--- @tparam bool value true if
--- @tab[opt] params table of optional parameters
--- @tparam[opt=true] bool params.setFocus set focus on the text field
--- @usage widget:setEditActive( true, { setFocus=true })
-
-function TextField:setEditActive( value, params )
-	-- print( "TextField:setEditActive", value )
-	params = params or {}
-	if params.setFocus==nil then params.setFocus=true end
-	assert( type(value)=='boolean' )
-	--==--
-	params.state=value
-	self._isEditActive = params
-	self._isEditActive_dirty=true
-	self:__invalidateProperties__()
-end
-
-
---== :setKeyboardFocus()
-
---- set keyboard cursor-focus on this TextField.
--- this will show the keyboard.
---
--- @within Properties
--- @function :setKeyboardFocus
--- @usage widget:setKeyboardFocus()
-
-function TextField:setKeyboardFocus()
-	-- print( "TextField:setKeyboardFocus" )
-	self._keyboardFocus = true
-	self._keyboardFocus_dirty = true
-	self:__invalidateProperties__()
-end
-
---== :unsetKeyboardFocus()
-
---- remove keyboard cursor-focus on this TextField.
--- this will hide the keyboard.
---
--- @within Properties
--- @function :unsetKeyboardFocus
-
-function TextField:unsetKeyboardFocus()
-	-- print( "TextField:unsetKeyboardFocus" )
-	self._keyboardFocus = false
-	self._keyboardFocus_dirty = true
-	self:__invalidateProperties__()
-end
-
---== setReturnKey()
-
--- set value for Return Key.
--- @TODO
--- @within Properties
--- @function :setReturnKey
-
-function TextField:setReturnKey( value )
-	-- print( "TextField:setReturnKey", value )
-	assert( type(value)=='string' )
-	--==--
-	if value==self._returnKey then return end
-	--==--
-	self._returnKey = value
-	self._returnKey_dirty = true
-	self:__invalidateProperties__()
-end
-
+TextField.__getters.marginY = WidgetHelp.__getters.marginY
+TextField.__setters.marginY = WidgetHelp.__setters.marginY
 
 --== .text
 
@@ -584,6 +546,81 @@ function TextField.__setters:text( value )
 	if value == self._displayText then return end
 	self._displayText = value
 	self._displayText_dirty=true
+	self:__invalidateProperties__()
+end
+
+
+
+--== :setEditActive()
+
+--- activate editing mode for TextField.
+--
+-- @within Methods
+-- @function :setEditActive
+--
+-- @tparam bool value true if
+-- @tab[opt] params table of optional parameters
+-- @tparam[opt=true] bool params.setFocus set focus on the text field
+-- @usage widget:setEditActive( true, { setFocus=true })
+
+function TextField:setEditActive( value, params )
+	-- print( "TextField:setEditActive", value )
+	params = params or {}
+	if params.setFocus==nil then params.setFocus=true end
+	assert( type(value)=='boolean' )
+	--==--
+	params.state=value
+	self._isEditActive = params
+	self._isEditActive_dirty=true
+	self:__invalidateProperties__()
+end
+
+--== :setKeyboardFocus()
+
+--- set keyboard cursor-focus on this TextField.
+-- this will show the keyboard.
+--
+-- @within Methods
+-- @function :setKeyboardFocus
+-- @usage widget:setKeyboardFocus()
+
+function TextField:setKeyboardFocus()
+	-- print( "TextField:setKeyboardFocus" )
+	self._keyboardFocus = true
+	self._keyboardFocus_dirty = true
+	self:__invalidateProperties__()
+end
+
+--== :unsetKeyboardFocus()
+
+--- remove keyboard cursor-focus on this TextField.
+-- this will hide the keyboard.
+--
+-- @within Methods
+-- @function :unsetKeyboardFocus
+
+function TextField:unsetKeyboardFocus()
+	-- print( "TextField:unsetKeyboardFocus" )
+	self._keyboardFocus = false
+	self._keyboardFocus_dirty = true
+	self:__invalidateProperties__()
+end
+
+--== setReturnKey()
+
+-- set value for Return Key.
+-- @TODO
+-- @within Methods
+-- @function :setReturnKey
+
+function TextField:setReturnKey( value )
+	-- print( "TextField:setReturnKey", value )
+	assert( type(value)=='string' )
+	--==--
+	if value==self._returnKey then return end
+	--==--
+	self._returnKey = value
+	self._returnKey_dirty = true
 	self:__invalidateProperties__()
 end
 

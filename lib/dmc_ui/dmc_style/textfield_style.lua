@@ -79,8 +79,10 @@ local StyleHelp = require( ui_find( 'core.style_helper' ) )
 --== Setup, Constants
 
 
+local assert = assert
 local sfmt = string.format
 local tinsert = table.insert
+local type = type
 
 --== To be set in initialize()
 local Style = nil
@@ -621,7 +623,14 @@ function TextFieldStyle.__setters:hintFont( value )
 	self._hint.font = value
 end
 
---== fontSize
+--== .hintFontSize
+
+--- [**style**] set/get Style value for Widget's Hint font size.
+--
+-- @within Style-Helpers
+-- @function .hintFontSize
+-- @usage style.hintFontSize = 12
+-- @usage print( style.hintFontSize )
 
 function TextFieldStyle.__getters:hintFontSize()
 	-- print( "TextFieldStyle.__getters:hintFontSize" )
@@ -632,7 +641,14 @@ function TextFieldStyle.__setters:hintFontSize( value )
 	self._hint.fontSize = value
 end
 
---== textColor
+--== .hintTextColor
+
+--- [**style**] set/get Style value for Widget's Hint text color.
+--
+-- @within Style-Helpers
+-- @function .hintTextColor
+-- @usage style.hintTextColor = {1,0.5,1,0.25}
+-- @usage print( style.hintTextColor )
 
 function TextFieldStyle.__getters:hintTextColor()
 	-- print( "TextFieldStyle.__getters:hintTextColor" )
@@ -647,7 +663,14 @@ end
 --======================================================--
 -- Display Style Properties
 
---== font
+--== .displayFont
+
+--- [**style**] set/get Style value for Widget's Display font.
+--
+-- @within Style-Helpers
+-- @function .displayFont
+-- @usage style.displayFont = 'helvetica-bold'
+-- @usage print( style.displayFont )
 
 function TextFieldStyle.__getters:displayFont()
 	-- print( "TextFieldStyle.__getters:displayFont" )
@@ -658,7 +681,14 @@ function TextFieldStyle.__setters:displayFont( value )
 	self._display.font = value
 end
 
---== fontSize
+--== .displayFontSize
+
+--- [**style**] set/get Style value for Widget's Display font size.
+--
+-- @within Style-Helpers
+-- @function .displayFontSize
+-- @usage style.displayFontSize = 12
+-- @usage print( style.displayFontSize )
 
 function TextFieldStyle.__getters:displayFontSize()
 	-- print( "TextFieldStyle.__getters:displayFontSize" )
@@ -669,7 +699,14 @@ function TextFieldStyle.__setters:displayFontSize( value )
 	self._display.fontSize = value
 end
 
---== textColor
+--== .displayTextColor
+
+--- [**style**] set/get Style value for Widget's Display text color.
+--
+-- @within Style-Helpers
+-- @function .displayTextColor
+-- @usage style.displayTextColor = {1,0.5,1,0.25}
+-- @usage print( style.displayTextColor )
 
 function TextFieldStyle.__getters:displayTextColor()
 	-- print( "TextFieldStyle.__getters:displayTextColor" )
