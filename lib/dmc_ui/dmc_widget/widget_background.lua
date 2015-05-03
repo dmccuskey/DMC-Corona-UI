@@ -228,6 +228,10 @@ Inherited Methods, from Style Mix
 --]]
 
 
+function Background:localToContent( ... )
+	return self._wgtView:localToContent(...)
+end
+
 
 
 --======================================================--
