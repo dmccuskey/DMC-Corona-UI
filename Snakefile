@@ -79,6 +79,8 @@ module_config = {
 			"dmc_ui/dmc_widget/widget_textfield/delegate_textfield.lua",
 			"dmc_ui/dmc_widget/widget_viewpager.lua",
 
+			"dmc_ui/manager/keyboard_mgr.lua",
+
 			"dmc_ui/theme/default/textfield/01-TL.png",
 			"dmc_ui/theme/default/textfield/02-TM.png",
 			"dmc_ui/theme/default/textfield/03-TR.png",
@@ -314,6 +316,16 @@ module_config = {
 			},
 			{
 				"exp_dir": "text-widget/text-themed",
+				"requires": [],
+				"mod_dir_map": {
+					"default_dir": "",
+					"libs": {
+						"dmc-corona-boot":""
+					}
+				}
+			},
+			{
+				"exp_dir": "textfield-widget/textfield-keyboard",
 				"requires": [],
 				"mod_dir_map": {
 					"default_dir": "",
