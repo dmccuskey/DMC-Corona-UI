@@ -1366,19 +1366,17 @@ function TextField:_hitAreaTouch_handler( e )
 	if phase=='began' then
 		display.getCurrentStage():setFocus( background )
 		self._has_focus = true
-		self:dispatchEvent( self.PRESSED, {isWithinBounds=true}, {merge=true} )
 		return true
 	end
 
 	if not self._has_focus then return false end
-
 
 	local bgCb = background.contentBounds
 	local isWithinBounds =
 		( bgCb.xMin <= e.x and bgCb.xMax >= e.x
 			and bgCb.yMin <= e.y and bgCb.yMax >= e.y )
 
-	if phase=='ended' or phase=='canceled' then
+	if phase=='ended' or phase=='cancelled' then
 		display.getCurrentStage():setFocus( nil )
 		self._has_focus = false
 
