@@ -106,7 +106,6 @@ function run_example1()
 
 	-- tf1.align='left'
 	tf1.hintFontSize=18
-	tf1:setBackgroundFillColor( 1,0.5,0.2,0.3 )
 
 	tf1.isSecure=true
 	tf1.isHitActive=true
@@ -140,14 +139,6 @@ function run_example1()
 	-- 	tf1.hintFontSize = 18
 
 	-- 	tf1:setAnchor( {0,0} )
-
-	-- 	tf1:setBackgroundStrokeColor( 0.2,0.2,0.9,0.5 )
-	-- 	tf1:setBackgroundFillColor( 0.2,0.2,0.2,0.2 )
-	-- 	tf1.backgroundStrokeWidth = 10
-
-	-- 	tf1:setBackgroundStrokeColor( 0.2,0.2,0.9,0.5 )
-	-- 	tf1:setBackgroundFillColor( 0.2,0.2,0.2,0.2 )
-	-- 	tf1.backgroundStrokeWidth = 10
 
 	-- 	tf1.hintFont = native.systemFontBold
 	-- 	tf1.hintFontSize = 30
