@@ -1366,7 +1366,6 @@ function TextField:_hitAreaTouch_handler( e )
 	if phase=='began' then
 		display.getCurrentStage():setFocus( background )
 		self._has_focus = true
-		self:dispatchEvent( self.PRESSED, {isWithinBounds=true}, {merge=true} )
 		return true
 	end
 
