@@ -309,6 +309,8 @@ end
 function Background:__commitProperties__()
 	-- print( "Background:__commitProperties__" )
 
+	if not self.isRendered then return end
+
 	--== Update Widget Components
 
 	if self._wgtView_dirty or self._wgtViewStyle_dirty then
