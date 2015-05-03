@@ -181,6 +181,7 @@ function KeyboardMgr.initialize( manager, params )
 	--== Add API calls
 
 	dUI.adjustForKeyboard = KeyboardMgr.adjustForKeyboard
+	dUI.cancelAdjustForKeyboard = KeyboardMgr.cancelAdjustForKeyboard
 	dUI.getKeyboardStatus = KeyboardMgr.getKeyboardStatus
 	dUI.setKeyboardFocus = KeyboardMgr.setKeyboardFocus
 	dUI.unsetKeyboardFocus = KeyboardMgr.unsetKeyboardFocus
@@ -223,7 +224,6 @@ function KeyboardMgr.adjustForKeyboard( obj, params )
 		local data, callback
 		local offset = calculateYOffset( proxy ) + params.offset
 
-
 		callback = function(e)
 			data.trans=nil
 		end
@@ -240,6 +240,16 @@ function KeyboardMgr.adjustForKeyboard( obj, params )
 
 	end
 
+end
+
+function KeyboardMgr.cancelAdjustForKeyboard( obj )
+	local data = obj.__keymgr
+	if not data then return end
+
+	if data.trans then
+		trcancel( data.trans )
+	end
+	obj.__keymgr=nil
 end
 
 function KeyboardMgr.getKeyboardStatus()
