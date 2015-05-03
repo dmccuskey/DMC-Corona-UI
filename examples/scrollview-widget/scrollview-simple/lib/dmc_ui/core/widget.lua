@@ -239,7 +239,9 @@ function View:__initComplete__()
 	--==--
 	local tmp = self._wc_tmp_params
 
+	self.isRendered = true
 	self._isRendered = true
+
 	self.id = tmp.id
 	self.delegate = tmp.delegate
 
@@ -250,8 +252,11 @@ end
 
 function View:__undoInitComplete__()
 	-- print( "View:__undoInitComplete__" )
+
 	self.delegate = nil
 	self.style = nil
+
+	self.isRendered = false
 	self._isRendered = false
 	--==--
 	self:superCall( ComponentBase, '__undoInitComplete__' )

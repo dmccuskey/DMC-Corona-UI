@@ -228,6 +228,10 @@ Inherited Methods, from Style Mix
 --]]
 
 
+function Background:localToContent( ... )
+	return self._wgtView:localToContent(...)
+end
+
 
 
 --======================================================--
@@ -308,6 +312,8 @@ end
 
 function Background:__commitProperties__()
 	-- print( "Background:__commitProperties__" )
+
+	if not self.isRendered then return end
 
 	--== Update Widget Components
 

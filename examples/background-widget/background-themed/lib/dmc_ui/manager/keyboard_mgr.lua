@@ -85,13 +85,28 @@ local dUI = nil
 --===================================================================--
 --== Support Functions
 
+local function getSystemOrientation()
+	return string.find( system.orientation, 'landscape' )
+end
 
 local function getPlatformKeyboardHeight()
-	return 256
+	local isLandscape = getSystemOrientation()
+	if isLandscape then
+		return display.pixelWidth*0.475
+	else
+		return display.pixelHeight*0.25
+	end
 end
 
 local function getActualKeyboardHeight()
-	local scale = display.pixelHeight/display.actualContentHeight
+	local isLandscape = getSystemOrientation()
+	local scale
+	if isLandscape then
+		scale = display.pixelWidth/display.actualContentHeight
+	else
+		scale = display.pixelHeight/display.actualContentWidth
+	end
+
 	local h = getPlatformKeyboardHeight()
 	return h/scale
 end
@@ -102,14 +117,11 @@ end
 
 
 local function calculateYOffset( obj )
-
-	local scale = display.pixelHeight/display.actualContentHeight
 	local _, y = obj:localToContent( 0, 0 )
 	local adjH = obj.height*0.5
 	local bottom = y+adjH
 	local kbActualH = getActualKeyboardHeight()
 	local keyboardY = display.actualContentHeight - kbActualH
-
 	return (keyboardY-bottom)
 end
 
@@ -169,6 +181,7 @@ function KeyboardMgr.initialize( manager, params )
 	--== Add API calls
 
 	dUI.adjustForKeyboard = KeyboardMgr.adjustForKeyboard
+	dUI.cancelAdjustForKeyboard = KeyboardMgr.cancelAdjustForKeyboard
 	dUI.getKeyboardStatus = KeyboardMgr.getKeyboardStatus
 	dUI.setKeyboardFocus = KeyboardMgr.setKeyboardFocus
 	dUI.unsetKeyboardFocus = KeyboardMgr.unsetKeyboardFocus
@@ -211,7 +224,6 @@ function KeyboardMgr.adjustForKeyboard( obj, params )
 		local data, callback
 		local offset = calculateYOffset( proxy ) + params.offset
 
-
 		callback = function(e)
 			data.trans=nil
 		end
@@ -228,6 +240,16 @@ function KeyboardMgr.adjustForKeyboard( obj, params )
 
 	end
 
+end
+
+function KeyboardMgr.cancelAdjustForKeyboard( obj )
+	local data = obj.__keymgr
+	if not data then return end
+
+	if data.trans then
+		trcancel( data.trans )
+	end
+	obj.__keymgr=nil
 end
 
 function KeyboardMgr.getKeyboardStatus()

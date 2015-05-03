@@ -213,7 +213,9 @@ end
 --== Public Methods
 
 
--- none
+function RoundedView:localToContent( ... )
+	return self._rndBg:localToContent(...)
+end
 
 
 
