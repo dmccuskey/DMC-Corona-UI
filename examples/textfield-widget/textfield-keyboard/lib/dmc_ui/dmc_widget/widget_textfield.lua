@@ -1259,54 +1259,15 @@ function TextField:__commitProperties__()
 end
 
 
--- sets keyboard focus, after a small timer delay
---
 function TextField:_startKeyboardFocus( focus )
-	print( "TextField:_startKeyboardFocus", self.id )
+	-- print( "TextField:_startKeyboardFocus", self.id )
 	dUI.setKeyboardFocus( focus )
-	-- self:_cancelStopKeyboardFocus()
-	-- self:_cancelStartKeyboardFocus()
-	-- local count = TextField._FOCUS_COUNT
-	-- count = count + 1
-	-- local f = function()
-	-- 	native.setKeyboardFocus( focus )
-	-- 	TextField._START_FOCUS_TIMER=nil
-	-- end
-	-- TextField._FOCUS_COUNT = count
-	-- TextField._START_FOCUS_TIMER = tdelay( 2, f )
 end
-
--- function TextField:_cancelStartKeyboardFocus()
--- 	print( "TextField:_cancelStartKeyboardFocus", self.id )
--- 	-- local t = TextField._START_FOCUS_TIMER
--- 	-- if not t then return end
--- 	-- tcancel( t )
--- 	-- TextField._START_FOCUS_TIMER = nil
--- end
 
 function TextField:_stopKeyboardFocus()
-	print( "TextField:_stopKeyboardFocus", self.id )
+	-- print( "TextField:_stopKeyboardFocus", self.id )
 	dUI.unsetKeyboardFocus()
-	-- self:_cancelStopKeyboardFocus()
-	-- local count = TextField._FOCUS_COUNT
-	-- if count > 0 then count = count-1 end
-	-- local f = function()
-	-- 	if TextField._FOCUS_COUNT==0 then
-	-- 		native.setKeyboardFocus( nil )
-	-- 	end
-	-- 	TextField._STOP_FOCUS_TIMER=nil
-	-- end
-	-- TextField._FOCUS_COUNT = count
-	-- TextField._STOP_FOCUS_TIMER = tdelay( 2, f )
 end
--- function TextField:_cancelStopKeyboardFocus()
--- 	print( "TextField:_cancelStopKeyboardFocus", self.id )
--- 	-- local t = TextField._STOP_FOCUS_TIMER
--- 	-- if not t then return end
--- 	-- tcancel( t )
--- 	-- TextField._STOP_FOCUS_TIMER = nil
--- end
-
 
 
 function TextField:_startEdit( setFocus )
