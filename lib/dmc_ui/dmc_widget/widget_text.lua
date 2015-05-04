@@ -435,7 +435,9 @@ end
 function Text.__getters:height()
 	-- print( 'Text.__getters:height' )
 	local h, t = self.curr_style.height, self._txtText
-	if h==nil and t then h=t.height end
+	if h==nil then
+		h = self:getTextHeight()
+	end
 	return h
 end
 function Text.__setters:height( value )
