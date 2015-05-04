@@ -378,6 +378,19 @@ Text.__setters.marginX = WidgetHelp.__setters.marginX
 Text.__getters.strokeWidth = WidgetHelp.__getters.strokeWidth
 Text.__setters.strokeWidth = WidgetHelp.__setters.strokeWidth
 
+--== .textColor
+
+--- [**style**] set/get textColor.
+-- set the font size of the text.
+--
+-- @within Properties
+-- @function .textColor
+-- @usage widget.textColor = 18
+-- @usage print( widget.textColor )
+
+Text.__getters.textColor = WidgetHelp.__getters.textColor
+Text.__setters.textColor = WidgetHelp.__setters.textColor
+
 
 --[[
 we use custom getters for width/height
