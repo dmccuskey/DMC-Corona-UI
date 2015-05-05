@@ -61,7 +61,7 @@ local function segmentEvent_handler( event )
 	print( "Main:segmentEvent_handler" )
 	local target = event.target
 
-	print( "Selected: ", event.index )
+	print( "Selected: ", event.index, event.data )
 end
 
 
@@ -103,7 +103,7 @@ function run_example1()
 
 	sc1:insertSegment( 'hello' )
 	sc1:insertSegment( o )
-	sc1:insertSegment( 'world' )
+	sc1:insertSegment( 'world', {data='w-o-r-l-d'} )
 	sc1.selected = 1
 
 	timer.performWithDelay( 1000, function()
@@ -116,7 +116,7 @@ function run_example1()
 		sc1:setImage( 1, o )
 
 		-- update segment with text
-		sc1:setImage( 2, 'brasil' )
+		sc1:setText( 2, 'brasil', {data='brasil-image'} )
 
 		-- disable segment
 		sc1:setEnabled( 3, false )
@@ -145,11 +145,11 @@ function run_example1()
 
 	timer.performWithDelay( 5000, function()
 		sc1.anchorX, sc1.anchorY = 1, 0.5
-		sc1:insertSegment( 'hello' )
+		sc1:insertSegment( 'hello', {data='h-e-l-l-o'} )
 		sc1:insertSegment( 'world' )
 	end)
 
-	timer.performWithDelay( 6000, function()
+	timer.performWithDelay( 10000, function()
 		sc1:removeSelf()
 	end)
 

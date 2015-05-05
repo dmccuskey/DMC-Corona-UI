@@ -314,10 +314,12 @@ end
 function SegmentedCtrl.__setters:selected( idx )
 	-- print( "SegmentedCtrl.__setters:selected", idx )
 	if idx<1 or idx>#self._segmentInfo then idx = 0 end
+	local sInfo = self._segmentInfo[idx] or {}
+
 	self._selectedIdx = idx
 	self._selectedIdx_dirty=true
 	self:__invalidateProperties__()
-	self:dispatchEvent( self.SELECTED, {index=idx}, {merge=true} )
+	self:dispatchEvent( self.SELECTED, {index=idx, data=sInfo.data}, {merge=true} )
 end
 
 --== :insertSegment
@@ -453,8 +455,13 @@ end
 
 function SegmentedCtrl:setImage( idx, image, params )
 	-- print( "SegmentedCtrl:setImage", idx, image )
+	params = params or {}
+	--==--
 	local selectedIdx = self._selectedIdx
 	local sInfo = self._segmentInfo[ idx ]
+	sInfo.width = params.width or sInfo.width
+	sInfo.data = params.data
+
 	self:removeSegment( idx )
 	self:insertSegment( idx, image, sInfo )
 
@@ -479,8 +486,13 @@ end
 
 function SegmentedCtrl:setText( idx, str, params )
 	-- print( "SegmentedCtrl:setText", idx, str )
+	params = params or {}
+	--==--
 	local selectedIdx = self._selectedIdx
 	local sInfo = self._segmentInfo[ idx ]
+	sInfo.width = params.width or sInfo.width
+	sInfo.data = params.data
+
 	self:removeSegment( idx )
 	self:insertSegment( idx, str, sInfo )
 
@@ -535,6 +547,7 @@ function SegmentedCtrl:_createSegmentRecord( params )
 		width=params.width,
 		offsetX=params.offsetX,
 		offsetY=params.offsetY,
+		data=params.data,
 		type='text',
 		item=nil, -- visual item
 		bg=nil, -- inactive visual bg
