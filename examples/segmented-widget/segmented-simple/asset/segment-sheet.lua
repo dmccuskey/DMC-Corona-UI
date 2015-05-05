@@ -1,8 +1,6 @@
 --
 -- created with TexturePacker (http://www.codeandweb.com/texturepacker)
 --
--- $TexturePacker:SmartUpdate:e9133adfd7de441686d319a057021420:38240b359cee80bae90791f91061f94b:a7033980e37402c6fac3f53e895e264c$
---
 -- local sheetInfo = require("mysheet")
 -- local myImageSheet = graphics.newImageSheet( "mysheet.png", sheetInfo:getSheet() )
 -- local sprite = display.newSprite( myImageSheet , {frames={sheetInfo:getFrameIndex("sprite")}} )
@@ -13,11 +11,11 @@ local SheetInfo = {}
 SheetInfo.sheet =
 {
     frames = {
-    
+
         {
-            -- 01-leftInctive
-            x=30,
-            y=49,
+            -- 01-leftInactive
+            x=57,
+            y=3,
             width=4,
             height=42,
 
@@ -28,7 +26,7 @@ SheetInfo.sheet =
         },
         {
             -- 02-middleInactive
-            x=49,
+            x=40,
             y=3,
             width=5,
             height=42,
@@ -52,8 +50,8 @@ SheetInfo.sheet =
         },
         {
             -- 04-leftActive
-            x=22,
-            y=49,
+            x=49,
+            y=3,
             width=4,
             height=42,
 
@@ -64,7 +62,7 @@ SheetInfo.sheet =
         },
         {
             -- 05-middleActive
-            x=40,
+            x=31,
             y=3,
             width=5,
             height=42,
@@ -87,19 +85,7 @@ SheetInfo.sheet =
             sourceHeight = 44
         },
         {
-            -- 07-dividerII
-            x=31,
-            y=3,
-            width=5,
-            height=42,
-
-            sourceX = 0,
-            sourceY = 1,
-            sourceWidth = 5,
-            sourceHeight = 44
-        },
-        {
-            -- 08-dividerIA
+            -- 07-dividerAI
             x=22,
             y=3,
             width=5,
@@ -111,7 +97,7 @@ SheetInfo.sheet =
             sourceHeight = 44
         },
         {
-            -- 09-dividerAA
+            -- 08-dividerII
             x=13,
             y=49,
             width=5,
@@ -123,7 +109,7 @@ SheetInfo.sheet =
             sourceHeight = 44
         },
         {
-            -- 10-dividerAI
+            -- 09-dividerIA
             x=13,
             y=3,
             width=5,
@@ -135,7 +121,7 @@ SheetInfo.sheet =
             sourceHeight = 44
         },
     },
-    
+
     sheetContentWidth = 64,
     sheetContentHeight = 128
 }
@@ -143,16 +129,15 @@ SheetInfo.sheet =
 SheetInfo.frameIndex =
 {
 
-    ["01-leftInctive"] = 1,
+    ["01-leftInactive"] = 1,
     ["02-middleInactive"] = 2,
     ["03-rightInactive"] = 3,
     ["04-leftActive"] = 4,
     ["05-middleActive"] = 5,
     ["06-rightActive"] = 6,
-    ["07-dividerII"] = 7,
-    ["08-dividerIA"] = 8,
-    ["09-dividerAA"] = 9,
-    ["10-dividerAI"] = 10,
+    ["07-dividerAI"] = 7,
+    ["08-dividerII"] = 8,
+    ["09-dividerIA"] = 9,
 }
 
 function SheetInfo:getSheet()
