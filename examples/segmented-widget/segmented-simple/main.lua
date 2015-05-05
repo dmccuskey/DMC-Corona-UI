@@ -97,25 +97,62 @@ function run_example1()
 	sc1.anchorX, sc1.anchorY=0,1
 	sc1:addEventListener( sc1.EVENT, segmentEvent_handler )
 
+	local o = display.newImage( 'asset/flag/Brasil.png' )
+	o.xScale, o.yScale = 0.15, 0.15
+	-- o.x, o.y = 100, 100
+
 	sc1:insertSegment( 'hello' )
+	sc1:insertSegment( o )
 	sc1:insertSegment( 'world' )
-	sc1:insertSegment( 'folks' )
 	sc1.selected = 1
 
 	timer.performWithDelay( 1000, function()
 		sc1.selected = 2
-			sc1.anchorX, sc1.anchorY = 0, 0
+		sc1.anchorX, sc1.anchorY = 0.5, 0
+
+		-- update text segment with image segment
+		local o = display.newImage( 'asset/flag/Canada.png' )
+		o.xScale, o.yScale = 0.15, 0.15
+		sc1:setImage( 1, o )
+
+		-- update segment with text
+		sc1:setImage( 2, 'brasil' )
+
+		-- disable segment
+		sc1:setEnabled( 3, false )
+
+		print( "width", sc1:getWidth( 3 ))
+		sc1:setWidth( 1, 100 )
+
 	end)
 
 	timer.performWithDelay( 2000, function()
-		sc1:insertSegment( 2, 'dude' )
-		sc1:removeSegment( 1 )
+		sc1.anchorX, sc1.anchorY = 0.5, 1
+		sc1:insertSegment( 2, 'nice' )
 	end)
 
 	timer.performWithDelay( 3000, function()
 		sc1.selected = 0
 		sc1.anchorX, sc1.anchorY = 0.5, 0
+
+		sc1:setEnabled( 4, true )
+
 	end)
+
+	timer.performWithDelay( 4000, function()
+		sc1:removeAllSegments()
+	end)
+
+	timer.performWithDelay( 5000, function()
+		sc1.anchorX, sc1.anchorY = 1, 0.5
+		sc1:insertSegment( 'hello' )
+		sc1:insertSegment( 'world' )
+	end)
+
+	timer.performWithDelay( 6000, function()
+		sc1:removeSelf()
+	end)
+
 
 end
 

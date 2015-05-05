@@ -164,8 +164,8 @@ function SegmentedCtrl:__init__( params )
 
 	-- array of info records
 	self._segmentInfo = {}
+	self._removeSegmentInfo = {}
 	self._segmentCount_dirty=true
-	self._segmentSelect_dirty=true
 
 	-- properties stored in Style
 
@@ -179,14 +179,13 @@ function SegmentedCtrl:__init__( params )
 
 	-- virtual
 
-	self._sliceX_dirty=true
-	self._sliceY_dirty=true
+	self._segmentHighlight_dirty=true
+	self._spriteSheet_dirty=true
 
 	--== Object References ==--
 
-	-- display group for slices
 	-- self._dgBg = nil
-	self._dgSegment = nil
+	self._dgSegment = nil  -- display group for segments
 	-- self._dgViews = nil
 
 	-- basic UI slices
@@ -228,7 +227,7 @@ function SegmentedCtrl:__createView__()
 	dg = display.newGroup()
 	dgMain:insert( dg )
 
-	-- items
+	-- items overlay
 	dg = display.newGroup()
 	dgMain:insert( dg )
 
@@ -250,13 +249,15 @@ function SegmentedCtrl:__initComplete__()
 	self:superCall( '__initComplete__' )
 	--==--
 end
+--]]
 
 function SegmentedCtrl:__undoInitComplete__()
-	--print( "SegmentedCtrl:__undoInitComplete__" )
+	-- print( "SegmentedCtrl:__undoInitComplete__" )
+	self:_removePreparedSegments( self._segmentInfo )
+	self:_removePreparedSegments( self._removeSegmentInfo )
 	--==--
 	self:superCall( '__undoInitComplete__' )
 end
---]]
 
 -- END: Setup DMC Objects
 --======================================================--
@@ -283,19 +284,6 @@ end
 --== Public Methods
 
 
---[[
-w:insertSegment( idx, image/text, params )
-w:insertSegment( image/text, params ) -- next
-w:setImage( idx, image, params )
-w:setText( idx, text, params )
-
-w:setWidth( idx, 80 )
-w:getWidth( idx )
-
-w:removeAllSegments()
-w:removeSegment( idx )
---]]
-
 --== .width
 
 function SegmentedCtrl.__getters:width()
@@ -318,6 +306,7 @@ function SegmentedCtrl.__setters:height( value )
 	self:_heightChanged()
 end
 
+--== .selected
 
 function SegmentedCtrl.__getters:selected()
 	return self._selectedIdx
@@ -331,6 +320,15 @@ function SegmentedCtrl.__setters:selected( idx )
 	self:dispatchEvent( self.SELECTED, {index=idx}, {merge=true} )
 end
 
+--== :insertSegment
+
+--- insert new segment into control.
+--
+-- @usage
+-- widget:insertSegment( string/image )
+-- widget:insertSegment( string/image, params )
+-- widget:insertSegment( index, string/image )
+-- widget:insertSegment( index, string/image, params )
 
 function SegmentedCtrl:insertSegment( ... )
 	-- print( "SegmentedCtrl:insertSegment" )
@@ -338,6 +336,9 @@ function SegmentedCtrl:insertSegment( ... )
 	assert( #args>=1 and #args<=3, "SegmentedCtrl:insertSegment incorrect number of args" )
 	--==--
 	local idx, obj, params
+
+	--== check params
+
 	if #args==1 then
 		obj = args[1]
 	elseif #args==2 then
@@ -354,23 +355,210 @@ function SegmentedCtrl:insertSegment( ... )
 		params = args[3]
 	end
 	assert( type(obj)=='string' or type(obj)=='table', "SegmentedCtrl:insertSegment object should be 'string' or 'image'" )
-	self:_insertSegment( idx, obj, params )
+
+	--== Start Processing
+
+	params = params or {}
+
+	local segments = self._segmentInfo
+	if idx==nil then idx = #segments + 1 end
+
+	local sInfo = self:_createSegmentRecord( params )
+	tinsert( segments, idx, sInfo )
+	self._segmentCount_dirty=true
+
+	self:_createSegment( sInfo, obj, params )
+
+	-- adjust current selection if necessary
+	local selectedIdx = self._selectedIdx
+	if idx<=selectedIdx then
+		-- advance selected index if inserting
+		-- item before current selection
+		self._selectedIdx = selectedIdx+1
+		self._selectedIdx_dirty=true
+	end
+
+	self:__invalidateProperties__()
+end
+
+--== :removeSegment
+
+function SegmentedCtrl:removeSegment( idx )
+	-- print( "SegmentedCtrl:removeSegment", idx )
+	assert( type(idx)=='number', "SegmentedCtrl:removeSegment expected parameter of type 'number'" )
+	--==--
+	self:_removeSegmentPrep( idx )
+	self._segmentCount_dirty=true
+	self:__invalidateProperties__()
+end
+
+--== :removeAllSegments
+
+function SegmentedCtrl:removeAllSegments()
+	-- print( "SegmentedCtrl:removeAllSegments" )
+	local curSegs = self._segmentInfo
+	local remSegs = self._removeSegmentInfo
+	local remSegPrep = self._removeSegmentPrep
+	for i=#curSegs, 1, -1 do
+		remSegPrep( self, i, curSegs, remSegs )
+	end
+	self._segmentCount_dirty=true
+	self:__invalidateProperties__()
+end
+
+--== :isEnabled
+
+function SegmentedCtrl:isEnabled( idx )
+	-- print( "SegmentedCtrl:isEnabled", idx )
+	assert( type(idx)=='number', "SegmentedCtrl:isEnabled expected parameter of type 'number'" )
+	--==--
+	local sInfo = self._segmentInfo[idx]
+	if not sInfo then
+		pwarn( sformat( "SegmentedCtrl:isEnabled no segment at index '%s'", idx ))
+		return nil
+	end
+	return sInfo.isEnabled
+end
+
+--== :setEnabled
+
+function SegmentedCtrl:setEnabled( idx, value )
+	-- print( "SegmentedCtrl:setEnabled", idx, value )
+	assert( type(idx)=='number', "SegmentedCtrl:isEnabled incorrect type for parameter 'index'" )
+	assert( type(value)=='boolean', "SegmentedCtrl:isEnabled incorrect type for parameter 'value'" )
+	--==--
+	local sInfo = self._segmentInfo[idx]
+	if not sInfo then
+		pwarn( sformat( "SegmentedCtrl:setEnabled no segment at index '%s'", idx ))
+		return nil
+	end
+	sInfo.isEnabled=value
+
+	self._segmentHighlight_dirty=true
+	self:__invalidateProperties__()
+end
+
+--== :setImage
+
+--- replace existing segment content with an Image.
+--
+-- @int idx index of current segment to replace
+-- @string image the image with which to update content
+--
+-- @usage
+-- widget:setImage( image )
+-- widget:setImage( index, image )
+-- widget:setImage( image, params )
+-- widget:setImage( index, image, params )
+
+function SegmentedCtrl:setImage( idx, image, params )
+	-- print( "SegmentedCtrl:setImage", idx, image )
+	local selectedIdx = self._selectedIdx
+	local sInfo = self._segmentInfo[ idx ]
+	self:removeSegment( idx )
+	self:insertSegment( idx, image, sInfo )
+
+	self._selectedIdx = selectedIdx
+	self._selectedIdx_dirty=true
+	self:__invalidateProperties__()
+end
+
+--== :setText
+
+--- replace existing segment content with Text.
+--
+-- @int idx index of current segment to replace
+-- @string str the text with which to update content
+-- @tparams[opt] table params
+--
+-- @usage
+-- widget:setImage( string )
+-- widget:setImage( index, string )
+-- widget:setImage( string, params )
+-- widget:setImage( index, string, params )
+
+function SegmentedCtrl:setText( idx, str, params )
+	-- print( "SegmentedCtrl:setText", idx, str )
+	local selectedIdx = self._selectedIdx
+	local sInfo = self._segmentInfo[ idx ]
+	self:removeSegment( idx )
+	self:insertSegment( idx, str, sInfo )
+
+	self._selectedIdx = selectedIdx
+	self._selectedIdx_dirty=true
+	self:__invalidateProperties__()
+end
+
+--== :getWidth
+
+function SegmentedCtrl:getWidth( idx )
+	-- print( "SegmentedCtrl:getWidth", idx )
+	local sInfo = self._segmentInfo[idx]
+	if not sInfo then
+		pwarn( sformat( "SegmentedCtrl:getWidth no segment at index '%s'", idx ))
+		return nil
+	end
+	return sInfo.width
+end
+
+--== :setWidth
+
+function SegmentedCtrl:setWidth( idx, value )
+	-- print( "SegmentedCtrl:setWidth", idx, value )
+	local sInfo = self._segmentInfo[idx]
+	if not sInfo then
+		pwarn( sformat( "SegmentedCtrl:setWidth no segment at index '%s'", idx ))
+		return
+	end
+	sInfo.width = value
+	self._segmentLayout_dirty=true
+	self:__invalidateProperties__()
 
 end
 
 
-function SegmentedCtrl:removeSegment( idx )
-	assert( type(idx)=='number', "SegmentedCtrl:removeSegment expected parameter of type 'number'" )
+
+--====================================================================--
+--== Private Methods
+
+
+function SegmentedCtrl:_createSegmentRecord( params )
+	params = params or {}
+	if params.isEnabled==nil then params.isEnabled = true end
+	if params.width==nil then params.width = 50 end
+	if params.offsetX==nil then params.offsetX = 0 end
+	if params.offsetY==nil then params.offsetY = 0 end
 	--==--
-	local sInfo = tremove( self._segmentInfo, idx )
+	return {
+		idx=0, -- current index
+		isEnabled=params.isEnabled,
+		width=params.width,
+		offsetX=params.offsetX,
+		offsetY=params.offsetY,
+		type='text',
+		item=nil, -- visual item
+		bg=nil, -- inactive visual bg
+		div=nil, -- inactive right divider
+		cb=nil, -- touch callback
+		hit=nil, -- touch hit area
+	}
+end
 
-	if not sInfo then
-		pwarn( sformat( "SegmentedCtrl:removeSegment no segment with index '%s'", idx ))
-		return
-	end
 
-	self:_removeSegment( sInfo )
+-- prepare to remove this segment, for async-removal
+-- caller should set/call:
+-- self._segmentCount_dirty, invalidate_properties
+--
+function SegmentedCtrl:_removeSegmentPrep( idx, curSegs, remSegs )
+	-- print( "SegmentedCtrl:_removeSegmentPrep", idx )
+	if curSegs==nil then curSegs=self._segmentInfo end
+	if remSegs==nil then remSegs=self._removeSegmentInfo end
+	assert( idx>=1 and idx<=#curSegs )
+	--==--
 
+	tinsert( remSegs, tremove( curSegs, idx ) )
+
+	-- adjust current selection as necessary
 	local selectedIdx = self._selectedIdx
 	if selectedIdx==idx then
 		self._selectedIdx=0
@@ -380,97 +568,81 @@ function SegmentedCtrl:removeSegment( idx )
 		self._selectedIdx_dirty=true
 	end
 
-	self._segmentCount_dirty=true
-	self:__invalidateProperties__()
 end
 
 
+-- this is sync-removal, async has already been setup.
+-- so this is the time
+--
+function SegmentedCtrl:_removeSegment( sInfo )
+	-- print( "SegmentedCtrl:_removeSegment", sInfo )
 
-function SegmentedCtrl:isEnabled( idx )
-	assert( type(idx)=='number', "SegmentedCtrl:isEnabled expected parameter of type 'number'" )
-	--==--
-	local sInfo = self._segmentInfo[idx]
+	self:_removeSegmentSlices( sInfo )
 
-	if not sInfo then
-		pwarn( sformat( "SegmentedCtrl:isEnabled no segment with index '%s'", idx ))
-		return nil
+	-- remove hit area
+	o = sInfo.hit
+	if o~=nil then
+		o:removeEventListener( 'touch', sInfo.cb )
+		sInfo.cb=nil
+		o:removeSelf()
+		sInfo.hit=nil
 	end
 
-	return sInfo.isEnabled
-end
-
-function SegmentedCtrl:setEnabled( idx, value )
-	assert( type(idx)=='number', "SegmentedCtrl:isEnabled incorrect type for parameter 'index'" )
-	assert( type(value)=='boolean', "SegmentedCtrl:isEnabled incorrect type for parameter 'value'" )
-	--==--
-	local sInfo = self._segmentInfo[idx]
-
-	if not sInfo then
-		pwarn( sformat( "SegmentedCtrl:setEnabled no segment with index '%s'", idx ))
-		return
+	-- remove object
+	o = sInfo.item
+	if o~=nil then
+		o:removeSelf()
+		sInfo.item=nil
 	end
 
-	sInfo.isEnabled=value
 end
 
+-- sync-create segment
+-- have to do slices later, async-create
+--
+function SegmentedCtrl:_createSegment( sInfo, obj, params )
+	-- print( "SegmentedCtrl:_createSegment", sInfo, obj, params )
+	local dgBg = self._dgSegment[1] -- background
+	local dgOver = self._dgSegment[3] -- overlay
 
---====================================================================--
---== Private Methods
-
-
-function SegmentedCtrl:_insertSegment( idx, obj, params )
-	-- print( "SegmentedCtrl:_insertSegment", idx, obj, params )
-	params = params or {}
-	if params.width==nil then params.width = 50 end
-	--==--
-	local dg = self._dgSegment[3] -- overlay
-	local segments = self._segmentInfo
-	if idx==nil then idx = #segments + 1 end
-
-	-- create new data record for segment
-	local sInfo = {
-		idx=0, -- current index
-		isEnabled=true,
-		width=params.width,
-		offsetX=0,
-		offsetY=0,
-		type='text',
-		item=item,
-		callback=nil, -- touch callback
-		bg=nil, -- this is visual bg
-		hit=nil, -- this is hit area
-		div=nil, -- inactive right divider
-	}
-
-	-- initial setup for text/image item
-	if type(obj)~='string' then
+	-- prepare object
+	local item
+	if type(obj)=='string' then
+		sInfo.type='text'
+		item = dUI.newText{text=obj}
+		sInfo.item=item
+		dgOver:insert( item.view )
+		-- force update highlight, set text style
+		self._segmentHighlight_dirty=true
+	else
 		sInfo.type='image'
 		sInfo.item=obj
-		dg:insert( item )
-	else
-		item = dUI.newText{text=obj}
-		-- item.debugOn=true
-		item.textColor={1,1,0,1}
-		sInfo.type='text'
-		sInfo.item=item
-		dg:insert( item.view )
+		item=obj
+		dgOver:insert( obj )
 	end
-	-- item.anchorX, item.anchorY = 0.5, 0.5
-	tinsert( segments, idx, sInfo )
+	item.isVisible=false
 
-	local selectedIdx = self._selectedIdx
-	if idx<=selectedIdx then
-		-- advance selected index if inserting
-		-- item before current selection
-		self._selectedIdx = selectedIdx+1
-		self._selectedIdx_dirty=true
+	-- create hit area
+	if sInfo.hit==nil then
+		local o = newRect( 0,0,10,10 )
+		o.anchorX, o.anchorY = 0,0
+		o:setFillColor( 0.5 )
+		o.isHitTestable=true
+		o.isVisible=false
+		dgBg:insert( o )
+		sInfo.hit = o
+		sInfo.cb = self:_createSegmentTouchCallback( sInfo )
+		o:addEventListener( 'touch', sInfo.cb )
+		o.isVisible=false
 	end
 
-	self._segmentCount_dirty=true
-	self:__invalidateProperties__()
+	--== slices will be created later
+
 end
 
 
+-- after addition/removal, re-adjust positioning of segments
+--
 function SegmentedCtrl:_adjustUILayout( height, offset )
 	-- print( "SegmentedCtrl:_adjustUILayout", height )
 	local offL, offR = offset.L, offset.R
@@ -493,13 +665,18 @@ function SegmentedCtrl:_adjustUILayout( height, offset )
 	for i=1,#segments do
 		local sInfo = segments[i]
 		local o
+
+		sInfo.idx=i
+
 		w = sInfo.width
 		-- adjust hit
 		o = sInfo.hit
+		-- o.isVisible=true
 		o.width, o.height = w, h
 		o.x, o.y = x, y+offT
 		-- adjust item
 		o = sInfo.item
+		o.isVisible=true
 		o.x, o.y = x+w*0.5, hc
 		-- adjust bg
 		o = sInfo.bg
@@ -535,7 +712,7 @@ end
 -- can be called independently of selected index
 --
 -- @int[opt=selectedIdx] idx index to show
-
+--
 function SegmentedCtrl:_highlightSegment( idx )
 	-- print( "SegmentedCtrl:_highlightSegment", idx )
 	idx = idx or self._selectedIdx
@@ -563,7 +740,11 @@ function SegmentedCtrl:_highlightSegment( idx )
 
 		if idx~=i then
 			if item then
-				item:setActiveStyle( style.inactive )
+				if sInfo.isEnabled then
+					item:setActiveStyle( style.inactive )
+				else
+					item:setActiveStyle( style.disabled )
+				end
 				item.width=sInfo.width
 			end
 
@@ -592,7 +773,11 @@ function SegmentedCtrl:_highlightSegment( idx )
 			end
 
 			if item then
-				item:setActiveStyle( style.active )
+				if sInfo.isEnabled then
+					item:setActiveStyle( style.active )
+				else
+					item:setActiveStyle( style.disabled )
+				end
 				item.width=sInfo.width
 			end
 			mA.x, mA.y = sInfo.bg.x, y
@@ -643,7 +828,9 @@ function SegmentedCtrl:_createSegmentTouchCallback( sInfo )
 
 		elseif phase=='ended' or phase=='cancelled' then
 			if isWithinBounds then
-				self.selected=segIdx
+				if self._selectedIdx~=segIdx then
+					self.selected=segIdx
+				end
 			else
 				self:_highlightSegment()
 			end
@@ -657,55 +844,74 @@ function SegmentedCtrl:_createSegmentTouchCallback( sInfo )
 end
 
 
-function SegmentedCtrl:_removeSegmentSlices( obj )
+
+function SegmentedCtrl:_removePreparedSegments( segments )
+	-- print( "SegmentedCtrl:_removePreparedSegments" )
+	if segments==nil then segments=self._segmentInfo end
+	local removeSegment = self._removeSegment
+	for i=1,#segments do
+		local sInfo = segments[i]
+		removeSegment( self, sInfo )
+	end
+end
+
+
+function SegmentedCtrl:_removeSegmentSlices( sInfo )
+	-- print( "SegmentedCtrl:_removeSegmentSlices" )
+	local o
+
+	o = sInfo.div
+	if o~=nil then
+		o:removeSelf()
+		sInfo.div=nil
+	end
+
+	o = sInfo.bg
+	if o~=nil then
+		o:removeSelf()
+		sInfo.bg=nil
+	end
+
+end
+
+function SegmentedCtrl:_createSegmentSlices( sheet, frames, dg, sInfo )
+	-- print( "SegmentedCtrl:_createSegmentSlices" )
+	local dg = self._dgSegment[1] -- background
+
+	-- inactive background
+
+	if sInfo.bg==nil then
+		local o = newImage( sheet, frames.middleInactive )
+		o.anchorX, o.anchorY = 0,0
+		dg:insert( o )
+		sInfo.bg = o
+	end
+
+	-- inactive divider
+
+	if sInfo.div==nil then
+		local o = newImage( sheet, frames.dividerII )
+		o.anchorX, o.anchorY = 0,0
+		dg:insert( o )
+		sInfo.div = o
+	end
 
 end
 
 
-function SegmentedCtrl:_createSegmentSlices( sheet, frames )
-	-- print( "SegmentedCtrl:_createSegmentSlices", sheet, frames )
+-- complete creation of segments, this is async-part
+--
+function SegmentedCtrl:_createAllSegmentSlices( sheet, frames )
+	-- print( "SegmentedCtrl:_createAllSegmentSlices", sheet, frames )
 	local segments = self._segmentInfo
 	local dg = self._dgSegment[1] -- background
-	local height = self._height
-
-	-- create segment pieces
+	local createSlices = self._createSegmentSlices
 	for i=1,#segments do
 		local sInfo = segments[i]
-
-		sInfo.idx = i -- update index
-
-		-- hit area
-
-		if sInfo.hit==nil then
-			local o = newRect( 0,0,10, height )
-			o.anchorX, o.anchorY = 0,0
-			o.cb = self:_createSegmentTouchCallback( sInfo )
-			o:setFillColor( 0.2, 0.2, 0.2 )
-			dg:insert( o )
-			sInfo.hit = o
-			o:addEventListener( 'touch', o.cb )
+		if not sInfo.bg or not sInfo.div then
+			createSlices( self, sheet, frames, dg, sInfo )
 		end
-
-		-- inactive background
-
-		if sInfo.bg==nil then
-			local o = newImage( sheet, frames.middleInactive )
-			o.anchorX, o.anchorY = 0,0
-			dg:insert( o )
-			sInfo.bg = o
-		end
-
-		-- inactive divider
-
-		if sInfo.div==nil then
-			local o = newImage( sheet, frames.dividerII )
-			o.anchorX, o.anchorY = 0,0
-			dg:insert( o )
-			sInfo.div = o
-		end
-
 	end
-
 end
 
 
@@ -842,15 +1048,23 @@ function SegmentedCtrl:__commitProperties__()
 	end
 
 	if self._segmentCount_dirty then
-		self:_createSegmentSlices( self._sheet, style.spriteFrames )
-		-- measure width, adjusted for offsets
-		local w = self:_adjustUILayout( self._height, offsets )
-		self.width = w
+		self:_removePreparedSegments( self._removeSegmentInfo )
+		self:_createAllSegmentSlices( self._sheet, style.spriteFrames )
 		self._segmentCount_dirty=false
 
+		self._segmentLayout_dirty=true
 		self._width_dirty=true
 	end
 
+
+	if self._segmentLayout_dirty then
+		-- measure width, adjusted for offsets
+		local w = self:_adjustUILayout( self._height, offsets )
+		self.width = w
+		self._segmentLayout_dirty=false
+
+		self._width_dirty=true
+	end
 	-- x/y
 
 	if self._x_dirty then
@@ -918,16 +1132,18 @@ function SegmentedCtrl:stylePropertyChangeHandler( event )
 
 	if etype==style.STYLE_RESET then
 		self._debugOn_dirty = true
+		-- self._width_dirty=true
+		-- self._height_dirty=true
 		self._anchorX_dirty=true
 		self._anchorY_dirty=true
 
+		self._offsetBottom_dirty=true
 		self._offsetLeft_dirty=true
 		self._offsetRight_dirty=true
 		self._offsetTop_dirty=true
-		self._offsetBottom_dirty=true
-		self._sheetInfo_dirty=true
-		self._sheetImage_dirty=true
 		self._spriteFrames_dirty=true
+		self._sheetImage_dirty=true
+		self._sheetInfo_dirty=true
 
 		self._selectedIdx_dirty=true
 		self._segmentHighlight_dirty=true
@@ -938,6 +1154,10 @@ function SegmentedCtrl:stylePropertyChangeHandler( event )
 	else
 		if property=='debugActive' then
 			self._debugOn_dirty=true
+		elseif property=='width' then
+			-- self._width_dirty=true
+		elseif property=='height' then
+			-- self._height_dirty=true
 		elseif property=='anchorX' then
 			self._anchorX_dirty=true
 		elseif property=='anchorY' then
