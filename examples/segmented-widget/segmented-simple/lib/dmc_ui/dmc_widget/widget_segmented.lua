@@ -65,6 +65,7 @@ local ui_find = dmc_ui_func.find
 
 
 local Objects = require 'dmc_objects'
+local Utils = require 'dmc_utils'
 
 local uiConst = require( ui_find( 'ui_constants' ) )
 
@@ -76,6 +77,9 @@ local WidgetBase = require( ui_find( 'core.widget' ) )
 --== Setup, Constants
 
 
+local getStage = display.getCurrentStage
+local newRect = display.newRect
+local newImage = display.newImage
 local tinsert = table.insert
 
 --== To be set in initialize()
@@ -145,6 +149,9 @@ function SegmentedCtrl:__init__( params )
 	self._sheet = nil
 	self._spriteSheet_dirty=true
 
+	self._selectedIdx = 0
+	self._selectedIdx_dirty=true
+
 	-- array of info records
 	self._segmentInfo = {}
 	self._segmentCount_dirty=true
@@ -162,7 +169,6 @@ function SegmentedCtrl:__init__( params )
 
 	-- virtual
 
-	self._sliceLayout_dirty=true
 	self._sliceX_dirty=true
 	self._sliceY_dirty=true
 
@@ -173,17 +179,13 @@ function SegmentedCtrl:__init__( params )
 	self._dgSegment = nil
 	-- self._dgViews = nil
 
-	-- image slices
-	-- self._aCapLeft
-	-- self._iCapLeft
-	-- self._aDivLeft
-	-- self._aItemMiddle
-	-- self._aDivRight
-
+	-- basic UI slices
 	self._leftA = nil
 	self._rightA = nil
 	self._leftI = nil
 	self._rightI = nil
+
+	self._middleA = nil
 	self._divAI = nil
 	self._divIA = nil
 
@@ -256,7 +258,7 @@ end
 
 
 function SegmentedCtrl.initialize( manager )
-	print( "SegmentedCtrl.initialize" )
+	-- print( "SegmentedCtrl.initialize" )
 	dUI = manager
 
 	local Style = dUI.Style
@@ -272,7 +274,6 @@ end
 
 
 --[[
-w.selectedSegment
 w:insertSegment( idx, image/text, params )
 w:insertSegment( image/text, params ) -- next
 w:setImage( idx, image, params )
@@ -288,8 +289,19 @@ w:removeSegment( idx )
 --]]
 
 
+function SegmentedCtrl.__getters:selected()
+	return self._selectedIdx
+end
+function SegmentedCtrl.__setters:selected( idx )
+	if idx<1 or idx>#self._segmentInfo then idx = 0 end
+	self._selectedIdx = idx
+	self._selectedIdx_dirty=true
+	self:__invalidateProperties__()
+	self:dispatchEvent( self.SELECTED, {index=idx}, {merge=true} )
+end
+
 function SegmentedCtrl:insertSegment( ... )
-	print( "SegmentedCtrl:insertSegment" )
+	-- print( "SegmentedCtrl:insertSegment" )
 	local args = {...}
 	assert( #args>=1 and #args<=3, "incorrect number of args" )
 	--==--
@@ -320,82 +332,111 @@ end
 
 
 function SegmentedCtrl:_insertSegment( idx, obj, params )
-	print( "SegmentedCtrl:_insertSegment", idx, obj, params )
+	-- print( "SegmentedCtrl:_insertSegment", idx, obj, params )
 	params = params or {}
 	--==--
-	local segInfo = self._segmentInfo
-	local dg = self._dgSegment[3]
+	local dg = self._dgSegment[3] -- overlay
+	local segments = self._segmentInfo
+	if idx==nil then idx = #segments + 1 end
 
-	if idx==nil then idx = #segInfo + 1 end
-	item=obj
+	-- create new data record for segment
+	local sInfo = {
+		idx=0, -- current index
+		width=50,
+		offsetX=0,
+		offsetY=0,
+		type='text',
+		item=item,
+		callback=nil, -- touch callback
+		bg=nil, -- this is visual bg
+		hit=nil, -- this is hit area
+		div=nil, -- inactive right divider
+	}
+
+	-- initial setup for text/image item
 	if type(obj)~='string' then
+		sInfo.type='image'
+		sInfo.item=obj
 		dg:insert( item )
 	else
-		print("Creating text obje")
 		item = dUI.newText{text=obj}
-		item.debugOn=true
+		-- item.debugOn=true
 		item.textColor={1,1,0,1}
+		sInfo.type='text'
+		sInfo.item=item
 		dg:insert( item.view )
 	end
 	item.anchorX, item.anchorY = 0.5, 0.5
-	local rec = {
-		width=50,
-		offX=0,
-		offY=0,
-		type='text',
-		item=item,
-		bg=nil,
-		div=nil
-	}
-	tinsert( segInfo, idx, rec )
+	tinsert( segments, idx, sInfo )
+
+	if idx>=self._selectedIdx then
+		-- advance selected index if inserting
+		-- item before current selection
+		self._selectedIdx = self._selectedIdx+1
+		self._selectedIdx_dirty=true
+	end
 
 	self._segmentCount_dirty=true
 	self:__invalidateProperties__()
 end
 
 
-function SegmentedCtrl:_adjustUILayout( width, height, off )
-	print( "SegmentedCtrl:_adjustUILayout", width, height )
+function SegmentedCtrl:_adjustUILayout( height, offset )
+	-- print( "SegmentedCtrl:_adjustUILayout", height )
+	local offL, offR = offset.L, offset.R
+	local offT, offB = offset.T, offset.B
 	local segments = self._segmentInfo
-	local x = 0
-	local o
-	local h = self.height
+	local h = height
 	local hc = h*0.5
+	local o
+
+	local x, y = 0-offL,0-offT
 
 	-- left cap
+	o = self._leftA
+	o.x, o.y = x, y
 	o = self._leftI
-	o.x=x
+	o.x, o.y = x, y
 	x=x+o.width
 
 	-- segments
 	for i=1,#segments do
 		local sInfo = segments[i]
+		local o
 		w = sInfo.width
+		-- adjust hit
+		o = sInfo.hit
+		o.width, o.height = w, h
+		o.x, o.y = x, y+offT
 		-- adjust item
 		o = sInfo.item
 		o.x, o.y = x+w*0.5, hc
 		-- adjust bg
-		sInfo.bg.x=x
+		o = sInfo.bg
+		o.x, o.y = x, y
+		o.width = w
+		o.isVisible=true -- TEST (True)/false
 		x=x+w
 		-- adjust divider
 		o = sInfo.div
 		if i~=#segments then
-			o.x=x
+			o.x, o.y = x, y
 			x=x+o.width
 			o.isVisible=true
 		else
-			o.x=0
+			o.x,o.y=0,0
 			o.isVisible=false
 		end
 	end
 
 	-- right cap
+	o = self._rightA
+	o.x, o.y = x, y
 	o = self._rightI
-	o.x=x
-	x=x+o.width
+	o.x, o.y = x, y
 
-	print("WW", x )
-	self.width = x
+	x=x+o.width-offR+offL
+	return x -- return x for set width
 
 end
 
@@ -460,29 +501,149 @@ function SegmentedCtrl:_removeUISlices()
 end
 
 
+-- hide/show the active slice elements.
+-- can be called independently of selected index
+--
+-- @int[opt=selectedIdx] idx index to show
+
+function SegmentedCtrl:_highlightSegment( idx )
+	-- print( "SegmentedCtrl:_highlightSegment", idx )
+	idx = idx or self._selectedIdx
+	--==--
+	local segments = self._segmentInfo
+	local style = self.curr_style
+
+	-- hide current selected slices
+	local lA, mA, rA = self._leftA, self._middleA, self._rightA
+	local dIA, dAI = self._divIA, self._divAI
+	lA.isVisible=false
+	rA.isVisible=false
+	mA.isVisible=false
+	dIA.isVisible=false
+	dAI.isVisible=false
+
+	-- show next selected slices
+	local y = 0-style.offsetTop
+	for i=1,#segments do
+		local sInfo = segments[i]
+		local prevSeg = segments[i-1]
+
+		if idx==i then
+
+			if i==1 then
+				lA.isVisible=true
+				if #segments==1 then
+					rA.isVisible=true
+				else
+					dAI.x, dAI.y = sInfo.div.x, y
+					dAI.isVisible=true
+				end
+
+			elseif i==#segments then
+				rA.isVisible=true
+				dIA.x, dIA.y = prevSeg.div.x, y
+				dIA.isVisible=true
+
+			else
+				dIA.x, dIA.y= prevSeg.div.x, y
+				dIA.isVisible=true
+				dAI.x, dAI.y = sInfo.div.x, y
+				dAI.isVisible=true
+
+			end
+
+			mA.x, mA.y = sInfo.bg.x, y
+			mA.width = sInfo.width
+			mA.isVisible=true
+
+		end
+
+	end
+
+end
+
+
+
 function SegmentedCtrl:_destroySegmentSlices( obj )
 
 end
 
 
+function SegmentedCtrl:_createSegmentTouchCallback( sInfo )
+
+	return function( event )
+		local target = event.target
+		local phase = event.phase
+		local segIdx = sInfo.idx
+
+		if phase=='began' then
+			self:_highlightSegment( segIdx )
+			target._isFocus=true
+			getStage():setFocus( target )
+			return true
+		end
+
+		if not target._isFocus then return end
+
+		local x, y = event.x, event.y
+		local bounds = target.contentBounds
+		local isWithinBounds =
+			( bounds.xMin <= x and bounds.xMax >= x and
+			bounds.yMin <= y and bounds.yMax >= y )
+
+		if phase=='moved' then
+			if isWithinBounds then
+				self:_highlightSegment( segIdx )
+			else
+				self:_highlightSegment()
+			end
+
+		elseif phase=='ended' or phase=='cancelled' then
+			if isWithinBounds then
+				self.selected=segIdx
+			else
+				self:_highlightSegment()
+			end
+			getStage():setFocus( nil )
+			target._isFocus=false
+		end
+
+		return true
+	end
+
+end
+
 function SegmentedCtrl:_createSegmentSlices( sheet, frames )
-	print( "SegmentedCtrl:_createSegmentSlices", sheet, frames )
+	-- print( "SegmentedCtrl:_createSegmentSlices", sheet, frames )
 	local segments = self._segmentInfo
 	local dg = self._dgSegment[1] -- background
+	local height = self.height
 
+	-- create segment pieces
 	for i=1,#segments do
 		local sInfo = segments[i]
 
-		if sInfo.bg==nil then
-			local o = display.newImage( sheet, frames.middleInactive )
+		sInfo.idx = i -- update index
+
+		if sInfo.hit==nil then
+			local o = newRect( 0,0,10, height )
 			o.anchorX, o.anchorY = 0,0
-			o.width=sInfo.width
+			o.cb = self:_createSegmentTouchCallback( sInfo )
+			o:setFillColor( 0.2, 0.2, 0.2 )
+			dg:insert( o )
+			sInfo.hit = o
+			o:addEventListener( 'touch', o.cb )
+		end
+
+		if sInfo.bg==nil then
+			local o = newImage( sheet, frames.middleInactive )
+			o.anchorX, o.anchorY = 0,0
 			dg:insert( o )
 			sInfo.bg = o
 		end
 
 		if sInfo.div==nil then
-			local o = display.newImage( sheet, frames.dividerII )
+			local o = newImage( sheet, frames.dividerII )
 			o.anchorX, o.anchorY = 0,0
 			dg:insert( o )
 			sInfo.div = o
@@ -493,45 +654,57 @@ function SegmentedCtrl:_createSegmentSlices( sheet, frames )
 end
 
 function SegmentedCtrl:_createUISlices( sheet, frames )
-	print( "SegmentedCtrl:_createUISlices", sheet, frames )
+	-- print( "SegmentedCtrl:_createUISlices", sheet, frames )
 	local dgBg = self._dgSegment[1]
 	local dgSelect = self._dgSegment[2]
 
 	-- self:_removeUISlices()
 
+	--== Active
+
 	o = display.newImage( sheet, frames.leftActive )
 	o.anchorX, o.anchorY = 0,0
+	o.isVisible=false
 	dgSelect:insert( o )
 	self._leftA = o
-	o.isVisible=false
 
-	-- o = display.newImage( sheet, frames.middleActive )
-	-- o.anchorX, o.anchorY = 0,0
-	-- dg:insert( o )
-	-- self._mm = o
+	o = display.newImage( sheet, frames.middleActive )
+	o.anchorX, o.anchorY = 0,0
+	o.isVisible=false
+	dgSelect:insert( o )
+	self._middleA = o
 
 	o = display.newImage( sheet, frames.rightActive )
 	o.anchorX, o.anchorY = 0,0
+	o.isVisible=false
 	dgSelect:insert( o )
 	self._rightA = o
+
+	-- dividers
+
+	o = display.newImage( sheet, frames.dividerIA )
+	o.anchorX, o.anchorY = 0,0
 	o.isVisible=false
+	dgSelect:insert( o )
+	self._divIA = o
+
+	o = display.newImage( sheet, frames.dividerAI )
+	o.anchorX, o.anchorY = 0,0
+	o.isVisible=false
+	dgSelect:insert( o )
+	self._divAI = o
+
+	--== Inactive
 
 	o = display.newImage( sheet, frames.leftInactive )
 	o.anchorX, o.anchorY = 0,0
 	dgBg:insert( o )
 	self._leftI = o
 
-	-- o = display.newImage( sheet, frames.middleInactive )
-	-- o.anchorX, o.anchorY = 0,0
-	-- dgBg:insert( o )
-	-- self._tm = o
-
 	o = display.newImage( sheet, frames.rightInactive )
 	o.anchorX, o.anchorY = 0,0
 	dgBg:insert( o )
 	self._rightI = o
-
-	self.height=self._leftA.height
 
 end
 
@@ -539,6 +712,12 @@ function SegmentedCtrl:__commitProperties__()
 	-- print( 'SegmentedCtrl:__commitProperties__' )
 	local style = self.curr_style
 	local view = self.view
+	local offsets = {
+		L=style.offsetLeft,
+		R=style.offsetRight,
+		T=style.offsetTop,
+		B=style.offsetBottom,
+	}
 
 	if self._sheetInfo_dirty or self._sheetImage_dirty then
 		self._sheet = loadSpriteSheet( style.sheetInfo, style.sheetImage )
@@ -549,37 +728,21 @@ function SegmentedCtrl:__commitProperties__()
 	end
 
 	if self._spriteSheet_dirty then
-		local frames = {
-			leftInactive=1,
-			middleInactive=2,
-			rightInactive=3,
-			leftActive=4,
-			middleActive=5,
-			rightActive=6
-		}
-		self:_createUISlices( self._sheet, frames )
+		self:_createUISlices( self._sheet, style.spriteFrames )
+
+		-- measure height, adjust for offsets
+		style.height=self._leftA.height-(offsets.T+offsets.B)
+
+		print(self._leftA.height, style.height)
+
 		-- self:_createUISlices( self._sheet, style.spriteFrames )
 		self._spriteSheet_dirty=false
 	end
 
 	if self._segmentCount_dirty then
-		local offsets = {
-			L=style.offsetLeft,
-			R=style.offsetRight,
-			T=style.offsetTop,
-			B=style.offsetBottom,
-		}
-		local frames = {
-			leftInactive=1,
-			middleInactive=2,
-			rightInactive=3,
-			leftActive=4,
-			middleActive=5,
-			rightActive=6,
-			dividerII=7
-		}
-		self:_createSegmentSlices( self._sheet, frames )
-		self:_adjustUILayout( style.width, style.height )
+		self:_createSegmentSlices( self._sheet, style.spriteFrames )
+		local w = self:_adjustUILayout( style.height, offsets )
+		style.width = w
 		self._segmentCount_dirty=false
 
 		self._width_dirty=true
@@ -600,61 +763,38 @@ function SegmentedCtrl:__commitProperties__()
 		self._width_dirty=false
 
 		self._anchorX_dirty=true
-		-- self._sliceLayout_dirty=true
-		-- self._sliceX_dirty=true
 	end
 
 	if self._height_dirty then
 		self._height_dirty=false
 
-		-- self._sliceLayout_dirty=true
-		-- self._sliceY_dirty=true
-	end
-
-	if self._sliceLayout_dirty then
-		local offsets = {
-			L=style.offsetLeft,
-			R=style.offsetRight,
-			T=style.offsetTop,
-			B=style.offsetBottom,
-		}
-		-- self:_adjustUILayout( style.width, style.height, offsets )
-		self._sliceLayout_dirty=false
+		self._anchorY_dirty=true
 	end
 
 	-- anchorX/anchorY
 
 	if self._anchorX_dirty then
-		self._dgSegment.x = -style.width*style.anchorX
+		self._dgSegment.x = -style.width*style.anchorX+offsets.L
 		self._anchorX_dirty=false
 	end
 	if self._anchorY_dirty then
 		self._dgSegment.y = -style.height*style.anchorY
 		self._anchorY_dirty=false
-
-		self._sliceY_dirty=true
 	end
 
-	if self._sliceX_dirty then
-		-- local dg = self._dgSegment
-		-- local anchorX = style.anchorX
-		-- local width = style.width
-		-- local offsetLeft, offsetRight = style.offsetLeft, style.offsetRight
-		-- local anchor = width*anchorX
-		-- dg.x = self._x - anchor
-		-- self._sliceX_dirty=false
+	-- selected index
+
+	if self._selectedIdx_dirty then
+		self._selectedIdx_dirty=false
+
+		self._segmentHighlight_dirty=true
 	end
 
-	if self._sliceY_dirty then
-		-- local dg = self._dgSegment
-		-- local anchorY = style.anchorY
-		-- local height = style.height
-		-- local offsetTop, offsetBottom = style.offsetTop, style.offsetBottom
-		-- local realH = height - (offsetTop + offsetBottom)
-		-- local anchor = height*anchorY
-		-- dg.y = self._y - anchor
-		-- self._sliceY_dirty=false
+	if self._segmentHighlight_dirty then
+		self:_highlightSegment()
+		self._segmentHighlight_dirty=false
 	end
+
 
 end
 
@@ -688,7 +828,6 @@ function SegmentedCtrl:stylePropertyChangeHandler( event )
 		self._sheetImage_dirty=true
 		self._spriteFrames_dirty=true
 
-		self._sliceLayout_dirty=true
 		self._sliceX_dirty=true
 		self._sliceY_dirty=true
 		self._spriteSheet_dirty=true

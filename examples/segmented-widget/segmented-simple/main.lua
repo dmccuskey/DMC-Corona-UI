@@ -57,18 +57,11 @@ local function setupBackground()
 end
 
 
-local function getIter( list, dir, idx )
-	idx = idx or 0
-	dir = dir or 1
-	return function()
-		if idx==#list then
-			dir = -1
-		elseif idx==1 then
-			dir = 1
-		end
-		idx=idx+dir
-		return list[idx]
-	end
+local function segmentEvent_handler( event )
+	print( "Main:segmentEvent_handler" )
+	local target = event.target
+
+	print( "Selected: ", event.index )
 end
 
 
@@ -91,9 +84,11 @@ function run_example1()
 		style={
 			anchorX=1,
 			anchorY=1,
-			height=40,
-			segmentWidth=0,
-			segmentHeight=44,
+
+			offsetLeft=2,
+			offsetRight=1,
+			offsetTop=2,
+			offsetBottom=1,
 
 			sheetInfo='asset.segment-sheet',
 			sheetImage='asset/segment-sheet.png',
@@ -104,28 +99,32 @@ function run_example1()
 				leftActive=4,
 				middleActive=5,
 				rightActive=6,
-				dividerInactiveInactive=7,
-				dividerInactiveActive=8,
-				dividerActiveActive=9,
-				dividerActiveInactive=10,
+				dividerAI=10,
+				dividerII=7,
+				dividerIA=8,
 			},
-
 		}
 	}
 	sc1.x, sc1.y = H_CENTER, V_CENTER
+	sc1:addEventListener( sc1.EVENT, segmentEvent_handler )
 
 	sc1:insertSegment( 'hello' )
 	sc1:insertSegment( 'world' )
 	sc1:insertSegment( 'folks' )
+	sc1.selected = 1
 
 	-- timer.performWithDelay( 1000, function()
-	-- 	txt1.align='left'
-	-- 	txt1.fillColor='#000000'
-	-- 	txt1.font=native.systemFontBold
-	-- 	txt1.fontSize=30
-	-- 	txt1.marginX=30
-	-- 	txt1.strokeWidth=20
+	-- 	sc1.selected = 2
 	-- end)
+
+	-- timer.performWithDelay( 2000, function()
+	-- 	sc1:insertSegment( 2, 'dude' )
+	-- end)
+
+	timer.performWithDelay( 3000, function()
+		sc1.selected = 0
+		sc1.anchorX, sc1.anchorY = 0.5, 0
+	end)
 
 	-- timer.performWithDelay( 2000, function()
 	-- 	txt1.align='center'
