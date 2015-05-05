@@ -82,8 +82,6 @@ function run_example1()
 
 	sc1 = dUI.newSegmentedControl{
 		style={
-			anchorX=1,
-			anchorY=1,
 
 			offsetLeft=2,
 			offsetRight=1,
@@ -92,20 +90,11 @@ function run_example1()
 
 			sheetInfo='asset.segment-sheet',
 			sheetImage='asset/segment-sheet.png',
-			spriteFrames = {
-				leftInactive=1,
-				middleInactive=2,
-				rightInactive=3,
-				leftActive=4,
-				middleActive=5,
-				rightActive=6,
-				dividerAI=10,
-				dividerII=7,
-				dividerIA=8,
-			},
 		}
 	}
 	sc1.x, sc1.y = H_CENTER, V_CENTER
+
+	sc1.anchorX, sc1.anchorY=0,1
 	sc1:addEventListener( sc1.EVENT, segmentEvent_handler )
 
 	sc1:insertSegment( 'hello' )
@@ -113,34 +102,20 @@ function run_example1()
 	sc1:insertSegment( 'folks' )
 	sc1.selected = 1
 
-	-- timer.performWithDelay( 1000, function()
-	-- 	sc1.selected = 2
-	-- end)
+	timer.performWithDelay( 1000, function()
+		sc1.selected = 2
+			sc1.anchorX, sc1.anchorY = 0, 0
+	end)
 
-	-- timer.performWithDelay( 2000, function()
-	-- 	sc1:insertSegment( 2, 'dude' )
-	-- end)
+	timer.performWithDelay( 2000, function()
+		sc1:insertSegment( 2, 'dude' )
+		sc1:removeSegment( 1 )
+	end)
 
 	timer.performWithDelay( 3000, function()
 		sc1.selected = 0
 		sc1.anchorX, sc1.anchorY = 0.5, 0
 	end)
-
-	-- timer.performWithDelay( 2000, function()
-	-- 	txt1.align='center'
-	-- 	txt1:setFillColor( 1,1,0 )
-	-- 	txt1:setStrokeColor( 0,1,1 )
-	-- 	txt1:setTextColor( 1,0,0 )
-	-- end)
-
-	-- timer.performWithDelay( 3000, function()
-	-- 	txt1.align='right'
-	-- 	txt1.fillColor=nil
-	-- 	txt1.font=nil
-	-- 	txt1.fontSize=nil
-	-- 	txt1.marginX=nil
-	-- 	txt1.strokeWidth=nil
-	-- end)
 
 end
 

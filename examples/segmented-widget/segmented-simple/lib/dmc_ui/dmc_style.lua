@@ -146,8 +146,8 @@ function Style.initialize( manager, params )
 	dUI.newNineSliceBackgroundStyle = Style.newNineSliceBackgroundStyle
 	dUI.newRectangleBackgroundStyle = Style.newRectangleBackgroundStyle
 	dUI.newRoundedBackgroundStyle = Style.newRoundedBackgroundStyle
-	dUI.newSegmentedControlStyle = Style.newSegmentedControlStyle
-	dUI.newTableViewStyle = Style.newTableViewStyle
+	dUI.newSegmentedControlStyle = Style.newSegmentedControl
+	dUI.newTableViewStyle = Style.newTableView
 	dUI.newTableViewCellStyle = Style.newTableViewCellStyle
 	dUI.newTextFieldStyle = Style.newTextFieldStyle
 	dUI.newTextStyle = Style.newTextStyle
@@ -279,7 +279,7 @@ function Style._loadButtonStyleSupport( params )
 
 	Style.loadBaseStyleSupport( params )
 	Style._loadBackgroundStyleSupport( params )
-	Style._loadTextStyleSupport( params )
+	Style.loadTextStyleSupport( params )
 
 	--== Components
 
@@ -413,8 +413,8 @@ end
 --======================================================--
 -- newSegmentedControl Support
 
-function Style.loadSegmentedControlStyleSupport( params )
-	-- print( "Style.loadSegmentedControlStyleSupport" )
+function Style.loadSegmentedControlSupport( params )
+	-- print( "Style.loadSegmentedControlSupport" )
 	if Style.SegmentedControl then return end
 	params = params or {}
 	if params.mode==nil then params.mode=uiConst.RUN_MODE end
@@ -427,6 +427,7 @@ function Style.loadSegmentedControlStyleSupport( params )
 	--== Dependencies
 
 	Style.loadBaseStyleSupport( params )
+	Style.loadTextStyleSupport( params )
 
 	--== Components
 
@@ -448,7 +449,7 @@ function Style.newSegmentedControl( style_info, params )
 	params = params or {}
 	--==--
 	params.data = style_info
-	if not Style.SegmentedControl then Style.loadSegmentedControlStyleSupport() end
+	if not Style.SegmentedControl then Style.loadSegmentedControlSupport() end
 	return Style.SegmentedControl:createStyleFrom( params )
 end
 
@@ -515,7 +516,7 @@ function Style.loadTableViewCellStyleSupport( params )
 
 	Style.loadBaseStyleSupport( params )
 	Style._loadBackgroundStyleSupport( params )
-	Style._loadTextStyleSupport( params )
+	Style.loadTextStyleSupport( params )
 
 	--== Components
 
@@ -549,8 +550,8 @@ end
 --======================================================--
 -- newTextStyle Support
 
-function Style._loadTextStyleSupport( params )
-	-- print( "Style._loadTextStyleSupport" )
+function Style.loadTextStyleSupport( params )
+	-- print( "Style.loadTextStyleSupport" )
 	if Style.Text then return end
 	params = params or {}
 	if params.mode==nil then params.mode=uiConst.RUN_MODE end
@@ -584,7 +585,7 @@ function Style.newTextStyle( style_info, params )
 	params = params or {}
 	--==--
 	params.data = style_info
-	if not Style.Text then Style._loadTextStyleSupport() end
+	if not Style.Text then Style.loadTextStyleSupport() end
 	return Style.Text:createStyleFrom( params )
 end
 
@@ -607,7 +608,7 @@ function Style._loadTextFieldStyleSupport( params )
 
 	Style.loadBaseStyleSupport( params )
 	Style._loadBackgroundStyleSupport( params )
-	Style._loadTextStyleSupport( params )
+	Style.loadTextStyleSupport( params )
 
 	--== Components
 

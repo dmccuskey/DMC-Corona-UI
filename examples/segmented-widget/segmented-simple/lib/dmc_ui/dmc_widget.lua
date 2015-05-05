@@ -554,7 +554,7 @@ function Widget.loadSegmentedControlSupport( params )
 
 	--== Dependencies
 
-	Style.loadSegmentedControlStyleSupport( params )
+	Style.loadSegmentedControlSupport( params )
 
 	Widget.loadViewSupport( params )
 
@@ -577,7 +577,7 @@ end
 -- @usage local uiBg = dUI.newSegmentedControl()
 --
 function Widget.newSegmentedControl( options )
-	print( "Widget.newSegmentedControl" )
+	-- print( "Widget.newSegmentedControl" )
 	if not Widget.SegmentedControl then Widget.loadSegmentedControlSupport() end
 	return Widget.SegmentedControl:new( options )
 end
@@ -687,7 +687,7 @@ function Widget._loadTextSupport( params )
 
 	--== Dependencies
 
-	Style._loadTextStyleSupport( params )
+	Style.loadTextStyleSupport( params )
 
 	Widget.loadViewSupport( params )
 
