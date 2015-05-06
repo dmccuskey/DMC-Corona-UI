@@ -37,6 +37,7 @@ module_config = {
 			"dmc_ui/dmc_style/navbar_style.lua",
 			"dmc_ui/dmc_style/navitem_style.lua",
 			"dmc_ui/dmc_style/scrollview_style.lua",
+			"dmc_ui/dmc_style/segmented_style.lua",
 			"dmc_ui/dmc_style/style_manager.lua",
 			"dmc_ui/dmc_style/style_mix.lua",
 			"dmc_ui/dmc_style/tableview_style.lua",
@@ -67,6 +68,7 @@ module_config = {
 			"dmc_ui/dmc_widget/widget_scrollview/axis_motion.lua",
 			"dmc_ui/dmc_widget/widget_scrollview/scale_motion.lua",
 			"dmc_ui/dmc_widget/widget_scrollview/scroller.lua",
+			"dmc_ui/dmc_widget/widget_segmented.lua",
 			"dmc_ui/dmc_widget/widget_slideview.lua",
 			"dmc_ui/dmc_widget/widget_tableview.lua",
 			"dmc_ui/dmc_widget/widget_tableview/delegate_tableview.lua",
@@ -92,6 +94,8 @@ module_config = {
 			"dmc_ui/theme/default/textfield/09-BR.png",
 			"dmc_ui/theme/default/textfield/textfield-sheet.lua",
 			"dmc_ui/theme/default/textfield/textfield-sheet.png",
+			"dmc_ui/theme/default/segmented/ios-sheet.lua",
+			"dmc_ui/theme/default/segmented/ios-sheet.png",
 
 		],
 		"requires": [
