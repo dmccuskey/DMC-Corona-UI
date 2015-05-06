@@ -326,6 +326,17 @@ function SegmentedCtrl.__setters:selected( idx )
 	self:dispatchEvent( self.SELECTED, {index=idx, data=sInfo.data}, {merge=true} )
 end
 
+
+function SegmentedCtrl:getItem( idx )
+	local sInfo = self._segmentInfo[idx]
+	if not sInfo then
+		pwarn( sformat( "SegmentedCtrl:getItem no segment at index '%s'", idx ))
+		return nil
+	end
+	return sInfo.item
+end
+
+
 --== :insertSegment
 
 --- insert new segment into control.
