@@ -205,7 +205,7 @@ SegmentedStyle._STYLE_DEFAULTS = {
 	},
 
 	sheetInfo=ui_find('theme.default.segmented.ios-sheet'),
-	sheetImage=ui_file('theme/default/segmented/ios-sheet.jpg'),
+	sheetImage=ui_file('theme/default/segmented/ios-sheet.png'),
 }
 
 SegmentedStyle._TEST_DEFAULTS = {
