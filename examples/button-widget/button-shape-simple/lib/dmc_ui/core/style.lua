@@ -220,6 +220,10 @@ function BaseStyle:__init__( params )
 	-- widget delegate
 	self._widget = params.widget
 
+	-- properties not to pass along, might be
+	-- be properties normally valid
+	self._exclude_properties = {}
+
 	self._onPropertyChange_f = params.onPropertyChange
 
 	self._tmp_data = params.data -- temporary save of data
@@ -451,6 +455,17 @@ function BaseStyle:getBaseStyle()
 	-- print( "BaseStyle:getBaseStyle", self )
 	return self.class.__base_style__
 end
+
+
+function BaseStyle:excludeParentProperty( name )
+	-- print( "BaseStyle:excludeParentProperty", name, self )
+	self._exclude_properties[ name ] = true
+end
+function BaseStyle:includeParentProperty( name )
+	-- print( "BaseStyle:includeParentProperty", self )
+	self._exclude_properties[ name ] = nil
+end
+
 
 
 function BaseStyle:getDefaultStyleValues()
@@ -1174,7 +1189,8 @@ function BaseStyle:_parentStyleEvent_handler( event )
 		-- we accept changes to parent as our own
 		-- however, check to see if property is valid
 		-- parent could have other properties
-		if self._VALID_PROPERTIES[property] then
+		if self._VALID_PROPERTIES[property] and not
+			self._exclude_properties[property] then
 			local func = self.__setters[property]
 			if func then
 				func( self, value, true )

@@ -137,6 +137,7 @@ function Widget.initialize( manager, params )
 	dUI.newNavItem = Widget.newNavItem
 	dUI.newPopover = Widget.newPopover
 	dUI.newScrollView = Widget.newScrollView
+	dUI.newSegmentedControl = Widget.newSegmentedControl
 	dUI.newSlideView = Widget.newSlideView
 	dUI.newTableView = Widget.newTableView
 	dUI.newTableViewCell = Widget.newTableViewCell
@@ -542,6 +543,47 @@ end
 
 
 --======================================================--
+-- newSegmentedControl Support
+
+function Widget.loadSegmentedControlSupport( params )
+	-- print( "Widget.loadSegmentedControlSupport" )
+	if Widget.SegmentedControl then return end
+	params = params or {}
+	if params.mode==nil then params.mode=uiConst.RUN_MODE end
+	--==--
+
+	--== Dependencies
+
+	Style.loadSegmentedControlSupport( params )
+
+	Widget.loadViewSupport( params )
+
+	--== Components
+
+	local SegmentedControl = require( ui_find( 'dmc_widget.widget_segmented' ) )
+
+	Widget.SegmentedControl=SegmentedControl
+
+	initKolors( function()
+		SegmentedControl.initialize( dUI, params )
+	end)
+end
+
+--- constructor for a Scroll View widget.
+--
+-- @function newSegmentedControl
+-- @tab[opt] options parameters used to create a Scroll View
+-- @treturn object @{Widget.SegmentedControl}
+-- @usage local uiBg = dUI.newSegmentedControl()
+--
+function Widget.newSegmentedControl( options )
+	-- print( "Widget.newSegmentedControl" )
+	if not Widget.SegmentedControl then Widget.loadSegmentedControlSupport() end
+	return Widget.SegmentedControl:new( options )
+end
+
+
+--======================================================--
 -- newSlideView Support
 
 function Widget.newSlideView( options )
@@ -645,7 +687,7 @@ function Widget._loadTextSupport( params )
 
 	--== Dependencies
 
-	Style._loadTextStyleSupport( params )
+	Style.loadTextStyleSupport( params )
 
 	Widget.loadViewSupport( params )
 

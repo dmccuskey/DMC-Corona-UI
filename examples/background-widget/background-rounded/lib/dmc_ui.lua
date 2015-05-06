@@ -362,27 +362,37 @@ Documentation items should be copied in manually
 -- @usage local widget = dUI.newNavItem()
 --
 
---== Scroll View
+--== ScrollView
 
---- constructor for a Scroll View widget.
+--- constructor for a ScrollView widget.
 --
 -- @function newScrollView
--- @tab[opt] options parameters used to create a Scroll View
+-- @tab[opt] options parameters used to create a ScrollView
 -- @treturn object @{Widget.ScrollView}
 -- @usage local widget = dUI.newScrollView()
 --
 
---== Table View / Cell
+--== SegmentedControl
 
---- constructor for a Table View widget.
+--- constructor for a SegmentedControl widget.
+--
+-- @function newScrollView
+-- @tab[opt] options parameters used to create a SegmentedControl
+-- @treturn object @{Widget.SegmentedControl}
+-- @usage local widget = dUI.newSegmentedControl()
+--
+
+--== TableView / Cell
+
+--- constructor for a TableView widget.
 --
 -- @function newTableView
--- @tab[opt] options parameters used to create a Table View
+-- @tab[opt] options parameters used to create a TableView
 -- @treturn object @{Widget.TableView}
 -- @usage local widget = dUI.newTableView()
 --
 
---- constructor for a Table View Cell widget.
+--- constructor for a TableViewCell widget.
 --
 -- @function newTableViewCell
 -- @tab[opt] options parameters used to create a Table View Cell
@@ -400,10 +410,10 @@ Documentation items should be copied in manually
 -- @usage local widget = dUI.newText()
 --
 
---- constructor for a Text Field widget.
+--- constructor for a TextField widget.
 --
 -- @function newTextField
--- @tab[opt] options parameters used to create a Text Field widget
+-- @tab[opt] options parameters used to create a TextField widget
 -- @treturn object @{Widget.TextField}
 -- @usage local widget = dUI.newTextField()
 --

@@ -419,6 +419,7 @@ function TextFieldStyle._addMissingChildProperties( dest, src )
 end
 
 
+
 function TextFieldStyle.copyExistingSrcProperties( dest, src, params)
 	-- print( "TextFieldStyle.copyMissingProperties", dest, src )
 	assert( dest )
@@ -553,7 +554,7 @@ function TextFieldStyle.__setters:background( data )
 	local inherit = self._inherit and self._inherit._background or self._inherit
 
 	self._background = StyleClass:createStyleFrom{
-		name=TextFieldStyle.BACKGROUND_NAME,
+		name=nil,
 		inherit=inherit,
 		parent=self,
 		data=data
@@ -573,7 +574,7 @@ function TextFieldStyle.__setters:display( data )
 	local inherit = self._inherit and self._inherit._display or self._inherit
 
 	self._display = StyleClass:createStyleFrom{
-		name=TextFieldStyle.DISPLAY_NAME,
+		name=nil,
 		inherit=inherit,
 		parent=self,
 		data=data
@@ -594,7 +595,7 @@ function TextFieldStyle.__setters:hint( data )
 	local inherit = self._inherit and self._inherit._hint or self._inherit
 
 	self._hint = StyleClass:createStyleFrom{
-		name=TextFieldStyle.HINT_NAME,
+		name=nil,
 		inherit=inherit,
 		parent=self,
 		data=data
@@ -877,8 +878,8 @@ function TextFieldStyle:_doChildrenInherit( value )
 	if not self._isInitialized then return end
 
 	self._background.inherit = value and value.background or value
-	self._hint.inherit = value and value.hint or value
 	self._display.inherit = value and value.display or value
+	self._hint.inherit = value and value.hint or value
 end
 
 
@@ -894,11 +895,11 @@ function TextFieldStyle:_clearChildrenProperties( style, params )
 	substyle = style and style.background
 	self._background:_clearProperties( substyle, params )
 
-	substyle = style and style.hint
-	self._hint:_clearProperties( substyle, params )
-
 	substyle = style and style.display
 	self._display:_clearProperties( substyle, params )
+
+	substyle = style and style.hint
+	self._hint:_clearProperties( substyle, params )
 end
 
 

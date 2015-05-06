@@ -636,7 +636,7 @@ function ButtonStyle.__setters:inactive( data )
 	local inherit = self._inherit and self._inherit._inactive
 
 	self._inactive = StyleClass:createStyleFrom{
-		name=ButtonStyle.INACTIVE_NAME,
+		name=nil,
 		inherit=inherit,
 		parent=self,
 		data=data
@@ -657,7 +657,7 @@ function ButtonStyle.__setters:active( data )
 	local inherit = self._inherit and self._inherit._active
 
 	self._active = StyleClass:createStyleFrom{
-		name=ButtonStyle.ACTIVE_NAME,
+		name=nil,
 		inherit=inherit,
 		parent=self,
 		data=data
@@ -678,7 +678,7 @@ function ButtonStyle.__setters:disabled( data )
 	local inherit = self._inherit and self._inherit._disabled
 
 	self._disabled = StyleClass:createStyleFrom{
-		name=ButtonStyle.DISABLED_NAME,
+		name=nil,
 		inherit=inherit,
 		parent=self,
 		data=data
