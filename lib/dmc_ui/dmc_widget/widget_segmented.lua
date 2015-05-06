@@ -135,6 +135,10 @@ SegmentedCtrl.STYLE_TYPE = uiConst.SEGMENTEDCTRL
 -- 	SegmentedCtrl.DEFAULT,
 -- }
 
+SegmentedCtrl.EVENT = 'segmented-control-event'
+
+SegmentedCtrl.SELECTED = 'segmented-selected'
+
 
 --======================================================--
 -- Start: Setup DMC Objects
