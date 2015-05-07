@@ -923,8 +923,8 @@ function NavBar:__commitProperties__()
 		local o
 		o = item.title
 		if o then
-			o.y = 0
-			o.anchorX, o.anchorY = 0.5, anchorY
+			o.y = (0.5-anchorY)*style.height
+			o.anchorX, o.anchorY = 0.5, 0.5
 		end
 		o = item.backButton
 		if o then
