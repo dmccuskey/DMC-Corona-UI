@@ -187,6 +187,7 @@ TextFieldStyle._STYLE_DEFAULTS = {
 		fillColor={0,0,0,0},
 		font=native.systemFont,
 		fontSize=18,
+		fontSizeMinimum=0,
 		marginX=15,
 		textColor={0.3,0.3,0.3,1},
 	},
@@ -202,6 +203,7 @@ TextFieldStyle._STYLE_DEFAULTS = {
 		fillColor={0,0,0,0},
 		font=native.systemFont,
 		fontSize=18,
+		fontSizeMinimum=0,
 		marginX=15,
 		textColor={0.1,0.1,0.1,1},
 	},
@@ -252,6 +254,7 @@ TextFieldStyle._TEST_DEFAULTS = {
 		fillColor={521,522,523,524},
 		font=native.systemFont,
 		fontSize=524,
+		fontSizeMinimum=520,
 		textColor={523,524,525,526},
 	},
 	display={
@@ -266,6 +269,7 @@ TextFieldStyle._TEST_DEFAULTS = {
 		fillColor={531,532,533,534},
 		font=native.systemFontBold,
 		fontSize=534,
+		fontSizeMinimum=523,
 		textColor={533,534,535,536},
 	},
 
