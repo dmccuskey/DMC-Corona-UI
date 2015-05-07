@@ -631,45 +631,43 @@ function NavBar:_getTransition( from_item, to_item, direction )
 					self:_attachBackListener( from_item.backButton )
 				end
 
+				--== Left/Back
 
-			--== Left/Back
+				if t_d then
+					t_d.isVisible = false
+				end
 
-			if t_d then
-				t_d.isVisible = false
-			end
+				if fHasLeft or #self._items>1 then
+					f_d.isVisible = true
+					f_d.x = mX_OFF-H_CENTER+MARGINS.x
+					f_d.alpha = 1
+				else
+					f_d.isVisible = false
+				end
 
-			if fHasLeft or #self._items>1 then
-				f_d.isVisible = true
-				f_d.x = mX_OFF-H_CENTER+MARGINS.x
-				f_d.alpha = 1
-			else
-				f_d.isVisible = false
-			end
+				--== Title
 
-			--== Title
+				if t_t then
+					t_t.isVisible = false
+				end
 
-			if t_t then
-				t_t.isVisible = false
-			end
+				if f_t then
+					f_t.isVisible = true
+					f_t.x = mX_OFF
+					f_t.alpha = 1
+				end
 
-			if f_t then
-				f_t.isVisible = true
-				f_t.x = mX_OFF
-				f_t.alpha = 1
-			end
+				--== Right
 
-			--== Right
+				if t_r then
+					t_r.isVisible = false
+				end
 
-			if t_r then
-				t_r.isVisible = false
-			end
-
-			if f_r then
-				f_r.isVisible = true
-				f_r.x = mX_OFF+H_CENTER
-				f_r.alpha = 1
-			end
-
+				if f_r then
+					f_r.isVisible = true
+					f_r.x = mX_OFF+H_CENTER
+					f_r.alpha = 1
+				end
 
 			end
 
