@@ -503,7 +503,7 @@ function NavControl:_getNavBarNextTransition( view, params )
 	local o = view.navItem
 	if not o then
 		o = dUI.newNavItem{
-			title=view.title or "Unknown"
+			titleText=view.title or "Unknown"
 		}
 		view.navItem = o
 	end
