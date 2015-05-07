@@ -212,6 +212,8 @@ Text.STYLE_TYPE = uiConst.TEXT
 
 Text.EVENT = 'text-widget-event'
 
+Text.DIMENSION_CHANGED = 'dimension-changed-event'
+
 
 --======================================================--
 -- Start: Setup DMC Objects
@@ -591,27 +593,29 @@ function Text:_createText()
 	self:_removeText()
 
 	local w, h = style.width, style.height
-	local text, fontSize = self._text, style.fontSize
+	local font, fontSize = style.font, style.fontSize
+	local text = self._text
+	local tw
 	if w==0 then
-		w=nil
+		tw=nil
 	else
-		w = w - style.marginX*2
+		tw = w - style.marginX*2
 		text, fontSize = testTextLength( text, {
-			width=w, font=style.font,
-			fontSize=style.fontSize,
+			width=w, font=font,
+			fontSize=fontSize,
 			fontSizeMinimum=style.fontSizeMinimum
 		})
 	end
 	o = newText{
 		x=0, y=0,
 
-		width=w,
+		width=tw,
 		-- don't use height, turns into multi-line
 		height=nil,
 
 		text=text,
 		align=style.align,
-		font=style.font,
+		font=font,
 		fontSize=fontSize,
 	}
 
@@ -624,6 +628,9 @@ function Text:_createText()
 	self._y_dirty=true
 	self._width_dirty=true
 	self._height_dirty=true
+	if w==0 or h==0 then
+		self._textDimension_dirty=true
+	end
 
 	self._text_dirty=false
 	self._textColor_dirty=true
@@ -806,6 +813,11 @@ function Text:__commitProperties__()
 	if self._textColor_dirty then
 		txt:setTextColor( unpack( style.textColor ) )
 		self._textColor_dirty=false
+	end
+
+	if self._textDimension_dirty then
+		self:dispatchEvent( self.EVENT, {width=self.width,height=self.height}, {merge=true} )
+		self._textDimension_dirty=false
 	end
 
 end
