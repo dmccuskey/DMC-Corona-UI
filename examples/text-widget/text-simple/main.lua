@@ -72,6 +72,14 @@ local function getIter( list, dir, idx )
 end
 
 
+
+local function dimensionChange_handler( event )
+	print( "Main:dimensionChange_handler" )
+	print( ">", event.type, event.width, event.height )
+end
+
+
+
 --===================================================================--
 --== Main
 --===================================================================--
@@ -328,6 +336,7 @@ function run_example4()
 	}
 	txt1.anchorX, txt1.anchorY = 0.5,0.5
 	txt1.x, txt1.y = H_CENTER, V_CENTER
+	txt1:addEventListener( txt1.EVENT, dimensionChange_handler )
 
 	local narrow, wide, pause
 
