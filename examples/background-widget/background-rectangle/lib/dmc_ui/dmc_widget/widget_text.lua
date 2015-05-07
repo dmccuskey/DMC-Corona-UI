@@ -77,6 +77,7 @@ local WidgetHelp = require( ui_find( 'core.widget_helper' ) )
 --== Setup, Constants
 
 
+local newText = display.newText
 local ssub = string.sub
 
 --== To be set in initialize()
@@ -92,24 +93,59 @@ local FontMgr = nil
 local function testTextLength( text, params )
 	-- print( "Text:testTextLength", text, params.width )
 	local w = params.width
+	local f = params.font
+	local fs = params.fontSize
+	local fsm = params.fontSizeMinimum
 	local _ssub = ssub
-	local o = display.newText{
+	local _newText = newText
+
+	--== check size with defaults
+
+	local o = _newText{
 		text=text,
-		font=params.font,
-		fontSize=params.fontSize
+		font=f,
+		fontSize=fs
 	}
 	local tw = o.width
 	o:removeSelf()
-	if tw < w then return text end
+	if tw < w then return text, fs end
+
+	--== check for font minimum
+
+	if fsm~=0 then
+		local cfs = fs-1 -- current font size
+		while cfs>=fsm do
+			local o = _newText{
+				text=text,
+				font=f,
+				fontSize=cfs
+			}
+			local tw = o.width
+			o:removeSelf()
+			if tw > w then
+				cfs = cfs-1
+			else
+				break
+			end
+		end
+		if cfs<fsm then
+			-- text too big, shorten with '...'
+			fs=fsm
+		else
+			return text, cfs
+		end
+	end
+
+	--== check for ellipses
 
 	local cnt = 0
 	local prev = '...'
 	while true do
 		local t = ssub( text, 0, cnt )..'...'
-		local o = display.newText{
+		local o = _newText{
 			text=t,
-			font=params.font,
-			fontSize=params.fontSize
+			font=f,
+			fontSize=fs
 		}
 		local tw = o.width
 		o:removeSelf()
@@ -119,7 +155,7 @@ local function testTextLength( text, params )
 			break
 		end
 	end
-	return prev
+	return prev, fs
 end
 
 
@@ -411,10 +447,10 @@ from text object after creation
 function Text.__getters:width()
 	-- print( 'Text.__getters:width' )
 	local style = self.curr_style
-	-- local mX = style.marginX*2
 	local w, t = style.width, self._txtText
-	if w==nil and t then w=t.width end
-	-- return w+mX
+	if w==0 and t then
+		w=t.width+style.marginX*2
+	end
 	return w
 end
 function Text.__setters:width( value )
@@ -434,9 +470,10 @@ end
 
 function Text.__getters:height()
 	-- print( 'Text.__getters:height' )
-	local h, t = self.curr_style.height, self._txtText
-	if h==nil then
-		h = self:getTextHeight()
+	local style = self.curr_style
+	local h, t = style.height, self._txtText
+	if h==0 then
+		h = self:getTextHeight()+style.marginY*2
 	end
 	return h
 end
@@ -554,14 +591,18 @@ function Text:_createText()
 	self:_removeText()
 
 	local w, h = style.width, style.height
-	local text = self._text
-	if w ~= nil then
+	local text, fontSize = self._text, style.fontSize
+	if w==0 then
+		w=nil
+	else
 		w = w - style.marginX*2
-		text = testTextLength( text, {
-			width=w, font=style.font, fontSize=style.fontSize
+		text, fontSize = testTextLength( text, {
+			width=w, font=style.font,
+			fontSize=style.fontSize,
+			fontSizeMinimum=style.fontSizeMinimum
 		})
 	end
-	o = display.newText{
+	o = newText{
 		x=0, y=0,
 
 		width=w,
@@ -571,7 +612,7 @@ function Text:_createText()
 		text=text,
 		align=style.align,
 		font=style.font,
-		fontSize=style.fontSize,
+		fontSize=fontSize,
 	}
 
 	self:insert( o )
