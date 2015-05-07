@@ -156,6 +156,86 @@ function run_example1()
 
 end
 
-run_example1()
+-- run_example1()
+
+
+
+
+--======================================================--
+--== create widget
+
+function run_example2()
+
+	local sc1, o
+
+	-- setup marker for comparison
+	o = display.newRect( 0,0, 200, 40 )
+	o.x, o.y = H_CENTER, V_CENTER
+	o:setFillColor( 0,1,0,0.2 )
+
+
+	sc1 = dUI.newSegmentedControl{
+		style={
+
+			offsetLeft=2,
+			offsetRight=1,
+			offsetTop=2,
+			offsetBottom=1,
+
+			sheetInfo='asset.segment-sheet',
+			sheetImage='asset/segment-sheet.png',
+		}
+	}
+	sc1.x, sc1.y = H_CENTER, V_CENTER
+	sc1.width = 200
+
+	sc1.anchorX, sc1.anchorY=0.5, 1
+	sc1:addEventListener( sc1.EVENT, segmentEvent_handler )
+
+	local o = display.newImage( 'asset/flag/Brasil.png' )
+	o.xScale, o.yScale = 0.15, 0.15
+
+	sc1:insertSegment( 'hello' )
+	sc1:insertSegment( o )
+	sc1:insertSegment( 'world', {data='w-o-r-l-d'} )
+	sc1.selected = 1
+
+	timer.performWithDelay( 1000, function()
+		sc1.selected = 2
+		-- sc1.anchorX, sc1.anchorY = 0.5, 0
+
+
+		-- print( "width", sc1:getWidth( 3 ))
+		sc1:setWidth( 2, 30 )
+
+	end)
+
+	timer.performWithDelay( 2000, function()
+		sc1.width = 200
+	end)
+
+	timer.performWithDelay( 3000, function()
+			sc1:insertSegment( 'world' )
+			sc1.anchorX, sc1.anchorY = 0.5, 1
+	end)
+
+	timer.performWithDelay( 4000, function()
+		sc1.width = 300
+	end)
+
+	timer.performWithDelay( 5000, function()
+		sc1.anchorX, sc1.anchorY = 0.5, 0
+		sc1:removeSegment( 3 )
+		sc1.width = 300
+	end)
+
+	-- timer.performWithDelay( 10000, function()
+	-- 	sc1:removeSelf()
+	-- end)
+
+
+end
+
+run_example2()
 
 
