@@ -158,6 +158,9 @@ function run_example2()
 			marginX=10,
 
 			inactive = {
+				-- label={
+				-- 	fontSizeMinimum=0,
+				-- },
 				background = {
 					type=dUI.NINE_SLICE,
 					view = {

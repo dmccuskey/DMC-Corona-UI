@@ -122,6 +122,7 @@ TextStyle._VALID_PROPERTIES = {
 	fillColor=true,
 	font=true,
 	fontSize=true,
+	fontSizeMinimum=true,
 	marginX=true,
 	marginY=true,
 	textColor=true,
@@ -130,17 +131,12 @@ TextStyle._VALID_PROPERTIES = {
 	strokeWidth=true,
 }
 
-TextStyle._EXCLUDE_PROPERTY_CHECK = {
-	-- width/height, they can be nil
-	width=true,
-	height=true
-}
+TextStyle._EXCLUDE_PROPERTY_CHECK = {}
 
 TextStyle._STYLE_DEFAULTS = {
-	name='text-default-style',
 	debugOn=false,
-	width=nil,
-	height=nil,
+	width=0,
+	height=0,
 	anchorX=0.5,
 	anchorY=0.5,
 
@@ -148,6 +144,7 @@ TextStyle._STYLE_DEFAULTS = {
 	fillColor={0,0,0,0},
 	font=native.systemFont,
 	fontSize=16,
+	fontSizeMinimum=0,
 	marginX=0,
 	marginY=0,
 	textColor={0,0,0,1},
@@ -157,7 +154,6 @@ TextStyle._STYLE_DEFAULTS = {
 }
 
 TextStyle._TEST_DEFAULTS = {
-	name='text-test-style',
 	debugOn=false,
 	width=117,
 	height=nil,
@@ -168,6 +164,7 @@ TextStyle._TEST_DEFAULTS = {
 	fillColor={101,102,103,104},
 	font=native.systemFont,
 	fontSize=101,
+	fontSizeMinimum=106,
 	marginX=102,
 	marginY=103,
 	textColor={111,112,113,114},
@@ -211,6 +208,7 @@ function TextStyle:__init__( params )
 	self._fillColor = nil
 	self._font = nil
 	self._fontSize = nil
+	self._fontSizeMinimum = nil
 	self._marginX = nil
 	self._marginY = nil
 	self._strokeColor = nil
@@ -260,6 +258,7 @@ function TextStyle.addMissingDestProperties( dest, src )
 		if dest.fillColor==nil then dest.fillColor=src.fillColor end
 		if dest.font==nil then dest.font=src.font end
 		if dest.fontSize==nil then dest.fontSize=src.fontSize end
+		if dest.fontSizeMinimum==nil then dest.fontSizeMinimum=src.fontSizeMinimum end
 		if dest.marginX==nil then dest.marginX=src.marginX end
 		if dest.marginY==nil then dest.marginY=src.marginY end
 		if dest.strokeColor==nil then dest.strokeColor=src.strokeColor end
@@ -296,6 +295,9 @@ function TextStyle.copyExistingSrcProperties( dest, src, params )
 	end
 	if (src.fontSize~=nil and dest.fontSize==nil) or force then
 		dest.fontSize=src.fontSize
+	end
+	if (src.fontSizeMinimum~=nil and dest.fontSizeMinimum==nil) or force then
+		dest.fontSizeMinimum=src.fontSizeMinimum
 	end
 	if (src.marginX~=nil and dest.marginX==nil) or force then
 		dest.marginX=src.marginX
@@ -337,6 +339,9 @@ function TextStyle._verifyStyleProperties( src )
 	end
 	if not src.fontSize then
 		print(sfmt(emsg,'fontSize')) ; is_valid=false
+	end
+	if not src.fontSizeMinimum then
+		print(sfmt(emsg,'fontSizeMinimum')) ; is_valid=false
 	end
 	if not src.marginX then
 		print(sfmt(emsg,'marginX')) ; is_valid=false
@@ -411,6 +416,33 @@ TextStyle.__setters.font = StyleHelp.__setters.font
 
 TextStyle.__getters.fontSize = StyleHelp.__getters.fontSize
 TextStyle.__setters.fontSize = StyleHelp.__setters.fontSize
+
+
+--== .fontSizeMinimum
+
+--- [**style**] set/get Style value for Widget minimum font size.
+--
+-- @within Properties
+-- @function .fontSizeMinimum
+-- @usage style.fontSizeMinimum = 8
+-- @usage print( style.fontSizeMinimum )
+
+function TextStyle.__getters:fontSizeMinimum()
+	-- print( "TextStyle.__getters:fontSizeMinimum", self )
+	local value = self._fontSizeMinimum
+	if value==nil and self._inherit then
+		value = self._inherit.fontSizeMinimum
+	end
+	return value
+end
+function TextStyle.__setters:fontSizeMinimum( value )
+	-- print( "TextStyle.__setters:fontSizeMinimum", self._fontSizeMinimum, value, self._isClearing )
+	assert( type(value)=='number' or (value==nil and (self._inherit or self._isClearing)) )
+	--==--
+	self._fontSizeMinimum = value
+	self:_dispatchChangeEvent( 'fontSizeMinimum', value )
+end
+
 
 --== .marginX
 

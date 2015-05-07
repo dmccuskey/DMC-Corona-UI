@@ -292,13 +292,17 @@ NavItemStyle._STYLE_DEFAULTS = {
 		}
 	},
 	title={
+		debugOn=false,
 		anchorX=0.5,
 		anchorY=0.5,
+		width=0,
+		height=0,
 
 		align='center',
 		fillColor={0,0,0,0},
 		font=native.systemFont,
 		fontSize=16,
+		fontSizeMinimum=0,
 		marginX=0,
 		marginY=0,
 		textColor={0,0,0,1},

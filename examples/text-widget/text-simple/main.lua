@@ -72,6 +72,14 @@ local function getIter( list, dir, idx )
 end
 
 
+
+local function dimensionChange_handler( event )
+	print( "Main:dimensionChange_handler" )
+	print( ">", event.type, event.width, event.height )
+end
+
+
+
 --===================================================================--
 --== Main
 --===================================================================--
@@ -161,7 +169,7 @@ function run_example1()
 
 end
 
-run_example1()
+-- run_example1()
 
 
 --======================================================--
@@ -301,3 +309,50 @@ end
 
 -- run_example3()
 
+
+
+--======================================================--
+--== shrink and expand
+
+function run_example4()
+
+	local txt1
+
+	txt1 = dUI.newText{
+		text = "hello there Kangarooo !!",
+		style={
+			debugOn=false,
+			width=0,
+			height=30,
+
+			align='center',
+			fontSize=14,
+			fontSizeMinimum=8,
+			marginX=0,
+			marginY=5,
+			fillColor={0.5,0,1},
+			textColor={0,0,0},
+		}
+	}
+	txt1.anchorX, txt1.anchorY = 0.5,0.5
+	txt1.x, txt1.y = H_CENTER, V_CENTER
+	txt1:addEventListener( txt1.EVENT, dimensionChange_handler )
+
+	local narrow, wide, pause
+
+	pause = function( f )
+		timer.performWithDelay( 1000, f )
+	end
+
+	wide = function()
+		transition.to( txt1, {time=2000, width=250, onComplete=function() pause(narrow) end } )
+	end
+	narrow = function()
+		transition.to( txt1, {time=2000, width=40, onComplete=function() pause(wide) end } )
+	end
+
+	narrow()
+
+end
+
+run_example4()

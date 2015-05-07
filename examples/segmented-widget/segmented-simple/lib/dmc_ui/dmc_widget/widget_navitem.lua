@@ -120,7 +120,7 @@ NavItem.STYLE_TYPE = uiConst.NAVITEM
 function NavItem:__init__( params )
 	-- print( "NavItem:__init__" )
 	params = params or {}
-	if params.title==nil then params.title="" end
+	if params.titleText==nil then params.titleText="" end
 
 	self:superCall( LifecycleMix, '__init__', params )
 	self:superCall( ObjectBase, '__init__', params )
@@ -131,7 +131,7 @@ function NavItem:__init__( params )
 
 	-- properties stored in Class
 
-	self._title = ''
+	self._titleText = ''
 
 	-- properties stored in Style
 
@@ -194,7 +194,7 @@ function NavItem:__initComplete__()
 	self:_createText()
 	self:_createBackButton()
 
-	self.title = tmp.title
+	self.titleText = tmp.titleText
 
 	self._ni_tmp_params = nil
 
@@ -313,23 +313,37 @@ function NavItem.__setters:rightButton( button )
 end
 
 
+--- get title Text Widget of Nav Item.
+--
+-- @within Properties
+-- @function .title
+-- @usage print( widget.title )
+
+function NavItem.__getters:title()
+	-- print( "NavItem.__getters:title" )
+	return self._wgtText
+end
+
+
 --- set/get title of Nav Item.
 -- value should be string
 --
 -- @within Properties
--- @function .title
--- @usage widget.title = "My Title"
--- @usage print( widget.title )
+-- @function .titleText
+-- @usage widget.titleText = "My Title"
+-- @usage print( widget.titleText )
 
-function NavItem.__getters:title()
-	-- print( "NavItem.__getters:rightButton" )
-	return self._wgtText
+function NavItem.__getters:titleText()
+	-- print( "NavItem.__getters:titleText" )
+	return self._titleText
 end
-function NavItem.__setters:title( title )
-	-- print( "NavItem.__setters:title", button )
-	assert( type(title)=='string', "title must be a string" )
+function NavItem.__setters:titleText( value )
+	-- print( "NavItem.__setters:titleText", button )
+	assert( type(value)=='string', "title must be a string" )
 	--==--
-	self._wgtText.text = title
+	self._titleText = value
+	self._wgtTextText_dirty=true
+	self:__invalidateProperties__()
 end
 
 
@@ -445,7 +459,7 @@ function NavItem:__commitProperties__()
 	end
 
 	if self._wgtTextText_dirty then
-		text.text=self._title
+		text.text=self._titleText
 		self._wgtTextText_dirty=false
 	end
 	if self._wgtTextStyle_dirty then

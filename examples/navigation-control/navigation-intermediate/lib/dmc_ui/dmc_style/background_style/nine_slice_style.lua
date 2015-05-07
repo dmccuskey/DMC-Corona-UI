@@ -77,8 +77,6 @@ local ViewStyle = require( ui_find( 'dmc_style.background_style.base_view_style'
 --== Setup, Constants
 
 
-local newClass = Objects.newClass
-
 local sfmt = string.format
 local tinsert = table.insert
 
@@ -88,11 +86,32 @@ local Style = nil
 
 
 --====================================================================--
---== Rounded Background Style Class
+--== 9-Slice Background Style Class
 --====================================================================--
 
 
+--- 9-Slice View Style Class.
+-- a style object for a 9-Slice Background View.
+--
+-- **Inherits from:** <br>
+-- * @{Core.Style}
+--
+-- **Child style of:** <br>
+-- * @{Style.Background}
+--
+-- @classmod Style.BackgroundView.9Slice
+-- @usage
+-- local dUI = require 'dmc_ui'
+-- local widget = dUI.newBackgroundStyle{
+--   type='9-slice',
+-- }
+--
+-- local widget = dUI.new9SliceBackgroundStyle()
+
 local NineSliceStyle = newClass( ViewStyle, {name="9-Slice Background Style"} )
+
+--- Class Constants.
+-- @section
 
 --== Class Constants
 
@@ -147,17 +166,31 @@ NineSliceStyle._STYLE_DEFAULTS = {
 }
 
 NineSliceStyle._TEST_DEFAULTS = {
-	name='rounded-background-test-style',
+	name='nice-slice-background-test-style',
 	debugOn=false,
 	width=301,
 	height=302,
 	anchorX=303,
 	anchorY=304,
 
-	cornerRadius=305,
-	fillColor={301,302,303,304},
-	strokeColor={311,312,313,314},
-	strokeWidth=311
+	spriteFrames = {
+		topLeft=10,
+		topMiddle=12,
+		topRight=13,
+		middleLeft=14,
+		middleMiddle=15,
+		middleRight=16,
+		bottomLeft=17,
+		bottomMiddle=18,
+		bottomRight=19,
+	},
+	offsetLeft=300,
+	offsetRight=301,
+	offsetTop=302,
+	offsetBottom=303,
+
+	sheetInfo='sheet',
+	sheetImage='sheet.png'
 }
 
 NineSliceStyle.MODE = uiConst.RUN_MODE

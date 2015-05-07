@@ -76,8 +76,6 @@ local WidgetBase = require( ui_find( 'core.widget' ) )
 --== Setup, Constants
 
 
-local newClass = Objects.newClass
-
 --== To be set in initialize()
 local dUI = nil
 
@@ -93,18 +91,18 @@ local function loadSpriteSheet( info, image )
 end
 
 
+
 --====================================================================--
 --== 9-Slice Background View Class
 --====================================================================--
 
 
 --- Background 9-Slice View Module.
--- at the core, the DMC Text Widget wraps a Corona Text widget to provide its functionality. this gives us more consistent behavior! (w00t!)
 --
 -- @classmod Widget.Background.9Slice
 -- @usage
--- local dUI = require 'dmc_ui'
--- local widget = dUI.new9SliceBackground()
+-- dUI = require 'dmc_ui'
+-- widget = dUI.new9SliceBackground()
 
 local NineSliceView = newClass( WidgetBase, {name="9-Slice Background View"} )
 

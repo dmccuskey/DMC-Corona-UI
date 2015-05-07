@@ -166,17 +166,31 @@ NineSliceStyle._STYLE_DEFAULTS = {
 }
 
 NineSliceStyle._TEST_DEFAULTS = {
-	name='rounded-background-test-style',
+	name='nice-slice-background-test-style',
 	debugOn=false,
 	width=301,
 	height=302,
 	anchorX=303,
 	anchorY=304,
 
-	cornerRadius=305,
-	fillColor={301,302,303,304},
-	strokeColor={311,312,313,314},
-	strokeWidth=311
+	spriteFrames = {
+		topLeft=10,
+		topMiddle=12,
+		topRight=13,
+		middleLeft=14,
+		middleMiddle=15,
+		middleRight=16,
+		bottomLeft=17,
+		bottomMiddle=18,
+		bottomRight=19,
+	},
+	offsetLeft=300,
+	offsetRight=301,
+	offsetTop=302,
+	offsetBottom=303,
+
+	sheetInfo='sheet',
+	sheetImage='sheet.png'
 }
 
 NineSliceStyle.MODE = uiConst.RUN_MODE
