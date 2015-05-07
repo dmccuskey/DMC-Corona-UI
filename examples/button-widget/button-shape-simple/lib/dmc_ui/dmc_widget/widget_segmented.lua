@@ -82,6 +82,7 @@ Patch.addPatch( 'print-output' )
 
 local assert = assert
 local getStage = display.getCurrentStage
+local mfloor = math.floor
 local newRect = display.newRect
 local newImage = display.newImage
 local sformat = string.format
@@ -123,6 +124,8 @@ local SegmentedCtrl = newClass( WidgetBase, {name="9-Slice Background View"} )
 
 --== Class Constants
 
+SegmentedCtrl.DEFAULT_WIDTH = 50
+
 --== Theme Constants
 
 SegmentedCtrl.STYLE_CLASS = nil -- added later
@@ -158,7 +161,9 @@ function SegmentedCtrl:__init__( params )
 
 	-- don't use style width/height
 	self._width=0
+	self._vWidth=0 -- virtual
 	self._height=0
+
 
 	self._sheet = nil
 	self._spriteSheet_dirty=true
@@ -291,11 +296,15 @@ end
 --== .width
 
 function SegmentedCtrl.__getters:width()
-	return self._width
+	local w = self.curr_style.width
+	if w==0 then
+		w=self._vWidth
+	end
+	return w
 end
 function SegmentedCtrl.__setters:width( value )
 	-- print("SegmentedCtrl.__setters:width", value)
-	self._width = value
+	self.curr_style.width = value
 	self:_widthChanged()
 end
 
@@ -377,12 +386,17 @@ function SegmentedCtrl:insertSegment( ... )
 
 	params = params or {}
 
+	-- turn off width auto-sizing
+	-- check before _createSegmentRecord()
+	if params.width then self.width=0 end
+
 	local segments = self._segmentInfo
 	if idx==nil then idx = #segments + 1 end
 
 	local sInfo = self:_createSegmentRecord( params )
 	tinsert( segments, idx, sInfo )
 	self._segmentCount_dirty=true
+
 
 	self:_createSegment( sInfo, obj, params )
 
@@ -471,11 +485,14 @@ end
 function SegmentedCtrl:setImage( idx, image, params )
 	-- print( "SegmentedCtrl:setImage", idx, image )
 	params = params or {}
+	-- turn off width auto-sizing
+	if params.width then self.width=0 end
 	--==--
 	local selectedIdx = self._selectedIdx
 	local sInfo = self._segmentInfo[ idx ]
 	sInfo.width = params.width or sInfo.width
 	sInfo.data = params.data
+
 
 	self:removeSegment( idx )
 	self:insertSegment( idx, image, sInfo )
@@ -502,11 +519,14 @@ end
 function SegmentedCtrl:setText( idx, str, params )
 	-- print( "SegmentedCtrl:setText", idx, str )
 	params = params or {}
+	-- turn off width auto-sizing
+	if params.width then self.width=0 end
 	--==--
 	local selectedIdx = self._selectedIdx
 	local sInfo = self._segmentInfo[ idx ]
 	sInfo.width = params.width or sInfo.width
 	sInfo.data = params.data
+
 
 	self:removeSegment( idx )
 	self:insertSegment( idx, str, sInfo )
@@ -537,6 +557,10 @@ function SegmentedCtrl:setWidth( idx, value )
 		pwarn( sformat( "SegmentedCtrl:setWidth no segment at index '%s'", idx ))
 		return
 	end
+
+	-- turn off width auto-sizing
+	self.width=0
+
 	sInfo.width = value
 	self._segmentLayout_dirty=true
 	self:__invalidateProperties__()
@@ -552,7 +576,7 @@ end
 function SegmentedCtrl:_createSegmentRecord( params )
 	params = params or {}
 	if params.isEnabled==nil then params.isEnabled = true end
-	if params.width==nil then params.width = 50 end
+	if params.width==nil then params.width = SegmentedCtrl.DEFAULT_WIDTH end
 	if params.offsetX==nil then params.offsetX = 0 end
 	if params.offsetY==nil then params.offsetY = 0 end
 	--==--
@@ -671,8 +695,8 @@ end
 
 -- after addition/removal, re-adjust positioning of segments
 --
-function SegmentedCtrl:_adjustUILayout( height, offset )
-	-- print( "SegmentedCtrl:_adjustUILayout", height )
+function SegmentedCtrl:_adjustUILayout( width, height, offset )
+	-- print( "SegmentedCtrl:_adjustUILayout", width, height )
 	local offL, offR = offset.L, offset.R
 	local offT, offB = offset.T, offset.B
 	local segments = self._segmentInfo
@@ -681,6 +705,15 @@ function SegmentedCtrl:_adjustUILayout( height, offset )
 	local o
 
 	local x, y = 0-offL,0-offT
+
+	-- calculate segment width if have style width
+	local segWidth=nil
+	if width~=0 then
+		local offset = self._leftI.width-offL
+		offset = offset + self._rightI.width-offR
+		offset = offset + self._divAI.width*(#segments-1)
+		segWidth = mfloor((width-offset)/#segments)
+	end
 
 	-- left cap
 	o = self._leftA
@@ -693,6 +726,12 @@ function SegmentedCtrl:_adjustUILayout( height, offset )
 	for i=1,#segments do
 		local sInfo = segments[i]
 		local o
+
+		if segWidth then
+			-- update segment width
+			-- based on #segments & style width
+			sInfo.width=segWidth
+		end
 
 		sInfo.idx=i
 
@@ -1080,19 +1119,9 @@ function SegmentedCtrl:__commitProperties__()
 		self:_createAllSegmentSlices( self._sheet, style.spriteFrames )
 		self._segmentCount_dirty=false
 
-		self._segmentLayout_dirty=true
 		self._width_dirty=true
 	end
 
-
-	if self._segmentLayout_dirty then
-		-- measure width, adjusted for offsets
-		local w = self:_adjustUILayout( self._height, offsets )
-		self.width = w
-		self._segmentLayout_dirty=false
-
-		self._width_dirty=true
-	end
 	-- x/y
 
 	if self._x_dirty then
@@ -1108,6 +1137,7 @@ function SegmentedCtrl:__commitProperties__()
 		self._width_dirty=false
 
 		self._anchorX_dirty=true
+		self._segmentLayout_dirty=true
 	end
 
 	if self._height_dirty then
@@ -1116,14 +1146,23 @@ function SegmentedCtrl:__commitProperties__()
 		self._anchorY_dirty=true
 	end
 
+	if self._segmentLayout_dirty then
+		-- measure width, adjusted for offsets
+		local w = self:_adjustUILayout( style.width, self._height, offsets )
+		self._vWidth = w
+		self._segmentLayout_dirty=false
+
+		self._segmentHighlight_dirty=true
+	end
+
 	-- anchorX/anchorY
 
 	if self._anchorX_dirty then
-		self._dgSegment.x = -self._width*style.anchorX+offsets.L
+		self._dgSegment.x = -self.width*style.anchorX
 		self._anchorX_dirty=false
 	end
 	if self._anchorY_dirty then
-		self._dgSegment.y = -self._height*style.anchorY
+		self._dgSegment.y = -self.height*style.anchorY
 		self._anchorY_dirty=false
 	end
 
@@ -1160,7 +1199,7 @@ function SegmentedCtrl:stylePropertyChangeHandler( event )
 
 	if etype==style.STYLE_RESET then
 		self._debugOn_dirty = true
-		-- self._width_dirty=true
+		self._width_dirty=true
 		-- self._height_dirty=true
 		self._anchorX_dirty=true
 		self._anchorY_dirty=true
@@ -1183,7 +1222,7 @@ function SegmentedCtrl:stylePropertyChangeHandler( event )
 		if property=='debugActive' then
 			self._debugOn_dirty=true
 		elseif property=='width' then
-			-- self._width_dirty=true
+			self._width_dirty=true
 		elseif property=='height' then
 			-- self._height_dirty=true
 		elseif property=='anchorX' then
