@@ -81,15 +81,6 @@ module_config = {
 
 			"dmc_ui/manager/keyboard_mgr.lua",
 
-			"dmc_ui/theme/default/textfield/01-TL.png",
-			"dmc_ui/theme/default/textfield/02-TM.png",
-			"dmc_ui/theme/default/textfield/03-TR.png",
-			"dmc_ui/theme/default/textfield/04-ML.png",
-			"dmc_ui/theme/default/textfield/05-MM.png",
-			"dmc_ui/theme/default/textfield/06-MR.png",
-			"dmc_ui/theme/default/textfield/07-BL.png",
-			"dmc_ui/theme/default/textfield/08-BM.png",
-			"dmc_ui/theme/default/textfield/09-BR.png",
 			"dmc_ui/theme/default/textfield/textfield-sheet.lua",
 			"dmc_ui/theme/default/textfield/textfield-sheet.png",
 
