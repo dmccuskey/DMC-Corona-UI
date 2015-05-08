@@ -136,6 +136,7 @@ Constant.BUTTON_STATE = 'Button-State'
 Constant.NAVITEM = 'NavItem'
 Constant.NAVBAR = 'NavBar'
 Constant.SCROLLVIEW = 'ScrollView'
+Constant.SEGMENTEDCTRL = 'SegmentedControl'
 Constant.TABLEVIEW = 'TableView'
 Constant.TABLEVIEWCELL = 'TableViewCell'
 Constant.TABLEVIEWCELL_STATE = 'TableViewCell-State'
@@ -146,6 +147,7 @@ Constant.TEXTFIELD = 'TextField'
 --======================================================--
 -- Background Widget
 
+Constant.IMAGE = 'image'
 Constant.NINE_SLICE = '9-slice'
 Constant.RECTANGLE = 'rectangle'
 Constant.ROUNDED = 'rounded'

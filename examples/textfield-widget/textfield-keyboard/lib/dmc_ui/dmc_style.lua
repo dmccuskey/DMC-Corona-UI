@@ -140,12 +140,14 @@ function Style.initialize( manager, params )
 	-- Style Interface
 
 	dUI.newBackgroundStyle = Style.newBackgroundStyle
-	dUI.newButtonStyle = Style.newButtonStyle
-	dUI.newNavBarStyle = Style.newNavBarStyle
-	dUI.newNavItemStyle = Style.newNavItemStyle
+	dUI.newImageBackgroundStyle = Style.newImageBackgroundStyle
 	dUI.newNineSliceBackgroundStyle = Style.newNineSliceBackgroundStyle
 	dUI.newRectangleBackgroundStyle = Style.newRectangleBackgroundStyle
 	dUI.newRoundedBackgroundStyle = Style.newRoundedBackgroundStyle
+
+	dUI.newButtonStyle = Style.newButtonStyle
+	dUI.newNavBarStyle = Style.newNavBarStyle
+	dUI.newNavItemStyle = Style.newNavItemStyle
 	dUI.newSegmentedControlStyle = Style.newSegmentedControl
 	dUI.newTableViewStyle = Style.newTableView
 	dUI.newTableViewCellStyle = Style.newTableViewCellStyle
@@ -206,8 +208,6 @@ function Style._loadBackgroundStyleSupport( params )
 	--== Components
 
 	local BackgroundStyle = require( ui_find( 'dmc_style.background_style' ) )
-	local RectangleStyle = require( ui_find( 'dmc_style.background_style.rectangle_style' ) )
-	local RoundedStyle = require( ui_find( 'dmc_style.background_style.rounded_style' ) )
 	local BackgroundStyleFactory = require( ui_find( 'dmc_style.background_style.style_factory' ) )
 
 	Style.Background=BackgroundStyle
@@ -230,6 +230,16 @@ function Style.newBackgroundStyle( style_info, params )
 	params.data = style_info
 	if not Style.Background then Style._loadBackgroundStyleSupport() end
 	return Style.Background:createStyleFrom( params )
+end
+
+function Style.newImageBackgroundStyle( style_info, params )
+	-- print("Style.newImageBackgroundStyle")
+	style_info = style_info or {}
+	params = params or {}
+	--==--
+	if not Style.Background then Style._loadBackgroundStyleSupport() end
+	style_info.type = Style.BackgroundFactory.Image.TYPE
+	return Style.newBackgroundStyle( style_info, params )
 end
 
 function Style.newNineSliceBackgroundStyle( style_info, params )

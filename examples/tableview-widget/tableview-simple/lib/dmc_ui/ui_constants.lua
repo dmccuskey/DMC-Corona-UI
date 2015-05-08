@@ -147,6 +147,7 @@ Constant.TEXTFIELD = 'TextField'
 --======================================================--
 -- Background Widget
 
+Constant.IMAGE = 'image'
 Constant.NINE_SLICE = '9-slice'
 Constant.RECTANGLE = 'rectangle'
 Constant.ROUNDED = 'rounded'

@@ -125,6 +125,7 @@ function Widget.initialize( manager, params )
 
 	dUI.newBackground = Widget.newBackground
 	dUI.new9SliceBackground = Widget.new9SliceBackground
+	dUI.newImageBackground = Widget.newImageBackground
 	dUI.newRectangleBackground = Widget.newRectangleBackground
 	dUI.newRoundedBackground = Widget.newRoundedBackground
 	dUI.newButton = Widget.newButton
@@ -290,6 +291,20 @@ function Widget.newRectangleBackground( options )
 	if not Widget.Background then Widget._loadBackgroundSupport() end
 	options = options or {}
 	options.viewType=uiConst.RECTANGLE
+	return Widget.Background:new( options )
+end
+
+--- convenience function for Rectangle Background widgets.
+--
+-- @function newImageBackground
+-- @tab[opt] options parameters used to create Background
+-- @treturn object @{Widget.Background}
+-- @usage local uiBg = dUI.newImageBackground()
+
+function Widget.newImageBackground( options )
+	if not Widget.Background then Widget._loadBackgroundSupport() end
+	options = options or {}
+	options.viewType=uiConst.IMAGE
 	return Widget.Background:new( options )
 end
 
