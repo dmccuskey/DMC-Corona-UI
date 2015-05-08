@@ -76,6 +76,8 @@ local WidgetBase = require( ui_find( 'core.widget' ) )
 --== Setup, Constants
 
 
+local newImage = display.newImage
+
 --== To be set in initialize()
 local dUI = nil
 
@@ -289,10 +291,10 @@ end
 
 
 function ImageView:_createBackgroundImage( path )
-	print( "ImageView:_createBackgroundImage", path )
+	-- print( "ImageView:_createBackgroundImage", path )
 	self:_removeBackgroundImage()
 
-	local o = display.newImage( path )
+	local o = newImage( path )
 	o.anchorX, o.anchorY = 0,0
 	self._dgBg:insert( o )
 	self._img = o
