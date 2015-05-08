@@ -238,7 +238,30 @@ function WidgetHelp.__setters:strokeWidth( value )
 end
 
 
---== .setFillColor
+--== .textColor
+
+--- [**style**] set/get textColor.
+-- set the font size of the text.
+--
+-- @within Properties
+-- @function .textColor
+-- @usage widget.textColor = 18
+-- @usage print( widget.textColor )
+
+-- CLASS.__getters.textColor = WidgetHelp.__getters.textColor
+-- CLASS.__setters.textColor = WidgetHelp.__setters.textColor
+
+function WidgetHelp.__getters:textColor()
+	return self.curr_style.textColor
+end
+function WidgetHelp.__setters:textColor( value )
+	print( 'WidgetHelp.__setters:textColor', value )
+	self.curr_style.textColor = value
+end
+
+
+
+--== :setFillColor
 
 --- set the fill color of the background.
 --
@@ -259,7 +282,7 @@ function WidgetHelp:setFillColor( ... )
 end
 
 
---== .setStrokeColor
+--== :setStrokeColor
 
 --- set stroke color of the background.
 --
@@ -280,7 +303,7 @@ function WidgetHelp:setStrokeColor( ... )
 end
 
 
---== .setTextColor
+--== :setTextColor
 
 --- set color of text.
 --
