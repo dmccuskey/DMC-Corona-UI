@@ -37,8 +37,9 @@ local navBar, navItem
 --== Support Functions
 
 
+--======================================================--
 -- Setup Visual Screen Items
---
+
 local function setupBackground()
 	local width, height = 100, 50
 	local o
