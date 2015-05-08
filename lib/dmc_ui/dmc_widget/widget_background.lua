@@ -233,6 +233,23 @@ function Background:localToContent( ... )
 end
 
 
+function Background.__getters:width()
+	-- print( 'Background.__getters:width' )
+	local w = self.curr_style.width
+	local v = self._wgtView
+	if w==0 then w = v and v.width or 0 end
+	return w
+end
+
+function Background.__getters:height()
+	-- print( 'Background.__getters:height' )
+	local h = self.curr_style.height
+	local v = self._wgtView
+	if h==0 then h = v and v.height or 0 end
+	return h
+end
+
+
 
 --======================================================--
 -- Local Properties

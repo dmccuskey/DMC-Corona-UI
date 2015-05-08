@@ -28,6 +28,7 @@ module_config = {
 			"dmc_ui/dmc_style.lua",
 			"dmc_ui/dmc_style/background_style.lua",
 			"dmc_ui/dmc_style/background_style/base_view_style.lua",
+			"dmc_ui/dmc_style/background_style/image_style.lua",
 			"dmc_ui/dmc_style/background_style/nine_slice_style.lua",
 			"dmc_ui/dmc_style/background_style/rectangle_style.lua",
 			"dmc_ui/dmc_style/background_style/rounded_style.lua",
@@ -50,7 +51,7 @@ module_config = {
 			"dmc_ui/dmc_widget/font_manager.lua",
 			"dmc_ui/dmc_widget/lib/easingx.lua",
 			"dmc_ui/dmc_widget/widget_background.lua",
-			#"dmc_ui/dmc_widget/widget_background/image_view.lua",
+			"dmc_ui/dmc_widget/widget_background/image_view.lua",
 			"dmc_ui/dmc_widget/widget_background/nine_slice_view.lua",
 			"dmc_ui/dmc_widget/widget_background/rectangle_view.lua",
 			"dmc_ui/dmc_widget/widget_background/rounded_view.lua",
@@ -81,6 +82,7 @@ module_config = {
 
 			"dmc_ui/manager/keyboard_mgr.lua",
 
+			"dmc_ui/theme/default/background/background.png",
 			"dmc_ui/theme/default/textfield/textfield-sheet.lua",
 			"dmc_ui/theme/default/textfield/textfield-sheet.png",
 
