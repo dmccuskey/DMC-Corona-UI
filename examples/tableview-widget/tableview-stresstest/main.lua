@@ -1,7 +1,7 @@
 --====================================================================--
 -- TableViewCell
 --
--- Shows basic use of TableViewCell with TableView, with Cell cache
+-- Stress Test tableview/ tableviewcell
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
@@ -19,6 +19,8 @@ print( "\n\n#########################################################\n\n" )
 
 
 local dUI = require 'lib.dmc_ui'
+
+local dmcPerf = require 'lib.dmc_corona.dmc_performance'
 
 
 
@@ -163,7 +165,7 @@ local function onRender( self, event )
 	tc.textLabel.text = rowData.title
 	tc.textDetail.text = rowData.detail
 
-	tc.imageView = display.newImageRect( rowData.image, 26, 26 )
+	-- tc.imageView = display.newImageRect( rowData.image, 26, 26 )
 
 	view:insert( tc.view )
 	view.cell = tc
@@ -187,10 +189,10 @@ local function onUnrender( self, event )
 	tc.isVisible = false
 	tinsert( cellCache, tc )
 
-	img = tc.imageView
-	assert( img )
-	img:removeSelf()
-	tc.imageView=nil
+	-- img = tc.imageView
+	-- assert( img )
+	-- img:removeSelf()
+	-- tc.imageView=nil
 
 	view.cell = nil
 end
@@ -263,27 +265,48 @@ local delegate = {
 	didSelectRow=onEvent,
 }
 
+local createWidget, destroyWidget
+local tdelay = timer.performWithDelay
+local DELAY = 250
+local count=0
+local tV
 
--- create Table View
+createTable = function()
 
-local tV = dUI.newTableView{
-	width=DIMS.w,
-	height=DIMS.h*SHOW,
-	delegate=delegate,
-	estimatedRowHeight=DIMS.h,
-	autoMask=true
-}
-tV.x, tV.y = H_CENTER-DIMS.w*0.5, V_CENTER-(DIMS.h*SHOW)*0.5
+	count=count+1
 
-tV:addEventListener( tV.EVENT, onEvent )
+	tV = dUI.newTableView{
+		width=DIMS.w,
+		height=DIMS.h*SHOW,
+		delegate=delegate,
+		estimatedRowHeight=DIMS.h,
+		autoMask=true
+	}
+	tV.x, tV.y = H_CENTER-DIMS.w*0.5, V_CENTER-(DIMS.h*SHOW)*0.5
 
-tV:reloadData()
+	tV:addEventListener( tV.EVENT, onEvent )
 
+	tV:reloadData()
 
+	tdelay( DELAY, function()
+		destroyTable()
+	end)
 
-timer.performWithDelay( 10000, function()
-	print( "Main: removing table" )
+end
+
+destroyTable = function()
+	tV:removeEventListener( tV.EVENT, onEvent )
 	tV:removeSelf()
-end)
+	if count%10==0 then
+		print( "completed: ", count )
+	end
+	tdelay( DELAY, function()
+		createTable()
+	end)
 
+end
+
+print( "Main: Starting" )
+-- dmcPerf.watchMemory( 2500 )
+-- createTable()
 

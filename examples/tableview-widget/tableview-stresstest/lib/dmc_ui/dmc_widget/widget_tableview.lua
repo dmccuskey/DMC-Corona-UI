@@ -276,11 +276,13 @@ function TableView:__init__( params )
 
 end
 
--- function TableView:__undoInit__()
--- 	-- print( "TableView:__undoInit__" )
--- 	--==--
--- 	self:superCall( '__undoInit__' )
--- end
+--[[
+function TableView:__undoInit__()
+	-- print( "TableView:__undoInit__" )
+	--==--
+	self:superCall( '__undoInit__' )
+end
+--]]
 
 
 --== initComplete
@@ -311,6 +313,8 @@ function TableView:__undoInitComplete__()
 	-- print( "TableView:__undoInitComplete__" )
 
 	self:removeAllRows()
+
+	self._tableCellTouch_f = nil
 
 	self._rowItemRecords = nil
 	self._renderedTableCells = nil

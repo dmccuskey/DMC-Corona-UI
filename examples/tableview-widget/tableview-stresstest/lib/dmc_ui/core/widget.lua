@@ -134,7 +134,6 @@ function View:__init__( params )
 	self:superCall( ComponentBase, '__init__', params )
 	self:superCall( StyleMix, '__init__', params )
 	--==--
-
 	-- save params for later
 	self._wc_tmp_params = params -- tmp
 
@@ -195,7 +194,7 @@ function View:__init__( params )
 end
 
 function View:__undoInit__()
-	--print( "View:__undoInit__" )
+	-- print( "View:__undoInit__" )
 	--==--
 	self:superCall( StyleMix, '__undoInit__' )
 	self:superCall( ComponentBase, '__undoInit__' )
@@ -244,7 +243,6 @@ function View:__initComplete__()
 
 	self.id = tmp.id
 	self.delegate = tmp.delegate
-
 	self.style = tmp.style
 
 	self:_loadViews()
@@ -252,6 +250,7 @@ end
 
 function View:__undoInitComplete__()
 	-- print( "View:__undoInitComplete__" )
+	self:_unloadViews()
 
 	self.delegate = nil
 	self.style = nil
@@ -304,7 +303,6 @@ Inherited Methods
 -- @within Methods
 -- @function :clearStyle
 -- @usage widget:clearStyle()
-
 
 
 
@@ -372,8 +370,7 @@ function View.__setters:id( value )
 	self._id = value
 end
 
-
---== anchorX
+--== .anchorX
 
 --- set/get anchorX.
 --
@@ -390,7 +387,7 @@ function View.__setters:anchorX( value )
 	self.curr_style.anchorX = value
 end
 
---== anchorY
+--== .anchorY
 
 --- set/get anchorY.
 --
@@ -407,9 +404,7 @@ function View.__setters:anchorY( value )
 	self.curr_style.anchorY = value
 end
 
-
-
---== debugOn
+--== .debugOn
 
 function View.__getters:debugOn()
 	return self.curr_style.debugOn
@@ -418,8 +413,6 @@ function View.__setters:debugOn( value )
 	-- print( 'View.__setters:debugOn', value )
 	self.curr_style.debugOn = value
 end
-
-
 
 --== .width
 
@@ -449,7 +442,6 @@ function View.__setters:height( value )
 	self:_heightChanged()
 end
 
-
 --== .preferredContentSize
 
 function View.__getters:preferredContentSize()
@@ -465,7 +457,8 @@ function View.__setters:preferredContentSize( value )
 end
 
 
---== setAnchor
+
+--== :setAnchor
 
 function View:setAnchor( ... )
 	-- print( 'View:setAnchor' )
@@ -481,6 +474,7 @@ function View:setAnchor( ... )
 		self.anchorY = args[2]
 	end
 end
+
 
 
 --====================================================================--
@@ -513,6 +507,8 @@ which are permanent to functionality, eg NavBar
 function View:_loadViews() end
 
 
+function View:_unloadViews() end
+
 
 --======================================================--
 -- DMC Lifecycle Methods
@@ -528,6 +524,7 @@ end
 
 
 -- none
+
 
 
 

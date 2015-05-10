@@ -211,7 +211,7 @@ TableViewCell.EVENT = 'tableviewcell-widget-event'
 --== Init
 
 function TableViewCell:__init__( params )
-	-- print( "TableViewCell:__init__", params )
+	print( "TableViewCell:__init__", params )
 	params = params or {}
 	if params.labelText==nil then params.labelText="" end
 	if params.detailText==nil then params.detailText="" end

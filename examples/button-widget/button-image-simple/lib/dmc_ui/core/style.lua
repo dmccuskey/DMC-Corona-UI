@@ -81,8 +81,10 @@ Patch.addPatch( 'print-output' )
 
 local ObjectBase = Objects.ObjectBase
 
+local assert, tostring = assert, tostring
 local sfmt = string.format
 local tinsert = table.insert
+local type = type
 
 --== To be set in initialize()
 local Style = nil
@@ -201,6 +203,8 @@ function BaseStyle:__init__( params )
 
   if self.is_class then return end
 
+  self._sc_tmp_params = params
+
 	self._isInitialized = false
 	self._isClearing = false
 	self._isDestroying = false
@@ -210,20 +214,17 @@ function BaseStyle:__init__( params )
 		params.inherit = self:getBaseStyle( params.data )
 	end
 
-	self._inherit = params.inherit
+	self._inherit = nil
 	self._inherit_f = nil
 
 	-- parent style
-	self._parent = params.parent
+	self._parent = nil
 	self._parent_f = nil
 
 	-- widget delegate
-	self._widget = params.widget
+	self._widget = nil
 
-	self._onPropertyChange_f = params.onPropertyChange
-
-	self._tmp_data = params.data -- temporary save of data
-	self._tmp_dataSrc = params.dataSrc -- temporary save of data
+	self._onPropertyChange_f = nil
 
 	self._name = params.name
 	self._debugOn = params.debugOn
@@ -232,34 +233,44 @@ function BaseStyle:__init__( params )
 	self._anchorX = params.anchorX
 	self._anchorY = params.anchorY
 end
+--[[
+function BaseStyle:__undoInit__()
+	-- print( "BaseStyle:__undoInit__" )
+	--==--
+	self:superCall( '__undoInit__' )
+end
+--]]
+
 
 function BaseStyle:__initComplete__()
 	-- print( "BaseStyle:__initComplete__", self )
 	self:superCall( '__initComplete__' )
 	--==--
-	self._isDestroying = false
+	local tmp = self._sc_tmp_params
+	self._sc_tmp_params = nil
 
-	local data = self:_prepareData( self._tmp_data,
-		self._tmp_dataSrc, {inherit=self._inherit} )
-	self._tmp_data = nil
-	self._tmp_dataSrc = nil
+	-- create children
+	local data = self:_prepareData( tmp.data,
+		tmp.dataSrc, {inherit=tmp.inherit} )
 	self:_parseData( data )
 
 	-- do this after style/children constructed --
 
-	self.inherit = self._inherit -- use setter
-	self.parent = self._parent -- use setter
-	self.widget = self._widget -- use setter
+	self.onPropertyChange = tmp.onPropertyChange -- use setter
+
+	self.inherit = tmp.inherit -- use setter
+	self.parent = tmp.parent -- use setter
+	self.widget = tmp.widget -- use setter
 
 	assert( self:verifyProperties(), sfmt( "Missing properties for Style '%s'", tostring(self.class) ) )
 
+	self._isDestroying = false
 	self._isInitialized = true
 end
 
 function BaseStyle:__undoInitComplete__()
 	-- print( "BaseStyle:__undoInitComplete__", self )
 	--==--
-
 	self._isDestroying = true
 
 	self:_dispatchDestroyEvent()
@@ -267,9 +278,9 @@ function BaseStyle:__undoInitComplete__()
 	self.widget = nil
 	self.parent = nil
 	self.inherit = nil
+	self.onPropertyChange = nil
 
 	self:_destroyChildren()
-
 	--==--
 	self:superCall( '__undoInitComplete__' )
 end
@@ -747,7 +758,8 @@ end
 function BaseStyle.__setters:widget( value )
 	-- print( "BaseStyle.__setters:widget", value )
 	-- TODO: update to check class, not table
-	assert( value==nil or type(value)=='table' )
+	local t = type(value)
+	assert( t=='nil' or t=='table' )
 	self._widget = value
 end
 
@@ -756,7 +768,8 @@ end
 --
 function BaseStyle.__setters:onPropertyChange( func )
 	-- print( "BaseStyle.__setters:onPropertyChange", func )
-	assert( type(func)=='function' )
+	local t = type(func)
+	assert( t=='nil' or t=='function' )
 	--==--
 	self._onPropertyChange_f = func
 end
@@ -1091,6 +1104,8 @@ end
 --
 function BaseStyle:_dispatchDestroyEvent( prop, value )
 	-- print( "BaseStyle:_dispatchDestroyEvent", prop, value, self )
+	local widget = self._widget
+	local callback = self._onPropertyChange_f
 
 	local e = self:createEvent( self.STYLE_DESTROYED )
 

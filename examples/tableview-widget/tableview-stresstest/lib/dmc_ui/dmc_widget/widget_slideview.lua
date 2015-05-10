@@ -185,35 +185,28 @@ end
 
 -- __createView__()
 --
+--[[
 function SlideView:__createView__()
 	-- print( "SlideView:__createView__" )
 	self:superCall( '__createView__' )
 	--==--
-
 	local W,H = self._width, self._height
 	local H_CENTER, V_CENTER = W*0.5, H*0.5
-
 	local o, dg, tmp  -- object, display group, tmp
-
 end
-
 function SlideView:__undoCreateView__()
 	-- print( "SlideView:__undoCreateView__" )
-
 	local o
-
 	--==--
 	self:superCall( '__undoCreateView__' )
 end
+--]]
 
 
 -- __initComplete__()
 --
 function SlideView:__initComplete__()
 	--print( "SlideView:__initComplete__" )
-
-	local o, f
-
 
 	self:setState( self.STATE_CREATE )
 	self:gotoState( self.STATE_AT_REST )
@@ -222,12 +215,13 @@ function SlideView:__initComplete__()
 	self:superCall( '__initComplete__' )
 end
 
+--[[
 function SlideView:__undoInitComplete__()
 	--print( "SlideView:__undoInitComplete__" )
-
 	--==--
 	self:superCall( '__undoInitComplete__' )
 end
+--]]
 
 --== END: Setup DMC Objects
 --======================================================--
