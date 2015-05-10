@@ -83,6 +83,8 @@ module_config = {
 			"dmc_ui/manager/keyboard_mgr.lua",
 
 			"dmc_ui/theme/default/background/background.png",
+			"dmc_ui/theme/default/background/nine-slice-sheet.lua",
+			"dmc_ui/theme/default/background/nine-slice-sheet.png",
 			"dmc_ui/theme/default/textfield/textfield-sheet.lua",
 			"dmc_ui/theme/default/textfield/textfield-sheet.png",
 
