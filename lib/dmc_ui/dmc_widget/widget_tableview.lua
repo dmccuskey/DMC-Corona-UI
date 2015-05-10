@@ -129,11 +129,14 @@ local function createRecords( list, idx, count, tinsert )
 end
 
 
-local function removeRecords( list, idx, count, tremove )
-	-- print( "removeRecords", idx, count )
-	if idx<=count then
-		tremove( list, idx )
-		return removeRecords( list, idx+1, count, tremove )
+-- remove records from end moving forward
+-- idx2, idx1 – indexes, inclusive
+--
+local function removeRecords( list, idx2, idx1, tremove )
+	-- print( "removeRecords", idx2, idx1, #list )
+	assert( idx2>=idx1 )
+	for i=idx2,idx1,-1 do
+		tremove( list, i )
 	end
 end
 
@@ -307,7 +310,7 @@ end
 function TableView:__undoInitComplete__()
 	-- print( "TableView:__undoInitComplete__" )
 
-	self:deleteAllItems()
+	self:removeAllRows()
 
 	self._rowItemRecords = nil
 	self._renderedTableCells = nil
@@ -572,6 +575,21 @@ function TableView:reloadData()
 	self._rowItemRecords = records
 
 	self:_renderDisplay{ clearAll=true }
+end
+
+--== :removeAllRows
+
+--- remove all rows from the tableview.
+--
+-- @within Methods
+-- @function :removeAllRows
+-- @usage widget:removeAllRows()
+
+function TableView:removeAllRows()
+	-- print( "TableView:removeAllRows" )
+	local records = self._rowItemRecords
+	self:_unrenderAllTableCells( self._renderedTableCells )
+	removeRecords( records, #records, 1, tremove )
 end
 
 --== :removeRowAt
