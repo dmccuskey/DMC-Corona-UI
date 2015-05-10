@@ -318,6 +318,16 @@ module_config = {
 				}
 			},
 			{
+				"exp_dir": "text-widget/text-stresstest",
+				"requires": [],
+				"mod_dir_map": {
+					"default_dir": "",
+					"libs": {
+						"dmc-corona-boot":""
+					}
+				}
+			},
+			{
 				"exp_dir": "text-widget/text-styled",
 				"requires": [],
 				"mod_dir_map": {
