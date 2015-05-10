@@ -76,6 +76,8 @@ local WidgetBase = require( ui_find( 'core.widget' ) )
 --== Setup, Constants
 
 
+local newImage = display.newImage
+
 --== To be set in initialize()
 local dUI = nil
 
@@ -387,55 +389,55 @@ function NineSliceView:_createImageSlices( sheet, frames )
 	-- put on lower layer for overlap
 
 	-- TL
-	o = display.newImage( sheet, frames.topLeft )
+	o = newImage( sheet, frames.topLeft )
 	o.anchorX, o.anchorY = 0,0
 	dg:insert( o )
 	self._tl = o
 
 	-- TM
-	o = display.newImage( sheet, frames.topMiddle )
+	o = newImage( sheet, frames.topMiddle )
 	o.anchorX, o.anchorY = 0,0
 	dg:insert( o )
 	self._tm = o
 
 	-- TR
-	o = display.newImage( sheet, frames.topRight )
+	o = newImage( sheet, frames.topRight )
 	o.anchorX, o.anchorY = 0,0
 	dg:insert( o )
 	self._tr = o
 
 	-- ML
-	o = display.newImage( sheet, frames.middleLeft )
+	o = newImage( sheet, frames.middleLeft )
 	o.anchorX, o.anchorY = 0,0
 	dg:insert( o )
 	self._ml = o
 
 	-- MM
-	o = display.newImage( sheet, frames.middleMiddle )
+	o = newImage( sheet, frames.middleMiddle )
 	o.anchorX, o.anchorY = 0,0
 	dg:insert( o )
 	self._mm = o
 
 	-- MR
-	o = display.newImage( sheet, frames.middleRight )
+	o = newImage( sheet, frames.middleRight )
 	o.anchorX, o.anchorY = 0,0
 	dg:insert( o )
 	self._mr = o
 
 	-- BL
-	o = display.newImage( sheet, frames.bottomLeft )
+	o = newImage( sheet, frames.bottomLeft )
 	o.anchorX, o.anchorY = 0,0
 	dg:insert( o )
 	self._bl = o
 
 	-- BM
-	o = display.newImage( sheet, frames.bottomMiddle )
+	o = newImage( sheet, frames.bottomMiddle )
 	o.anchorX, o.anchorY = 0,0
 	dg:insert( o )
 	self._bm = o
 
 	-- BR
-	o = display.newImage( sheet, frames.bottomRight )
+	o = newImage( sheet, frames.bottomRight )
 	o.anchorX, o.anchorY = 0,0
 	dg:insert( o )
 	self._br = o

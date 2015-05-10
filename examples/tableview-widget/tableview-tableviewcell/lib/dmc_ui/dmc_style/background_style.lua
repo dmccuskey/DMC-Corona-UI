@@ -924,7 +924,7 @@ end
 
 function BackgroundStyle:_destroyChildren()
 	-- print( 'BackgroundStyle:_destroyChildren', self )
-	self:_destroyView()
+	self:_destroyView( self._view )
 end
 
 

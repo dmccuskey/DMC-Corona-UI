@@ -75,6 +75,8 @@ local WidgetBase = require( ui_find( 'core.widget' ) )
 --====================================================================--
 --== Setup, Constants
 
+local newRect = display.newRect
+local unpack = unpack
 
 --== To be set in initialize()
 local dUI = nil
@@ -131,7 +133,7 @@ function RectangleView:__init__( params )
 
 	-- properties stored in Style
 
-	self._fillColor_dirty = true
+	self._fillColor_dirty=true
 	self._strokeColor_dirty=true
 	self._strokeWidth_dirty=true
 
@@ -155,7 +157,7 @@ function RectangleView:__createView__()
 	-- print( "RectangleView:__createView__" )
 	self:superCall( '__createView__' )
 	--==--
-	local o = display.newRect( 0,0,0,0 )
+	local o = newRect( 0,0,0,0 )
 	o.anchorX, o.anchorY = 0.5, 0.5
 	self._dgBg:insert( o )
 	self._rectBg = o
@@ -308,7 +310,7 @@ function RectangleView:stylePropertyChangeHandler( event )
 		self._anchorX_dirty=true
 		self._anchorY_dirty=true
 
-		self._fillColor_dirty = true
+		self._fillColor_dirty=true
 		self._strokeColor_dirty=true
 		self._strokeWidth_dirty=true
 

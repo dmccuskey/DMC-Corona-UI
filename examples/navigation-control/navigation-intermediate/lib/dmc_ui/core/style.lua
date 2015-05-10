@@ -214,7 +214,8 @@ function BaseStyle:__init__( params )
 		params.inherit = self:getBaseStyle( params.data )
 	end
 
-	self._inherit = nil
+	-- @TODO: fix inherit,
+	self._inherit = params.inherit
 	self._inherit_f = nil
 
 	-- parent style
@@ -252,6 +253,7 @@ function BaseStyle:__initComplete__()
 	-- create children
 	local data = self:_prepareData( tmp.data,
 		tmp.dataSrc, {inherit=tmp.inherit} )
+	-- @TODO: fix inherit,
 	self:_parseData( data )
 
 	-- do this after style/children constructed --
