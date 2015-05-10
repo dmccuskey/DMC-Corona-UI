@@ -601,7 +601,7 @@ function Text:_createText()
 	else
 		tw = w - style.marginX*2
 		text, fontSize = testTextLength( text, {
-			width=w, font=font,
+			width=tw, font=font,
 			fontSize=fontSize,
 			fontSizeMinimum=style.fontSizeMinimum
 		})
