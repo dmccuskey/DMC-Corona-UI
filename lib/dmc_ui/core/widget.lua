@@ -252,6 +252,7 @@ end
 
 function View:__undoInitComplete__()
 	-- print( "View:__undoInitComplete__" )
+	self:_unloadViews()
 
 	self.delegate = nil
 	self.style = nil
@@ -512,6 +513,8 @@ which are permanent to functionality, eg NavBar
 --]]
 function View:_loadViews() end
 
+
+function View:_unloadViews() end
 
 
 --======================================================--
