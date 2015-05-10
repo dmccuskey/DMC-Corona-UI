@@ -76,6 +76,7 @@ local WidgetBase = require( ui_find( 'core.widget' ) )
 --== Setup, Constants
 
 
+local newRoundedRect = display.newRoundedRect
 local unpack = unpack
 
 --== To be set in initialize()
@@ -158,7 +159,7 @@ function RoundedView:__createView__()
 	-- print( "RoundedView:__createView__" )
 	self:superCall( '__createView__' )
 	--==--
-	local o = display.newRoundedRect( 0,0,0,0,1 )
+	local o = newRoundedRect( 0,0,0,0,1 )
 	self._dgBg:insert( o )
 	self._rndBg = o
 end

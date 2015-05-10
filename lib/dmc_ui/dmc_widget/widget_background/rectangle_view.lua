@@ -75,6 +75,8 @@ local WidgetBase = require( ui_find( 'core.widget' ) )
 --====================================================================--
 --== Setup, Constants
 
+local newRect = display.newRect
+local unpack = unpack
 
 --== To be set in initialize()
 local dUI = nil
@@ -155,7 +157,7 @@ function RectangleView:__createView__()
 	-- print( "RectangleView:__createView__" )
 	self:superCall( '__createView__' )
 	--==--
-	local o = display.newRect( 0,0,0,0 )
+	local o = newRect( 0,0,0,0 )
 	o.anchorX, o.anchorY = 0.5, 0.5
 	self._dgBg:insert( o )
 	self._rectBg = o
