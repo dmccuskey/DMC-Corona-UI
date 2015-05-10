@@ -133,7 +133,7 @@ function RectangleView:__init__( params )
 
 	-- properties stored in Style
 
-	self._fillColor_dirty = true
+	self._fillColor_dirty=true
 	self._strokeColor_dirty=true
 	self._strokeWidth_dirty=true
 
@@ -310,7 +310,7 @@ function RectangleView:stylePropertyChangeHandler( event )
 		self._anchorX_dirty=true
 		self._anchorY_dirty=true
 
-		self._fillColor_dirty = true
+		self._fillColor_dirty=true
 		self._strokeColor_dirty=true
 		self._strokeWidth_dirty=true
 

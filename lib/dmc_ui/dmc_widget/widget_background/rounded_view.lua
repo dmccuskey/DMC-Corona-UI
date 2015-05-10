@@ -134,8 +134,8 @@ function RoundedView:__init__( params )
 
 	-- properties stored in Style
 
-	self._cornerRadius_dirty = true
-	self._fillColor_dirty = true
+	self._cornerRadius_dirty=true
+	self._fillColor_dirty=true
 	self._strokeColor_dirty=true
 	self._strokeWidth_dirty=true
 
@@ -313,8 +313,8 @@ function RoundedView:stylePropertyChangeHandler( event )
 		self._anchorX_dirty=true
 		self._anchorY_dirty=true
 
-		self._cornerRadius_dirty = true
-		self._fillColor_dirty = true
+		self._cornerRadius_dirty=true
+		self._fillColor_dirty=true
 		self._strokeColor_dirty=true
 		self._strokeWidth_dirty=true
 
