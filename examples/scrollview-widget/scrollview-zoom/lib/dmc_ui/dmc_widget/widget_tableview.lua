@@ -129,11 +129,14 @@ local function createRecords( list, idx, count, tinsert )
 end
 
 
-local function removeRecords( list, idx, count, tremove )
-	-- print( "removeRecords", idx, count )
-	if idx<=count then
-		tremove( list, idx )
-		return removeRecords( list, idx+1, count, tremove )
+-- remove records from end moving forward
+-- idx2, idx1 – indexes, inclusive
+--
+local function removeRecords( list, idx2, idx1, tremove )
+	-- print( "removeRecords", idx2, idx1, #list )
+	assert( idx2>=idx1 )
+	for i=idx2,idx1,-1 do
+		tremove( list, i )
 	end
 end
 
@@ -307,7 +310,7 @@ end
 function TableView:__undoInitComplete__()
 	-- print( "TableView:__undoInitComplete__" )
 
-	self:deleteAllItems()
+	self:removeAllRows()
 
 	self._rowItemRecords = nil
 	self._renderedTableCells = nil
@@ -356,21 +359,6 @@ TableView.__getters.delegate = WidgetHelp.__getters.delegate
 TableView.__setters.delegate = WidgetHelp.__setters.delegate
 
 
-
--- block horizontal motion change
---
-function TableView.__setters:horizontalScrollEnabled( value )
-	-- print( "TableView.__setters:horizontalScrollEnabled", value )
-	ScrollView.__setters.horizontalScrollEnabled( self, false )
-end
-
--- block width change
---
-function TableView.__setters:scrollWidth( value )
-	-- print( "TableView.__setters:scrollWidth", value )
-	ScrollView.__setters.scrollWidth( self, 0 )
-end
-
 --== .estimatedRowHeight
 
 --- set/get the estimated height for each row.
@@ -388,6 +376,15 @@ function TableView.__setters:estimatedRowHeight( value )
 	assert( type(value)=='number' and value > 0 )
 	--==--
 	self._estimatedRowHeight = value
+end
+
+--== .horizontalScrollEnabled
+
+-- block horizontal motion change
+--
+function TableView.__setters:horizontalScrollEnabled( value )
+	-- print( "TableView.__setters:horizontalScrollEnabled", value )
+	ScrollView.__setters.horizontalScrollEnabled( self, false )
 end
 
 --== .lowerOffset
@@ -435,6 +432,19 @@ ScrollView.__setters.marginX = WidgetHelp.__setters.marginX
 ScrollView.__getters.marginY = WidgetHelp.__getters.marginY
 ScrollView.__setters.marginY = WidgetHelp.__setters.marginY
 
+--== .renderMargin
+
+-- set the additional boundary beyond the view which defines the boundary for rendering table cells.
+--
+-- @within Properties
+-- @function .renderMargin
+-- @usage widget.renderMargin = 100
+
+function TableView.__setters:renderMargin( value )
+	-- print( "TableView.__setters:renderMargin", value )
+	self._renderMargin = value
+end
+
 --== .scrollEnabled
 
 --- set/get control TableView scrolling motion.
@@ -452,6 +462,15 @@ end
 function ScrollView.__setters:scrollEnabled( value )
 	-- print( "ScrollView.__setters:scrollEnabled", value )
 	ScrollView.__setters.verticalScrollEnabled( self, value )
+end
+
+--== .scrollWidth
+
+-- block width change
+--
+function TableView.__setters:scrollWidth( value )
+	-- print( "TableView.__setters:scrollWidth", value )
+	ScrollView.__setters.scrollWidth( self, 0 )
 end
 
 --== .upperOffset
@@ -473,18 +492,7 @@ function TableView.__setters:upperOffset( value )
 	self.upperVerticalOffset = value
 end
 
---== .renderMargin
 
--- set the additional boundary beyond the view which defines the boundary for rendering table cells.
---
--- @within Properties
--- @function .renderMargin
--- @usage widget.renderMargin = 100
-
-function TableView.__setters:renderMargin( value )
-	-- print( "TableView.__setters:renderMargin", value )
-	self._renderMargin = value
-end
 
 --== :getContentPosition
 
@@ -499,27 +507,6 @@ function TableView:getContentPosition()
 	-- print( "TableView:getContentPosition" )
 	local _, y = ScrollView.getContentPosition( self )
 	return y
-end
-
---== :setContentPosition
-
---- Scroll to a specific y position.
--- Moves content position to y over a certain time duration. Use this when you want to scroll to a specific Y location.
---
--- @within Methods
--- @function :setContentPosition
--- @tab params table of parameters
--- @int params.y the y position to scroll to
--- @int[opt=500] params.time the duration for scroll animation, in milliseconds. set to 0 for immediate transition
--- @func[opt] params.onComplete a function to call when the animation is complete
--- @usage widget:setContentPosition( { y=-35 } )
-
-function TableView:setContentPosition( params )
-	-- print( "TableView:setContentPosition" )
-	assert( type(params)=='table' )
-	params.x = nil
-	--==--
-	ScrollView.setContentPosition( self, params )
 end
 
 --== :getRowAt
@@ -590,6 +577,21 @@ function TableView:reloadData()
 	self:_renderDisplay{ clearAll=true }
 end
 
+--== :removeAllRows
+
+--- remove all rows from the tableview.
+--
+-- @within Methods
+-- @function :removeAllRows
+-- @usage widget:removeAllRows()
+
+function TableView:removeAllRows()
+	-- print( "TableView:removeAllRows" )
+	local records = self._rowItemRecords
+	self:_unrenderAllTableCells( self._renderedTableCells )
+	removeRecords( records, #records, 1, tremove )
+end
+
 --== :removeRowAt
 
 --- remove existing row from table.
@@ -658,6 +660,27 @@ function TableView:scrollToRowAt( idx, params )
 		self:_renderDisplay{ clearAll=false }
 	end
 
+end
+
+--== :setContentPosition
+
+--- Scroll to a specific y position.
+-- Moves content position to y over a certain time duration. Use this when you want to scroll to a specific Y location.
+--
+-- @within Methods
+-- @function :setContentPosition
+-- @tab params table of parameters
+-- @int params.y the y position to scroll to
+-- @int[opt=500] params.time the duration for scroll animation, in milliseconds. set to 0 for immediate transition
+-- @func[opt] params.onComplete a function to call when the animation is complete
+-- @usage widget:setContentPosition( { y=-35 } )
+
+function TableView:setContentPosition( params )
+	-- print( "TableView:setContentPosition" )
+	assert( type(params)=='table' )
+	params.x = nil
+	--==--
+	ScrollView.setContentPosition( self, params )
 end
 
 
