@@ -298,6 +298,16 @@ module_config = {
 				}
 			},
 			{
+				"exp_dir": "tableview-widget/tableview-stresstest",
+				"requires": [],
+				"mod_dir_map": {
+					"default_dir": "",
+					"libs": {
+						"dmc-corona-boot":""
+					}
+				}
+			},
+			{
 				"exp_dir": "text-widget/text-simple",
 				"requires": [],
 				"mod_dir_map": {
