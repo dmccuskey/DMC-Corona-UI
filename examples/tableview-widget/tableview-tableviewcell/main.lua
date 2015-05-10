@@ -226,7 +226,6 @@ end
 
 
 
-
 --===================================================================--
 --== Main
 --===================================================================--
@@ -279,4 +278,12 @@ tV.x, tV.y = H_CENTER-DIMS.w*0.5, V_CENTER-(DIMS.h*SHOW)*0.5
 tV:addEventListener( tV.EVENT, onEvent )
 
 tV:reloadData()
+
+
+
+timer.performWithDelay( 10000, function()
+	print( "Main: removing table" )
+	tV:removeSelf()
+end)
+
 
