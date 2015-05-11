@@ -570,7 +570,6 @@ end
 
 
 
-
 function TableViewCell:_removeTextDetail()
 	-- print( "TableViewCell:_removeTextDetail" )
 	local o = self._wgtTextDetail
@@ -586,7 +585,7 @@ function TableViewCell:_createTextDetail()
 
 	self:_removeTextDetail()
 
-	local o = Widget.newText{
+	o = Widget.newText{
 		defaultStyle = self.defaultStyle.label
 	}
 	o:setAnchor( o.CenterLeftReferencePoint )
@@ -617,7 +616,7 @@ function TableViewCell:_createTextLabel()
 
 	self:_removeTextLabel()
 
-	local o = Widget.newText{
+	o = Widget.newText{
 		defaultStyle = self.defaultStyle.label
 	}
 	o:setAnchor( o.TopLeftReferencePoint )
