@@ -86,10 +86,9 @@ local Scroller = require( ui_find( 'dmc_widget.widget_scrollview.scroller' ) )
 
 Patch.addPatch( 'print-output' )
 
-local newClass = Objects.newClass
-
 local circle
 
+local newRect = display.newRect
 local mmin = math.min
 local tcancel = timer.cancel
 local tdelay = timer.performWithDelay
@@ -269,16 +268,12 @@ function ScrollView:__createView__()
 	-- print( "ScrollView:__createView__" )
 	self:superCall( '__createView__' )
 	--==--
-	local o
-
 	-- local background, gesture hit area
-
-	o = display.newRect( 0,0,0,0 )
+	local o = newRect( 0,0,0,0 )
 	o.anchorX, o.anchorY = 0, 0
 	o:setFillColor( 1,0,0,0.4 )
 	self._dgBg:insert( o )
 	self._rectBg = o
-
 end
 
 function ScrollView:__undoCreateView__()
@@ -296,6 +291,8 @@ function ScrollView:__initComplete__()
 	self:superCall( '__initComplete__' )
 	--==--
 	local tmp = self._sv_tmp_params
+	self._sv_tmp_params = nil
+
 	local o, f
 
 	local delegate = {
@@ -349,7 +346,6 @@ function ScrollView:__initComplete__()
 	self.upperVerticalOffset = tmp.upperVerticalOffset
 	self.lowerVerticalOffset = tmp.lowerVerticalOffset
 
-	self._sv_tmp_params = nil
 end
 
 function ScrollView:__undoInitComplete__()
