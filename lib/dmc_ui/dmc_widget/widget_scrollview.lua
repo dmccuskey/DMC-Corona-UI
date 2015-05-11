@@ -253,16 +253,15 @@ function ScrollView:__init__( params )
 
 	self._scroller = nil -- our scroll area
 	self._scroller_dirty=true
-
 end
 
 --[[
---]]
 function ScrollView:__undoInit__()
 	-- print( "ScrollView:__undoInit__" )
 	--==--
 	self:superCall( '__undoInit__' )
 end
+--]]
 
 --== createView
 
@@ -386,7 +385,7 @@ end
 --====================================================================--
 --== Static Methods
 
-
+--
 function ScrollView.initialize( manager, params )
 	-- print( "ScrollView.initialize" )
 	dUI = manager
@@ -1098,7 +1097,7 @@ end
 
 
 function ScrollView:_removeScroller()
-	-- print( "ScrollView:_removeScroller" )
+	-- print( "ScrollView:_removeScroller", self )
 	local o = self._scroller
 	if not o then return end
 	o:removeSelf()
