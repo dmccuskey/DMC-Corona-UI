@@ -90,6 +90,7 @@ local newClass = Objects.newClass
 
 local circle
 
+local newRect = display.newRect
 local mmin = math.min
 local tcancel = timer.cancel
 local tdelay = timer.performWithDelay
@@ -257,12 +258,12 @@ function ScrollView:__init__( params )
 end
 
 --[[
---]]
 function ScrollView:__undoInit__()
 	-- print( "ScrollView:__undoInit__" )
 	--==--
 	self:superCall( '__undoInit__' )
 end
+--]]
 
 --== createView
 
@@ -273,8 +274,7 @@ function ScrollView:__createView__()
 	local o
 
 	-- local background, gesture hit area
-
-	o = display.newRect( 0,0,0,0 )
+	o = newRect( 0,0,0,0 )
 	o.anchorX, o.anchorY = 0, 0
 	o:setFillColor( 1,0,0,0.4 )
 	self._dgBg:insert( o )
@@ -361,6 +361,7 @@ function ScrollView:__undoInitComplete__()
 	self:_removeAxisMotionY()
 
 	self:_removeScaleMotion()
+	self._scale_f = nil
 
 	o = self._panGesture
 	o:removeEventListener( o.EVENT, self._gesture_f )
