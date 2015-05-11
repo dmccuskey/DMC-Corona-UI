@@ -353,25 +353,27 @@ function ScrollView:__initComplete__()
 end
 
 function ScrollView:__undoInitComplete__()
-	--print( "ScrollView:__undoInitComplete__" )
+	-- print( "ScrollView:__undoInitComplete__" )
 	local o, f
+
+	self:_removeScaleMotion()
+	self._scale_f = nil
 
 	self:_removeAxisMotionX()
 	self:_removeAxisMotionY()
-
-	self:_removeScaleMotion()
+	self._axis_f = nil
 
 	o = self._panGesture
 	o:removeEventListener( o.EVENT, self._gesture_f )
+	o:removeSelf()
 	self._panGesture = nil
 
 	o = self._pinchGesture
 	o:removeEventListener( o.EVENT, self._gesture_f )
+	o:removeSelf()
 	self._pinchGesture = nil
 
 	self._gesture_f = nil
-
-	self:_removeScroller()
 
 	--==--
 	self:superCall( '__undoInitComplete__' )
@@ -1120,6 +1122,9 @@ function ScrollView:_loadViews()
 	self:_createScroller()
 end
 
+function ScrollView:_unloadViews()
+	self:_removeScroller()
+end
 
 
 function ScrollView:__commitProperties__()
