@@ -78,6 +78,8 @@ local WidgetBase = require( ui_find( 'core.widget' ) )
 --== Setup, Constants
 
 
+local newImageRect = display.newImageRect
+
 -- these are set later
 local dUI = nil
 local Widget = nil
@@ -318,10 +320,11 @@ function TableViewCell:__initComplete__()
 end
 
 function TableViewCell:__undoInitComplete__()
-	--print( "TableViewCell:__undoInitComplete__" )
+	-- print( "TableViewCell:__undoInitComplete__" )
 	self:_removeTextLabel()
 	self:_removeTextDetail()
 	self:_removeBackground()
+	self:_removeAccessory()
 	--==--
 	self:superCall( '__undoInitComplete__' )
 end
@@ -521,20 +524,21 @@ end
 
 
 
-function TableViewCell:_removeAccessory( obj )
-	if not obj then return end
-	obj:removeSelf()
-	return nil
+function TableViewCell:_removeAccessory()
+	-- print( "TableViewCell:_removeAccessory" )
+	local o = self._accessoryObject
+	if not o then return end
+	o:removeSelf()
+	self._accessoryObject = nil
 end
 
-function TableViewCell:_loadAccessory( name, obj )
-	-- print( "TableViewCell:_loadAccessory" )
+function TableViewCell:_loadAccessory( name )
+	-- print( "TableViewCell:_loadAccessory", name )
+	self:_removeAccessory()
 	local tbl = TableViewCell.ACCESSORY
-	if obj then obj:removeSelf() end
 	local info = tbl[ name ]
 	local scale = 20/info.h
-	local img = display.newImageRect( info.file, info.w*scale, info.h*scale )
-	return img
+	return newImageRect( info.file, info.w*scale, info.h*scale )
 end
 
 
@@ -777,17 +781,17 @@ function TableViewCell:__commitProperties__()
 
 	if self._cellAccessory_dirty then
 		local accessory = style.accessory
-		local accessObj = self._accessoryObject
+		local accessObj
 
 		if type(accessory)=='string' then
 			if accessory==TableViewCell.CHECKMARK then
-				accessObj = self:_loadAccessory( accessory, accessObj )
+				accessObj = self:_loadAccessory( accessory )
 			elseif accessory==TableViewCell.DETAIL_BUTTON then
-				accessObj = self:_loadAccessory( accessory, accessObj )
+				accessObj = self:_loadAccessory( accessory )
 			elseif accessory==TableViewCell.DISCLOSURE_INDICATOR then
-				accessObj = self:_loadAccessory( accessory, accessObj )
+				accessObj = self:_loadAccessory( accessory )
 			else
-				accessObj=self:_removeAccessory( accessObj )
+				accessObj=self:_removeAccessory()
 			end
 		else
 			-- @TODO, allow other accessory objects
