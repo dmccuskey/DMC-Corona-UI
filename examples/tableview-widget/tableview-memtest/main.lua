@@ -22,8 +22,6 @@ local dUI = require 'lib.dmc_ui'
 
 local Perf = require 'lib.dmc_corona.dmc_performance'
 
-local tdelay = timer.performWithDelay
-
 
 
 --===================================================================--
@@ -39,9 +37,9 @@ local H_CENTER, V_CENTER = W*0.5, H*0.5
 
 local mrandom = math.random
 local mfloor = math.floor
-local tinsert = table.insert
-local tremove = table.remove
+local tinsert, tremove = table.insert, table.remove
 local tstr = tostring
+local tdelay = timer.performWithDelay
 
 local OFFSET = 100
 local DIMS = {w=280,h=30} -- dimensions of a row item
@@ -415,6 +413,6 @@ function run_example4()
 
 end
 
--- run_example4()
+run_example4()
 
 
