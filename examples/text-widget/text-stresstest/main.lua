@@ -102,6 +102,7 @@ function run_example1()
 	end
 
 	print( "Main: Starting" )
+	Perf.watchMemory( 2500 )
 	createItem()
 
 end
