@@ -130,7 +130,7 @@ module_config = {
 				}
 			},
 			{
-				"exp_dir": "background-widget/background-stresstest",
+				"exp_dir": "background-widget/background-memtest",
 				"requires": [
 					"dmc-performance"
 				],
@@ -262,7 +262,7 @@ module_config = {
 				}
 			},
 			{
-				"exp_dir": "scrollview-widget/scrollview-stresstest",
+				"exp_dir": "scrollview-widget/scrollview-memtest",
 				"requires": [
 					"dmc-performance"
 				],
@@ -324,7 +324,7 @@ module_config = {
 				}
 			},
 			{
-				"exp_dir": "tableview-widget/tableview-stresstest",
+				"exp_dir": "tableview-widget/tableview-memtest",
 				"requires": [
 					"dmc-performance"
 				],
@@ -346,7 +346,7 @@ module_config = {
 				}
 			},
 			{
-				"exp_dir": "text-widget/text-stresstest",
+				"exp_dir": "text-widget/text-memtest",
 				"requires": [
 					"dmc-performance"
 				],
