@@ -20,7 +20,9 @@ print( "\n\n#########################################################\n\n" )
 
 local dUI = require 'lib.dmc_ui'
 
-local dmcPerf = require 'lib.dmc_corona.dmc_performance'
+local Perf = require 'lib.dmc_corona.dmc_performance'
+
+local tdelay = timer.performWithDelay
 
 
 
@@ -233,25 +235,7 @@ end
 --===================================================================--
 
 
--- get our table view data
-
 tableData = createDataArray()
-
-tableStyle = dUI.newTableViewCellStyle{
-	width=DIMS.w,
-	inactive={
-		background={
-			type='rectangle'
-		}
-	},
-	active={
-		background={
-			type='rectangle'
-		}
-	}
-}
-
--- setup tableview delegate/datasource helpers
 
 local delegate = {
 	numberOfRows=getRows,
@@ -265,48 +249,172 @@ local delegate = {
 	didSelectRow=onEvent,
 }
 
-local createWidget, destroyWidget
-local tdelay = timer.performWithDelay
-local DELAY = 250
-local count=0
-local tV
 
-createTable = function()
 
-	count=count+1
+--======================================================--
+--== stress test TableView Style
 
-	tV = dUI.newTableView{
-		width=DIMS.w,
-		height=DIMS.h*SHOW,
-		delegate=delegate,
-		estimatedRowHeight=DIMS.h,
-		autoMask=true
-	}
-	tV.x, tV.y = H_CENTER-DIMS.w*0.5, V_CENTER-(DIMS.h*SHOW)*0.5
+function run_example1()
 
-	tV:addEventListener( tV.EVENT, onEvent )
+	local createItem, destroyItem
+	local DELAY = 50
+	local count = 0
+	local o
 
-	tV:reloadData()
+	createItem = function()
+		count=count+1
+		-- o = dUI.newTableViewStyle()
 
-	tdelay( DELAY, function()
-		destroyTable()
-	end)
-
-end
-
-destroyTable = function()
-	tV:removeEventListener( tV.EVENT, onEvent )
-	tV:removeSelf()
-	if count%10==0 then
-		print( "completed: ", count )
+		tdelay( DELAY, function()
+			destroyItem()
+		end)
 	end
-	tdelay( DELAY, function()
-		createTable()
-	end)
+
+	destroyItem = function()
+		-- o:removeSelf()
+		o = nil
+		if count%10==0 then
+			print( "cycles completed: ", count )
+		end
+		tdelay( DELAY, function()
+			createItem()
+		end)
+	end
+
+	print( "Main: Starting" )
+	createItem()
+	Perf.watchMemory( 2500 )
 
 end
 
-print( "Main: Starting" )
--- dmcPerf.watchMemory( 2500 )
--- createTable()
+-- run_example1()
+
+
+--======================================================--
+--== stress test TableViewCell Style
+
+function run_example2()
+
+	local createItem, destroyItem
+	local DELAY = 250
+	local count = 0
+	local o
+
+	createItem = function()
+		count=count+1
+		o = dUI.newTableViewCellStyle()
+
+		tdelay( DELAY, function()
+			destroyItem()
+		end)
+	end
+
+	destroyItem = function()
+		o:removeSelf()
+		o = nil
+		if count%10==0 then
+			print( "cycles completed: ", count )
+		end
+		tdelay( DELAY, function()
+			createItem()
+		end)
+	end
+
+	print( "Main: Starting" )
+	createItem()
+	Perf.watchMemory( 2500 )
+
+end
+
+-- run_example2()
+
+
+--======================================================--
+--== stress test TableViewCell
+
+function run_example3()
+
+	local createItem, destroyItem
+	local DELAY = 100
+	local count = 0
+	local o
+
+	createItem = function()
+		count=count+1
+		o = dUI.newTableViewCell{}
+		o.x, o.y = H_CENTER, V_CENTER
+
+		tdelay( DELAY, function()
+			destroyItem()
+		end)
+	end
+
+	destroyItem = function()
+		o:removeSelf()
+		o = nil
+		if count%10==0 then
+			print( "cycles completed: ", count )
+		end
+		tdelay( DELAY, function()
+			createItem()
+		end)
+	end
+
+	print( "Main: Starting" )
+	createItem()
+	Perf.watchMemory( 2500 )
+
+end
+
+-- run_example3()
+
+
+--======================================================--
+--== stress test TableView
+
+function run_example4()
+
+	local createItem, destroyItem
+	local DELAY = 100
+	local count = 0
+	local o
+
+	createItem = function()
+		count=count+1
+		o = dUI.newTableView{
+			width=DIMS.w,
+			height=DIMS.h*SHOW,
+			delegate=delegate,
+			estimatedRowHeight=DIMS.h,
+			autoMask=false
+		}
+		o.x, o.y = H_CENTER-DIMS.w*0.5, V_CENTER-(DIMS.h*SHOW)*0.5
+		o:addEventListener( o.EVENT, onEvent )
+		o:reloadData()
+
+		tdelay( DELAY, function()
+			destroyItem()
+		end)
+	end
+
+	destroyItem = function()
+		o:removeEventListener( o.EVENT, onEvent )
+		o:removeSelf()
+		o = nil
+		if count%10==0 then
+			print( "cycles completed: ", count )
+		end
+		tdelay( DELAY, function()
+			createItem()
+		end)
+	end
+
+	print( "Main: Starting" )
+	createItem()
+	Perf.watchMemory( 2500 )
+
+end
+
+-- run_example4()
+
 
