@@ -268,6 +268,13 @@ function TableViewCell:__init__( params )
 	-- self._anchorX
 	-- self._anchorY
 
+	--== Object Refs ==--
+
+	-- these are other style objects
+	-- TableViewCellState
+	self._active = nil
+	self._inactive = nil
+
 end
 
 -- END: Setup DMC Objects
