@@ -80,8 +80,8 @@ function run_example1a()
 			anchorX=1,
 			anchorY=1,
 			view = {
-				sheetInfo='asset.image.cloud_button.button-sheet',
-				sheetImage='asset/image/cloud_button/button-sheet.png',
+				sheetInfo='asset.background.background-sheet',
+				sheetImage='asset/background/background-sheet.png',
 				offsetLeft=6,
 				offsetRight=7,
 				offsetTop=4,
