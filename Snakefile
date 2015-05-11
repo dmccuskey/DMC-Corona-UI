@@ -131,7 +131,9 @@ module_config = {
 			},
 			{
 				"exp_dir": "background-widget/background-stresstest",
-				"requires": [],
+				"requires": [
+					"dmc-performance"
+				],
 				"mod_dir_map": {
 					"default_dir": "",
 					"libs": {
@@ -261,7 +263,9 @@ module_config = {
 			},
 			{
 				"exp_dir": "scrollview-widget/scrollview-stresstest",
-				"requires": [],
+				"requires": [
+					"dmc-performance"
+				],
 				"mod_dir_map": {
 					"default_dir": "",
 					"libs": {
@@ -321,7 +325,9 @@ module_config = {
 			},
 			{
 				"exp_dir": "tableview-widget/tableview-stresstest",
-				"requires": [],
+				"requires": [
+					"dmc-performance"
+				],
 				"mod_dir_map": {
 					"default_dir": "",
 					"libs": {
@@ -341,7 +347,9 @@ module_config = {
 			},
 			{
 				"exp_dir": "text-widget/text-stresstest",
-				"requires": [],
+				"requires": [
+					"dmc-performance"
+				],
 				"mod_dir_map": {
 					"default_dir": "",
 					"libs": {
