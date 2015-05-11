@@ -156,7 +156,7 @@ function run_example2()
 
 	local createItem, destroyItem
 	local w, h = 200, 300
-	local DELAY = 250
+	local DELAY = 200
 	local count = 0
 	local o
 
@@ -182,6 +182,8 @@ function run_example2()
 		if count%10==0 then
 			print( "cycles completed: ", count )
 		end
+
+
 		tdelay( DELAY, function()
 			createItem()
 		end)

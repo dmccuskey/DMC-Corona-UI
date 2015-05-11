@@ -86,8 +86,6 @@ local Scroller = require( ui_find( 'dmc_widget.widget_scrollview.scroller' ) )
 
 Patch.addPatch( 'print-output' )
 
-local newClass = Objects.newClass
-
 local circle
 
 local newRect = display.newRect
@@ -254,7 +252,6 @@ function ScrollView:__init__( params )
 
 	self._scroller = nil -- our scroll area
 	self._scroller_dirty=true
-
 end
 
 --[[
@@ -271,15 +268,12 @@ function ScrollView:__createView__()
 	-- print( "ScrollView:__createView__" )
 	self:superCall( '__createView__' )
 	--==--
-	local o
-
 	-- local background, gesture hit area
-	o = newRect( 0,0,0,0 )
+	local o = newRect( 0,0,0,0 )
 	o.anchorX, o.anchorY = 0, 0
 	o:setFillColor( 1,0,0,0.4 )
 	self._dgBg:insert( o )
 	self._rectBg = o
-
 end
 
 function ScrollView:__undoCreateView__()
@@ -297,6 +291,8 @@ function ScrollView:__initComplete__()
 	self:superCall( '__initComplete__' )
 	--==--
 	local tmp = self._sv_tmp_params
+	self._sv_tmp_params = nil
+
 	local o, f
 
 	local delegate = {
@@ -350,30 +346,30 @@ function ScrollView:__initComplete__()
 	self.upperVerticalOffset = tmp.upperVerticalOffset
 	self.lowerVerticalOffset = tmp.lowerVerticalOffset
 
-	self._sv_tmp_params = nil
 end
 
 function ScrollView:__undoInitComplete__()
-	--print( "ScrollView:__undoInitComplete__" )
+	-- print( "ScrollView:__undoInitComplete__" )
 	local o, f
-
-	self:_removeAxisMotionX()
-	self:_removeAxisMotionY()
 
 	self:_removeScaleMotion()
 	self._scale_f = nil
 
+	self:_removeAxisMotionX()
+	self:_removeAxisMotionY()
+	self._axis_f = nil
+
 	o = self._panGesture
 	o:removeEventListener( o.EVENT, self._gesture_f )
+	o:removeSelf()
 	self._panGesture = nil
 
 	o = self._pinchGesture
 	o:removeEventListener( o.EVENT, self._gesture_f )
+	o:removeSelf()
 	self._pinchGesture = nil
 
 	self._gesture_f = nil
-
-	self:_removeScroller()
 
 	--==--
 	self:superCall( '__undoInitComplete__' )
@@ -387,7 +383,7 @@ end
 --====================================================================--
 --== Static Methods
 
-
+--
 function ScrollView.initialize( manager, params )
 	-- print( "ScrollView.initialize" )
 	dUI = manager
@@ -1099,7 +1095,7 @@ end
 
 
 function ScrollView:_removeScroller()
-	-- print( "ScrollView:_removeScroller" )
+	-- print( "ScrollView:_removeScroller", self )
 	local o = self._scroller
 	if not o then return end
 	o:removeSelf()
@@ -1122,6 +1118,9 @@ function ScrollView:_loadViews()
 	self:_createScroller()
 end
 
+function ScrollView:_unloadViews()
+	self:_removeScroller()
+end
 
 
 function ScrollView:__commitProperties__()

@@ -115,8 +115,6 @@ function StyleMix.__init__( self, params )
 	params = params or {}
 	--==--
 
-	--== Sanity Check ==--
-
 	if self.is_class then return end
 
 	--== Setup
@@ -125,11 +123,11 @@ function StyleMix.__init__( self, params )
 		print( "\n\n\n DOING THEME INIT: widget", self)
 	end
 	self:resetStyle( params )
-
 	if LOCAL_DEBUG then
 		print( "\n\n\n DONE WITH THEME INIT")
 	end
 end
+
 
 
 function StyleMix.__undoInit__( self )
