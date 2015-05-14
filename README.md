@@ -14,7 +14,6 @@ The module architecture is heavily object-oriented, but each module can be used 
 
 There are examples and documentation available for the modules. Look in the `examples` folder for available examples which can be run directly in the Corona SDK. Documentation and some simple screencasts of examples are online at: [docs.davidmccuskey.com](http://docs.davidmccuskey.com/dmc+corona+ui)
 
-
 **Questions or Comments**
 
 If you have questions or comments you can either (preferred order):
@@ -22,7 +21,6 @@ If you have questions or comments you can either (preferred order):
 * post an issue here on github
 * send a PM @ coronalabs.com: @dmccuskey
 * post to the Corona forums: http://forums.coronalabs.com
-
 
 **Issues**
 
@@ -32,17 +30,18 @@ If you have any issues, please post them here on github: [dmc-corona-ui issues](
 
 ## Installation & Use ##
 
-For easy installation, copy the following items to the same location anywhere in your Corona project:
+For easy installation, copy the following setup in your project:
 
-* The entire `dmc_corona` folder
-* The file `dmc_corona_boot.lua`
-* `dmc_corona.cfg`
-* The entire `dmc_ui` folder
-* The file `dmc_ui.lua`
+```lua
+dmc_corona.cfg
+dmc_corona_boot.lua
+lib/
+  dmc_ui.lua
+  dmc_corona/
+  dmc_ui/
+```
 
-`dmc-corona-ui` depends on `dmc-corona-library` for some of its functionality. It is included in this repo for convenience. 
-
-As in the examples, if you placed both items inside of a directory `lib`, the widgets module would be imported like so:
+With this setup the widgets module would be imported like so:
 
 ```lua
 local dUI = require 'lib.dmc_ui'
@@ -51,8 +50,7 @@ local button = dUI.newPushButton( params )
 ...
 ```
 
-
-As with `dmc-corona-library`, `dmc-corona-ui` has been designed to give a lot of flexibility where it is located in your project. For more information regarding the library and individual widgets, visit [DMC Corona UI](http://docs.davidmccuskey.com/dmc+corona+ui).
+For more detailed info about installation, visit [Install DMC Corona UI](http://docs.davidmccuskey.com/install+dmc-corona-ui).
 
 
 
