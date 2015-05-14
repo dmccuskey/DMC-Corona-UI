@@ -1,13 +1,18 @@
 # Overview #
 
-The DMC Corona UI library is collection of advanced widgets for the Corona SDK. They can be used in any size or type of application.
+The **DMC Corona UI** library is collection of advanced widgets for the Corona SDK. They can be used in any size or type of application.
 
 The module architecture is heavily object-oriented, but each module can be used with any style of coding. The OO-nature ensures that the modules can be easily re-used or modified as necessary.
 
+**Features**
+
+* Robust and efficient widgets
+* Cascading style sheets
+* Powerful controls
 
 **Documentation & Examples**
 
-There are examples and documentation available for the modules. Look in the `examples` folder for available examples which can be run directly in the Corona SDK. Documentation is online at: [docs.davidmccuskey.com](http://docs.davidmccuskey.com/dmc+corona+ui)
+There are examples and documentation available for the modules. Look in the `examples` folder for available examples which can be run directly in the Corona SDK. Documentation and some simple screencasts of examples are online at: [docs.davidmccuskey.com](http://docs.davidmccuskey.com/dmc+corona+ui)
 
 
 **Questions or Comments**
@@ -25,15 +30,17 @@ If you have any issues, please post them here on github: [dmc-corona-ui issues](
 
 
 
-
 ## Installation & Use ##
 
-For easy installation, copy the following items to the same location anywhere in your Corona project.
+For easy installation, copy the following items to the same location anywhere in your Corona project:
 
 * The entire `dmc_corona` folder
+* The file `dmc_corona_boot.lua`
+* `dmc_corona.cfg`
 * The entire `dmc_ui` folder
-* The `dmc_ui.lua` file
+* The file `dmc_ui.lua`
 
+`dmc-corona-ui` depends on `dmc-corona-library` for some of its functionality. It is included in this repo for convenience. 
 
 As in the examples, if you placed both items inside of a directory `lib`, the widgets module would be imported like so:
 
@@ -45,7 +52,7 @@ local button = dUI.newPushButton( params )
 ```
 
 
-The library has been designed to give a lot of flexibility where it is stored in your project. For more information regarding the library and individual widgets, visit [DMC Corona UI](http://docs.davidmccuskey.com/dmc+corona+ui).
+As with `dmc-corona-library`, `dmc-corona-ui` has been designed to give a lot of flexibility where it is located in your project. For more information regarding the library and individual widgets, visit [DMC Corona UI](http://docs.davidmccuskey.com/dmc+corona+ui).
 
 
 
@@ -70,10 +77,14 @@ The library has been designed to give a lot of flexibility where it is stored in
 * ScrollView
 
   A robust 2D scroll surface.
+  
+* Segmented Control
+
+  A horizontal control made of multiple segments, each segment functioning as a discrete button.
 
 * TableView
 
-  A high-performance TableView widget, built on the ScrollView.
+  A high-performance TableView widget, inherits from ScrollView.
 
 * TableViewCell
 
@@ -81,13 +92,11 @@ The library has been designed to give a lot of flexibility where it is stored in
 
 * Text
 
-  A widget to display information.
+  A widget to display textual information.
 
 * TextField
 
-  No-fuss, all action text input widget.
-
-  Advanced widget for slide carousels.
+  No-fuss, all action text-input widget.
 
 
 
