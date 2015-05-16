@@ -39,16 +39,17 @@ SOFTWARE.
 
 -- Semantic Versioning Specification: http://semver.org/
 
-local VERSION = "1.2.0"
+local VERSION = "1.3.0"
 
 
 
 --====================================================================--
 --== Imports
 
-local Objects = require 'dmc_objects'
+
+local Objects = require 'lib.dmc_lua.lua_objects'
 local socket = require 'socket'
-local Utils = require 'dmc_utils'
+local Utils = require 'lib.dmc_lua.lua_utils'
 
 
 
@@ -56,11 +57,12 @@ local Utils = require 'dmc_utils'
 --== Setup, Constants
 
 
--- setup some aliases to make code cleaner
-local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
 
+local sfind = string.find
+local ssub = string.sub
 local tconcat = table.concat
+local type = type
 
 local LOCAL_DEBUG = false
 
@@ -100,7 +102,7 @@ TCPSocket.WRITE = 'write_event'
 
 
 --======================================================--
--- Start: Setup DMC Objects
+-- Start: Setup Lua Objects
 
 function TCPSocket:__init__( params )
 	-- print( "TCPSocket:__init__" )
@@ -139,7 +141,7 @@ function TCPSocket:__undoInitComplete__()
 	self:superCall( '__undoInitComplete__' )
 end
 
--- END: Setup DMC Objects
+-- END: Setup Lua Objects
 --======================================================--
 
 
@@ -202,6 +204,8 @@ function TCPSocket:connect( host, port, params )
 	if success then
 		self._status = TCPSocket.CONNECTED
 		self._socket:settimeout(0)
+		self._socket:setoption( 'keepalive', true )
+		self._socket:setoption( 'tcp-nodelay', true )
 
 		self._master:_connect( self )
 
@@ -245,25 +249,25 @@ function TCPSocket:receive( ... )
 
 	local data
 
-	if type( args ) == 'string' and args == '*a' then
+	if type( args )=='string' and args == '*a' then
 		data = buffer
 		self._buffer = ""
 
-	elseif type( args ) == 'number' and #buffer >= args then
-		data = string.sub( buffer, 1, args )
-		self._buffer = string.sub( buffer, args+1 )
+	elseif type( args )=='number' and #buffer >= args then
+		data = ssub( buffer, 1, args )
+		self._buffer = ssub( buffer, args+1 )
 
-	elseif type( args ) == 'string' and args == '*l' then
+	elseif type( args )=='string' and args == '*l' then
 		local ret = '\r\n'
 		local lret = #ret
-		local beg, _ = string.find( buffer, ret )
+		local beg, _ = sfind( buffer, ret )
 
 		if beg == 1 then
 			data = ""
-			self._buffer = string.sub( buffer, beg+lret )
+			self._buffer = ssub( buffer, beg+lret )
 		elseif beg then
-			data = string.sub( buffer, 1, beg )
-			self._buffer = string.sub( buffer, beg+lret )
+			data = ssub( buffer, 1, beg )
+			self._buffer = ssub( buffer, beg+lret )
 		end
 
 	end
@@ -319,6 +323,8 @@ function TCPSocket:_createSocket( params )
 	self._status = TCPSocket.NOT_CONNECTED
 
 	self._socket:settimeout( params.timeout )
+	self._socket:setoption( 'keepalive', true )
+	self._socket:setoption( 'tcp-nodelay', true )
 
 end
 

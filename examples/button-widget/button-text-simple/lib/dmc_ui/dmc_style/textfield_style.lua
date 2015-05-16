@@ -71,6 +71,7 @@ local Utils = require 'dmc_utils'
 local uiConst = require( ui_find( 'ui_constants' ) )
 
 local BaseStyle = require( ui_find( 'core.style' ) )
+local StyleHelp = require( ui_find( 'core.style_helper' ) )
 
 
 
@@ -78,10 +79,10 @@ local BaseStyle = require( ui_find( 'core.style' ) )
 --== Setup, Constants
 
 
-local newClass = Objects.newClass
-
+local assert = assert
 local sfmt = string.format
 local tinsert = table.insert
+local type = type
 
 --== To be set in initialize()
 local Style = nil
@@ -93,7 +94,21 @@ local Style = nil
 --====================================================================--
 
 
+--- TextField Style Class.
+-- a style object for a TextField View.
+--
+-- **Inherits from:** <br>
+-- * @{Core.Style}
+--
+-- @classmod Style.TextField
+-- @usage
+-- dUI = require 'dmc_ui'
+-- widget = dUI.newTextFieldStyle()
+
 local TextFieldStyle = newClass( BaseStyle, {name="TextField Style"} )
+
+--- Class Constants.
+-- @section
 
 --== Class Constants
 
@@ -172,6 +187,7 @@ TextFieldStyle._STYLE_DEFAULTS = {
 		fillColor={0,0,0,0},
 		font=native.systemFont,
 		fontSize=18,
+		fontSizeMinimum=0,
 		marginX=15,
 		textColor={0.3,0.3,0.3,1},
 	},
@@ -187,6 +203,7 @@ TextFieldStyle._STYLE_DEFAULTS = {
 		fillColor={0,0,0,0},
 		font=native.systemFont,
 		fontSize=18,
+		fontSizeMinimum=0,
 		marginX=15,
 		textColor={0.1,0.1,0.1,1},
 	},
@@ -237,6 +254,7 @@ TextFieldStyle._TEST_DEFAULTS = {
 		fillColor={521,522,523,524},
 		font=native.systemFont,
 		fontSize=524,
+		fontSizeMinimum=520,
 		textColor={523,524,525,526},
 	},
 	display={
@@ -251,6 +269,7 @@ TextFieldStyle._TEST_DEFAULTS = {
 		fillColor={531,532,533,534},
 		font=native.systemFontBold,
 		fontSize=534,
+		fontSizeMinimum=523,
 		textColor={533,534,535,536},
 	},
 
@@ -301,8 +320,8 @@ function TextFieldStyle:__init__( params )
 
 	-- these are other style objects
 	self._background = nil -- Background Style
-	self._hint = nil  -- Text Style
 	self._display = nil  -- Text Style
+	self._hint = nil  -- Text Style
 
 end
 
@@ -545,6 +564,26 @@ function TextFieldStyle.__setters:background( data )
 	}
 end
 
+--== Display
+
+function TextFieldStyle.__getters:display()
+	return self._display
+end
+function TextFieldStyle.__setters:display( data )
+	-- print( 'TextFieldStyle.__setters:display', data )
+	assert( data==nil or type( data )=='table' )
+	--==--
+	local StyleClass = Style.Text
+	local inherit = self._inherit and self._inherit._display or self._inherit
+
+	self._display = StyleClass:createStyleFrom{
+		name=TextFieldStyle.DISPLAY_NAME,
+		inherit=inherit,
+		parent=self,
+		data=data
+	}
+end
+
 --== Hint
 
 function TextFieldStyle.__getters:hint()
@@ -566,68 +605,18 @@ function TextFieldStyle.__setters:hint( data )
 	}
 end
 
---== Display
-
-function TextFieldStyle.__getters:display()
-	return self._display
-end
-function TextFieldStyle.__setters:display( data )
-	-- print( 'TextFieldStyle.__setters:display', data )
-	assert( data==nil or type( data )=='table' )
-	--==--
-	local StyleClass = Style.Text
-	local inherit = self._inherit and self._inherit._display or self._inherit
-
-	self._display = StyleClass:createStyleFrom{
-		name=TextFieldStyle.DISPLAY_NAME,
-		inherit=inherit,
-		parent=self,
-		data=data
-	}
-end
-
-
---======================================================--
--- Background Style Properties
-
---== fillColor
-
-function TextFieldStyle.__getters:backgroundFillColor()
-	-- print( "TextFieldStyle.__getters:backgroundFillColor" )
-	return self._background.fillColor
-end
-function TextFieldStyle.__setters:backgroundFillColor( value )
-	-- print( "TextFieldStyle.__setters:backgroundFillColor", value )
-	self._background.fillColor = value
-end
-
---== strokeColor
-
-function TextFieldStyle.__getters:backgroundStrokeColor()
-	-- print( "TextFieldStyle.__getters:backgroundStrokeColor" )
-	return self._background.strokeColor
-end
-function TextFieldStyle.__setters:backgroundStrokeColor( value )
-	-- print( "TextFieldStyle.__setters:backgroundStrokeColor", value )
-	self._background.strokeColor = value
-end
-
---== strokeWidth
-
-function TextFieldStyle.__getters:backgroundStrokeWidth()
-	-- print( "TextFieldStyle.__getters:backgroundStrokeWidth" )
-	return self._background.strokeWidth
-end
-function TextFieldStyle.__setters:backgroundStrokeWidth( value )
-	-- print( "TextFieldStyle.__setters:backgroundStrokeWidth", value )
-	self._background.strokeWidth = value
-end
-
 
 --======================================================--
 -- Hint Style Properties
 
---== font
+--== .hintFont
+
+--- [**style**] set/get Style value for Widget's Hint font.
+--
+-- @within Style-Helpers
+-- @function .hintFont
+-- @usage style.hintFont = 'helvetica-bold'
+-- @usage print( style.hintFont )
 
 function TextFieldStyle.__getters:hintFont()
 	-- print( "TextFieldStyle.__getters:hintFont" )
@@ -638,7 +627,14 @@ function TextFieldStyle.__setters:hintFont( value )
 	self._hint.font = value
 end
 
---== fontSize
+--== .hintFontSize
+
+--- [**style**] set/get Style value for Widget's Hint font size.
+--
+-- @within Style-Helpers
+-- @function .hintFontSize
+-- @usage style.hintFontSize = 12
+-- @usage print( style.hintFontSize )
 
 function TextFieldStyle.__getters:hintFontSize()
 	-- print( "TextFieldStyle.__getters:hintFontSize" )
@@ -649,7 +645,14 @@ function TextFieldStyle.__setters:hintFontSize( value )
 	self._hint.fontSize = value
 end
 
---== textColor
+--== .hintTextColor
+
+--- [**style**] set/get Style value for Widget's Hint text color.
+--
+-- @within Style-Helpers
+-- @function .hintTextColor
+-- @usage style.hintTextColor = {1,0.5,1,0.25}
+-- @usage print( style.hintTextColor )
 
 function TextFieldStyle.__getters:hintTextColor()
 	-- print( "TextFieldStyle.__getters:hintTextColor" )
@@ -664,7 +667,14 @@ end
 --======================================================--
 -- Display Style Properties
 
---== font
+--== .displayFont
+
+--- [**style**] set/get Style value for Widget's Display font.
+--
+-- @within Style-Helpers
+-- @function .displayFont
+-- @usage style.displayFont = 'helvetica-bold'
+-- @usage print( style.displayFont )
 
 function TextFieldStyle.__getters:displayFont()
 	-- print( "TextFieldStyle.__getters:displayFont" )
@@ -675,7 +685,14 @@ function TextFieldStyle.__setters:displayFont( value )
 	self._display.font = value
 end
 
---== fontSize
+--== .displayFontSize
+
+--- [**style**] set/get Style value for Widget's Display font size.
+--
+-- @within Style-Helpers
+-- @function .displayFontSize
+-- @usage style.displayFontSize = 12
+-- @usage print( style.displayFontSize )
 
 function TextFieldStyle.__getters:displayFontSize()
 	-- print( "TextFieldStyle.__getters:displayFontSize" )
@@ -686,7 +703,14 @@ function TextFieldStyle.__setters:displayFontSize( value )
 	self._display.fontSize = value
 end
 
---== textColor
+--== .displayTextColor
+
+--- [**style**] set/get Style value for Widget's Display text color.
+--
+-- @within Style-Helpers
+-- @function .displayTextColor
+-- @usage style.displayTextColor = {1,0.5,1,0.25}
+-- @usage print( style.displayTextColor )
 
 function TextFieldStyle.__getters:displayTextColor()
 	-- print( "TextFieldStyle.__getters:displayTextColor" )
@@ -701,7 +725,29 @@ end
 --======================================================--
 -- Access to style properties
 
---== backgroundStyle
+
+--== .align
+
+--- [**style**] set/get Style value for Widget text alignment.
+-- values are 'left', 'center', 'right'
+--
+-- @within Properties
+-- @function .align
+-- @usage style.align = 'center'
+-- @usage print( style.align )
+
+TextFieldStyle.__getters.align = StyleHelp.__getters.align
+TextFieldStyle.__setters.align = StyleHelp.__setters.align
+
+--== .backgroundStyle
+
+-- [**style**] set/get Style value for Widget background style.
+-- values are 'none', ...
+--
+-- @within Properties
+-- @function .backgroundStyle
+-- @usage style.backgroundStyle = 'none'
+-- @usage print( style.backgroundStyle )
 
 function TextFieldStyle.__getters:backgroundStyle()
 	-- print( "TextFieldStyle.__getters:backgroundStyle" )
@@ -720,7 +766,7 @@ function TextFieldStyle.__setters:backgroundStyle( value )
 	self:_dispatchChangeEvent( 'backgroundStyle', value )
 end
 
---== inputType
+--== .inputType
 
 function TextFieldStyle.__getters:inputType()
 	-- print( "TextFieldStyle.__getters:inputType" )
@@ -739,7 +785,7 @@ function TextFieldStyle.__setters:inputType( value )
 	self:_dispatchChangeEvent( 'inputType', value )
 end
 
---== isHitActive
+--== .isHitActive
 
 function TextFieldStyle.__getters:isHitActive()
 	-- print( "TextFieldStyle.__getters:isHitActive" )
@@ -758,7 +804,7 @@ function TextFieldStyle.__setters:isHitActive( value )
 	self:_dispatchChangeEvent( 'isHitActive', value )
 end
 
---== isSecure
+--== .isSecure
 
 function TextFieldStyle.__getters:isSecure()
 	-- print( "TextFieldStyle.__getters:isSecure" )
@@ -777,7 +823,32 @@ function TextFieldStyle.__setters:isSecure( value )
 	self:_dispatchChangeEvent( 'isSecure', value )
 end
 
---== returnKey
+--== .marginX
+
+--- [**style**] set/get Style value for Widget X-axis margin.
+--
+-- @within Properties
+-- @function .marginX
+-- @usage style.marginX = 10
+-- @usage print( style.marginX )
+
+TextFieldStyle.__getters.marginX = StyleHelp.__getters.marginX
+TextFieldStyle.__setters.marginX = StyleHelp.__setters.marginX
+
+--== .marginY
+
+--- [**style**] set/get Style value for Widget Y-axis margin.
+--
+-- @within Properties
+-- @function .marginY
+-- @usage style.marginY = 10
+-- @usage print( style.marginY )
+
+TextFieldStyle.__getters.marginY = StyleHelp.__getters.marginY
+TextFieldStyle.__setters.marginY = StyleHelp.__setters.marginY
+
+
+--== .returnKey
 
 function TextFieldStyle.__getters:returnKey()
 	-- print( "TextFieldStyle.__getters:returnKey" )
@@ -839,11 +910,11 @@ function TextFieldStyle:_destroyChildren()
 	self._background:removeSelf()
 	self._background=nil
 
-	self._hint:removeSelf()
-	self._hint=nil
-
 	self._display:removeSelf()
 	self._display=nil
+
+	self._hint:removeSelf()
+	self._hint=nil
 end
 
 
@@ -872,13 +943,13 @@ function TextFieldStyle:_prepareData( data, dataSrc, params )
 	end
 
 	StyleClass = Style.Text
-	if not src.hint then
-		tmp = dataSrc and dataSrc.hint
-		src.hint = StyleClass.createStyleStructure( tmp )
-	end
 	if not src.display then
 		tmp = dataSrc and dataSrc.display
 		src.display = StyleClass.createStyleStructure( tmp )
+	end
+	if not src.hint then
+		tmp = dataSrc and dataSrc.hint
+		src.hint = StyleClass.createStyleStructure( tmp )
 	end
 
 	--== process children
@@ -886,11 +957,11 @@ function TextFieldStyle:_prepareData( data, dataSrc, params )
 	dest = src.background
 	src.background = StyleClass.copyExistingSrcProperties( dest, src )
 
-	dest = src.hint
-	src.hint = StyleClass.copyExistingSrcProperties( dest, src )
-
 	dest = src.display
 	src.display = StyleClass.copyExistingSrcProperties( dest, src )
+
+	dest = src.hint
+	src.hint = StyleClass.copyExistingSrcProperties( dest, src )
 
 	return data
 end

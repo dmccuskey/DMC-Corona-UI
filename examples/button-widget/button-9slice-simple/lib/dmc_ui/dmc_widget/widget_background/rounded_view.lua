@@ -64,9 +64,9 @@ local ui_find = dmc_ui_func.find
 --== Imports
 
 
-local Objects = require 'dmc_objects'
-
 local uiConst = require( ui_find( 'ui_constants' ) )
+
+local Objects = require 'dmc_objects'
 
 local WidgetBase = require( ui_find( 'core.widget' ) )
 
@@ -76,7 +76,8 @@ local WidgetBase = require( ui_find( 'core.widget' ) )
 --== Setup, Constants
 
 
-local newClass = Objects.newClass
+local newRoundedRect = display.newRoundedRect
+local unpack = unpack
 
 --== To be set in initialize()
 local dUI = nil
@@ -88,7 +89,17 @@ local dUI = nil
 --====================================================================--
 
 
+--- Rounded Background View Class.
+--
+-- @classmod Widget.Background.Rounded
+-- @usage
+-- local dUI = require 'dmc_ui'
+-- local widget = dUI.newRoundedBackground()
+
 local RoundedView = newClass( WidgetBase, {name="Rounded Background View"} )
+
+--- Class Constants.
+-- @section
 
 --== Class Constants
 
@@ -123,8 +134,8 @@ function RoundedView:__init__( params )
 
 	-- properties stored in Style
 
-	self._cornerRadius_dirty = true
-	self._fillColor_dirty = true
+	self._cornerRadius_dirty=true
+	self._fillColor_dirty=true
 	self._strokeColor_dirty=true
 	self._strokeWidth_dirty=true
 
@@ -148,8 +159,8 @@ function RoundedView:__createView__()
 	-- print( "RoundedView:__createView__" )
 	self:superCall( '__createView__' )
 	--==--
-	local o = display.newRoundedRect( 0,0,0,0,1 )
-	self:insert( o )
+	local o = newRoundedRect( 0,0,0,0,1 )
+	self._dgBg:insert( o )
 	self._rndBg = o
 end
 
@@ -203,7 +214,9 @@ end
 --== Public Methods
 
 
--- none
+function RoundedView:localToContent( ... )
+	return self._rndBg:localToContent(...)
+end
 
 
 
@@ -229,11 +242,11 @@ function RoundedView:__commitProperties__()
 	end
 
 	if self._width_dirty then
-		bg.path.width=style.width
+		bg.width=style.width
 		self._width_dirty=false
 	end
 	if self._height_dirty then
-		bg.path.height=style.height
+		bg.height=style.height
 		self._height_dirty=false
 	end
 
@@ -300,8 +313,8 @@ function RoundedView:stylePropertyChangeHandler( event )
 		self._anchorX_dirty=true
 		self._anchorY_dirty=true
 
-		self._cornerRadius_dirty = true
-		self._fillColor_dirty = true
+		self._cornerRadius_dirty=true
+		self._fillColor_dirty=true
 		self._strokeColor_dirty=true
 		self._strokeWidth_dirty=true
 

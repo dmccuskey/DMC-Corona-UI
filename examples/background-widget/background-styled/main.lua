@@ -238,7 +238,6 @@ function run_example3()
 		bw3:setAnchor( {0,0})
 		-- bw3:setAnchor( {0.5,0.5})
 		-- bw3:setAnchor( {1,1})
-		-- bw3.viewStrokeWidth = 1
 		bw3.viewStyle:setFillColor( 1,0,0,1)
 		bw3.viewStyle:setStrokeColor( 0,1,0,1)
 		bw3.cornerRadius = 20
@@ -310,10 +309,6 @@ function run_example4()
 		-- bw3:setAnchor( {0,0})
 		-- bw3:setAnchor( {0.5,0.5})
 		-- bw3:setAnchor( {1,1})
-		-- bw3.viewStrokeWidth = 1
-		-- bw3:setViewFillColor( 1,0,0,1)
-		-- bw3:setViewStrokeColor( 0,1,0,1)
-		-- bw3.cornerRadius = 20
 		st2.type='rectangle'
 
 	end)
@@ -322,16 +317,11 @@ function run_example4()
 		-- bw3:setAnchor( {0,0})
 		-- bw3:setAnchor( {0.5,0.5})
 		-- bw3:setAnchor( {1,1})
-		-- bw3.viewStrokeWidth = 1
-		-- bw3:setViewFillColor( 1,0,0,1)
-		-- bw3:setViewStrokeColor( 0,1,0,1)
-		-- bw3.cornerRadius = 20
 
 		st2.type=nil
 
 		bw3.width=110
 		bw3.height=40
-
 
 	end)
 

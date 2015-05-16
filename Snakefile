@@ -1,19 +1,21 @@
-# DMC-Corona-Widgets
+# DMC-Corona-UI
 
 try:
 	if not gSTARTED: print( gSTARTED )
 except:
-	MODULE = "DMC-Corona-Widgets"
-	include: "../DMC-Corona-Widgets/snakemake/Snakefile"
+	MODULE = "DMC-Corona-UI"
+	include: "../DMC-Corona-UI/snakemake/Snakefile"
 
 module_config = {
-	"name": "DMC-Corona-Widgets",
+	"name": "DMC-Corona-UI",
 	"module": {
 		"dir": "lib",
 		"files": [
 			"dmc_ui.lua",
-			"dmc_ui/core/widget.lua",
 			"dmc_ui/core/style.lua",
+			"dmc_ui/core/style_helper.lua",
+			"dmc_ui/core/widget.lua",
+			"dmc_ui/core/widget_helper.lua",
 			"dmc_ui/ui_constants.lua",
 			"dmc_ui/ui_utils.lua",
 
@@ -26,6 +28,7 @@ module_config = {
 			"dmc_ui/dmc_style.lua",
 			"dmc_ui/dmc_style/background_style.lua",
 			"dmc_ui/dmc_style/background_style/base_view_style.lua",
+			"dmc_ui/dmc_style/background_style/image_style.lua",
 			"dmc_ui/dmc_style/background_style/nine_slice_style.lua",
 			"dmc_ui/dmc_style/background_style/rectangle_style.lua",
 			"dmc_ui/dmc_style/background_style/rounded_style.lua",
@@ -48,7 +51,7 @@ module_config = {
 			"dmc_ui/dmc_widget/font_manager.lua",
 			"dmc_ui/dmc_widget/lib/easingx.lua",
 			"dmc_ui/dmc_widget/widget_background.lua",
-			#"dmc_ui/dmc_widget/widget_background/image_view.lua",
+			"dmc_ui/dmc_widget/widget_background/image_view.lua",
 			"dmc_ui/dmc_widget/widget_background/nine_slice_view.lua",
 			"dmc_ui/dmc_widget/widget_background/rectangle_view.lua",
 			"dmc_ui/dmc_widget/widget_background/rounded_view.lua",
@@ -77,15 +80,11 @@ module_config = {
 			"dmc_ui/dmc_widget/widget_textfield/delegate_textfield.lua",
 			"dmc_ui/dmc_widget/widget_viewpager.lua",
 
-			"dmc_ui/theme/default/textfield/01-TL.png",
-			"dmc_ui/theme/default/textfield/02-TM.png",
-			"dmc_ui/theme/default/textfield/03-TR.png",
-			"dmc_ui/theme/default/textfield/04-ML.png",
-			"dmc_ui/theme/default/textfield/05-MM.png",
-			"dmc_ui/theme/default/textfield/06-MR.png",
-			"dmc_ui/theme/default/textfield/07-BL.png",
-			"dmc_ui/theme/default/textfield/08-BM.png",
-			"dmc_ui/theme/default/textfield/09-BR.png",
+			"dmc_ui/manager/keyboard_mgr.lua",
+
+			"dmc_ui/theme/default/background/background.png",
+			"dmc_ui/theme/default/background/nine-slice-sheet.lua",
+			"dmc_ui/theme/default/background/nine-slice-sheet.png",
 			"dmc_ui/theme/default/textfield/textfield-sheet.lua",
 			"dmc_ui/theme/default/textfield/textfield-sheet.png",
 
@@ -123,6 +122,18 @@ module_config = {
 			{
 				"exp_dir": "background-widget/background-rounded",
 				"requires": [],
+				"mod_dir_map": {
+					"default_dir": "",
+					"libs": {
+						"dmc-corona-boot":""
+					}
+				}
+			},
+			{
+				"exp_dir": "background-widget/background-memtest",
+				"requires": [
+					"dmc-performance"
+				],
 				"mod_dir_map": {
 					"default_dir": "",
 					"libs": {
@@ -221,6 +232,16 @@ module_config = {
 				}
 			},
 			{
+				"exp_dir": "navigation-control/navigation-intermediate",
+				"requires": [],
+				"mod_dir_map": {
+					"default_dir": "",
+					"libs": {
+						"dmc-corona-boot":""
+					}
+				}
+			},
+			{
 				"exp_dir": "popover-control/popover-control-simple",
 				"requires": [],
 				"mod_dir_map": {
@@ -233,6 +254,18 @@ module_config = {
 			{
 				"exp_dir": "scrollview-widget/scrollview-simple",
 				"requires": [],
+				"mod_dir_map": {
+					"default_dir": "",
+					"libs": {
+						"dmc-corona-boot":""
+					}
+				}
+			},
+			{
+				"exp_dir": "scrollview-widget/scrollview-memtest",
+				"requires": [
+					"dmc-performance"
+				],
 				"mod_dir_map": {
 					"default_dir": "",
 					"libs": {
@@ -291,8 +324,32 @@ module_config = {
 				}
 			},
 			{
+				"exp_dir": "tableview-widget/tableview-memtest",
+				"requires": [
+					"dmc-performance"
+				],
+				"mod_dir_map": {
+					"default_dir": "",
+					"libs": {
+						"dmc-corona-boot":""
+					}
+				}
+			},
+			{
 				"exp_dir": "text-widget/text-simple",
 				"requires": [],
+				"mod_dir_map": {
+					"default_dir": "",
+					"libs": {
+						"dmc-corona-boot":""
+					}
+				}
+			},
+			{
+				"exp_dir": "text-widget/text-memtest",
+				"requires": [
+					"dmc-performance"
+				],
 				"mod_dir_map": {
 					"default_dir": "",
 					"libs": {
@@ -312,6 +369,16 @@ module_config = {
 			},
 			{
 				"exp_dir": "text-widget/text-themed",
+				"requires": [],
+				"mod_dir_map": {
+					"default_dir": "",
+					"libs": {
+						"dmc-corona-boot":""
+					}
+				}
+			},
+			{
+				"exp_dir": "textfield-widget/textfield-keyboard",
 				"requires": [],
 				"mod_dir_map": {
 					"default_dir": "",
@@ -349,6 +416,6 @@ module_config = {
 	}
 }
 
-register( "DMC-Corona-Widgets", module_config )
+register( "DMC-Corona-UI", module_config )
 
 

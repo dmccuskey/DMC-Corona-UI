@@ -64,6 +64,7 @@ local ui_find = dmc_ui_func.find
 
 
 local BaseStyle = require( ui_find( 'core.style' ) )
+local Image = require( ui_find( 'dmc_style.background_style.image_style' ) )
 local NineSlice = require( ui_find( 'dmc_style.background_style.nine_slice_style' ) )
 local Rectangle = require( ui_find( 'dmc_style.background_style.rectangle_style' ) )
 local Rounded = require( ui_find( 'dmc_style.background_style.rounded_style' ) )
@@ -88,6 +89,7 @@ local function initializeFactory( manager, params )
 	-- print( "StyleFactory.initializeFactory" )
 	Style = manager
 
+	Image.initialize( Style, params )
 	NineSlice.initialize( Style, params )
 	Rectangle.initialize( Style, params )
 	Rounded.initialize( Style, params )
@@ -97,6 +99,7 @@ end
 local function getStyleNames()
 	-- print( "StyleFactory.getStyleNames" )
 	return {
+		Image.TYPE,
 		NineSlice.TYPE,
 		Rectangle.TYPE,
 		Rounded.TYPE
@@ -106,6 +109,7 @@ end
 local function getStyleClasses()
 	-- print( "StyleFactory.getStyleClasses" )
 	return {
+		Image,
 		NineSlice,
 		Rectangle,
 		Rounded
@@ -115,7 +119,9 @@ end
 
 local function getStyleClass( style_type )
 	-- print( "StyleFactory.getStyleClass", style_type )
-	if style_type==NineSlice.TYPE then
+	if style_type==Image.TYPE then
+		return Image
+	elseif style_type==NineSlice.TYPE then
 		return NineSlice
 	elseif style_type==Rectangle.TYPE then
 		return Rectangle
@@ -146,11 +152,13 @@ return {
 
 	Style={
 		Base=BaseStyle,
+		Image=Image,
 		NineSlice=NineSlice,
 		Rectangle=Rectangle,
 		Rounded=Rounded,
 	},
 
+	Image=Image,
 	NineSlice=NineSlice,
 	Rectangle=Rectangle,
 	Rounded=Rounded,

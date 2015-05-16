@@ -31,13 +31,6 @@ SOFTWARE.
 --]]
 
 
---- Pinch Gesture Module
--- @module PinchGesture
--- @usage local Gesture = require 'dmc_gestures'
--- local view = display.newRect( 100, 100, 200, 200 )
--- local g = Gesture.newPinchGesture( view )
--- g:addEventListener( g.EVENT, gHandler )
-
 
 --====================================================================--
 --== DMC Corona Library : Pinch Gesture
@@ -91,9 +84,22 @@ local tstr = tostring
 --- Pinch Gesture Recognizer Class.
 -- gestures to recognize pinch motions
 --
--- @type PinchGesture
+-- **Inherits from:**
 --
+-- * @{Gesture.Gesture}
+-- * @{Gesture.Continuous}
+--
+-- @classmod Gesture.Pinch
+--
+-- @usage local Gesture = require 'dmc_gestures'
+-- local view = display.newRect( 100, 100, 200, 200 )
+-- local g = Gesture.newPinchGesture( view )
+-- g:addEventListener( g.EVENT, gHandler )
+
 local PinchGesture = newClass( Continuous, { name="Pinch Gesture" } )
+
+--- Class Constants.
+-- @section
 
 --== Class Constants
 
@@ -175,30 +181,11 @@ end
 --== Public Methods
 
 
+--======================================================--
+-- Getters/Setters
+
 --- Getters and Setters
 -- @section getters-setters
-
-
---- the gesture's id (string).
--- this is useful to differentiate between
--- different gestures attached to the same view object
---
--- @function .id
--- @usage print( gesture.id )
--- @usage gesture.id = "myid"
-
---- the gesture's target view (Display Object).
---
--- @function .view
--- @usage print( gesture.view )
--- @usage gesture.view = DisplayObject
-
---- the gesture's delegate (object/table)
---
--- @function .delegate
--- @usage print( gesture.delegate )
--- @usage gesture.delegate = DisplayObject
-
 
 
 --- whether to reset internal scale after pinch gesture is finished (boolean).
@@ -347,6 +334,7 @@ end
 --======================================================--
 --== Test Methods
 
+--[[
 function PinchGesture:_startTestTouchEvent( event )
 	-- print("PinchGesture:_startTestTouchEvent")
 	local offset = 30
@@ -376,6 +364,7 @@ function PinchGesture:_endTestTouchEvent( event )
 		self:touch( evt )
 	end)
 end
+--]]
 
 
 
@@ -395,25 +384,20 @@ function PinchGesture:touch( event )
 
 	local is_touch_ok = ( touch_count==2 )
 
-
 	if phase=='began' then
-		local touches = self._touches
-		local t_max = self._max_touches
 
-		self:_startFailTimer()
-		self._gesture_attempt=true
+		if state==Continuous.STATE_POSSIBLE then
+			local touches = self._touches
+			if is_touch_ok then
+					self._touch_dist = self:_calculateTouchDistance( touches )
+					self:_addMultitouchToQueue( Continuous.BEGAN )
+			end
 
-		if is_touch_ok then
-			self._touch_dist = self:_calculateTouchDistance( touches )
-			self:_addMultitouchToQueue( Continuous.BEGAN )
-			self:_startGestureTimer()
-		elseif touch_count>t_max then
-			self:gotoState( PinchGesture.STATE_FAILED )
-		end
+		elseif state==Continuous.STATE_BEGAN or state==Continuous.STATE_CHANGED then
+			if not is_touch_ok then
+				self:gotoState( Continuous.STATE_SOFT_RESET, event )
+			end
 
-		if self._test_mode and not self._test_evt then
-			-- add extra touch, for testing
-			self:_startTestTouchEvent( event )
 		end
 
 	elseif phase=='moved' then
@@ -427,32 +411,48 @@ function PinchGesture:touch( event )
 					self:gotoState( Continuous.STATE_BEGAN, event )
 				end
 			end
+
 		elseif state==Continuous.STATE_BEGAN or state==Continuous.STATE_CHANGED then
 			if is_touch_ok then
 				self:gotoState( Continuous.STATE_CHANGED, event )
 			else
-				self:gotoState( Continuous.STATE_RECOGNIZED, event )
+				self:gotoState( Continuous.STATE_SOFT_RESET, event )
 			end
+
+		elseif state==Continuous.STATE_SOFT_RESET then
+			if is_touch_ok then
+				self:_addMultitouchToQueue( Continuous.BEGAN )
+				self:gotoState( Continuous.STATE_BEGAN, event )
+			end
+
 		end
 
 	elseif phase=='cancelled' then
+		-- @TODO: think about this, merge with 'ended' ?
 		self:gotoState( PinchGesture.STATE_FAILED  )
 
 	else -- ended
-
-		if is_touch_ok then
-			self:gotoState( Continuous.STATE_CHANGED, event )
-		else
-			if state==Continuous.STATE_BEGAN or state==Continuous.STATE_CHANGED then
-				self:gotoState( Continuous.STATE_RECOGNIZED, event )
+		if state==Continuous.STATE_POSSIBLE then
+			if touch_count==0 then
+				self:gotoState( Continuous.STATE_FAILED )
+			elseif is_touch_ok then
+				self:gotoState( Continuous.STATE_BEGAN, event )
 			else
+				self:gotoState( Continuous.STATE_SOFT_RESET, event )
+			end
+
+		elseif state==Continuous.STATE_BEGAN or state==Continuous.STATE_CHANGED then
+			if touch_count==0 then
+				self:gotoState( Continuous.STATE_RECOGNIZED, event )
+			elseif not is_touch_ok then
+				self:gotoState( Continuous.STATE_SOFT_RESET, event )
+			end
+
+		elseif state==Continuous.STATE_SOFT_RESET then
+			if touch_count==0 then
 				self:gotoState( Continuous.STATE_FAILED )
 			end
-		end
 
-		if self._test_mode and self._test_evt then
-			-- remove extra touch, for testing
-			self:_endTestTouchEvent( event )
 		end
 
 	end

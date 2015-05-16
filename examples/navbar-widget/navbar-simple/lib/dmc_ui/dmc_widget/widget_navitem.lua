@@ -76,7 +76,6 @@ local uiConst = require( ui_find( 'ui_constants' ) )
 --== Setup, Constants
 
 
-local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
 
 local LifecycleMix = LifecycleMixModule.LifecycleMix
@@ -121,7 +120,7 @@ NavItem.STYLE_TYPE = uiConst.NAVITEM
 function NavItem:__init__( params )
 	-- print( "NavItem:__init__" )
 	params = params or {}
-	if params.title==nil then params.title="" end
+	if params.titleText==nil then params.titleText="" end
 
 	self:superCall( LifecycleMix, '__init__', params )
 	self:superCall( ObjectBase, '__init__', params )
@@ -132,7 +131,7 @@ function NavItem:__init__( params )
 
 	-- properties stored in Class
 
-	self._title = params.title
+	self._titleText = ''
 
 	-- properties stored in Style
 
@@ -148,7 +147,6 @@ function NavItem:__init__( params )
 
 	--== Object References ==--
 
-	self._tmp_style = params.style -- save
 
 	self._wgtBtnBack = nil -- Back button widget
 	self._wgtBtnBack_dirty=true
@@ -163,8 +161,10 @@ function NavItem:__init__( params )
 	self._btnLeft = nil
 	self._btnLeftStyle_dirty=true
 
-	self._btnRight = params.rightButton
+	self._btnRight = nil
 	self._btnRightStyle_dirty=true
+
+	self._ni_tmp_params = params -- save
 
 end
 
@@ -184,15 +184,19 @@ function NavItem:__initComplete__()
 	self:superCall( StyleMix, '__initComplete__' )
 	self:superCall( ObjectBase, '__initComplete__' )
 	--==--
-	self.style = self._tmp_style
+	local tmp = self._ni_tmp_params
 
-	self.rightButton = self._btnRight -- setter
-	self.leftButton = self._btnLeft -- setter
+	self.style = tmp.style
+
+	self.rightButton = tmp.rightButton -- setter
+	self.leftButton = tmp.leftButton -- setter
 
 	self:_createText()
 	self:_createBackButton()
 
-	self.title = self._title
+	self.titleText = tmp.titleText
+
+	self._ni_tmp_params = nil
 
 end
 
@@ -253,6 +257,12 @@ end
 -- @function .backButton
 -- @usage print( widget.backButton )
 
+function NavItem.__getters:backButton()
+	-- print( "NavItem.__getters:backButton" )
+	return self._wgtBtnBack
+end
+
+
 --- set/get leftButton object.
 --
 -- @within Properties
@@ -260,33 +270,6 @@ end
 -- @usage widget.leftButton = <DMC PushButton>
 -- @usage print( widget.leftButton )
 
---- set/get rightButton object.
---
--- @within Properties
--- @function .rightButton
--- @usage widget.rightButton = <DMC PushButton>
--- @usage print( widget.rightButton )
-
---- set/get title of Nav Item.
--- value should be string
---
--- @within Properties
--- @function .title
--- @usage widget.title = "My Title"
--- @usage print( widget.title )
-
-
-
--- getter, back button
---
-function NavItem.__getters:backButton()
-	-- print( "NavItem.__getters:backButton" )
-	return self._wgtBtnBack
-end
-
-
--- getter/setter, left button
---
 function NavItem.__getters:leftButton()
 	-- print( "NavItem.__getters:leftButton" )
 	return self._btnLeft
@@ -305,8 +288,13 @@ function NavItem.__setters:leftButton( button )
 end
 
 
--- getter/setter, right button
+--- set/get rightButton object.
 --
+-- @within Properties
+-- @function .rightButton
+-- @usage widget.rightButton = <DMC PushButton>
+-- @usage print( widget.rightButton )
+
 function NavItem.__getters:rightButton()
 	-- print( "NavItem.__getters:rightButton" )
 	return self._btnRight
@@ -325,18 +313,37 @@ function NavItem.__setters:rightButton( button )
 end
 
 
-
--- getter/setter, title TODO (inside of buttons)
+--- get title Text Widget of Nav Item.
 --
+-- @within Properties
+-- @function .title
+-- @usage print( widget.title )
+
 function NavItem.__getters:title()
-	-- print( "NavItem.__getters:rightButton" )
+	-- print( "NavItem.__getters:title" )
 	return self._wgtText
 end
-function NavItem.__setters:title( title )
-	-- print( "NavItem.__setters:title", button )
-	assert( type(title)=='string', "title must be a string" )
+
+
+--- set/get title of Nav Item.
+-- value should be string
+--
+-- @within Properties
+-- @function .titleText
+-- @usage widget.titleText = "My Title"
+-- @usage print( widget.titleText )
+
+function NavItem.__getters:titleText()
+	-- print( "NavItem.__getters:titleText" )
+	return self._titleText
+end
+function NavItem.__setters:titleText( value )
+	-- print( "NavItem.__setters:titleText", button )
+	assert( type(value)=='string', "title must be a string" )
 	--==--
-	self._wgtText.text = title
+	self._titleText = value
+	self._wgtTextText_dirty=true
+	self:__invalidateProperties__()
 end
 
 
@@ -452,7 +459,7 @@ function NavItem:__commitProperties__()
 	end
 
 	if self._wgtTextText_dirty then
-		text.text=self._title
+		text.text=self._titleText
 		self._wgtTextText_dirty=false
 	end
 	if self._wgtTextStyle_dirty then

@@ -75,6 +75,7 @@ local Utils = require 'dmc_utils'
 local uiConst = require( ui_find( 'ui_constants' ) )
 
 local WidgetBase = require( ui_find( 'core.widget' ) )
+local WidgetHelp = require( ui_find( 'core.widget_helper' ) )
 local Scroller = require( ui_find( 'dmc_widget.widget_scrollview.scroller' ) )
 
 
@@ -85,10 +86,9 @@ local Scroller = require( ui_find( 'dmc_widget.widget_scrollview.scroller' ) )
 
 Patch.addPatch( 'print-output' )
 
-local newClass = Objects.newClass
-
 local circle
 
+local newRect = display.newRect
 local mmin = math.min
 local tcancel = timer.cancel
 local tdelay = timer.performWithDelay
@@ -103,13 +103,16 @@ local dUI = nil
 --== ScrollView Widget Class
 --====================================================================--
 
---- Scroll View Widget.
+--- ScrollView Widget.
 -- a container view which can scroll independently on two axis (X/Y).
+--
+-- **Inherits from:** <br>
+-- * @{Core.Widget}
 --
 -- @classmod Widget.ScrollView
 -- @usage
--- local dUI = require 'dmc_ui'
--- local widget = dUI.newScrollView()
+-- dUI = require 'dmc_ui'
+-- widget = dUI.newScrollView()
 
 local ScrollView = newClass( WidgetBase, { name="ScrollView" } )
 
@@ -160,8 +163,10 @@ function ScrollView:__init__( params )
 	if params.horizontalScrollEnabled==nil then params.horizontalScrollEnabled=true end
 	if params.lowerHorizontalOffset==nil then params.lowerHorizontalOffset = 0 end
 	if params.lowerVerticalOffset==nil then params.lowerVerticalOffset = 0 end
-	if params.scrollWidth==nil then params.scrollWidth=dUI.WIDTH end
-	if params.scrollHeight==nil then params.scrollHeight=dUI.HEIGHT end
+	if params.width==nil then params.width=dUI.WIDTH end
+	if params.height==nil then params.height=dUI.HEIGHT end
+	if params.scrollWidth==nil then params.scrollWidth=params.width end
+	if params.scrollHeight==nil then params.scrollHeight=params.height end
 	if params.upperHorizontalOffset==nil then params.upperHorizontalOffset = 0 end
 	if params.upperVerticalOffset==nil then params.upperVerticalOffset = 0 end
 	if params.verticalScrollEnabled==nil then params.verticalScrollEnabled=true end
@@ -177,8 +182,8 @@ function ScrollView:__init__( params )
 
 	-- properties in this class
 
-	self._width = params.width
-	self._height = params.height
+	-- self._width = params.width
+	-- self._height = params.height
 
 	self._contentPosition = {x=0,y=0}
 	self._contentPosition_dirty=true
@@ -247,16 +252,15 @@ function ScrollView:__init__( params )
 
 	self._scroller = nil -- our scroll area
 	self._scroller_dirty=true
-
 end
 
 --[[
---]]
 function ScrollView:__undoInit__()
 	-- print( "ScrollView:__undoInit__" )
 	--==--
 	self:superCall( '__undoInit__' )
 end
+--]]
 
 --== createView
 
@@ -264,16 +268,12 @@ function ScrollView:__createView__()
 	-- print( "ScrollView:__createView__" )
 	self:superCall( '__createView__' )
 	--==--
-	local o
-
 	-- local background, gesture hit area
-
-	o = display.newRect( 0,0,0,0 )
+	local o = newRect( 0,0,0,0 )
 	o.anchorX, o.anchorY = 0, 0
 	o:setFillColor( 1,0,0,0.4 )
 	self._dgBg:insert( o )
 	self._rectBg = o
-
 end
 
 function ScrollView:__undoCreateView__()
@@ -291,6 +291,8 @@ function ScrollView:__initComplete__()
 	self:superCall( '__initComplete__' )
 	--==--
 	local tmp = self._sv_tmp_params
+	self._sv_tmp_params = nil
+
 	local o, f
 
 	local delegate = {
@@ -314,6 +316,8 @@ function ScrollView:__initComplete__()
 	self._gesture_f = f
 
 	-- before axis creation
+	self.width = tmp.width
+	self.height = tmp.height
 	self.scrollWidth = tmp.scrollWidth
 	self.scrollHeight = tmp.scrollHeight
 
@@ -342,29 +346,30 @@ function ScrollView:__initComplete__()
 	self.upperVerticalOffset = tmp.upperVerticalOffset
 	self.lowerVerticalOffset = tmp.lowerVerticalOffset
 
-	self._sv_tmp_params = nil
 end
 
 function ScrollView:__undoInitComplete__()
-	--print( "ScrollView:__undoInitComplete__" )
+	-- print( "ScrollView:__undoInitComplete__" )
 	local o, f
+
+	self:_removeScaleMotion()
+	self._scale_f = nil
 
 	self:_removeAxisMotionX()
 	self:_removeAxisMotionY()
-
-	self:_removeScaleMotion()
+	self._axis_f = nil
 
 	o = self._panGesture
 	o:removeEventListener( o.EVENT, self._gesture_f )
+	o:removeSelf()
 	self._panGesture = nil
 
 	o = self._pinchGesture
 	o:removeEventListener( o.EVENT, self._gesture_f )
+	o:removeSelf()
 	self._pinchGesture = nil
 
 	self._gesture_f = nil
-
-	self:_removeScroller()
 
 	--==--
 	self:superCall( '__undoInitComplete__' )
@@ -378,7 +383,7 @@ end
 --====================================================================--
 --== Static Methods
 
-
+--
 function ScrollView.initialize( manager, params )
 	-- print( "ScrollView.initialize" )
 	dUI = manager
@@ -391,7 +396,7 @@ end
 
 
 
-
+--[[
 --== width
 
 function ScrollView.__getters:width()
@@ -413,6 +418,7 @@ function ScrollView.__setters:height( value )
 	-- print( 'StyleMix.__setters:height', value )
 	self._height = value
 end
+--]]
 
 
 
@@ -504,7 +510,6 @@ function ScrollView.__setters:decelerateTransitionTime( value )
 	self._axisY.decelerateTransitionTime = value
 end
 
-
 --== .delegate
 
 --- set/get delegate for item.
@@ -513,6 +518,22 @@ end
 -- @function .delegate
 -- @usage widget.delegate = <delegate object>
 -- @usage print( widget.delegate )
+
+ScrollView.__getters.delegate = WidgetHelp.__getters.delegate
+ScrollView.__setters.delegate = WidgetHelp.__setters.delegate
+
+--== .fillColor
+
+--- [**style**] set/get Style value for Widget fill color.
+--
+-- @within Properties
+-- @function .fillColor
+-- @usage style.fillColor = '#ff0000'
+-- @usage print( style.fillColor )
+
+ScrollView.__getters.fillColor = WidgetHelp.__getters.fillColor
+ScrollView.__setters.fillColor = WidgetHelp.__setters.fillColor
+
 
 --== .lowerHorizontalOffset
 
@@ -707,6 +728,13 @@ function ScrollView.__getters:pinchGesture()
 	-- print( "ScrollView.__setters:pinchGesture" )
 	return self._pinchGesture
 end
+
+
+--== .setFillColor
+
+ScrollView.setFillColor = WidgetHelp.setFillColor
+ScrollView.setFillColor = WidgetHelp.setFillColor
+
 
 
 --== .scrollWidth
@@ -1067,7 +1095,7 @@ end
 
 
 function ScrollView:_removeScroller()
-	-- print( "ScrollView:_removeScroller" )
+	-- print( "ScrollView:_removeScroller", self )
 	local o = self._scroller
 	if not o then return end
 	o:removeSelf()
@@ -1090,6 +1118,9 @@ function ScrollView:_loadViews()
 	self:_createScroller()
 end
 
+function ScrollView:_unloadViews()
+	self:_removeScroller()
+end
 
 
 function ScrollView:__commitProperties__()

@@ -54,8 +54,9 @@ local VERSION = "0.1.0"
 
 
 local Objects = require 'dmc_objects'
-local StatesMixModule = require 'dmc_states_mix'
+local Patch = require 'dmc_patch'
 
+local StatesMixModule = require 'dmc_states_mix'
 local Constants = require 'dmc_gestures.gesture_constants'
 
 
@@ -64,11 +65,14 @@ local Constants = require 'dmc_gestures.gesture_constants'
 --== Setup, Constants
 
 
+Patch.addPatch( 'print-output' )
+
 local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
 
 local StatesMix = StatesMixModule.StatesMix
 
+local sfmt = string.format
 local tcancel = timer.cancel
 local tdelay = timer.performWithDelay
 local tstr = tostring
@@ -78,6 +82,16 @@ local tstr = tostring
 --== Gesture Base Class
 --====================================================================--
 
+
+--- Gesture Recognizer Base Class.
+-- Base class for all Gesture Recognizers.
+--
+-- **Inherits from:**
+--
+-- * DMC.ObjectBase
+-- * DMC.StatesMix
+--
+-- @classmod Gesture.Gesture
 
 local Gesture = newClass(
 	{ ObjectBase, StatesMix }, { name="Gesture Base Class" }
@@ -96,9 +110,13 @@ Gesture.STATE_RECOGNIZED = 'state_recognized'
 
 --== Event Constants
 
+--- EVENT Name
 Gesture.EVENT = 'gesture-event'
 
+--- GESTURE Event
 Gesture.GESTURE = 'recognized-gesture-event'
+
+--- STATE Event
 Gesture.STATE = 'state-changed-event'
 
 
@@ -108,8 +126,6 @@ Gesture.STATE = 'state-changed-event'
 function Gesture:__init__( params )
 	-- print( "Gesture:__init__", params )
 	params = params or {}
-	-- params.id = params.id
-	-- params.delegate = params.delegate
 
 	self:superCall( StatesMix, '__init__', params )
 	self:superCall( ObjectBase, '__init__', params )
@@ -178,6 +194,7 @@ end
 function Gesture:__undoInitComplete__()
 	-- print( "Gesture:__undoInitComplete__" )
 	self:_stopAllTimers()
+	self._gesture_mgr:removeGesture( self )
 	--==--
 	self:superCall( ObjectBase, '__undoInitComplete__' )
 end
@@ -193,6 +210,19 @@ end
 --======================================================--
 -- Getters/Setters
 
+--- Getters and Setters
+-- @section getters-setters
+
+
+--== .id
+
+--- the id (string).
+-- this is useful to differentiate between
+-- different gestures attached to the same view object
+--
+-- @function .id
+-- @usage print( gesture.id )
+-- @usage gesture.id = "myid"
 
 function Gesture.__getters:id()
 	return self._id
@@ -202,7 +232,13 @@ function Gesture.__setters:id( value )
 	self._id = value
 end
 
--- delegate
+--== .delegate
+
+--- a gesture delegate (object/table)
+--
+-- @function .delegate
+-- @usage print( gesture.delegate )
+-- @usage gesture.delegate = { shouldRecognizeWith=<func> }
 
 function Gesture.__getters:delegate()
 	return self._delegate
@@ -220,6 +256,13 @@ function Gesture.__setters:gesture_mgr( value )
 	self._gesture_mgr = value
 end
 
+--== .view
+
+--- the target view (Display Object).
+--
+-- @function .view
+-- @usage print( gesture.view )
+-- @usage gesture.view = DisplayObject
 
 function Gesture.__getters:view()
 	return self._view
@@ -310,10 +353,10 @@ end
 -- Event Dispatch
 
 -- this one goes to the Gesture Manager
-function Gesture:_dispatchGestureNotification( notify )
+function Gesture:_dispatchGestureNotification( params )
 	-- print("Gesture:_dispatchGestureNotification", notify )
 	local g_mgr = self._gesture_mgr
-	if g_mgr and notify then
+	if g_mgr and params.notify then
 		g_mgr:gesture{
 			target=self,
 			id=self._id,
@@ -325,15 +368,18 @@ end
 
 
 -- this one goes to the Gesture Manager
-function Gesture:_dispatchStateNotification( notify )
+function Gesture:_dispatchStateNotification( params )
 	-- print("Gesture:_dispatchStateNotification" )
+	params = params or {}
+	local state = params.state or self:getState()
+	--==--
 	local g_mgr = self._gesture_mgr
-	if g_mgr and notify then
+	if g_mgr and params.notify then
 		g_mgr:gesture{
 			target=self,
 			id=self._id,
 			type=Gesture.STATE,
-			state=self:getState()
+			state=state
 		}
 	end
 end
@@ -408,7 +454,7 @@ end
 -- Touch Event
 
 function Gesture:_createTouchEvent( event )
-	-- print( "Gesture:_createTouchEvent", event, self )
+	-- print( "Gesture:_createTouchEvent", self.id )
 	self._total_touch_count = self._total_touch_count + 1
 	self._touch_count = self._touch_count + 1
 	self._touches[ tstr(event.id) ] = {
@@ -425,7 +471,7 @@ function Gesture:_createTouchEvent( event )
 end
 
 function Gesture:_updateTouchEvent( event )
-	-- print( "Gesture:_updateTouchEvent" )
+	-- print( "Gesture:_updateTouchEvent", self.id )
 	for id, evt in pairs( self._touches ) do
 		if id==tstr(event.id) then
 			evt.x, evt.y = event.x, event.y
@@ -437,7 +483,7 @@ function Gesture:_updateTouchEvent( event )
 end
 
 function Gesture:_endTouchEvent( event )
-	-- print( "Gesture:_endTouchEvent" )
+	-- print( "Gesture:_endTouchEvent", self.id )
 	self:_updateTouchEvent( event )
 	self._touch_count = self._touch_count - 1
 end
@@ -450,13 +496,12 @@ end
 
 
 
-
 --====================================================================--
 --== Event Handlers
 
 
 function Gesture:touch( event )
-	-- print("Gesture:touch" )
+	-- print("Gesture:touch", event.phase, self.id )
 	local phase = event.phase
 	if phase=='began' then
 		self:_createTouchEvent( event )
@@ -492,13 +537,11 @@ end
 
 function Gesture:do_state_possible( params )
 	-- print( "Gesture:do_state_possible" )
-	params = params or {}
-	--==--
 	self:setState( Gesture.STATE_POSSIBLE )
 end
 
 function Gesture:state_possible( next_state, params )
-	-- print( "Gesture:state_possible: >> ", next_state )
+	-- print( "Gesture:state_possible: >> ", next_state, self.id )
 
 	--== Check Delegate to see if this transition is OK
 
@@ -532,14 +575,15 @@ function Gesture:do_state_recognized( params )
 	params = params or {}
 	if params.notify==nil then params.notify=true end
 	--==--
+
 	self:setState( Gesture.STATE_RECOGNIZED )
-	self:_dispatchGestureNotification( params.notify )
-	self:_dispatchStateNotification( params.notify )
+	self:_dispatchGestureNotification( params )
+	self:_dispatchStateNotification( params )
 	self:_dispatchRecognizedEvent()
 end
 
 function Gesture:state_recognized( next_state, params )
-	-- print( "Gesture:state_recognized: >> ", next_state )
+	-- print( "Gesture:state_recognized: >> ", next_state, self.id )
 
 	if next_state == Gesture.STATE_POSSIBLE then
 		self:do_state_possible( params )
@@ -559,11 +603,11 @@ function Gesture:do_state_failed( params )
 	--==--
 	self:_stopAllTimers()
 	self:setState( Gesture.STATE_FAILED )
-	self:_dispatchStateNotification( params.notify )
+	self:_dispatchStateNotification( params )
 end
 
 function Gesture:state_failed( next_state, params )
-	-- print( "Gesture:state_failed: >> ", next_state )
+	-- print( "Gesture:state_failed: >> ", next_state, self.id )
 
 	if next_state == Gesture.STATE_POSSIBLE then
 		self:do_state_possible( params )

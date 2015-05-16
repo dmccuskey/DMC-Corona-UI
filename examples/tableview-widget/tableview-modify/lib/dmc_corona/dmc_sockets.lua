@@ -39,7 +39,7 @@ SOFTWARE.
 
 -- Semantic Versioning Specification: http://semver.org/
 
-local VERSION = "0.2.0"
+local VERSION = "0.3.0"
 
 
 
@@ -127,14 +127,12 @@ local dmc_sockets_data = Utils.extend( dmc_lib_data.dmc_sockets, DMC_SOCKETS_DEF
 --== Imports
 
 
-
-local Objects = require 'dmc_objects'
-local Utils = require 'dmc_utils'
-
+local Objects = require 'lua_objects'
 local socket = require 'socket'
+local Utils = require 'lua_utils'
 
-local tcp_socket = require 'dmc_sockets.tcp'
-local atcp_socket = require 'dmc_sockets.async_tcp'
+local TCPSocket = require 'dmc_sockets.tcp'
+local ATCPSocket = require 'dmc_sockets.async_tcp'
 
 
 
@@ -142,9 +140,15 @@ local atcp_socket = require 'dmc_sockets.async_tcp'
 --== Setup, Constants
 
 
--- setup some aliases to make code cleaner
-local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
+
+local ipairs = ipairs
+local mfloor = math.floor
+local sselect = socket.select
+local tinsert = table.insert
+local tonumber = tonumber
+local tostring = tostring
+local type = type
 
 local Singleton = nil
 
@@ -167,15 +171,15 @@ Sockets.ATCP = 'atcp'
 
 -- throttle socket checks, milliseconds delay
 Sockets.OFF = 0
-Sockets.LOW = math.floor( 1000/30 )  -- ie, 30 FPS
-Sockets.MEDIUM = math.floor( 1000/15 )  -- ie, 15 FPS
-Sockets.HIGH = math.floor( 1000/1 )  -- ie, 1 FPS
+Sockets.LOW = mfloor( 1000/30 )  -- ie, 30 FPS
+Sockets.MEDIUM = mfloor( 1000/15 )  -- ie, 15 FPS
+Sockets.HIGH = mfloor( 1000/1 )  -- ie, 1 FPS
 
 Sockets.DEFAULT = Sockets.MEDIUM
 
 
 --======================================================--
---== Start: Setup DMC Objects
+--== Start: Setup Lua Objects
 
 function Sockets:__init__( params )
 	-- print( "Sockets:__init__" )
@@ -236,7 +240,7 @@ function Sockets:__undoInitComplete__()
 	self:superCall( '__undoInitComplete__' )
 end
 
--- END: Setup DMC Objects
+-- END: Setup Lua Objects
 --====================================================================--
 
 
@@ -301,11 +305,11 @@ function Sockets:create( s_type, params )
 
 	if s_type == Sockets.TCP then
 		params.master = self
-		return tcp_socket:new( params )
+		return TCPSocket:new( params )
 
 	elseif s_type == Sockets.ATCP then
 		params.master = self
-		return atcp_socket:new( params )
+		return ATCPSocket:new( params )
 
 	elseif s_type == Sockets.UDP then
 		error( "Sockets:create, UDP is not yet available" )
@@ -406,7 +410,7 @@ function Sockets:_addSocket( sock )
 	self._raw_socks[ key ] = sock
 
 	-- save raw socket in list
-	table.insert( self._raw_socks_list, raw_sock )
+	tinsert( self._raw_socks_list, raw_sock )
 
 	if #self._raw_socks_list then
 		self.check_is_active = true
@@ -439,7 +443,7 @@ end
 function Sockets:_checkConnections()
 	-- print( "Sockets:_checkConnections" )
 
-	local s_read, s_write, err = socket.select( self._check_read, self._check_write, Sockets.NO_BLOCK )
+	local s_read, s_write, err = sselect( self._check_read, self._check_write, Sockets.NO_BLOCK )
 
 	if err ~= nil then return end
 

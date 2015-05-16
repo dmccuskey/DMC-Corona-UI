@@ -106,10 +106,9 @@ function run_example1()
 
 	-- tf1.align='left'
 	tf1.hintFontSize=18
-	-- tf1:setBackgroundFillColor( 1,0.5,0.2,0.3 )
 
-	-- tf1.isSecure=true
-	-- tf1.isHitActive=true
+	tf1.isSecure=true
+	tf1.isHitActive=true
 
 	tf2 = dUI.newTextField{
 		text="",
@@ -120,42 +119,34 @@ function run_example1()
 
 	-- timer.performWithDelay( 1000, function()
 	-- 	print("\n\n Update Properties")
-		-- test background props
+	-- 	-- test background props
 
-		-- tf1.x = H_CENTER-50
-		-- tf1.y = V_CENTER+100
+	-- 	tf1.x = H_CENTER-50
+	-- 	tf1.y = V_CENTER+100
 
-		-- tf1.isSecure=false
+	-- 	tf1.isSecure=false
 
-		-- tf1.align='center'
-		-- tf1.text="hello"
-		-- tf1.marginX=10
+	-- 	tf1.align='center'
+	-- 	tf1.text="hello"
+	-- 	tf1.marginX=10
 
-		-- tf1.width=200
-		-- tf1.height=100
+	-- 	tf1.width=200
+	-- 	tf1.height=100
 
-		-- -- tf1.isHitActive=false
+	-- 	-- tf1.isHitActive=false
 
-		-- tf1:setHintTextColor( 1,1,0 )
-		-- tf1.hintFontSize = 18
+	-- 	tf1:setHintTextColor( 1,1,0 )
+	-- 	tf1.hintFontSize = 18
 
-		-- tf1:setAnchor( {0,0} )
+	-- 	tf1:setAnchor( {0,0} )
 
-		-- tf1:setBackgroundStrokeColor( 0.2,0.2,0.9,0.5 )
-		-- tf1:setBackgroundFillColor( 0.2,0.2,0.2,0.2 )
-		-- tf1.backgroundStrokeWidth = 10
+	-- 	tf1.hintFont = native.systemFontBold
+	-- 	tf1.hintFontSize = 30
+	-- 	tf1:setHintTextColor(1,0,0,1)
 
-		-- tf1:setBackgroundStrokeColor( 0.2,0.2,0.9,0.5 )
-		-- tf1:setBackgroundFillColor( 0.2,0.2,0.2,0.2 )
-		-- tf1.backgroundStrokeWidth = 10
-
-		-- tf1.hintFont = native.systemFontBold
-		-- tf1.hintFontSize = 30
-		-- tf1:setHintTextColor(1,0,0,1)
-
-		-- tf1.displayFont = native.systemFontBold
-		-- tf1.displayFontSize = 30
-		-- tf1:setDisplayTextColor(1,0,0,1)
+	-- 	tf1.displayFont = native.systemFontBold
+	-- 	tf1.displayFontSize = 30
+	-- 	tf1:setDisplayTextColor(1,0,0,1)
 
 	-- end)
 
@@ -179,3 +170,59 @@ end
 
 run_example1()
 
+
+
+
+--======================================================--
+--== create textfield widget, default style
+
+function run_example2()
+
+	local ts1, tf1
+
+	ts1 = dUI.newTextFieldStyle{
+		debugOn=false,
+		width=280,
+		height=30,
+		align='left',
+		anchorX=0,
+		anchorY=0,
+	}
+
+	tf1 = dUI.newTextField{
+		text="hello",
+		hintText="Pizza:",
+	}
+	tf1.style=ts1
+	tf1.x, tf1.y = H_CENTER, V_CENTER
+	tf1.id="TOP"
+
+	timer.performWithDelay( 1000, function()
+		print("\n\n Update Properties")
+		-- test background props
+
+		ts1.width = 150
+		ts1.height = 40
+		-- ts1.marginX = 40
+		-- ts1.align='right'
+		ts1.anchorX=1
+		ts1.anchorY=1
+		tf1.isHitActive=true
+		tf1.isSecure=true
+		tf1.marginX=30
+
+		tf1:setHintTextColor( 1, 0, 0 )
+		tf1:setDisplayTextColor( 1, 0, 0 )
+
+		-- tf1.text="done"
+		tf1.align='right'
+		-- tf1.hintText="input:"
+	end)
+
+	timer.performWithDelay( 2000, function()
+		tf1.isSecure=false
+	end)
+
+end
+
+-- run_example2()

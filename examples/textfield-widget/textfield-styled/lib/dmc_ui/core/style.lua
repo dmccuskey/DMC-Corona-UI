@@ -79,11 +79,12 @@ local uiConst = require( ui_find( 'ui_constants' ) )
 
 Patch.addPatch( 'print-output' )
 
-local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
 
+local assert, tostring = assert, tostring
 local sfmt = string.format
 local tinsert = table.insert
+local type = type
 
 --== To be set in initialize()
 local Style = nil
@@ -95,17 +96,22 @@ local Style = nil
 --====================================================================--
 
 
+--- Style Base Class.
+-- The base class used for all Styles.
+--
+-- @classmod Core.Style
+
 local BaseStyle = newClass( ObjectBase, {name="Style Base"}  )
 
 --== Class Constants
 
---- the main style instance for the class.
+-- the main style instance for the class.
 -- is is the root style for the class, all styles
 -- inherit from this one. set later in setup.
 --
 BaseStyle.__base_style__ = nil  -- <instance of class>
 
---- table (hash) of valid style properties.
+-- table (hash) of valid style properties.
 -- used to check properties when updates come from Parent Style
 -- It's highly possible for Parent to have properties not available in
 -- a Child Style, so those should be skipped for propagation
@@ -117,7 +123,7 @@ BaseStyle._VALID_PROPERTIES = {}
 --
 BaseStyle._EXCLUDE_PROPERTY_CHECK = {}
 
---- table (hash) of children styles.
+-- table (hash) of children styles.
 -- this allows data (structures) for children
 -- to be processed separately.
 -- key/value should be name of child set to true, eg
@@ -197,6 +203,8 @@ function BaseStyle:__init__( params )
 
   if self.is_class then return end
 
+  self._sc_tmp_params = params
+
 	self._isInitialized = false
 	self._isClearing = false
 	self._isDestroying = false
@@ -206,20 +214,18 @@ function BaseStyle:__init__( params )
 		params.inherit = self:getBaseStyle( params.data )
 	end
 
+	-- @TODO: fix inherit,
 	self._inherit = params.inherit
 	self._inherit_f = nil
 
 	-- parent style
-	self._parent = params.parent
+	self._parent = nil
 	self._parent_f = nil
 
 	-- widget delegate
-	self._widget = params.widget
+	self._widget = nil
 
-	self._onPropertyChange_f = params.onPropertyChange
-
-	self._tmp_data = params.data -- temporary save of data
-	self._tmp_dataSrc = params.dataSrc -- temporary save of data
+	self._onPropertyChange_f = nil
 
 	self._name = params.name
 	self._debugOn = params.debugOn
@@ -228,34 +234,45 @@ function BaseStyle:__init__( params )
 	self._anchorX = params.anchorX
 	self._anchorY = params.anchorY
 end
+--[[
+function BaseStyle:__undoInit__()
+	-- print( "BaseStyle:__undoInit__" )
+	--==--
+	self:superCall( '__undoInit__' )
+end
+--]]
+
 
 function BaseStyle:__initComplete__()
 	-- print( "BaseStyle:__initComplete__", self )
 	self:superCall( '__initComplete__' )
 	--==--
-	self._isDestroying = false
+	local tmp = self._sc_tmp_params
+	self._sc_tmp_params = nil
 
-	local data = self:_prepareData( self._tmp_data,
-		self._tmp_dataSrc, {inherit=self._inherit} )
-	self._tmp_data = nil
-	self._tmp_dataSrc = nil
+	-- create children
+	local data = self:_prepareData( tmp.data,
+		tmp.dataSrc, {inherit=tmp.inherit} )
+	-- @TODO: fix inherit,
 	self:_parseData( data )
 
 	-- do this after style/children constructed --
 
-	self.inherit = self._inherit -- use setter
-	self.parent = self._parent -- use setter
-	self.widget = self._widget -- use setter
+	self.onPropertyChange = tmp.onPropertyChange -- use setter
+
+	self.inherit = tmp.inherit -- use setter
+	self.parent = tmp.parent -- use setter
+	self.widget = tmp.widget -- use setter
 
 	assert( self:verifyProperties(), sfmt( "Missing properties for Style '%s'", tostring(self.class) ) )
 
+	self._isDestroying = false
 	self._isInitialized = true
 end
 
 function BaseStyle:__undoInitComplete__()
 	-- print( "BaseStyle:__undoInitComplete__", self )
 	--==--
-
 	self._isDestroying = true
 
 	self:_dispatchDestroyEvent()
@@ -263,9 +280,9 @@ function BaseStyle:__undoInitComplete__()
 	self.widget = nil
 	self.parent = nil
 	self.inherit = nil
+	self.onPropertyChange = nil
 
 	self:_destroyChildren()
-
 	--==--
 	self:superCall( '__undoInitComplete__' )
 end
@@ -307,8 +324,6 @@ function BaseStyle.createStyleStructure( src )
 	--==--
 	return {}
 end
-
-
 
 
 -- addMissingDestProperties()
@@ -745,7 +760,8 @@ end
 function BaseStyle.__setters:widget( value )
 	-- print( "BaseStyle.__setters:widget", value )
 	-- TODO: update to check class, not table
-	assert( value==nil or type(value)=='table' )
+	local t = type(value)
+	assert( t=='nil' or t=='table' )
 	self._widget = value
 end
 
@@ -754,7 +770,8 @@ end
 --
 function BaseStyle.__setters:onPropertyChange( func )
 	-- print( "BaseStyle.__setters:onPropertyChange", func )
-	assert( type(func)=='function' )
+	local t = type(func)
+	assert( t=='nil' or t=='function' )
 	--==--
 	self._onPropertyChange_f = func
 end
@@ -768,6 +785,15 @@ override these getters/setters/methods if necesary
 --]]
 
 --== name
+
+--- [**style**] get/set name of Style.
+-- nil or a string.
+-- will put in Style Manager to reference.
+--
+-- @within Properties
+-- @function .name
+-- @usage style.name = 'home-images'
+-- @usage print( style.name )
 
 function BaseStyle.__getters:name()
 	-- print( "BaseStyle.__getters:name", self._inherit )
@@ -791,6 +817,14 @@ end
 
 --== debugOn
 
+--- [**style**] set/get value for debug mode.
+-- implementation depends on Widget.
+--
+-- @within Properties
+-- @function .debugOn
+-- @usage style.debugOn = true
+-- @usage print( style.debugOn )
+
 function BaseStyle.__getters:debugOn()
 	local value = self._debugOn
 	if value==nil and self._inherit then
@@ -807,6 +841,7 @@ function BaseStyle.__setters:debugOn( value )
 	self:_dispatchChangeEvent( 'debugOn', value )
 end
 
+--[[
 --== X
 
 function BaseStyle.__getters:x()
@@ -842,8 +877,16 @@ function BaseStyle.__setters:y( value )
 	self._y = value
 	self:_dispatchChangeEvent( 'y', value )
 end
+--]]
 
 --== width
+
+--- [**style**] set/get Style value for Widget width.
+--
+-- @within Properties
+-- @function .width
+-- @usage style.width = 100
+-- @usage print( style.width )
 
 function BaseStyle.__getters:width()
 	-- print( "BaseStyle.__getters:width", self.name, self._width  )
@@ -864,6 +907,13 @@ end
 
 --== height
 
+--- [**style**] set/get Style value for Widget height.
+--
+-- @within Properties
+-- @function .height
+-- @usage style.height = 50
+-- @usage print( style.height )
+
 function BaseStyle.__getters:height()
 	local value = self._height
 	if value==nil and self._inherit then
@@ -880,26 +930,14 @@ function BaseStyle.__setters:height( value )
 	self:_dispatchChangeEvent( 'height', value )
 end
 
-
---== align
-
-function BaseStyle.__getters:align()
-	local value = self._align
-	if value==nil and self._inherit then
-		value = self._inherit.align
-	end
-	return value
-end
-function BaseStyle.__setters:align( value )
-	-- print( "BaseStyle.__setters:align", value )
-	assert( type(value)=='string' or (value==nil and (self._inherit or self._isClearing)) )
-	--==--
-	if value==self._align then return end
-	self._align = value
-	self:_dispatchChangeEvent( 'align', value )
-end
-
 --== anchorX
+
+--- [**style**] set/get Style value for Widget anchorX.
+--
+-- @within Properties
+-- @function .anchorX
+-- @usage style.anchorX = 0.5
+-- @usage print( style.anchorX )
 
 function BaseStyle.__getters:anchorX()
 	local value = self._anchorX
@@ -919,6 +957,13 @@ end
 
 --== anchorY
 
+--- [**style**] set/get Style value for Widget anchorY.
+--
+-- @within Properties
+-- @function .anchorY
+-- @usage style.anchorY = 0.5
+-- @usage print( style.anchorY )
+
 function BaseStyle.__getters:anchorY()
 	local value = self._anchorY
 	if value==nil and self._inherit then
@@ -933,145 +978,6 @@ function BaseStyle.__setters:anchorY( value )
 	if value==self._anchorY then return end
 	self._anchorY = value
 	self:_dispatchChangeEvent( 'anchorY', value )
-end
-
---== fillColor
-
-function BaseStyle.__getters:fillColor()
-	-- print( "BaseStyle.__getters:fillColor", self, self._fillColor )
-	local value = self._fillColor
-	if value==nil and self._inherit then
-		value = self._inherit.fillColor
-	end
-	return value
-end
-function BaseStyle.__setters:fillColor( value )
-	-- print( "BaseStyle.__setters:fillColor", self._fillColor, value, self._isClearing )
-	assert( value or (value==nil and (self._inherit or self._isClearing)) )
-	--==--
-	self._fillColor = Kolor.translateColor( value )
-	self:_dispatchChangeEvent( 'fillColor', value )
-end
-
---== font
-
-function BaseStyle.__getters:font()
-	local value = self._font
-	if value==nil and self._inherit then
-		value = self._inherit.font
-	end
-	return value
-end
-function BaseStyle.__setters:font( value )
-	-- print( "BaseStyle.__setters:font", value )
-	assert( value or (value==nil and (self._inherit or self._isClearing)) )
-	--==--
-	self._font = value
-	self:_dispatchChangeEvent( 'font', value )
-end
-
---== fontSize
-
-function BaseStyle.__getters:fontSize()
-	local value = self._fontSize
-	if value==nil and self._inherit then
-		value = self._inherit.fontSize
-	end
-	return value
-end
-function BaseStyle.__setters:fontSize( value )
-	-- print( "BaseStyle.__setters:fontSize", value )
-	assert( type(value)=='number' or (value==nil and (self._inherit or self._isClearing)) )
-	--==--
-	self._fontSize = value
-	self:_dispatchChangeEvent( 'fontSize', value )
-end
-
---== marginX
-
-function BaseStyle.__getters:marginX()
-	local value = self._marginX
-	if value==nil and self._inherit then
-		value = self._inherit.marginX
-	end
-	return value
-end
-function BaseStyle.__setters:marginX( value )
-	-- print( "BaseStyle.__setters:marginX", value )
-	assert( type(value)=='number' or (value==nil and (self._inherit or self._isClearing)) )
-	--==--
-	self._marginX = value
-	self:_dispatchChangeEvent( 'marginX', value )
-end
-
---== marginY
-
-function BaseStyle.__getters:marginY()
-	local value = self._marginY
-	if value==nil and self._inherit then
-		value = self._inherit.marginY
-	end
-	return value
-end
-function BaseStyle.__setters:marginY( value )
-	-- print( "BaseStyle.__setters:marginY", value )
-	assert( type(value)=='number' or (value==nil and (self._inherit or self._isClearing)) )
-	--==--
-	self._marginY = value
-	self:_dispatchChangeEvent( 'marginY', value )
-end
-
---== strokeColor
-
-function BaseStyle.__getters:strokeColor()
-	local value = self._strokeColor
-	if value==nil and self._inherit then
-		value = self._inherit.strokeColor
-	end
-	return value
-end
-function BaseStyle.__setters:strokeColor( value )
-	-- print( "BaseStyle.__setters:strokeColor", value )
-	assert( value or (value==nil and (self._inherit or self._isClearing)) )
-	--==--
-	self._strokeColor = Kolor.translateColor( value )
-	self:_dispatchChangeEvent( 'strokeColor', value )
-end
-
---== strokeWidth
-
-function BaseStyle.__getters:strokeWidth( value )
-	local value = self._strokeWidth
-	if value==nil and self._inherit then
-		value = self._inherit.strokeWidth
-	end
-	return value
-end
-function BaseStyle.__setters:strokeWidth( value )
-	-- print( "BaseStyle.__setters:strokeWidth", self._strokeWidth, value, self._isClearing )
-	assert( value or (value==nil and (self._inherit or self._isClearing)) )
-	--==--
-	if value == self._strokeWidth then return end
-	self._strokeWidth = value
-	self:_dispatchChangeEvent( 'strokeWidth', value )
-
-end
-
---== textColor
-
-function BaseStyle.__getters:textColor()
-	local value = self._textColor
-	if value==nil and self._inherit then
-		value = self._inherit.textColor
-	end
-	return value
-end
-function BaseStyle.__setters:textColor( value )
-	-- print( "BaseStyle.__setters:textColor", value )
-	assert( value or (value==nil and (self._inherit or self._isClearing)) )
-	--==--
-	self._textColor = Kolor.translateColor( value )
-	self:_dispatchChangeEvent( 'textColor', value )
 end
 
 
@@ -1200,6 +1106,8 @@ end
 --
 function BaseStyle:_dispatchDestroyEvent( prop, value )
 	-- print( "BaseStyle:_dispatchDestroyEvent", prop, value, self )
+	local widget = self._widget
+	local callback = self._onPropertyChange_f
 
 	local e = self:createEvent( self.STYLE_DESTROYED )
 

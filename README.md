@@ -1,14 +1,18 @@
 # Overview #
 
-The DMC Corona UI library is collection of advanced widgets for the Corona SDK. They can be used in any size or type of application.
+The **DMC Corona UI** library is collection of advanced widgets for the Corona SDK. They can be used in any size or type of application.
 
 The module architecture is heavily object-oriented, but each module can be used with any style of coding. The OO-nature ensures that the modules can be easily re-used or modified as necessary.
 
+**Features**
+
+* Robust and efficient widgets
+* Cascading style sheets
+* Powerful controls
 
 **Documentation & Examples**
 
-There are examples and documentation available for the modules. Look in the `examples` folder for available examples which can be run directly in the Corona SDK. Documentation is online at: [docs.davidmccuskey.com](http://docs.davidmccuskey.com/dmc+corona+ui)
-
+There are examples and documentation available for the modules. Look in the `examples` folder for available examples which can be run directly in the Corona SDK. Documentation and some simple screencasts of examples are online at: [docs.davidmccuskey.com](http://docs.davidmccuskey.com/dmc+corona+ui)
 
 **Questions or Comments**
 
@@ -18,24 +22,26 @@ If you have questions or comments you can either (preferred order):
 * send a PM @ coronalabs.com: @dmccuskey
 * post to the Corona forums: http://forums.coronalabs.com
 
-
 **Issues**
 
 If you have any issues, please post them here on github: [dmc-corona-ui issues](http://github.com/dmccuskey/dmc-corona-ui/issues)
 
 
 
-
 ## Installation & Use ##
 
-For easy installation, copy the following items to the same location anywhere in your Corona project.
+For easy installation, copy the following setup in your project:
 
-* The entire `dmc_corona` folder
-* The entire `dmc_ui` folder
-* The `dmc_ui.lua` file
+```lua
+dmc_corona.cfg
+dmc_corona_boot.lua
+lib/
+  dmc_ui.lua
+  dmc_corona/
+  dmc_ui/
+```
 
-
-As in the examples, if you placed both items inside of a directory `lib`, the widgets module would be imported like so:
+With this setup the widgets module would be imported like so:
 
 ```lua
 local dUI = require 'lib.dmc_ui'
@@ -44,8 +50,7 @@ local button = dUI.newPushButton( params )
 ...
 ```
 
-
-The library has been designed to give a lot of flexibility where it is stored in your project. For more information regarding the library and individual widgets, visit [DMC Corona UI](http://docs.davidmccuskey.com/dmc+corona+ui).
+For more detailed info about installation, visit [Install DMC Corona UI](http://docs.davidmccuskey.com/install+dmc-corona-ui).
 
 
 
@@ -70,10 +75,14 @@ The library has been designed to give a lot of flexibility where it is stored in
 * ScrollView
 
   A robust 2D scroll surface.
+  
+* Segmented Control
+
+  A horizontal control made of multiple segments, each segment functioning as a discrete button.
 
 * TableView
 
-  A high-performance TableView widget, built on the ScrollView.
+  A high-performance TableView widget, inherits from ScrollView.
 
 * TableViewCell
 
@@ -81,13 +90,11 @@ The library has been designed to give a lot of flexibility where it is stored in
 
 * Text
 
-  A widget to display information.
+  A widget to display textual information.
 
 * TextField
 
-  No-fuss, all action text input widget.
-
-  Advanced widget for slide carousels.
+  No-fuss, all action text-input widget.
 
 
 

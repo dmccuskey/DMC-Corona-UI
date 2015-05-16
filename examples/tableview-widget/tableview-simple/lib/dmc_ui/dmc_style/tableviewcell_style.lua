@@ -77,9 +77,6 @@ local BaseStyle = require( ui_find( 'core.style' ) )
 --== Setup, Constants
 
 
-local newClass = Objects.newClass
-local ObjectBase = Objects.ObjectBase
-
 local sfmt = string.format
 local tinsert = table.insert
 
@@ -270,6 +267,13 @@ function TableViewCell:__init__( params )
 	-- self._height
 	-- self._anchorX
 	-- self._anchorY
+
+	--== Object Refs ==--
+
+	-- these are other style objects
+	-- TableViewCellState
+	self._active = nil
+	self._inactive = nil
 
 end
 

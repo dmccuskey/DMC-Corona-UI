@@ -140,11 +140,11 @@ local urllib = require 'socket.url'
 
 local ByteArray = require 'lib.dmc_lua.lua_bytearray'
 local ByteArrayError = require 'lib.dmc_lua.lua_bytearray.exceptions'
-local Objects = require 'dmc_objects'
+local LuaStatesMixin = require 'lib.dmc_lua.lua_states_mix'
+local Objects = require 'lib.dmc_lua.lua_objects'
 local Patch = require 'lib.dmc_lua.lua_patch'
 local Sockets = require 'dmc_sockets'
-local LuaStatesMixin = require 'lib.dmc_lua.lua_states_mix'
-local Utils = require 'dmc_utils'
+local Utils = require 'lib.dmc_lua.lua_utils'
 
 -- websocket modules
 local ws_error = require 'dmc_websockets.exception'
@@ -165,9 +165,15 @@ local StatesMix = LuaStatesMixin.StatesMix
 local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
 
+local assert = assert
+local sgmatch = string.gmatch
+local sgettimer = system.getTimer
+local tdelay = timer.performWithDelay
+local tcancel = timer.cancel
 local tinsert = table.insert
 local tconcat = table.concat
 local tremove = table.remove
+local type = type
 
 local ProtocolError = ws_error.ProtocolError
 local BufferError = ByteArrayError.BufferError
@@ -249,15 +255,18 @@ WebSocket.ONCLOSE = 'onclose'
 function WebSocket:__init__( params )
 	-- print( "WebSocket:__init__" )
 	params = params or {}
+	if params.auto_connect==nil then params.auto_connect=true end
+	if params.auto_reconnect==nil then params.auto_reconnect=false end
+
 	self:superCall( ObjectBase, '__init__', params )
 	self:superCall( StatesMix, '__init__', params )
 	--==--
 
 	--== Sanity Check ==--
 
-	if self.is_instance then
-		assert( params.uri, "WebSocket: requires parameter 'uri'" )
-	end
+	if self.is_class then return end
+
+	assert( params.uri, "WebSocket: requires parameter 'uri'" )
 
 	--== Create Properties ==--
 
@@ -266,8 +275,8 @@ function WebSocket:__init__( params )
 	self._query = params.query
 	self._protocols = params.protocols
 
-	self._auto_connect = params.auto_connect == nil and true or params.auto_connect
-	self._auto_reconnect = params.auto_reconnect or false
+	self._auto_connect = params.auto_connect
+	self._auto_reconnect = params.auto_reconnect
 
 	self._msg_queue = {}
 	self._msg_queue_handler = nil
@@ -294,7 +303,6 @@ function WebSocket:__init__( params )
 	self._ba = nil -- our Byte Array, buffer
 	self._socket = nil
 	self._ssl_params = params.ssl_params
-
 
 	-- set first state
 	self:setState( WebSocket.STATE_CREATE )
@@ -463,7 +471,7 @@ end
 function WebSocket:_processHeaderString( str )
 	-- print( "WebSocket:_processHeaderString" )
 	local results = {}
-	for line in string.gmatch( str, '([^\r\n]*)\r\n') do
+	for line in sgmatch( str, '([^\r\n]*)\r\n') do
 		tinsert( results, line )
 	end
 	return results
@@ -623,7 +631,6 @@ function WebSocket:_receiveFrame()
 	until err or self:getState() == WebSocket.STATE_CLOSED
 
 	--== handle error
-
 	if not err then
 		-- pass, WebSocket.STATE_CLOSED
 
@@ -771,7 +778,7 @@ function WebSocket:_addMessageToQueue( message )
 	-- print( "WebSocket:_addMessageToQueue" )
 	assert( message:isa( ws_message ), "expected message object" )
 	--==--
-	table.insert( self._msg_queue, message )
+	tinsert( self._msg_queue, message )
 	self:_processMessageQueue()
 
 	-- if we still have info left, then set listener
@@ -796,7 +803,7 @@ function WebSocket:_processMessageQueue()
 	-- print( "WebSocket:_processMessageQueue", #self._msg_queue )
 
 	if #self._msg_queue == 0 then return end
-	local start = system.getTimer()
+	local start = sgettimer()
 
 	repeat
 		local msg = self._msg_queue[1]
@@ -804,7 +811,7 @@ function WebSocket:_processMessageQueue()
 		if msg:getAvailable() == 0 then
 			self:_removeMessageFromQueue( msg )
 		end
-		local diff = system.getTimer() - start
+		local diff = sgettimer() - start
 	until #self._msg_queue == 0 or diff > 0
 end
 
@@ -1036,7 +1043,7 @@ function WebSocket:do_state_closing_connection( params )
 			self._close_timer = nil
 			self:gotoState( WebSocket.STATE_CLOSED, { code=params.code, reason=params.reason } )
 		end
-		self._close_timer = timer.performWithDelay( 4000, f )
+		self._close_timer = tdelay( 4000, f )
 	end
 
 end
@@ -1067,7 +1074,7 @@ function WebSocket:do_state_closed( params )
 
 	if self._close_timer then
 		-- print( "Close response received" )
-		timer.cancel( self._close_timer )
+		tcancel( self._close_timer )
 		self._close_timer = nil
 	end
 

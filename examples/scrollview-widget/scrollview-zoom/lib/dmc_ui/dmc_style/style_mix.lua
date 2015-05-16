@@ -1,5 +1,5 @@
 --====================================================================--
--- dmc_widget/widget_style_mix.lua
+-- dmc_ui/dmc_style/style_mix.lua
 --
 -- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
@@ -33,7 +33,7 @@ SOFTWARE.
 
 
 --====================================================================--
---== DMC Corona Widgets : Widget StyleMix Mixin
+--== DMC Corona Widgets : Widget Style Mixin
 --====================================================================--
 
 
@@ -47,8 +47,7 @@ local VERSION = "0.1.0"
 --== Imports
 
 
-local Utils = require 'dmc_utils'
-
+-- local Utils = require 'dmc_utils'
 
 
 
@@ -56,7 +55,9 @@ local Utils = require 'dmc_utils'
 --== Setup, Constants
 
 
+local assert, tostring = assert, tostring
 local sfmt = string.format
+local tdelay = timer.performWithDelay
 
 --== To be set in initialize()
 local Style = nil
@@ -95,26 +96,24 @@ end
 
 
 --====================================================================--
---== StyleMix Mixin
+--== Style Mixin
 --====================================================================--
 
 
 local StyleMix = {}
 
-StyleMix.NAME = "StyleMix Mixin"
+StyleMix.NAME = "Style Mixin"
 
 StyleMix.__getters = {}
 StyleMix.__setters = {}
 
 --======================================================--
--- START: Mixin Setup for DMC Objects
+-- START: Mixin Setup for Lua Objects
 
 function StyleMix.__init__( self, params )
-	-- print( 'StyleMix.__init__x', params )
+	-- print( "StyleMix.__init__", params )
 	params = params or {}
 	--==--
-
-	--== Sanity Check ==--
 
 	if self.is_class then return end
 
@@ -124,13 +123,11 @@ function StyleMix.__init__( self, params )
 		print( "\n\n\n DOING THEME INIT: widget", self)
 	end
 	self:resetStyle( params )
-
-	self.__default_style = params.defaultStyle
-
 	if LOCAL_DEBUG then
 		print( "\n\n\n DONE WITH THEME INIT")
 	end
 end
+
 
 
 function StyleMix.__undoInit__( self )
@@ -139,7 +136,7 @@ function StyleMix.__undoInit__( self )
 end
 
 function StyleMix.__initComplete__( self )
-	-- print( 'StyleMix.__initComplete__' )
+	-- print( "StyleMix.__initComplete__" )
 	if not self.__default_style then
 		self.__default_style = self:_createDefaultStyle()
 	end
@@ -147,12 +144,13 @@ function StyleMix.__initComplete__( self )
 end
 
 function StyleMix.__undoInitComplete__( self )
-	-- print( 'StyleMix.__undoInitComplete__' )
-	local o = self.__default_style
-	self.__default_style = self:_destroyDefaultStyle( o )
+	-- print( "StyleMix.__undoInitComplete__" )
+	self:_purgeActiveStyle( self.__curr_style )
+	self:_destroyDefaultStyle( self.__default_style )
+	self.__default_style=nil
 end
 
--- END: Mixin Setup for DMC Objects
+-- END: Mixin Setup for Lua Objects
 --======================================================--
 
 
@@ -162,6 +160,7 @@ end
 
 
 function StyleMix.resetStyle( self, params )
+	-- print( "StyleMix:resetStyle" )
 	params = params or {}
 	if params.debug_on==nil then params.debug_on=false end
 	--==--
@@ -171,7 +170,7 @@ function StyleMix.resetStyle( self, params )
 	self.__collection_name = nil -- 'navbar-home'
 	self.__curr_style_collection = nil -- <style collection obj>
 	self.__curr_style = nil -- <style obj>
-	self.__default_style = nil
+	self.__default_style = params.defaultStyle
 	self.__curr_style_f = nil
 	self.__theme_f = nil -- theme callback
 	self.__styles = {}
@@ -233,7 +232,7 @@ function StyleMix.__setters:style( value )
 		value = StyleMgr.getStyle( self.STYLE_TYPE, name )
 		if value then
 			local f = function(e)
-				timer.performWithDelay( 1, function()
+				tdelay( 1, function()
 					StyleMix.__setters.style( self, name )
 				end)
 			end
@@ -253,6 +252,17 @@ function StyleMix.beforeRemoveStyle( self )
 end
 
 
+function StyleMix._purgeActiveStyle( self, style )
+	-- print( "StyleMix._purgeActiveStyle", self, style )
+	if not style then return end
+	self:beforeRemoveStyle()
+	style.widget = nil
+	self:_destroyStyle( style )
+	self.__curr_style = nil
+	self.curr_style = nil
+end
+
+
 function StyleMix.setActiveStyle( self, data, params )
 	-- print( "\n\n\n>>>>>>>StyleMix.setActiveStyle", self, data, self.STYLE_CLASS )
 	params = params or {}
@@ -266,14 +276,7 @@ function StyleMix.setActiveStyle( self, data, params )
 	local style = self.__curr_style
 	local o = self.__curr_style
 
-	if style then
-		self:beforeRemoveStyle()
-		style.widget = nil
-
-		self:_destroyStyle( style )
-		self.__curr_style = nil
-		self.curr_style = nil
-	end
+	self:_purgeActiveStyle( style )
 
 	if data==nil then
 		-- use our default style
@@ -284,6 +287,7 @@ function StyleMix.setActiveStyle( self, data, params )
 			style = data
 		else
 			style = data:copyStyle()
+			style.__active_create=true
 		end
 	else
 		-- Utils.print( data )
@@ -315,179 +319,7 @@ end
 
 
 
-
---[[
-override these getters/setters/methods if necesary
---]]
-
---== debugOn
-
-function StyleMix.__getters:debugOn()
-	return self.curr_style.debugOn
-end
-function StyleMix.__setters:debugOn( value )
-	-- print( 'StyleMix.__setters:debugOn', value )
-	self.curr_style.debugOn = value
-end
-
-
---== width
-
-function StyleMix.__getters:width()
-	-- print( 'StyleMix.__getters:width' )
-	return self.curr_style.width
-end
-function StyleMix.__setters:width( value )
-	-- print( 'StyleMix.__setters:width', value )
-	self.curr_style.width = value
-end
-
---== height
-
-function StyleMix.__getters:height()
-	-- print( 'StyleMix.__getters:height' )
-	return self.curr_style.height
-end
-function StyleMix.__setters:height( value )
-	-- print( 'StyleMix.__setters:height', value )
-	self.curr_style.height = value
-end
-
---== align
-
-function StyleMix.__getters:align()
-	return self.curr_style.align
-end
-function StyleMix.__setters:align( value )
-	-- print( 'StyleMix.__setters:align', value )
-	self.curr_style.align = value
-end
-
---== anchorX
-
---- set/get anchorX.
---
--- @within Inherited
--- @function .anchorX
--- @usage widget.anchorX = 5
--- @usage print( widget.anchorX )
---
-function StyleMix.__getters:anchorX()
-	return self.curr_style.anchorX
-end
-function StyleMix.__setters:anchorX( value )
-	-- print( 'StyleMix.__setters:anchorX', value, self )
-	self.curr_style.anchorX = value
-end
-
---== anchorY
-
---- set/get anchorY.
---
--- @within Inherited
--- @function .anchorY
--- @usage widget.anchorY = 5
--- @usage print( widget.anchorY )
---
-function StyleMix.__getters:anchorY()
-	return self.curr_style.anchorY
-end
-function StyleMix.__setters:anchorY( value )
-	-- print( 'StyleMix.__setters:anchorY', value )
-	self.curr_style.anchorY = value
-end
-
---== font
-
-function StyleMix.__getters:font()
-	return self.curr_style.font
-end
-function StyleMix.__setters:font( value )
-	-- print( 'StyleMix.__setters:font', value )
-	self.curr_style.font = value
-end
-
---== fontSize
-
-function StyleMix.__getters:fontSize()
-	return self.curr_style.fontSize
-end
-function StyleMix.__setters:fontSize( value )
-	-- print( 'StyleMix.__setters:fontSize', value )
-	self.curr_style.fontSize = value
-end
-
---== marginX
-
-function StyleMix.__getters:marginX()
-	return self.curr_style.marginX
-end
-function StyleMix.__setters:marginX( value )
-	-- print( 'StyleMix.__setters:marginX', value )
-	self.curr_style.marginX = value
-end
-
---== marginY
-
-function StyleMix.__getters:marginY()
-	return self.curr_style.marginY
-end
-function StyleMix.__setters:marginY( value )
-	-- print( 'StyleMix.__setters:marginY', value )
-	self.curr_style.marginY = value
-end
-
---== strokeWidth
-
-function StyleMix.__getters:strokeWidth()
-	return self.curr_style.strokeWidth
-end
-function StyleMix.__setters:strokeWidth( value )
-	-- print( 'StyleMix.__setters:strokeWidth', value )
-	self.curr_style.strokeWidth = value
-end
-
-
-
 --== Style Methods ==--
-
---== setAnchor
-
-function StyleMix:setAnchor( ... )
-	-- print( 'StyleMix:setAnchor' )
-	local args = {...}
-
-	if type( args[1] ) == 'table' then
-		self.anchorX, self.anchorY = unpack( args[1] )
-	end
-	if type( args[1] ) == 'number' then
-		self.anchorX = args[1]
-	end
-	if type( args[2] ) == 'number' then
-		self.anchorY = args[2]
-	end
-end
-
---== setFillColor
-
-function StyleMix:setFillColor( ... )
-	-- print( 'StyleMix:setFillColor' )
-	self.curr_style.fillColor = {...}
-end
-
---== setStrokeColor
-
-function StyleMix:setStrokeColor( ... )
-	-- print( 'StyleMix:setStrokeColor' )
-	self.curr_style.strokeColor = {...}
-end
-
---== setTextColor
-
-function StyleMix:setTextColor( ... )
-	-- print( 'StyleMix:setTextColor' )
-	self.curr_style.textColor = {...}
-end
 
 
 function StyleMix.__getters:defaultStyle()
@@ -503,7 +335,7 @@ end
 function StyleMix._createStyle( self, StyleClass, data )
 	-- print( "StyleMix._createStyle", self, StyleClass, data )
 	-- create copied style
-	local name = string.format( "copied-style-%s", tostring( self ) )
+	local name = sfmt( "copied-style-%s", tostring( self ) )
 	local style = StyleClass:createStyleFrom{
 		data=data,
 		name=name
@@ -526,11 +358,8 @@ end
 -- _createDefaultStyle()
 -- create the default Style instance for this Widget
 --
-function StyleMix._createDefaultStyle( self, params )
+function StyleMix._createDefaultStyle( self )
 	-- print( "StyleMix._createDefaultStyle", self.STYLE_CLASS )
-	params = params or {}
-	if params.copy==nil then params.copy=true end
-	--==--
 	local StyleClass = self.STYLE_CLASS
 	assert( StyleClass, "[ERROR] Widget is missing property 'STYLE_CLASS'" )
 	local BaseStyle = StyleClass:getBaseStyle()
@@ -543,9 +372,9 @@ end
 
 function StyleMix._destroyDefaultStyle( self, style )
 	-- print( "StyleMix._destroyDefaultStyle", style )
-	if not style or not style.__mix_created then return nil end
+	if not style or not style.__mix_created then return end
+	style.__mix_created=nil
 	style:removeSelf()
-	return nil
 end
 
 

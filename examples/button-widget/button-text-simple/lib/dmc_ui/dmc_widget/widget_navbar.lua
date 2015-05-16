@@ -69,14 +69,13 @@ local Objects = require 'dmc_objects'
 local uiConst = require( ui_find( 'ui_constants' ) )
 
 local WidgetBase = require( ui_find( 'core.widget' ) )
+local WidgetHelp = require( ui_find( 'core.widget_helper' ) )
 
 
 
 --====================================================================--
 --== Setup, Constants
 
-
-local newClass = Objects.newClass
 
 local tinsert = table.insert
 local tremove = table.remove
@@ -95,10 +94,16 @@ local Widget = nil
 --- NavBar Widget.
 -- a widget used for navigation between pages.
 --
+-- **Inherits from:** <br>
+-- * @{Core.Widget}
+--
+-- **Style Object:** <br>
+-- * @{Style.NavBar}
+--
 -- @classmod Widget.NavBar
 -- @usage
--- local dUI = require 'dmc_ui'
--- local widget = dUI.newNavBar()
+-- dUI = require 'dmc_ui'
+-- widget = dUI.newNavBar()
 
 local NavBar = newClass( WidgetBase, {name="Nav Bar Widget"}
 )
@@ -271,66 +276,17 @@ end
 --== Public Methods
 
 
---======================================================--
--- Local Properties
+--== .delegate
 
-
---[[
-Inherited - copied from dmc_widget.core.widget
---]]
-
---- set/get x position.
---
--- @within Properties
--- @function .x
--- @usage widget.x = 5
--- @usage print( widget.x )
-
---- set/get y position.
---
--- @within Properties
--- @function .y
--- @usage widget.y = 5
--- @usage print( widget.y )
-
---- set/get width.
---
--- @within Properties
--- @function .width
--- @usage widget.width = 5
--- @usage print( widget.width )
-
---- set/get height.
---
--- @within Properties
--- @function .height
--- @usage widget.height = 5
--- @usage print( widget.height )
-
---- set/get anchorX.
---
--- @within Properties
--- @function .anchorX
--- @usage widget.anchorX = 5
--- @usage print( widget.anchorX )
-
---- set/get anchorY.
---
--- @within Properties
--- @function .anchorY
--- @usage widget.anchorY = 5
--- @usage print( widget.anchorY )
-
-
---======================================================--
--- Local Properties
-
---- set delegate.
--- set delegate to control functionality.
+--- set/get delegate for item.
 --
 -- @within Properties
 -- @function .delegate
 -- @usage widget.delegate = <delegate object>
+-- @usage print( widget.delegate )
+
+NavBar.__getters.delegate = WidgetHelp.__getters.delegate
+NavBar.__setters.delegate = WidgetHelp.__setters.delegate
 
 
 --- add Nav Item to navigation stack.
@@ -352,12 +308,6 @@ Inherited - copied from dmc_widget.core.widget
 
 --======================================================--
 -- Nav Bar Methods
-
-function NavBar.__setters:delegate( obj )
-	-- print( "NavBar.__setters:delegate", obj )
-	self._delegate = obj
-end
-
 
 function NavBar:pushNavItem( item, params )
 	-- print( "NavBar:pushNavItem", item )
@@ -681,45 +631,43 @@ function NavBar:_getTransition( from_item, to_item, direction )
 					self:_attachBackListener( from_item.backButton )
 				end
 
+				--== Left/Back
 
-			--== Left/Back
+				if t_d then
+					t_d.isVisible = false
+				end
 
-			if t_d then
-				t_d.isVisible = false
-			end
+				if fHasLeft or #self._items>1 then
+					f_d.isVisible = true
+					f_d.x = mX_OFF-H_CENTER+MARGINS.x
+					f_d.alpha = 1
+				else
+					f_d.isVisible = false
+				end
 
-			if fHasLeft or #self._items>1 then
-				f_d.isVisible = true
-				f_d.x = mX_OFF-H_CENTER+MARGINS.x
-				f_d.alpha = 1
-			else
-				f_d.isVisible = false
-			end
+				--== Title
 
-			--== Title
+				if t_t then
+					t_t.isVisible = false
+				end
 
-			if t_t then
-				t_t.isVisible = false
-			end
+				if f_t then
+					f_t.isVisible = true
+					f_t.x = mX_OFF
+					f_t.alpha = 1
+				end
 
-			if f_t then
-				f_t.isVisible = true
-				f_t.x = mX_OFF
-				f_t.alpha = 1
-			end
+				--== Right
 
-			--== Right
+				if t_r then
+					t_r.isVisible = false
+				end
 
-			if t_r then
-				t_r.isVisible = false
-			end
-
-			if f_r then
-				f_r.isVisible = true
-				f_r.x = mX_OFF+H_CENTER
-				f_r.alpha = 1
-			end
-
+				if f_r then
+					f_r.isVisible = true
+					f_r.x = mX_OFF+H_CENTER
+					f_r.alpha = 1
+				end
 
 			end
 
@@ -975,8 +923,8 @@ function NavBar:__commitProperties__()
 		local o
 		o = item.title
 		if o then
-			o.y = 0
-			o.anchorX, o.anchorY = 0.5, anchorY
+			o.y = (0.5-anchorY)*style.height
+			o.anchorX, o.anchorY = 0.5, 0.5
 		end
 		o = item.backButton
 		if o then

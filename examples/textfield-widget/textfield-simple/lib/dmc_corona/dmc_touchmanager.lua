@@ -31,10 +31,12 @@ SOFTWARE.
 --]]
 
 
---- Touch Manager Module
--- @module TouchManager
+--- A Lua module to patch multitouch in Corona SDK.
+--
+-- @module dmc-touchmanager
+--
 -- @usage
--- local TouchMgr = require 'dmc_corona.dmc_touchmanager'
+-- local TouchMgr = require 'dmc_touchmanager'
 -- local o = createDisplayObject( color )
 -- TouchMgr.register( o )
 
@@ -401,11 +403,7 @@ end
 -- @param g_mgr a Gesture Manager
 --
 function TouchMgr.unregisterGestureMgr( g_mgr )
-	local r = TouchMgr._getRegisteredObject( g_mgr )
-		if r then
-			TouchMgr._setRegisteredObject( obj, nil )
-			obj:removeEventListener( 'touch', r.callback )
-		end
+	TouchMgr._removeRegisteredManager( g_mgr )
 end
 
 
@@ -527,6 +525,10 @@ function TouchMgr._setRegisteredManager( g_mgr )
 	assert( struct.g_mgr==nil )
 	g_mgr.touch_manager = TouchMgr
 	struct.g_mgr = g_mgr
+end
+
+function TouchMgr._removeRegisteredManager( g_mgr )
+	return TouchMgr._removeRegisteredObjectStruct( g_mgr.view )
 end
 
 

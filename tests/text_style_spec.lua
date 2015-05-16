@@ -316,6 +316,7 @@ function test_verifyStyleProperties()
 		fillColor={1,1,0},
 		font=native.systemFont,
 		fontSize=5,
+		fontSizeMinimum=3,
 		marginX=15,
 		marginY=4,
 		strokeColor={1,1,1},

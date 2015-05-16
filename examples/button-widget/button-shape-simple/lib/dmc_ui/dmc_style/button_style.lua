@@ -69,15 +69,13 @@ local Utils = require 'dmc_utils'
 local uiConst = require( ui_find( 'ui_constants' ) )
 
 local BaseStyle = require( ui_find( 'core.style' ) )
+local StyleHelp = require( ui_find( 'core.style_helper' ) )
 
 
 
 --====================================================================--
 --== Setup, Constants
 
-
-local newClass = Objects.newClass
-local ObjectBase = Objects.ObjectBase
 
 local sfmt = string.format
 local tinsert = table.insert
@@ -91,6 +89,21 @@ local Style = nil
 --== Button Style Class
 --====================================================================--
 
+
+--- Button Style Class.
+-- a Style object for a Button Widget.
+--
+-- **Inherits from:** <br>
+-- * @{Core.Style}
+--
+-- @classmod Style.Button
+-- @usage
+-- local dUI = require 'dmc_ui'
+-- local widget = dUI.newButtonStyle{
+--   type='rounded',
+-- }
+--
+-- local widget = dUI.newRoundedBackgroundStyle()
 
 local ButtonStyle = newClass( BaseStyle, {name="Button Style"} )
 
@@ -382,6 +395,7 @@ function ButtonStyle:__init__( params )
 	-- self._anchorX
 	-- self._anchorY
 
+	self._align = nil
 	self._hitMarginX = nil
 	self._hitMarginY = nil
 	self._isHitActive = nil
@@ -604,6 +618,12 @@ end
 
 --== .inactive
 
+--- get Style object for State 'inactive'.
+--
+-- @within Properties
+-- @function .inactive
+-- @usage print( style.inactive )
+
 function ButtonStyle.__getters:inactive()
 	-- print( "ButtonStyle.__getters:inactive", self._inactive )
 	return self._inactive
@@ -669,6 +689,19 @@ end
 --======================================================--
 -- Access to style properties
 
+--== .align
+
+--- [**style**] set/get Style value for Widget text alignment.
+-- values are 'left', 'center', 'right'
+--
+-- @within Properties
+-- @function .align
+-- @usage widget.align = 'center'
+-- @usage print( widget.align )
+
+ButtonStyle.__getters.align = StyleHelp.__getters.align
+ButtonStyle.__setters.align = StyleHelp.__setters.align
+
 --== .hitMarginX
 
 function ButtonStyle.__getters:hitMarginX()
@@ -725,6 +758,30 @@ function ButtonStyle.__setters:isHitActive( value )
 	self._isHitActive = value
 	self:_dispatchChangeEvent( 'isHitActive', value )
 end
+
+--== .marginX
+
+--- [**style**] set/get Style value for Widget X-axis margin.
+--
+-- @within Properties
+-- @function .marginX
+-- @usage style.marginX = 10
+-- @usage print( style.marginX )
+
+ButtonStyle.__getters.marginX = StyleHelp.__getters.marginX
+ButtonStyle.__setters.marginX = StyleHelp.__setters.marginX
+
+--== .marginY
+
+--- [**style**] set/get Style value for Widget Y-axis margin.
+--
+-- @within Properties
+-- @function .marginY
+-- @usage style.marginY = 10
+-- @usage print( style.marginY )
+
+ButtonStyle.__getters.marginY = StyleHelp.__getters.marginY
+ButtonStyle.__setters.marginY = StyleHelp.__setters.marginY
 
 
 --======================================================--

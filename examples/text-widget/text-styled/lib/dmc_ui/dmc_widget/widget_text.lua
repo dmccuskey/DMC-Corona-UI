@@ -69,6 +69,7 @@ local Objects = require 'dmc_objects'
 local uiConst = require( ui_find( 'ui_constants' ) )
 
 local WidgetBase = require( ui_find( 'core.widget' ) )
+local WidgetHelp = require( ui_find( 'core.widget_helper' ) )
 
 
 
@@ -76,8 +77,7 @@ local WidgetBase = require( ui_find( 'core.widget' ) )
 --== Setup, Constants
 
 
-local newClass = Objects.newClass
-
+local newText = display.newText
 local ssub = string.sub
 
 --== To be set in initialize()
@@ -93,24 +93,59 @@ local FontMgr = nil
 local function testTextLength( text, params )
 	-- print( "Text:testTextLength", text, params.width )
 	local w = params.width
+	local f = params.font
+	local fs = params.fontSize
+	local fsm = params.fontSizeMinimum
 	local _ssub = ssub
-	local o = display.newText{
+	local _newText = newText
+
+	--== check size with defaults
+
+	local o = _newText{
 		text=text,
-		font=params.font,
-		fontSize=params.fontSize
+		font=f,
+		fontSize=fs
 	}
 	local tw = o.width
 	o:removeSelf()
-	if tw < w then return text end
+	if tw < w then return text, fs end
+
+	--== check for font minimum
+
+	if fsm~=0 then
+		local cfs = fs-1 -- current font size
+		while cfs>=fsm do
+			local o = _newText{
+				text=text,
+				font=f,
+				fontSize=cfs
+			}
+			local tw = o.width
+			o:removeSelf()
+			if tw > w then
+				cfs = cfs-1
+			else
+				break
+			end
+		end
+		if cfs<fsm then
+			-- text too big, shorten with '...'
+			fs=fsm
+		else
+			return text, cfs
+		end
+	end
+
+	--== check for ellipses
 
 	local cnt = 0
 	local prev = '...'
 	while true do
 		local t = ssub( text, 0, cnt )..'...'
-		local o = display.newText{
+		local o = _newText{
 			text=t,
-			font=params.font,
-			fontSize=params.fontSize
+			font=f,
+			fontSize=fs
 		}
 		local tw = o.width
 		o:removeSelf()
@@ -120,7 +155,7 @@ local function testTextLength( text, params )
 			break
 		end
 	end
-	return prev
+	return prev, fs
 end
 
 
@@ -131,12 +166,18 @@ end
 
 
 --- Text Widget Module.
--- at the core, the DMC Text Widget wraps a Corona Text widget to provide its functionality. this gives us more consistent behavior! (w00t!)
+-- displays text content. this widget wraps the a Corona OpenGL Text component to provide its core functionality.
+--
+-- **Inherits from:** <br>
+-- * @{Core.Widget}
+--
+-- **Style Object:** <br>
+-- * @{Style.Text}
 --
 -- @classmod Widget.Text
 -- @usage
--- local dUI = require 'dmc_ui'
--- local widget = dUI.newText()
+-- dUI = require 'dmc_ui'
+-- widget = dUI.newText()
 
 local Text = newClass( WidgetBase, { name="Text Widget" } )
 
@@ -145,9 +186,15 @@ local Text = newClass( WidgetBase, { name="Text Widget" } )
 
 --== Class Constants
 
+--- Constant for 'left'
 Text.LEFT = 'left'
+
+--- Constant for 'center'
 Text.CENTER = 'center'
+
+--- Constant for 'right'
 Text.RIGHT = 'right'
+
 
 --== Style/Theme Constants
 
@@ -164,6 +211,8 @@ Text.STYLE_TYPE = uiConst.TEXT
 --== Event Constants
 
 Text.EVENT = 'text-widget-event'
+
+Text.DIMENSION_CHANGED = 'dimension-changed-event'
 
 
 --======================================================--
@@ -290,58 +339,9 @@ end
 --== Public Methods
 
 
---[[
-Inherited Methods
---]]
+--== .align
 
---- set/get x position.
---
--- @within Properties
--- @function .x
--- @usage widget.x = 5
--- @usage print( widget.x )
-
---- set/get y position.
---
--- @within Properties
--- @function .y
--- @usage widget.y = 5
--- @usage print( widget.y )
-
---- set/get anchorX.
---
--- @within Properties
--- @function .anchorX
--- @usage widget.anchorX = 5
--- @usage print( widget.anchorX )
-
---- set/get anchorY.
---
--- @within Properties
--- @function .anchorY
--- @usage widget.anchorY = 5
--- @usage print( widget.anchorY )
-
---- set/get widget style.
--- style can be a style name or a Style Object.
--- Style Object must be appropriate style for Widget, eg style for Background widget comes from dUI.newBackgroundStyle().
--- @within Properties
--- @function .style
--- @usage widget.style = 'widget-home-page'
--- @usage
--- local wStyle = dUI.newTextStyle()
--- widget.style = wStyle
-
-
---- clear any local properties on style.
--- convenience method, calls clearProperties() on active style.
---
--- @within Methods
--- @function :clearStyle
--- @usage widget:clearStyle()
-
-
---- set/get align.
+--- [**style**] set/get align.
 -- values are 'left', 'center', 'right'
 --
 -- @within Properties
@@ -349,7 +349,24 @@ Inherited Methods
 -- @usage widget.align = 'center'
 -- @usage print( widget.align )
 
---- set/get font.
+Text.__getters.align = WidgetHelp.__getters.align
+Text.__setters.align = WidgetHelp.__setters.align
+
+--== .fillColor
+
+--- [**style**] set/get Style value for Widget fill color.
+--
+-- @within Properties
+-- @function .fillColor
+-- @usage style.fillColor = '#ff0000'
+-- @usage print( style.fillColor )
+
+Text.__getters.fillColor = WidgetHelp.__getters.fillColor
+Text.__setters.fillColor = WidgetHelp.__setters.fillColor
+
+--== .font
+
+--- [**style**] set/get font.
 -- can either be Corona font (eg, native.systemFont) or one installed in system (eg, 'Helvetica-Grande')
 --
 -- @within Properties
@@ -357,7 +374,12 @@ Inherited Methods
 -- @usage widget.font = native.systemFont
 -- @usage print( widget.font )
 
---- set/get fontSize.
+Text.__getters.font = WidgetHelp.__getters.font
+Text.__setters.font = WidgetHelp.__setters.font
+
+--== .fontSize
+
+--- [**style**] set/get fontSize.
 -- set the font size of the text.
 --
 -- @within Properties
@@ -365,7 +387,12 @@ Inherited Methods
 -- @usage widget.fontSize = 18
 -- @usage print( widget.fontSize )
 
---- set/get marginX.
+Text.__getters.fontSize = WidgetHelp.__getters.fontSize
+Text.__setters.fontSize = WidgetHelp.__setters.fontSize
+
+--== .marginX
+
+--- [**style**] set/get marginX.
 -- set the margin inset of the widget. this value is *subtracted* from the widget width.
 --
 -- @within Properties
@@ -373,8 +400,12 @@ Inherited Methods
 -- @usage widget.marginX = 18
 -- @usage print( widget.marginX )
 
+Text.__getters.marginX = WidgetHelp.__getters.marginX
+Text.__setters.marginX = WidgetHelp.__setters.marginX
 
---- set/get strokeWidth.
+--== .strokeWidth
+
+--- [**style**] set/get strokeWidth.
 -- set stroke width for the simple background.
 --
 -- @within Properties
@@ -382,38 +413,21 @@ Inherited Methods
 -- @usage widget.strokeWidth = 18
 -- @usage print( widget.strokeWidth )
 
+Text.__getters.strokeWidth = WidgetHelp.__getters.strokeWidth
+Text.__setters.strokeWidth = WidgetHelp.__setters.strokeWidth
 
---- set the fill color of the simple background.
+--== .textColor
+
+--- [**style**] set/get textColor.
+-- set the font size of the text.
 --
--- @within Methods
--- @function :setFillColor
--- @usage
--- widget:setFillColor( grey )
--- widget:setFillColor( grey, a )
--- widget:setFillColor( r, g, b, a )
--- widget:setFillColor( gradient )
+-- @within Properties
+-- @function .textColor
+-- @usage widget.textColor = 18
+-- @usage print( widget.textColor )
 
---- set stroke color of the simple background.
---
--- @within Methods
--- @function :setStrokeColor
--- @usage
--- widget:setStrokeColor( grey )
--- widget:setStrokeColor( grey, a )
--- widget:setStrokeColor( r, g, b, a )
--- widget:setStrokeColor( gradient )
-
---- set color of text.
---
--- @within Methods
--- @function :setTextColor
--- @usage
--- widget:setTextColor( grey )
--- widget:setTextColor( grey, a )
--- widget:setTextColor( r, g, b, a )
--- widget:setTextColor( gradient )
-
-
+Text.__getters.textColor = WidgetHelp.__getters.textColor
+Text.__setters.textColor = WidgetHelp.__setters.textColor
 
 
 --[[
@@ -424,8 +438,8 @@ from text object after creation
 
 --== .width (custom)
 
---- set/get width.
--- Note: this property changes both the width of the DMC Text Widget and the encapsulated Corona Text widget. If the style is unset, then the width value is the width of the encapsulated Corona Text widget. If the style value is set, then then the width for both changes to that value.
+--- [**style**] set/get width.
+-- Note: this property changes both the width of the DMC Text Widget and the encapsulated Corona Text widget. If the style is unset, then the width value is the width of the encapsulated Corona Text widget. If the style value is set, then then the width for both will change to that value.
 --
 -- @within Properties
 -- @function .width
@@ -435,10 +449,10 @@ from text object after creation
 function Text.__getters:width()
 	-- print( 'Text.__getters:width' )
 	local style = self.curr_style
-	-- local mX = style.marginX*2
 	local w, t = style.width, self._txtText
-	if w==nil and t then w=t.width end
-	-- return w+mX
+	if w==0 and t then
+		w=t.width+style.marginX*2
+	end
 	return w
 end
 function Text.__setters:width( value )
@@ -448,7 +462,7 @@ end
 
 --== .height (custom)
 
---- set/get height.
+--- [**style**] set/get height.
 -- Note: this property *doesn't* change the height of the actual *Corona Text widget*, that remains constant. If the style is unset, then the height value is the height of the encapsulated Corona Text widget. If the style value is set, then then the height is that value, even if the height of the Corona Text widget is different. (If the height of the Corona Text widget is set then it becomes a multi-line text widget.)
 --
 -- @within Properties
@@ -458,8 +472,11 @@ end
 
 function Text.__getters:height()
 	-- print( 'Text.__getters:height' )
-	local h, t = self.curr_style.height, self._txtText
-	if h==nil and t then h=t.height end
+	local style = self.curr_style
+	local h, t = style.height, self._txtText
+	if h==0 then
+		h = self:getTextHeight()+style.marginY*2
+	end
 	return h
 end
 function Text.__setters:height( value )
@@ -509,6 +526,53 @@ end
 
 
 
+--== .setFillColor
+
+--- set the fill color of the simple background.
+--
+-- @within Methods
+-- @function :setFillColor
+-- @usage
+-- widget:setFillColor( grey )
+-- widget:setFillColor( grey, a )
+-- widget:setFillColor( r, g, b, a )
+-- widget:setFillColor( gradient )
+
+Text.setFillColor = WidgetHelp.setFillColor
+Text.setFillColor = WidgetHelp.setFillColor
+
+--== .setStrokeColor
+
+--- set stroke color of the simple background.
+--
+-- @within Methods
+-- @function :setStrokeColor
+-- @usage
+-- widget:setStrokeColor( grey )
+-- widget:setStrokeColor( grey, a )
+-- widget:setStrokeColor( r, g, b, a )
+-- widget:setStrokeColor( gradient )
+
+Text.setStrokeColor = WidgetHelp.setStrokeColor
+Text.setStrokeColor = WidgetHelp.setStrokeColor
+
+--== .setTextColor
+
+--- set color of text.
+--
+-- @within Methods
+-- @function :setTextColor
+-- @usage
+-- widget:setTextColor( grey )
+-- widget:setTextColor( grey, a )
+-- widget:setTextColor( r, g, b, a )
+-- widget:setTextColor( gradient )
+
+Text.setTextColor = WidgetHelp.setTextColor
+Text.setTextColor = WidgetHelp.setTextColor
+
+
+
 --====================================================================--
 --== Private Methods
 
@@ -529,24 +593,30 @@ function Text:_createText()
 	self:_removeText()
 
 	local w, h = style.width, style.height
+	local font, fontSize = style.font, style.fontSize
 	local text = self._text
-	if w ~= nil then
-		w = w - style.marginX*2
-		text = testTextLength( text, {
-			width=w, font=style.font, fontSize=style.fontSize
+	local tw
+	if w==0 then
+		tw=nil
+	else
+		tw = w - style.marginX*2
+		text, fontSize = testTextLength( text, {
+			width=tw, font=font,
+			fontSize=fontSize,
+			fontSizeMinimum=style.fontSizeMinimum
 		})
 	end
-	o = display.newText{
+	o = newText{
 		x=0, y=0,
 
-		width=w,
+		width=tw,
 		-- don't use height, turns into multi-line
 		height=nil,
 
 		text=text,
 		align=style.align,
-		font=style.font,
-		fontSize=style.fontSize,
+		font=font,
+		fontSize=fontSize,
 	}
 
 	self:insert( o )
@@ -558,6 +628,9 @@ function Text:_createText()
 	self._y_dirty=true
 	self._width_dirty=true
 	self._height_dirty=true
+	if w==0 or h==0 then
+		self._textDimension_dirty=true
+	end
 
 	self._text_dirty=false
 	self._textColor_dirty=true
@@ -740,6 +813,11 @@ function Text:__commitProperties__()
 	if self._textColor_dirty then
 		txt:setTextColor( unpack( style.textColor ) )
 		self._textColor_dirty=false
+	end
+
+	if self._textDimension_dirty then
+		self:dispatchEvent( self.EVENT, {width=self.width,height=self.height}, {merge=true} )
+		self._textDimension_dirty=false
 	end
 
 end

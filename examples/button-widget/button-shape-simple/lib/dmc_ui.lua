@@ -118,6 +118,7 @@ end
 
 local uiConst = require( PATH .. '.' .. 'ui_constants' )
 local UIUtils = require( PATH .. '.' .. 'ui_utils' )
+local EventsMixin = require 'dmc_events_mix'
 local Utils = require 'dmc_utils'
 
 
@@ -135,7 +136,12 @@ SEP = uiConst.getSystemSeparator()
 DPATH = sgsub( PATH, '%.', SEP )
 split = Utils.split
 
+
 local UI = {}
+
+UI.EVENT = 'dmc-ui-event' -- before patch
+
+EventsMixin.patch( UI )
 
 UI.stage = nil
 
@@ -157,19 +163,25 @@ end
 local function initialize( params )
 	-- print( "UI.initialize" )
 
+	local KeyboardMgr = require( PATH .. '.' .. 'manager.keyboard_mgr' )
 	local Style = require( PATH .. '.' .. 'dmc_style' )
 	local Widget = require( PATH .. '.' .. 'dmc_widget' )
 	local Control = require( PATH .. '.' .. 'dmc_control' )
 
+	UI.Keyboard = KeyboardMgr
 	UI.Style = Style
 	UI.Widget = Widget
 	UI.Control = Control
 
 	--== Initialize
 
+	KeyboardMgr.initialize( UI, params )
 	Style.initialize( UI, params )
 	Widget.initialize( UI, params )
 	Control.initialize( UI, params )
+
+	KeyboardMgr:addEventListener( KeyboardMgr.EVENT, UI._keyboardMgr_handler )
+
 
 	--== Set UI/UX
 
@@ -185,6 +197,7 @@ local function initialize( params )
 
 	createUIStage()
 end
+
 
 
 
@@ -331,17 +344,6 @@ Documentation items should be copied in manually
 --== Button Group
 
 
---== Formatter
-
---- constructor for Field Formatter delegates.
--- formatting delegates for use with Text Field
---
--- @function newFormatter
--- @tab[opt] options parameters used to create a data Formatter
--- @treturn object @{Widget.Formatter}
--- @usage local widget = dUI.newFormatter()
---
-
 --== Nav Bar
 
 --- constructor for Nav Bar widgets.
@@ -436,6 +438,17 @@ Documentation items should be copied in manually
 
 --===================================================================--
 --== Misc Functions
+
+
+
+function UI._keyboardMgr_handler( event )
+	print( "UI._keyboardMgr_handler", event )
+
+	-- Utils.print( event )
+	event.name=UI.EVENT
+
+	UI:dispatchRawEvent( event )
+end
 
 
 function UI.setOS( platform, version )

@@ -131,9 +131,9 @@ local dmc_wamp_data = Utils.extend( dmc_lib_data.dmc_wamp, DMC_WAMP_DEFAULTS )
 --== Imports
 
 
-local Objects = require 'dmc_objects'
-local LuaStatesMixin = require 'lib.dmc_lua.lua_states_mix'
-local Utils = require 'dmc_utils'
+local Objects = require 'lib.dmc_lua.lua_objects'
+local Patch = require 'lib.dmc_lua.lua_patch'
+local Utils = require 'lib.dmc_lua.lua_utils'
 local WebSocket = require 'dmc_websockets'
 
 local WError = require 'dmc_wamp.exception'
@@ -147,10 +147,10 @@ local WTypes = require 'dmc_wamp.types'
 --== Setup, Constants
 
 
-local StatesMix = LuaStatesMixin.StatesMix
+Patch.addPatch( 'print-output' )
 
--- setup some aliases to make code cleaner
-local newClass = Objects.newClass
+local assert = assert
+local type = type
 
 -- local control of development functionality
 local LOCAL_DEBUG = dmc_wamp_data.debug_active~=nil and dmc_wamp_data.debug_active or false
@@ -162,7 +162,7 @@ local LOCAL_DEBUG = dmc_wamp_data.debug_active~=nil and dmc_wamp_data.debug_acti
 --====================================================================--
 
 
-local Wamp = newClass( { WebSocket, StatesMix }, { name="WAMP Connector" } )
+local Wamp = newClass( WebSocket, {name="WAMP Connector"} )
 
 --== Class Constants ==--
 
@@ -200,8 +200,7 @@ Wamp.ONPROGRESS = 'wamp_on_progress_event'
 function Wamp:__init__( params )
 	-- print( "Wamp:__init__" )
 	params = params or {}
-	self:superCall( WebSocket, '__init__', params )
-	self:superCall( StatesMix, '__init__', params )
+	self:superCall( '__init__', params )
 	--==--
 
 	--== Sanity Check ==--
@@ -245,7 +244,7 @@ end
 
 function Wamp:__initComplete__()
 	-- print( "Wamp:__initComplete__" )
-	self:superCall( WebSocket, '__initComplete__' )
+	self:superCall( '__initComplete__' )
 
 	self._session_handler = self:createCallback( self._wampSessionEvent_handler )
 	self._serializer = WSerializerFactory.create( 'json' )
@@ -389,6 +388,7 @@ function Wamp:register( handler, params )
 	if params.pkeys or params.disclose_caller then
 		params.options = Types.RegisterOptions:new( params )
 	end
+	-- @TODO: check session
 	return self._session:register( handler, params )
 end
 
@@ -546,6 +546,8 @@ function Wamp:subscribe( topic, handler, params )
 		handler( evt )
 	end
 
+	-- @TOD: check session
+
 	def = self._session:subscribe( topic, decorate_f, params )
 	def:addCallbacks( success_f, error_f )
 
@@ -609,11 +611,16 @@ end
 
 function Wamp:leave( reason, message )
 	-- print( "Wamp:leave" )
-	local p = {
-		reason=reason,
-		log_message=message
-	}
-	self._session:leave( p )
+	-- @TODO: check session, try
+	local session = self._session
+	if not session then
+		pnotice( "Wamp:leave no active session" )
+	else
+		session:leave{
+			reason=reason,
+			log_message=message
+		}
+	end
 end
 
 function Wamp:close( reason, message )
@@ -630,10 +637,12 @@ end
 
 function Wamp:_wamp_close( reason, message )
 	-- print( "Wamp:_wamp_close" )
-	local had_session = ( self._session ~= nil )
+	local session = self._session
+	local had_session = ( session~=nil )
 
-	if self._session then
-		self._session:onClose( message, was_clean )
+	-- @TODO: check with no session
+	if session then
+		session:onClose( message, was_clean )
 		self._session = nil
 	end
 

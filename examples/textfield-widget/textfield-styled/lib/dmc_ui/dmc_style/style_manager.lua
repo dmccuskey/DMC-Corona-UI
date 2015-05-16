@@ -280,10 +280,17 @@ function StyleMgr.activateTheme( themeId )
 end
 
 function StyleMgr.createTheme( themeId, params )
-	params = params or {}
 	-- print( "StyleMgr.createTheme", params.name )
+	params = params or {}
 	params.id = themeId
-	local struct = StyleMgr._createThemeStruct( params )
+	--==--
+	local themes = StyleMgr._theme
+	local struct = themes[ themeId ]
+	if struct then
+		return StyleMgr._createThemeInterface( struct )
+	end
+
+	struct = StyleMgr._createThemeStruct( params )
 	StyleMgr._theme[ themeId ] = struct
 	return StyleMgr._createThemeInterface( struct )
 end
