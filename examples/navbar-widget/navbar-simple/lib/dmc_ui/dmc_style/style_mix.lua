@@ -173,6 +173,7 @@ function StyleMix.resetStyle( self, params )
 	self.__curr_style = nil -- <style obj>
 	self.__default_style = nil
 	self.__curr_style_f = nil
+	self.__theme_f = nil -- theme callback
 	self.__styles = {}
 	self.__debug_on = params.debug_on
 end
@@ -205,16 +206,40 @@ end
 
 --== Style Getters/Setters ==--
 
+--- set/get widget style.
+-- style can be a style name or a Style Object.
+-- Style Object must be appropriate style for Widget, eg style for Background widget comes from dUI.newBackgroundStyle().
+-- @within Inherited
+-- @function .style
+-- @usage widget.style = 'widget-home-page'
+-- @usage
+-- local wStyle = dUI.newBackgroundStyle()
+-- widget.style = wStyle
+--
 function StyleMix.__getters:style()
 	-- print( "StyleMix.__getters:style" )
 	return self.curr_style
 end
 function StyleMix.__setters:style( value )
 	-- print( "StyleMix.__setters:style", value, self )
+	if self.__theme_f then
+		StyleMgr:removeEventListener( StyleMgr.EVENT, self.__theme_f )
+		self.__theme_f = nil
+	end
 	if type(value)=='string' then
 		-- get named style from Style Mgr
 		-- will be Style instance or 'nil'
-		value = StyleMgr.getStyle( self.STYLE_TYPE, value )
+		local name = value
+		value = StyleMgr.getStyle( self.STYLE_TYPE, name )
+		if value then
+			local f = function(e)
+				timer.performWithDelay( 1, function()
+					StyleMix.__setters.style( self, name )
+				end)
+			end
+			StyleMgr:addEventListener( StyleMgr.EVENT, f )
+			self.__theme_f = f
+		end
 	end
 	self:setActiveStyle( value )
 end
@@ -277,6 +302,13 @@ function StyleMix.setActiveStyle( self, data, params )
 	end
 end
 
+--- clear any local properties on style.
+-- causes full style-inheritance to activate.
+--
+-- @within Inherited
+-- @function clearStyle
+-- @usage widget:clearStyle()
+--
 function StyleMix:clearStyle()
 	return self.curr_style:clearProperties()
 end
@@ -302,6 +334,7 @@ end
 --== width
 
 function StyleMix.__getters:width()
+	-- print( 'StyleMix.__getters:width' )
 	return self.curr_style.width
 end
 function StyleMix.__setters:width( value )
@@ -332,6 +365,13 @@ end
 
 --== anchorX
 
+--- set/get anchorX.
+--
+-- @within Inherited
+-- @function .anchorX
+-- @usage widget.anchorX = 5
+-- @usage print( widget.anchorX )
+--
 function StyleMix.__getters:anchorX()
 	return self.curr_style.anchorX
 end
@@ -342,6 +382,13 @@ end
 
 --== anchorY
 
+--- set/get anchorY.
+--
+-- @within Inherited
+-- @function .anchorY
+-- @usage widget.anchorY = 5
+-- @usage print( widget.anchorY )
+--
 function StyleMix.__getters:anchorY()
 	return self.curr_style.anchorY
 end

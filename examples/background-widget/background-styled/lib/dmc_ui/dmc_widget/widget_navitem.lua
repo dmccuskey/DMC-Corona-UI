@@ -1,5 +1,5 @@
 --====================================================================--
--- dmc_widget/widget_navitem.lua
+-- dmc_ui/dmc_widget/widget_navitem.lua
 --
 -- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
@@ -33,7 +33,7 @@ SOFTWARE.
 
 
 --====================================================================--
---== DMC Corona UI : Widget Nav Item
+--== DMC Corona UI : NavItem Widget
 --====================================================================--
 
 
@@ -70,16 +70,12 @@ local LifecycleMixModule = require 'dmc_lifecycle_mix'
 local StyleMixModule = require( ui_find( 'dmc_style.style_mix' ) )
 local uiConst = require( ui_find( 'ui_constants' ) )
 
---== To be set in initialize()
-local dUI = nil
-local Widget = nil
 
 
 --====================================================================--
 --== Setup, Constants
 
 
--- setup some aliases to make code cleaner
 local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
 
@@ -89,12 +85,23 @@ local StyleMix = StyleMixModule.StyleMix
 local tinsert = table.insert
 local tremove = table.remove
 
+--== To be set in initialize()
+local dUI = nil
+local Widget = nil
+
 
 
 --====================================================================--
 --== Nav Item Widget Class
 --====================================================================--
 
+--- Nav Item Module.
+-- a navigation component used with a NavBar widget. this is essentially a container of items to show in a NavBar.
+--
+-- @classmod Widget.NavItem
+-- @usage
+-- local dUI = require 'dmc_ui'
+-- local widget = dUI.newNavItem()
 
 local NavItem = newClass(
 	{ StyleMix, ObjectBase, LifecycleMix }, {name="Nav Item"}
@@ -114,8 +121,6 @@ NavItem.STYLE_TYPE = uiConst.NAVITEM
 function NavItem:__init__( params )
 	-- print( "NavItem:__init__" )
 	params = params or {}
-	if params.x==nil then params.x=0 end
-	if params.y==nil then params.y=0 end
 	if params.title==nil then params.title="" end
 
 	self:superCall( LifecycleMix, '__init__', params )
@@ -126,11 +131,6 @@ function NavItem:__init__( params )
 	--== Create Properties ==--
 
 	-- properties stored in Class
-
-	self._x = params.x
-	self._x_dirty=true
-	self._y = params.y
-	self._y_dirty=true
 
 	self._title = params.title
 
@@ -163,7 +163,7 @@ function NavItem:__init__( params )
 	self._btnLeft = nil
 	self._btnLeftStyle_dirty=true
 
-	self._btnRight = nil
+	self._btnRight = params.rightButton
 	self._btnRightStyle_dirty=true
 
 end
@@ -186,8 +186,13 @@ function NavItem:__initComplete__()
 	--==--
 	self.style = self._tmp_style
 
+	self.rightButton = self._btnRight -- setter
+	self.leftButton = self._btnLeft -- setter
+
 	self:_createText()
 	self:_createBackButton()
+
+	self.title = self._title
 
 end
 
@@ -242,6 +247,36 @@ end
 --== Public Methods
 
 
+--- get backButton object.
+--
+-- @within Properties
+-- @function .backButton
+-- @usage print( widget.backButton )
+
+--- set/get leftButton object.
+--
+-- @within Properties
+-- @function .leftButton
+-- @usage widget.leftButton = <DMC PushButton>
+-- @usage print( widget.leftButton )
+
+--- set/get rightButton object.
+--
+-- @within Properties
+-- @function .rightButton
+-- @usage widget.rightButton = <DMC PushButton>
+-- @usage print( widget.rightButton )
+
+--- set/get title of Nav Item.
+-- value should be string
+--
+-- @within Properties
+-- @function .title
+-- @usage widget.title = "My Title"
+-- @usage print( widget.title )
+
+
+
 -- getter, back button
 --
 function NavItem.__getters:backButton()
@@ -258,10 +293,15 @@ function NavItem.__getters:leftButton()
 end
 function NavItem.__setters:leftButton( button )
 	-- print( "NavItem.__setters:leftButton", button )
-	assert( type(button)=='table' and button.isa, "wrong type for button" )
-	assert( button:isa( Widget.Button ), "wrong type for button" )
+	local bType = type(button)
+	assert( bType=='nil' or bType=='table', "wrong type for button" )
 	--==--
+	if bType=='table' then
+		assert( button.isa and button:isa( Widget.ButtonFactory.Base ), "button not object" )
+	end
 	self._btnLeft = button
+	self._btnLeftStyle_dirty=true
+	self:__invalidateProperties__()
 end
 
 
@@ -273,10 +313,17 @@ function NavItem.__getters:rightButton()
 end
 function NavItem.__setters:rightButton( button )
 	-- print( "NavItem.__setters:rightButton", button )
-	assert( type(button)=='table' and button.isa, "wrong type for button" )
-	assert( button:isa( Widget.Button ), "wrong type for button" )
+	local bType = type(button)
+	assert( bType=='nil' or bType=='table', "wrong type for button" )
+	--==--
+	if bType=='table' then
+		assert( button.isa and button:isa( Widget.ButtonFactory.Base ), "button not object" )
+	end
 	self._btnRight = button
+	self._btnRightStyle_dirty=true
+	self:__invalidateProperties__()
 end
+
 
 
 -- getter/setter, title TODO (inside of buttons)
@@ -362,7 +409,7 @@ function NavItem:_createText()
 	self:_removeText()
 
 	local o = Widget.newText{
-	defaultStyle = self.defaultStyle.title
+		defaultStyle = self.defaultStyle.title
 	}
 	self._wgtText = o
 
@@ -388,19 +435,19 @@ function NavItem:__commitProperties__()
 	--== Set Styles
 
 	if self._wgtBtnBackStyle_dirty then
-		back:setActiveStyle( style.buttonBack, {copy=false} )
+		back:setActiveStyle( style.backButton, {copy=false} )
 		self._wgtBtnBackStyle_dirty=false
 	end
 
 	-- TODO: check widget type (apply style if Widget)
 	if left and self._btnLeftStyle_dirty then
-		left:setActiveStyle( style.buttonLeft, {copy=false} )
+		left:setActiveStyle( style.leftButton, {copy=false} )
 		self._btnLeftStyle_dirty=false
 	end
 
 	-- TODO: check widget type (apply style if Widget)
 	if right and self._btnRightStyle_dirty then
-		right:setActiveStyle( style.buttonRight, {copy=false} )
+		right:setActiveStyle( style.rightButton, {copy=false} )
 		self._btnRightStyle_dirty=false
 	end
 

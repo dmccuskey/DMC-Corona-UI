@@ -68,7 +68,7 @@ local Objects = require 'dmc_objects'
 local Utils = require 'dmc_utils'
 local uiConst = require( ui_find( 'ui_constants' ) )
 
-local BaseStyle = require( ui_find( 'dmc_style.base_style' ) )
+local BaseStyle = require( ui_find( 'core.style' ) )
 
 
 
@@ -122,7 +122,7 @@ NavItemStyle._EXCLUDE_PROPERTY_CHECK = {
 NavItemStyle._STYLE_DEFAULTS = {
 	name='textfield-default-style',
 	debugOn=false,
-	width=60,
+	width=80,
 	height=40,
 	anchorX=0.5,
 	anchorY=0.5,
@@ -182,6 +182,8 @@ NavItemStyle._STYLE_DEFAULTS = {
 	},
 
 	leftButton={
+		anchorX=0,
+		anchorY=0.5,
 		align='center',
 		hitMarginX=0,
 		hitMarginY=0,
@@ -191,44 +193,33 @@ NavItemStyle._STYLE_DEFAULTS = {
 
 		inactive={
 			label={
-				textColor={0,0,0},
+				textColor='#007BFF'
 			},
 			background={
-				type='rounded',
+				type='rectangle',
 				view={
-					cornerRadius=9,
-					fillColor={
-						type='gradient',
-						color1={ 0.9,0.9,0.9 },
-						color2={ 0.5,0.5,0.5 },
-						direction='down'
-					},
-					strokeWidth=2,
-					strokeColor={0.2,0.2,0.2,1},
+					height=20,
+					fillColor={ 0,0,0,0 },
+					strokeWidth=0,
+					strokeColor={ 0,0,0,0 },
 				}
 			}
-
 		},
+
 		active={
 			label={
-				textColor={0,0,0},
+				textColor={ '#007BFF', 0.5 },
 			},
 			background={
-				type='rounded',
+				type='rectangle',
 				view={
-					cornerRadius=9,
-					fillColor={
-						type='gradient',
-						color1={ 0.9,0.9,0.9 },
-						color2={ 0.5,0.5,0.5 },
-						direction='down'
-					},
-					strokeWidth=2,
-					strokeColor={0.2,0.2,0.2,1},
+					fillColor={ 0,0,0,0 },
+					strokeWidth=0,
+					strokeColor={ 0,0,0,0 },
 				}
 			}
-
 		},
+
 		disabled={
 			label={
 				textColor={0,0,0},
@@ -251,6 +242,8 @@ NavItemStyle._STYLE_DEFAULTS = {
 
 	},
 	rightButton={
+		anchorX=1,
+		anchorY=0.5,
 		align='center',
 		hitMarginX=0,
 		hitMarginY=0,
@@ -260,64 +253,46 @@ NavItemStyle._STYLE_DEFAULTS = {
 
 		inactive={
 			label={
-				textColor={0,0,0},
+				textColor='#007BFF'
 			},
 			background={
-				type='rounded',
+				type='rectangle',
 				view={
-					cornerRadius=9,
-					fillColor={
-						type='gradient',
-						color1={ 0.9,0.9,0.9 },
-						color2={ 0.5,0.5,0.5 },
-						direction='down'
-					},
-					strokeWidth=2,
-					strokeColor={0.2,0.2,0.2,1},
+					height=20,
+					fillColor={ 0,0,0,0 },
+					strokeWidth=0,
+					strokeColor={ 0,0,0,0 },
 				}
 			}
-
 		},
+
 		active={
 			label={
-				textColor={0,0,0},
+				textColor={ '#007BFF', 0.5 },
 			},
 			background={
-				type='rounded',
+				type='rectangle',
 				view={
-					cornerRadius=9,
-					fillColor={
-						type='gradient',
-						color1={ 0.9,0.9,0.9 },
-						color2={ 0.5,0.5,0.5 },
-						direction='down'
-					},
-					strokeWidth=2,
-					strokeColor={0.2,0.2,0.2,1},
+					fillColor={ 0,0,0,0 },
+					strokeWidth=0,
+					strokeColor={ 0,0,0,0 },
 				}
 			}
-
 		},
+
 		disabled={
 			label={
-				textColor={0,0,0},
+				textColor={ 0.6,0.6,0.6,0.8 },
 			},
 			background={
-				type='rounded',
+				type='rectangle',
 				view={
-					cornerRadius=9,
-					fillColor={
-						type='gradient',
-						color1={ 0.9,0.9,0.9 },
-						color2={ 0.5,0.5,0.5 },
-						direction='down'
-					},
-					strokeWidth=2,
-					strokeColor={0.2,0.2,0.2,1},
+					fillColor={ 0,0,0,0 },
+					strokeWidth=0,
+					strokeColor={ 0,0,0,0 },
 				}
 			}
 		}
-
 	},
 	title={
 		anchorX=0.5,
@@ -371,7 +346,6 @@ NavItemStyle._TEST_DEFAULTS = {
 				strokeColor={0.2,0.2,0.2,1},
 			}
 		}
-
 	},
 	active={
 		label={

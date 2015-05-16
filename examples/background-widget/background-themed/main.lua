@@ -13,6 +13,8 @@
 print( "\n\n#########################################################\n\n" )
 
 
+error("\n\n SORRY THIS EXAMPLE NOT READY\n\n")
+
 
 --===================================================================--
 --== Imports
@@ -184,6 +186,11 @@ function run_example3()
 		bw1:clearStyle() -- clear our changes
 	end)
 
+	timer.performWithDelay( 10000, function()
+		print( "\n\n Delete Widget" )
+		bw1:removeSelf()
+	end)
+
 end
 
 -- run_example3()
@@ -238,6 +245,11 @@ function run_example4()
 		bw2.style=nil
 	end)
 
+	timer.performWithDelay( 10000, function()
+		print( "\n\n Delete Widget" )
+		bw2:removeSelf()
+	end)
+
 end
 
 -- run_example4()
@@ -248,9 +260,9 @@ end
 
 function run_example5()
 
-	local st3, bw3
+	local st1, bw1
 
-	st3 = Widgets.newBackgroundStyle{
+	st1 = Widgets.newBackgroundStyle{
 		name='my-background-style',
 
 		width=150,
@@ -270,20 +282,25 @@ function run_example5()
 
 	-- add style to widget
 
-	bw3 = Widgets.newBackground{
+	bw1 = Widgets.newBackground{
 		x=H_CENTER,
 		y=50,
-		style=st3
+		style=st1
 	}
-	bw3:addEventListener( bw3.EVENT, widgetEvent_handler )
-	-- bw3.onProperty = widgetOnPropertyEvent_handler
+	bw1:addEventListener( bw1.EVENT, widgetEvent_handler )
+	-- bw1.onProperty = widgetOnPropertyEvent_handler
 
 
 	timer.performWithDelay( 2000, function()
 		print( "\n\nUpdate properties" )
-		bw3.style=nil
-		bw3.y=100
-		bw3:setViewFillColor( 0.7, 0.5, 0.6, 1)
+		bw1.style=nil
+		bw1.y=100
+		bw1:setViewFillColor( 0.7, 0.5, 0.6, 1)
+	end)
+
+	timer.performWithDelay( 10000, function()
+		print( "\n\n Delete Widget" )
+		bw1:removeSelf()
 	end)
 
 end
@@ -296,42 +313,46 @@ end
 
 function run_example6()
 
-	local bw4 = Widgets.newBackground()
-	bw4:addEventListener( bw4.EVENT, widgetEvent_handler )
+	local bw1 = Widgets.newBackground()
+	bw1:addEventListener( bw1.EVENT, widgetEvent_handler )
 
-	bw4.x = H_CENTER
-	bw4.y = V_CENTER
+	bw1.x = H_CENTER
+	bw1.y = V_CENTER
 
-	-- bw4:setFillColor( 0.2,0.6,1, 0.5 )
+	-- bw1:setFillColor( 0.2,0.6,1, 0.5 )
 
-	-- bw4:setAnchor( {0,0} )
-	bw4:setAnchor( {0.5,0.5} )
-	-- bw4:setAnchor( {1,1} )
+	-- bw1:setAnchor( {0,0} )
+	bw1:setAnchor( {0.5,0.5} )
+	-- bw1:setAnchor( {1,1} )
 
-	-- bw4.debugOn = true
+	-- bw1.debugOn = true
 
 
 	timer.performWithDelay( 1000, function()
 		print("\n\n\n\nUpdate Properties")
-		bw4.anchorX=1
-		bw4.width=200
-		bw4.height=75
-		bw4.x = H_CENTER-10
-		bw4:setFillColor( 0.2,0.6,1, 0.5 )
+		bw1.anchorX=1
+		bw1.width=200
+		bw1.height=75
+		bw1.x = H_CENTER-10
+		bw1:setFillColor( 0.2,0.6,1, 0.5 )
 	end)
 
 
 	-- timer.performWithDelay( 1000, function()
 	-- 	print("\n\nUpdate Properties")
-	-- 	bw4.hitMarginX=5
-	-- 	bw4.hitMarginY=10
-	-- 	bw4.y = 400
+	-- 	bw1.hitMarginX=5
+	-- 	bw1.hitMarginY=10
+	-- 	bw1.y = 400
 	-- end)
-
 
 	timer.performWithDelay( 2000, function()
 		print("\n\nClear Style")
-		bw4:clearStyle()
+		bw1:clearStyle()
+	end)
+
+	timer.performWithDelay( 10000, function()
+		print( "\n\n Delete Widget" )
+		bw1:removeSelf()
 	end)
 
 end

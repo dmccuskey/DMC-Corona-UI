@@ -54,6 +54,7 @@ local VERSION = "0.1.0"
 
 
 local PLATFORM = system.getInfo( 'platformName' )
+local MODEL = system.getInfo( 'model' )
 
 
 
@@ -73,6 +74,8 @@ local Constant = {}
 Constant.RUN_MODE = 'run'
 Constant.TEST_MODE = 'test'
 
+Constant.PLATFORM = PLATFORM
+Constant.MODEL = MODEL
 
 
 --====================================================================--
@@ -89,10 +92,37 @@ Constant.IOS_8x = "8.0.0"
 
 Constant.WINDOWS = 'WinPhone'
 
-Constant.IS_IOS = ( PLATFORM=='iPhone OS' )
+Constant.IS_IOS = ( PLATFORM=='iPhone OS' or PLATFORM=='Mac OS X' )
 Constant.IS_ANDROID = ( PLATFORM=='Android' )
-Constant.IS_WINDOWS = ( PLATFORM=='WinPhone' )
+Constant.IS_WINDOWS = ( PLATFORM=='WinPhone' or PLATFORM=='Win' )
 Constant.IS_SIMULATOR = ( PLATFORM=='Mac OS X' or PLATFORM=='Win' )
+
+Constant.ANDROID_KEYBOARD = 80
+Constant.IOS_KEYBOARD = 80
+
+function Constant.getKeyboardHeight()
+	if Constant.IS_IOS then
+		return Constant.IOS_KEYBOARD
+	else
+		return Constant.ANDROID_KEYBOARD
+	end
+end
+
+function Constant.getSystemSeparator()
+	if Constant.IS_WINDOWS then
+		return '\\'
+	else
+		return '/'
+	end
+end
+
+
+
+--====================================================================--
+--== Views
+
+
+Constant.VIEW_LAYOUT_MARGINS = {top=8,left=8,bottom=8,right=8}
 
 
 
@@ -105,13 +135,75 @@ Constant.BUTTON = 'Button'
 Constant.BUTTON_STATE = 'Button-State'
 Constant.NAVITEM = 'NavItem'
 Constant.NAVBAR = 'NavBar'
+Constant.SCROLLVIEW = 'ScrollView'
+Constant.TABLEVIEW = 'TableView'
+Constant.TABLEVIEWCELL = 'TableViewCell'
+Constant.TABLEVIEWCELL_STATE = 'TableViewCell-State'
 Constant.TEXT = 'Text'
 Constant.TEXTFIELD = 'TextField'
 
--- View Types
 
-Constant.ROUNDED = 'rounded'
+--======================================================--
+-- Background Widget
+
+Constant.NINE_SLICE = '9-slice'
 Constant.RECTANGLE = 'rectangle'
+Constant.ROUNDED = 'rounded'
+
+Constant.DEFAULT_BACKGROUND_TYPE = Constant.ROUNDED
+
+
+--======================================================--
+-- ScrollView Widget
+
+Constant.SCROLLVIEW_DECELERATE_TIME = 200
+
+-- Axis Motion
+
+Constant.AXIS_DECELERATE_TIME = 200
+Constant.AXIS_RESTORE_TIME = 400
+Constant.AXIS_RESTRAINT_TIME = 400
+Constant.AXIS_SCROLLTO_TIME = 500
+
+Constant.AXIS_VELOCITY_STACK_LENGTH = 4
+Constant.AXIS_VELOCITY_LIMIT = 1
+
+
+--======================================================--
+-- TableView Widget
+
+Constant.TABLEVIEW_DECELERATE_TIME = 2000
+
+
+--======================================================--
+-- TableViewCell Widget
+
+Constant.TABLEVIEWCELL_DEFAULT_LAYOUT = 'default-layout'
+Constant.TABLEVIEWCELL_SUBTITLE_LAYOUT = 'subtitle-layout'
+
+Constant.TABLEVIEWCELL_CHECKMARK = 'checkmark-accessory'
+Constant.TABLEVIEWCELL_DETAIL_BUTTON = 'detail-button-accessory'
+Constant.TABLEVIEWCELL_DISCLOSURE_INDICATOR = 'disclosure-indicator-accessory'
+Constant.TABLEVIEWCELL_NONE = 'no-accessory'
+
+
+
+--====================================================================--
+--== Controls
+
+
+-- Transition Times
+
+Constant.NAVBAR_TRANSITION_TIME = 400
+Constant.PRESENT_CONTROL_TRANSITION_TIME = 100
+
+Constant.TABLEVIEW_TOUCH_THRESHOLD = 10
+
+-- Modal Types
+
+Constant.POPOVER = 'popover'
+Constant.POPOVER_PREFERRED_SIZE = {width=320,height=600}
+
 
 
 

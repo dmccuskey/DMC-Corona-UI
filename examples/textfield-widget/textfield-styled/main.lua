@@ -1,7 +1,7 @@
 --====================================================================--
--- Themed Background
+-- Styled TextField
 --
--- Shows themed use of the DMC Widget: Background
+-- Shows styled use of the DMC TextField Widget
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
@@ -19,6 +19,7 @@ print( "\n\n#########################################################\n\n" )
 
 
 local dUI = require 'lib.dmc_ui'
+local Utils = require 'dmc_utils'
 
 
 
@@ -35,14 +36,15 @@ local H_CENTER, V_CENTER = W*0.5, H*0.5
 --== Support Functions
 
 
+--======================================================--
 -- Setup Visual Screen Items
---
+
 local function setupBackground()
 	local width, height = 100, 50
 	local o
 
 	o = display.newRect(0,0,W,H)
-	o:setFillColor(0.5,0.5,0.5)
+	o:setFillColor(1,1,1)
 	o.x, o.y = H_CENTER, V_CENTER
 
 	o = display.newRect(0,0,width+4,height+4)
@@ -55,6 +57,9 @@ local function setupBackground()
 	o.x, o.y = H_CENTER, V_CENTER
 end
 
+
+--======================================================--
+-- Widget Handlers
 
 local function widgetOnPropertyEvent_handler( event )
 	print( 'Main: widgetOnPropertyEvent_handler', event.id, event.phase )
@@ -84,6 +89,19 @@ end
 setupBackground()
 
 
+local delegate = {
+	-- shouldChangeCharacters = function( self, event )
+	-- 	print("main:shouldChangeCharacters", event )
+	-- 	Utils.print( event )
+	-- 	return true
+	-- end,
+	-- shouldBeginEditing = function( self )
+	-- 	print("main:shouldBeginEditing" )
+	-- 	return true
+	-- end
+}
+
+
 --======================================================--
 --== create textfield widget, default style
 
@@ -93,7 +111,8 @@ function run_example1()
 
 	tf1 = dUI.newTextField{
 		text="",
-		hintText="Pizza Topping:"
+		hintText="Pizza Topping:",
+		delegate=delegate
 	}
 	-- tf1:addEventListener( tf1.EVENT, widgetEvent_handler )
 	-- tf1.onProperty = widgetOnPropertyEvent_handler
@@ -112,7 +131,7 @@ function run_example1()
 	tf1.align='left'
 	tf1.marginX=10
 	tf1.hintFontSize=18
-	tf1:setBackgroundFillColor( 1,0.5,0.2,1 )
+	tf1:setBackgroundFillColor( 1,0.5,0.2,0.3 )
 
 	-- tf1.isSecure=true
 	-- tf1.isHitActive=true
@@ -176,7 +195,7 @@ function run_example1()
 
 end
 
-run_example1()
+-- run_example1()
 
 
 
@@ -187,70 +206,29 @@ run_example1()
 
 function run_example2()
 
+	local w1
 
-	-- timer.performWithDelay( 2000, function()
-	-- 	print("\n\n Update Properties")
-	-- 	-- test hint-text props
+	w1 = dUI.newTextField{
+		text="",
+		hintText="Pizza Topping:",
+	}
+	w1.x = H_CENTER
+	w1.y = V_CENTER
 
-	-- 	tf1.x = H_CENTER
-	-- 	tf1.y = V_CENTER
+	w1:setAnchor( {0,0} )
+	w1:setAnchor( {0.5,0.5} )
+	-- w1:setAnchor( {1,1} )
 
-	-- 	-- testing hint properties
-	-- 	tf1.text=""
-
-	-- 	tf1.align='right'
-
-	-- 	-- tf1.marginX=5
-	-- 	-- tf1.marginY=10
-
-	-- 	-- tf1.width=200
-	-- 	-- tf1.height=60
-
-	-- 	-- tf1:setAnchor( {0,0} )
-	-- 	-- tf1:setAnchor( {0,1} )
-	-- 	-- tf1:setAnchor( {1,1} )
-
-	-- 	tf1.hintFont = native.systemFontBold
-	-- 	tf1.hintFontSize = 50
-	-- 	tf1:setHintColor( 0.5,0.5,0.5, 1)
-
-	-- end)
+	w1:setBackgroundFillColor( 1,0.5,0.2,1 )
+	w1.marginX = 10
+	w1.align = 'left'
 
 
-	-- tf1.text="hamburger"
-
-
-	-- timer.performWithDelay( 1000, function()
-	-- 	print("\n\n Update Properties")
-	-- 	-- test hint-text props
-
-	-- 	tf1.x = H_CENTER
-	-- 	tf1.y = V_CENTER
-
-	-- 	-- testing text properties
-
-	-- 	tf1.align='right'
-
-	-- 	tf1.marginX=5
-	-- 	tf1.marginY=10
-
-	-- 	tf1.width=200
-	-- 	tf1.height=60
-
-	-- 	tf1:setAnchor( {0,0} )
-	-- 	-- tf1:setAnchor( {0,1} )
-	-- 	-- tf1:setAnchor( {1,1} )
-
-	-- 		tf1:setBackgroundFillColor( 1,0.5,0.2,0.5 )
-	-- 		tf1:setBackgroundStrokeColor( 2,0,0,1 )
-	-- 		tf1.backgroundStrokeWidth = 1
-
-	-- 	tf1.textFont = native.systemFontBold
-	-- 	tf1.textFontSize = 20
-	-- 	tf1:setTextColor( 0.5,0.5,0.5, 1)
-
-	-- end)
-
+	timer.performWithDelay( 2000, function()
+		print("\n\n Update Properties")
+		w1:setAnchor( {1,1} )
+		w1.align='right'
+	end)
 
 end
 
@@ -511,4 +489,95 @@ function run_example4()
 end
 
 -- run_example4()
+
+
+
+
+function run_example5()
+
+	local w1, w2, w3
+
+
+	w1 = dUI.newTextField{
+		text="",
+		hintText="Username:",
+		style = {
+			width=270,
+			height=40,
+			marginX=10,
+			align='left',
+			fontSize=16,
+			textColor='#663366',
+			font='Optima-Italic',
+			background={
+				type='9-slice',
+				view={
+					sheetInfo='asset.textfield-pink-sheet',
+					sheetImage='asset/textfield-pink-sheet.png',
+				}
+			},
+			display={
+				font='Optima-Bold',
+			}
+
+		}
+	}
+	w1.x, w1.y = H_CENTER, V_CENTER-150
+
+	w2 = dUI.newTextField{
+		text="",
+		hintText="Email",
+		style = {
+			width=280,
+			marginX=15,
+			height=45,
+			fontSize=16,
+			align='left',
+			background={
+				type='9-slice',
+				view={
+					sheetInfo='asset.textfield-nice-sheet',
+					sheetImage='asset/textfield-nice-sheet.png',
+				}
+			},
+			hint={
+				align='right',
+				textColor='#999999',
+			},
+			display={
+				align='left',
+				textColor='#444444',
+			}
+		}
+	}
+	w2.x, w2.y = H_CENTER, V_CENTER-90
+
+
+	w3 = dUI.newTextField{
+		text="",
+		hintText="Address",
+	}
+	w3.x, w3.y = H_CENTER, V_CENTER
+
+
+
+	local narrow, wide, pause
+
+	pause = function( f )
+		timer.performWithDelay( 1000, f )
+	end
+
+	wide = function()
+		transition.to( w1, {time=3000, width=270, onComplete=function() pause(narrow) end } )
+	end
+	narrow = function()
+		transition.to( w1, {time=3000, width=60, onComplete=function() pause(wide) end} )
+	end
+
+	narrow()
+
+
+end
+
+run_example5()
 

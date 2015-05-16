@@ -32,6 +32,11 @@ SOFTWARE.
 
 --]]
 
+--- A Lua module which creates UI widgets for the Corona SDK.
+-- @module dmc-widget
+-- @usage local dUI = require 'dmc_ui'
+-- local g = dUI.newTableView( view )
+
 
 
 --====================================================================--
@@ -104,11 +109,6 @@ local initKolors = Kolor.initializeKolorSet
 local Widget = {}
 
 
---== Give widgets access to Widget (do this last)
-
--- Widget.Popover.__setWidgetManager( Widget )
--- Widget.PopoverMixModule.__setWidgetManager( Widget )
-
 
 --====================================================================--
 --== Widget Static Functions
@@ -124,8 +124,9 @@ function Widget.initialize( manager, params )
 	--== Add API calls
 
 	dUI.newBackground = Widget.newBackground
-	dUI.newRectangleBackground = Widget.newRoundedBackground
-	dUI.newRoundedBackground = Widget.newRectangleBackground
+	dUI.new9SliceBackground = Widget.new9SliceBackground
+	dUI.newRectangleBackground = Widget.newRectangleBackground
+	dUI.newRoundedBackground = Widget.newRoundedBackground
 	dUI.newButton = Widget.newButton
 	dUI.newPushButton = Widget.newPushButton
 	dUI.newRadioButton = Widget.newRadioButton
@@ -135,8 +136,10 @@ function Widget.initialize( manager, params )
 	dUI.newNavBar = Widget.newNavBar
 	dUI.newNavItem = Widget.newNavItem
 	dUI.newPopover = Widget.newPopover
+	dUI.newScrollView = Widget.newScrollView
 	dUI.newSlideView = Widget.newSlideView
 	dUI.newTableView = Widget.newTableView
+	dUI.newTableViewCell = Widget.newTableViewCell
 	dUI.newText = Widget.newText
 	dUI.newTextField = Widget.newTextField
 
@@ -161,9 +164,61 @@ end
 --== Widget Public Functions
 
 
+--======================================================--
+-- UI View Base Support
+
+function Widget.loadViewSupport( params )
+	-- print( "Widget.loadViewSupport" )
+	if Widget.View then return end
+	params = params or {}
+	if params.mode==nil then params.mode=uiConst.RUN_MODE end
+	--==--
+
+	--== Components
+
+	local WidgetBase = require( ui_find( 'core.widget' ) )
+
+	Widget.Base=WidgetBase
+
+	WidgetBase.initialize( dUI, params )
+end
+
+
 
 --===================================================================--
 --== Widget Methods
+
+--[[
+The following should be copied inside of dmc_ui.lua
+--]]
+--======================================================--
+-- START: bogus methods, copied from super class
+
+--- the gesture's id (string).
+-- this is useful to differentiate between
+-- different gestures attached to the same view object
+--
+-- @function .id
+-- @usage print( gesture.id )
+-- @usage gesture.id = "myid"
+--
+
+--- the gesture's target view (Display Object).
+--
+-- @function .view
+-- @usage print( gesture.view )
+-- @usage gesture.view = DisplayObject
+--
+
+--- the gesture's delegate (object/table)
+--
+-- @function .delegate
+-- @usage print( gesture.delegate )
+-- @usage gesture.delegate = DisplayObject
+--
+
+-- END: bogus methods, copied from super class
+--======================================================--
 
 
 --======================================================--
@@ -180,6 +235,8 @@ function Widget._loadBackgroundSupport( params )
 
 	Style._loadBackgroundStyleSupport( params )
 
+	Widget.loadViewSupport( params )
+
 	--== Components
 
 	local Background = require( ui_find( 'dmc_widget.widget_background' ) )
@@ -194,22 +251,58 @@ function Widget._loadBackgroundSupport( params )
 	end)
 end
 
+--- contructor for Background widgets.
+--
+-- @function newBackground
+-- @tab[opt] options parameters used to create Background
+-- @treturn object @{Widget.Background}
+-- @usage local uiBg = dUI.newBackground()
+--
 function Widget.newBackground( options )
 	if not Widget.Background then Widget._loadBackgroundSupport() end
 	return Widget.Background:new( options )
 end
 
+
+--- convenience function for Rectangle Background widgets.
+--
+-- @function new9SliceBackground
+-- @tab[opt] options parameters used to create Background
+-- @treturn object @{Widget.Background}
+-- @usage local uiBg = dUI.new9SliceBackground()
+
+function Widget.new9SliceBackground( options )
+	if not Widget.Background then Widget._loadBackgroundSupport() end
+	options = options or {}
+	options.viewType=uiConst.NINE_SLICE
+	return Widget.Background:new( options )
+end
+
+--- convenience function for Rectangle Background widgets.
+--
+-- @function newRectangleBackground
+-- @tab[opt] options parameters used to create Background
+-- @treturn object @{Widget.Background}
+-- @usage local uiBg = dUI.newRectangleBackground()
+
 function Widget.newRectangleBackground( options )
 	if not Widget.Background then Widget._loadBackgroundSupport() end
 	options = options or {}
-	options.defaultViewType=uiConst.RECTANGLE
+	options.viewType=uiConst.RECTANGLE
 	return Widget.Background:new( options )
 end
+
+--- convenience function for Rounded Background widgets.
+--
+-- @function newRoundedBackground
+-- @tab[opt] options parameters used to create Background
+-- @treturn object @{Widget.Background}
+-- @usage local uiBg = dUI.newRoundedBackground()
 
 function Widget.newRoundedBackground( options )
 	if not Widget.Background then Widget._loadBackgroundSupport() end
 	options = options or {}
-	options.defaultViewType=uiConst.ROUNDED
+	options.viewType=uiConst.ROUNDED
 	return Widget.Background:new( options )
 end
 
@@ -219,7 +312,7 @@ end
 
 function Widget._loadButtonSupport( params )
 	-- print( "Widget._loadButtonSupport" )
-	if Widget.Button then return end
+	if Widget.ButtonFactory then return end
 	params = params or {}
 	if params.mode==nil then params.mode=uiConst.RUN_MODE end
 	--==--
@@ -233,42 +326,73 @@ function Widget._loadButtonSupport( params )
 
 	--== Components
 
-	local Button = require( ui_find( 'dmc_widget.widget_button' ) )
+	local ButtonFactory = require( ui_find( 'dmc_widget.widget_button' ) )
 
-	Widget.Button=Button
+	Widget.ButtonFactory=ButtonFactory
 
 	initKolors( function()
-		Button.initialize( dUI, params )
+		ButtonFactory.initialize( dUI, params )
 	end)
 end
 
+--- constructor for Button widgets.
+--
+-- @function newButton
+-- @tab[opt] options parameters used to create Button
+-- @treturn object @{Widget.Button}
+-- @usage local uiBg = dUI.newButton()
+--
 function Widget.newButton( options )
-	if not Widget.Button then Widget._loadButtonSupport() end
-	return Widget.Button.create( options )
+	if not Widget.ButtonFactory then Widget._loadButtonSupport() end
+	options = options or {}
+	if options.action==nil then options.action = Widget.ButtonFactory.PushButton.TYPE end
+	--==--
+	return Widget.ButtonFactory.create( options )
 end
 
+--- convenience function for Push Buttons.
+--
+-- @function newPushButton
+-- @tab[opt] options parameters used to create Button
+-- @treturn object @{Widget.Button}
+-- @usage local uiBg = dUI.newPushButton()
+--
 function Widget.newPushButton( options )
-	if not Widget.Button then Widget._loadButtonSupport() end
+	if not Widget.ButtonFactory then Widget._loadButtonSupport() end
 	options = options or {}
-	options.action = Widget.Button.PushButton.TYPE
+	options.action = Widget.ButtonFactory.PushButton.TYPE
 	--==--
-	return Widget.Button.create( options )
+	return Widget.ButtonFactory.create( options )
 end
 
+--- convenience function for Radio Buttons.
+--
+-- @function newRadioButton
+-- @tab[opt] options parameters used to create Button
+-- @treturn object @{Widget.Button}
+-- @usage local uiBg = dUI.newRadioButton()
+--
 function Widget.newRadioButton( options )
-	if not Widget.Button then Widget._loadButtonSupport() end
+	if not Widget.ButtonFactory then Widget._loadButtonSupport() end
 	options = options or {}
-	options.action = Widget.Button.RadioButton.TYPE
+	options.action = Widget.ButtonFactory.RadioButton.TYPE
 	--==--
-	return Widget.Button.create( options )
+	return Widget.ButtonFactory.create( options )
 end
 
+--- convenience function for Toggle Buttons.
+--
+-- @function newToggleButton
+-- @tab[opt] options parameters used to create Button
+-- @treturn object @{Widget.Button}
+-- @usage local uiBg = dUI.newToggleButton()
+--
 function Widget.newToggleButton( options )
-	if not Widget.Button then Widget._loadButtonSupport() end
+	if not Widget.ButtonFactory then Widget._loadButtonSupport() end
 	options = options or {}
-	options.action = Widget.Button.ToggleButton.TYPE
+	options.action = Widget.ButtonFactory.ToggleButton.TYPE
 	--==--
-	return Widget.Button.create( options )
+	return Widget.ButtonFactory.create( options )
 end
 
 
@@ -283,6 +407,14 @@ end
 --======================================================--
 -- newFormatter Support
 
+--- constructor for Field Formatter delegates.
+-- formatting delegates for use with Text Field
+--
+-- @function newFormatter
+-- @tab[opt] options parameters used to create a data Formatter
+-- @treturn object @{Widget.Formatter}
+-- @usage local uiBg = dUI.newFormatter()
+--
 function Widget.newFormatter( options )
 	if type(options)=='string' then
 		-- wrap option in a params table
@@ -323,11 +455,25 @@ function Widget._loadNavBarSupport( params )
 	end)
 end
 
+--- constructor for Nav Bar widgets.
+--
+-- @function newNavBar
+-- @tab[opt] options parameters used to create a Nav Bar
+-- @treturn object @{Widget.NavBar}
+-- @usage local uiBg = dUI.newNavBar()
+--
 function Widget.newNavBar( options )
 	if not Widget.NavBar then Widget._loadNavBarSupport() end
 	return Widget.NavBar:new( options )
 end
 
+--- constructor for Nav Bar Item.
+--
+-- @function newNavItem
+-- @tab[opt] options parameters used to create a Nav Item
+-- @treturn object @{Widget.NavItem}
+-- @usage local uiBg = dUI.newNavItem()
+--
 function Widget.newNavItem( options )
 	if not Widget.NavItem then Widget._loadNavBarSupport() end
 	return Widget.NavItem:new( options )
@@ -337,11 +483,11 @@ end
 --======================================================--
 -- newPopover Support
 
-function Widget.newPopover( options )
-	local theme = nil
-	local widget = Widget.Popover
-	return widget:new( options, theme )
-end
+-- function Widget.newPopover( options )
+-- 	local theme = nil
+-- 	local widget = Widget.Popover
+-- 	return widget:new( options, theme )
+-- end
 
 
 --======================================================--
@@ -352,6 +498,47 @@ end
 -- 	local _library = require( PATH .. '.' .. 'widget_scroller' )
 -- 	return _library:new( options, theme )
 -- end
+
+
+--======================================================--
+-- newScrollView Support
+
+function Widget.loadScrollViewSupport( params )
+	-- print( "Widget.loadScrollViewSupport" )
+	if Widget.ScrollView then return end
+	params = params or {}
+	if params.mode==nil then params.mode=uiConst.RUN_MODE end
+	--==--
+
+	--== Dependencies
+
+	Style.loadScrollViewStyleSupport( params )
+
+	Widget.loadViewSupport( params )
+
+	--== Components
+
+	local ScrollView = require( ui_find( 'dmc_widget.widget_scrollview' ) )
+
+	Widget.ScrollView=ScrollView
+
+	initKolors( function()
+		ScrollView.initialize( dUI, params )
+	end)
+end
+
+--- constructor for a Scroll View widget.
+--
+-- @function newScrollView
+-- @tab[opt] options parameters used to create a Scroll View
+-- @treturn object @{Widget.ScrollView}
+-- @usage local uiBg = dUI.newScrollView()
+--
+function Widget.newScrollView( options )
+	-- print( "Widget.newScrollView" )
+	if not Widget.ScrollView then Widget.loadScrollViewSupport() end
+	return Widget.ScrollView:new( options )
+end
 
 
 --======================================================--
@@ -367,10 +554,82 @@ end
 --======================================================--
 -- newTableView Support
 
+function Widget.loadTableViewSupport( params )
+	-- print( "Widget.loadTableViewSupport" )
+	if Widget.TableView then return end
+	params = params or {}
+	if params.mode==nil then params.mode=uiConst.RUN_MODE end
+	--==--
+
+	--== Dependencies
+
+	Style.loadTableViewStyleSupport( params )
+
+	Widget.loadScrollViewSupport( params )
+
+	--== Components
+
+	local TableView = require( ui_find( 'dmc_widget.widget_tableview' ) )
+
+	Widget.TableView=TableView
+
+	initKolors( function()
+		TableView.initialize( dUI, params )
+	end)
+end
+
+--- constructor for a Table View widget.
+--
+-- @function newTableView
+-- @tab[opt] options parameters used to create a Table View
+-- @treturn object @{Widget.TableView}
+-- @usage local uiBg = dUI.newTableView()
+--
 function Widget.newTableView( options )
-	local theme = nil
-	local _library = require( PATH .. '.' .. 'widget_tableview' )
-	return _library:new( options, theme )
+	-- print( "Widget.newTableView" )
+	if not Widget.TableView then Widget.loadTableViewSupport() end
+	return Widget.TableView:new( options )
+end
+
+
+--======================================================--
+-- newTableViewCell Support
+
+function Widget.loadTableViewCellSupport( params )
+	-- print( "Widget.loadTableViewCellSupport" )
+	if Widget.TableViewCell then return end
+	params = params or {}
+	if params.mode==nil then params.mode=uiConst.RUN_MODE end
+	--==--
+
+	--== Dependencies
+
+	Style.loadTableViewCellStyleSupport( params )
+
+	Widget.loadViewSupport( params )
+
+	--== Components
+
+	local TableViewCell = require( ui_find( 'dmc_widget.widget_tableviewcell' ) )
+
+	Widget.TableViewCell=TableViewCell
+
+	initKolors( function()
+		TableViewCell.initialize( dUI, params )
+	end)
+end
+
+--- constructor for a Table View Cell widget.
+--
+-- @function newTableViewCell
+-- @tab[opt] options parameters used to create a Table View Cell widget
+-- @treturn object @{Widget.TableViewCell}
+-- @usage local uiBg = dUI.newTableViewCell()
+--
+function Widget.newTableViewCell( options )
+	-- print( "Widget.newTableViewCell" )
+	if not Widget.TableViewCell then Widget.loadTableViewCellSupport() end
+	return Widget.TableViewCell:new( options )
 end
 
 
@@ -388,6 +647,8 @@ function Widget._loadTextSupport( params )
 
 	Style._loadTextStyleSupport( params )
 
+	Widget.loadViewSupport( params )
+
 	--== Components
 
 	local Text = require( ui_find( 'dmc_widget.widget_text' ) )
@@ -399,6 +660,13 @@ function Widget._loadTextSupport( params )
 	end)
 end
 
+--- constructor for a Text widget.
+--
+-- @function newText
+-- @tab[opt] options parameters used to create a Text widget
+-- @treturn object @{Widget.Text}
+-- @usage local uiBg = dUI.newText()
+--
 function Widget.newText( options )
 	-- print( "Widget.newText" )
 	if not Widget.Text then Widget._loadTextSupport() end
@@ -420,6 +688,7 @@ function Widget._loadTextFieldSupport( params )
 
 	Style._loadTextFieldStyleSupport( params )
 
+	Widget.loadViewSupport( params )
 	Widget._loadBackgroundSupport( params )
 	Widget._loadTextSupport( params )
 
@@ -434,6 +703,13 @@ function Widget._loadTextFieldSupport( params )
 	end)
 end
 
+--- constructor for a Text Field widget.
+--
+-- @function newTextField
+-- @tab[opt] options parameters used to create a Text Field widget
+-- @treturn object @{Widget.TextField}
+-- @usage local uiBg = dUI.newTextField()
+--
 function Widget.newTextField( options )
 	-- print( "Widget.newTextField" )
 	if not Widget.TextField then Widget._loadTextFieldSupport() end

@@ -1,5 +1,5 @@
 --====================================================================--
--- dmc_widget/widget_text.lua
+-- dmc_ui/dmc_widget/widget_text.lua
 --
 -- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
@@ -65,13 +65,10 @@ local ui_find = dmc_ui_func.find
 
 
 local Objects = require 'dmc_objects'
-local LifecycleMixModule = require 'dmc_lifecycle_mix'
-local StyleMixModule = require( ui_find( 'dmc_style.style_mix' ) )
+
 local uiConst = require( ui_find( 'ui_constants' ) )
 
--- these are set later
-local dUI = nil
-local FontMgr = nil
+local WidgetBase = require( ui_find( 'core.widget' ) )
 
 
 
@@ -79,12 +76,52 @@ local FontMgr = nil
 --== Setup, Constants
 
 
--- setup some aliases to make code cleaner
 local newClass = Objects.newClass
-local ComponentBase = Objects.ComponentBase
 
-local LifecycleMix = LifecycleMixModule.LifecycleMix
-local StyleMix = StyleMixModule.StyleMix
+local ssub = string.sub
+
+--== To be set in initialize()
+local dUI = nil
+local FontMgr = nil
+
+
+
+--====================================================================--
+--== Support Functions
+
+
+local function testTextLength( text, params )
+	-- print( "Text:testTextLength", text, params.width )
+	local w = params.width
+	local _ssub = ssub
+	local o = display.newText{
+		text=text,
+		font=params.font,
+		fontSize=params.fontSize
+	}
+	local tw = o.width
+	o:removeSelf()
+	if tw < w then return text end
+
+	local cnt = 0
+	local prev = '...'
+	while true do
+		local t = ssub( text, 0, cnt )..'...'
+		local o = display.newText{
+			text=t,
+			font=params.font,
+			fontSize=params.fontSize
+		}
+		local tw = o.width
+		o:removeSelf()
+		if tw <= w then
+			cnt = cnt + 1 ;	prev = t
+		else
+			break
+		end
+	end
+	return prev
+end
 
 
 
@@ -93,10 +130,18 @@ local StyleMix = StyleMixModule.StyleMix
 --====================================================================--
 
 
-local Text = newClass(
-	{ StyleMix, ComponentBase, LifecycleMix },
-	{ name = "Text" }
-)
+--- Text Widget Module.
+-- at the core, the DMC Text Widget wraps a Corona Text widget to provide its functionality. this gives us more consistent behavior! (w00t!)
+--
+-- @classmod Widget.Text
+-- @usage
+-- local dUI = require 'dmc_ui'
+-- local widget = dUI.newText()
+
+local Text = newClass( WidgetBase, { name="Text Widget" } )
+
+--- Class Constants.
+-- @section
 
 --== Class Constants
 
@@ -129,40 +174,27 @@ Text.EVENT = 'text-widget-event'
 function Text:__init__( params )
 	-- print( "Text:__init__", params )
 	params = params or {}
-	if params.x==nil then params.x=0 end
-	if params.y==nil then params.y=0 end
 	if params.text==nil then params.text="" end
 
-	self:superCall( LifecycleMix, '__init__', params )
-	self:superCall( ComponentBase, '__init__', params )
-	self:superCall( StyleMix, '__init__', params )
+	self:superCall( '__init__', params )
 	--==--
 
 	--== Create Properties ==--
 
 	-- properties in this class
 
-	self._x = params.x
-	self._x_dirty = true
-	self._y = params.y
-	self._y_dirty = true
-
 	self._text = params.text
 	self._text_dirty=true
 
 	-- properties from style
 
-	self._width_dirty=true
-	self._height_dirty=true
 	-- virtual
-	self._rectBgWidth_dirty=true
-	self._rectBgHeight_dirty=true
 	self._displayWidth_dirty=true
 	self._displayHeight_dirty=true
+	self._rectBgWidth_dirty=true
+	self._rectBgHeight_dirty=true
 
 	self._align_dirty=true
-	self._anchorX_dirty=true
-	self._anchorY_dirty=true
 	self._fillColor_dirty = true
 	self._font_dirty=true
 	self._fontSize_dirty=true
@@ -172,33 +204,32 @@ function Text:__init__( params )
 	self._strokeWidth_dirty=true
 
 	self._textColor_dirty=true
+	self._textObject_dirty=true
+
 	-- virtual
 	self._textX_dirty=true
 	self._textY_dirty=true
 
 	--== Object References ==--
 
-	self._tmp_style = params.style -- save
-
-	self._txt_text = nil -- our text object
+	self._txtText = nil -- our text object
 	self._rectBg = nil -- our background object
 
 end
 
+--[[
 function Text:__undoInit__()
 	-- print( "Text:__undoInit__" )
 	--==--
-	self:superCall( StyleMix, '__undoInit__' )
-	self:superCall( ComponentBase, '__undoInit__' )
-	self:superCall( LifecycleMix, '__undoInit__' )
+		self:superCall( '__undoInit__' )
 end
-
+--]]
 
 --== createView
 
 function Text:__createView__()
 	-- print( "Text:__createView__" )
-	self:superCall( ComponentBase, '__createView__' )
+	self:superCall( '__createView__' )
 	--==--
 	local o = display.newRect( 0,0,0,0 )
 	o.anchorX, o.anchorY = 0.5, 0.5
@@ -211,28 +242,24 @@ function Text:__undoCreateView__()
 	self._rectBg:removeSelf()
 	self._rectBg=nil
 	--==--
-	self:superCall( ComponentBase, '__undoCreateView__' )
+	self:superCall( '__undoCreateView__' )
 end
-
 
 --== initComplete
 
+--[[
 function Text:__initComplete__()
 	-- print( "Text:__initComplete__" )
-	self:superCall( StyleMix, '__initComplete__' )
-	self:superCall( ComponentBase, '__initComplete__' )
+	self:superCall( '__initComplete__' )
 	--==--
-	self.style = self._tmp_style
 end
+--]]
 
 function Text:__undoInitComplete__()
 	--print( "Text:__undoInitComplete__" )
 	self:_removeText()
-
-	self.style = nil
 	--==--
-	self:superCall( ComponentBase, '__undoInitComplete__' )
-	self:superCall( StyleMix, '__undoInitComplete__' )
+	self:superCall( '__undoInitComplete__' )
 end
 
 -- END: Setup DMC Objects
@@ -263,35 +290,130 @@ end
 --== Public Methods
 
 
---== X
+--[[
+Inherited Methods
+--]]
 
-function Text.__getters:x()
-	return self._x
-end
-function Text.__setters:x( value )
-	-- print( 'Text.__setters:x', value )
-	assert( type(value)=='number' )
-	--==--
-	if self._x == value then return end
-	self._x = value
-	self._x_dirty=true
-	self:__invalidateProperties__()
-end
+--- set/get x position.
+--
+-- @within Properties
+-- @function .x
+-- @usage widget.x = 5
+-- @usage print( widget.x )
 
---== Y
+--- set/get y position.
+--
+-- @within Properties
+-- @function .y
+-- @usage widget.y = 5
+-- @usage print( widget.y )
 
-function Text.__getters:y()
-	return self._y
-end
-function Text.__setters:y( value )
-	-- print( 'Text.__setters:y', value )
-	assert( type(value)=='number' )
-	--==--
-	if self._y == value then return end
-	self._y = value
-	self._y_dirty=true
-	self:__invalidateProperties__()
-end
+--- set/get anchorX.
+--
+-- @within Properties
+-- @function .anchorX
+-- @usage widget.anchorX = 5
+-- @usage print( widget.anchorX )
+
+--- set/get anchorY.
+--
+-- @within Properties
+-- @function .anchorY
+-- @usage widget.anchorY = 5
+-- @usage print( widget.anchorY )
+
+--- set/get widget style.
+-- style can be a style name or a Style Object.
+-- Style Object must be appropriate style for Widget, eg style for Background widget comes from dUI.newBackgroundStyle().
+-- @within Properties
+-- @function .style
+-- @usage widget.style = 'widget-home-page'
+-- @usage
+-- local wStyle = dUI.newTextStyle()
+-- widget.style = wStyle
+
+
+--- clear any local properties on style.
+-- convenience method, calls clearProperties() on active style.
+--
+-- @within Methods
+-- @function :clearStyle
+-- @usage widget:clearStyle()
+
+
+--- set/get align.
+-- values are 'left', 'center', 'right'
+--
+-- @within Properties
+-- @function .align
+-- @usage widget.align = 'center'
+-- @usage print( widget.align )
+
+--- set/get font.
+-- can either be Corona font (eg, native.systemFont) or one installed in system (eg, 'Helvetica-Grande')
+--
+-- @within Properties
+-- @function .font
+-- @usage widget.font = native.systemFont
+-- @usage print( widget.font )
+
+--- set/get fontSize.
+-- set the font size of the text.
+--
+-- @within Properties
+-- @function .fontSize
+-- @usage widget.fontSize = 18
+-- @usage print( widget.fontSize )
+
+--- set/get marginX.
+-- set the margin inset of the widget. this value is *subtracted* from the widget width.
+--
+-- @within Properties
+-- @function .marginX
+-- @usage widget.marginX = 18
+-- @usage print( widget.marginX )
+
+
+--- set/get strokeWidth.
+-- set stroke width for the simple background.
+--
+-- @within Properties
+-- @function .strokeWidth
+-- @usage widget.strokeWidth = 18
+-- @usage print( widget.strokeWidth )
+
+
+--- set the fill color of the simple background.
+--
+-- @within Methods
+-- @function :setFillColor
+-- @usage
+-- widget:setFillColor( grey )
+-- widget:setFillColor( grey, a )
+-- widget:setFillColor( r, g, b, a )
+-- widget:setFillColor( gradient )
+
+--- set stroke color of the simple background.
+--
+-- @within Methods
+-- @function :setStrokeColor
+-- @usage
+-- widget:setStrokeColor( grey )
+-- widget:setStrokeColor( grey, a )
+-- widget:setStrokeColor( r, g, b, a )
+-- widget:setStrokeColor( gradient )
+
+--- set color of text.
+--
+-- @within Methods
+-- @function :setTextColor
+-- @usage
+-- widget:setTextColor( grey )
+-- widget:setTextColor( grey, a )
+-- widget:setTextColor( r, g, b, a )
+-- widget:setTextColor( gradient )
+
+
 
 
 --[[
@@ -300,13 +422,23 @@ without width/height, we just use dimensions
 from text object after creation
 --]]
 
---== width (custom)
+--== .width (custom)
 
+--- set/get width.
+-- Note: this property changes both the width of the DMC Text Widget and the encapsulated Corona Text widget. If the style is unset, then the width value is the width of the encapsulated Corona Text widget. If the style value is set, then then the width for both changes to that value.
+--
+-- @within Properties
+-- @function .width
+-- @usage widget.width = 5
+-- @usage print( widget.width )
 
 function Text.__getters:width()
 	-- print( 'Text.__getters:width' )
-	local w, t = self.curr_style.width, self._txt_text
+	local style = self.curr_style
+	-- local mX = style.marginX*2
+	local w, t = style.width, self._txtText
 	if w==nil and t then w=t.width end
+	-- return w+mX
 	return w
 end
 function Text.__setters:width( value )
@@ -314,11 +446,19 @@ function Text.__setters:width( value )
 	self.curr_style.width = value
 end
 
---== height (custom)
+--== .height (custom)
+
+--- set/get height.
+-- Note: this property *doesn't* change the height of the actual *Corona Text widget*, that remains constant. If the style is unset, then the height value is the height of the encapsulated Corona Text widget. If the style value is set, then then the height is that value, even if the height of the Corona Text widget is different. (If the height of the Corona Text widget is set then it becomes a multi-line text widget.)
+--
+-- @within Properties
+-- @function .height
+-- @usage widget.height = 5
+-- @usage print( widget.height )
 
 function Text.__getters:height()
 	-- print( 'Text.__getters:height' )
-	local h, t = self.curr_style.height, self._txt_text
+	local h, t = self.curr_style.height, self._txtText
 	if h==nil and t then h=t.height end
 	return h
 end
@@ -327,18 +467,14 @@ function Text.__setters:height( value )
 	self.curr_style.height = value
 end
 
--- get just the text height
-function Text:getTextHeight()
-	-- print( "Text:getTextHeight", self._txt_text )
-	local val = 0
-	if self._txt_text then
-		val = self._txt_text.height
-	end
-	return val
-end
+--== .text
 
-
---== Text
+--- set/get widget text.
+--
+-- @within Properties
+-- @function .text
+-- @usage widget.text = 5
+-- @usage print( widget.text )
 
 function Text.__getters:text()
 	return self._text
@@ -354,16 +490,35 @@ function Text.__setters:text( value )
 end
 
 
+
+--- get height of Corona Text object.
+-- return the height of the encapsulated Corona text object, not height of the DMC Text Widget. returns 0 if Corona Text has yet to be created.
+--
+-- @within Methods
+-- @function :getTextHeight
+-- @treturn number height of Corona Text object
+-- @usage print( widget:getTextHeight() )
+
+function Text:getTextHeight()
+	-- print( "Text:getTextHeight", self._txtText )
+	local val = 0
+	local o = self._txtText
+	if o then val = o.height end
+	return val
+end
+
+
+
 --====================================================================--
 --== Private Methods
 
 
 function Text:_removeText()
 	-- print( "Text:_removeText" )
-	local o = self._txt_text
+	local o = self._txtText
 	if not o then return end
 	o:removeSelf()
-	self._txt_text = nil
+	self._txtText = nil
 end
 
 function Text:_createText()
@@ -374,10 +529,13 @@ function Text:_createText()
 	self:_removeText()
 
 	local w, h = style.width, style.height
+	local text = self._text
 	if w ~= nil then
 		w = w - style.marginX*2
+		text = testTextLength( text, {
+			width=w, font=style.font, fontSize=style.fontSize
+		})
 	end
-
 	o = display.newText{
 		x=0, y=0,
 
@@ -385,14 +543,14 @@ function Text:_createText()
 		-- don't use height, turns into multi-line
 		height=nil,
 
-		text=self._text,
+		text=text,
 		align=style.align,
 		font=style.font,
 		fontSize=style.fontSize,
 	}
 
 	self:insert( o )
-	self._txt_text = o
+	self._txtText = o
 
 	--== Reset properties
 
@@ -401,7 +559,7 @@ function Text:_createText()
 	self._width_dirty=true
 	self._height_dirty=true
 
-	self._text_dirty=true
+	self._text_dirty=false
 	self._textColor_dirty=true
 end
 
@@ -410,87 +568,79 @@ function Text:__commitProperties__()
 	-- print( 'Text:__commitProperties__' )
 	local style = self.curr_style
 	-- local metric = FontMgr:getFontMetric( style.font, style.fontSize )
-	metric={offsetX=0,offsetY=0}
+	-- metric={offsetX=0,offsetY=0}
+
+	if self._width_dirty then
+		self._width_dirty=false
+
+		self._anchorX_dirty=true
+		self._displayWidth_dirty=true
+		self._rectBgWidth_dirty=true
+		self._textObject_dirty=true
+	end
+	if self._height_dirty then
+		self._height_dirty=false
+
+		self._anchorY_dirty=true
+		self._displayHeight_dirty=true
+		self._rectBgHeight_dirty=true
+	end
 
 	-- create new text if necessary
-	if self._align_dirty or self._font_dirty or self._fontSize_dirty then
+	if self._align_dirty or self._font_dirty or self._fontSize_dirty or self._textObject_dirty then
 		self:_createText()
 		self._align_dirty=false
 		self._font_dirty=false
 		self._fontSize_dirty=false
+		self._textObject_dirty=false
 	end
 
 	local view = self.view
 	local bg = self._rectBg
-	local display = self._txt_text
+	local txt = self._txtText
 
 	--== position sensitive
 
 	-- set text string
 
 	if self._text_dirty then
-		display.text = self._text
 		self._text_dirty=false
-
-		self._width_dirty=true
-		self._height_dirty=true
-	end
-
-	if self._align_dirty then
-		display.align=style.align
-		self._align_dirty = false
-	end
-
-	if self._width_dirty then
-		bg.width = self.width -- use getter
-		self._width_dirty=false
-
-		self._anchorX_dirty=true
-		self._rectBgWidth_dirty=true
-		self._displayWidth_dirty=true
-	end
-	if self._height_dirty then
-		bg.height = self.height -- use getter
-		self._height_dirty=false
-
-		self._anchorY_dirty=true
-		self._rectBgHeight_dirty=true
-		self._displayHeight_dirty=true
 	end
 
 	if self._marginX_dirty then
 		self._marginX_dirty=false
 
+		self._displayWidth_dirty=true
 		self._rectBgWidth_dirty=true
 		self._textX_dirty=true
-		self._displayWidth_dirty=true
 	end
 	if self._marginY_dirty then
-		-- reminder, we don't set text height
+		--== Reminder, we don't set text height ==--
 		self._marginY_dirty=false
 
+		self._displayHeight_dirty=true
 		self._rectBgHeight_dirty=true
 		self._textY_dirty=true
-		self._displayHeight_dirty=true
 	end
 
 	-- bg width/height
 
 	if self._rectBgWidth_dirty then
+		bg.width = self.width -- use getter
 		self._rectBgWidth_dirty=false
 	end
 	if self._rectBgHeight_dirty then
+		bg.height = self.height -- use getter
 		self._rectBgHeight_dirty=false
 	end
 
 	if self._displayWidth_dirty then
-		display.width = self.width-style.marginX*2 -- use getter
 		self._displayWidth_dirty=false
 	end
 	if self._displayHeight_dirty then
 		--== !! DO NOT SET HEIGHT OF TEXT !! ==--
 		--[[
-		-- -- display.height = self.height
+		-- -- txt.height = self.height
 		--]]
 		self._displayHeight_dirty=false
 	end
@@ -531,20 +681,27 @@ function Text:__commitProperties__()
 
 	if self._textX_dirty then
 		local align = style.align
+		local w = style.width
 		local width = self.width -- use getter, it's smart
 		local offset
 		if align == self.LEFT then
-			display.anchorX = 0
-			offset = -width*(style.anchorX)+style.marginX
-			display.x=offset
+			txt.anchorX = 0
+			offset = -width*(style.anchorX)
+			if w~=nil then
+				offset = offset+style.marginX
+			end
+			txt.x=offset
 		elseif align == self.RIGHT then
-			display.anchorX = 1
-			offset = width*(1-style.anchorX)-style.marginX
-			display.x=offset
+			txt.anchorX = 1
+			offset = width*(1-style.anchorX)
+			if w~=nil then
+				offset = offset-style.marginX
+			end
+			txt.x=offset
 		else
-			display.anchorX = 0.5
+			txt.anchorX = 0.5
 			offset = width*(0.5-style.anchorX)
-			display.x=offset
+			txt.x=offset
 		end
 		self._textX_dirty = false
 	end
@@ -552,9 +709,9 @@ function Text:__commitProperties__()
 	if self._textY_dirty then
 		local height = self.height -- use getter
 		local offset
-		display.anchorY = 0.5
+		txt.anchorY = 0.5
 		offset = height/2-height*(style.anchorY)
-		display.y=offset
+		txt.y=offset
 		self._textY_dirty=false
 	end
 
@@ -581,12 +738,11 @@ function Text:__commitProperties__()
 		self._strokeWidth_dirty=false
 	end
 	if self._textColor_dirty then
-		display:setTextColor( unpack( style.textColor ) )
+		txt:setTextColor( unpack( style.textColor ) )
 		self._textColor_dirty=false
 	end
 
 end
-
 
 
 
