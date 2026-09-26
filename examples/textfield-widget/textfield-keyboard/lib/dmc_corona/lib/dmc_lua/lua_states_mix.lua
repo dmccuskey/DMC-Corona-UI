@@ -71,7 +71,7 @@ end
 
 
 function _patch( obj )
-	print("pathing")
+
 	obj = obj or {}
 
 	-- add properties
