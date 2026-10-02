@@ -37,10 +37,10 @@ A widget's style sends it an event for each property that changes, and for a res
 `tests/` holds unit tests for the styles, in [lunatest](https://github.com/silentbicycle/lunatest). The repository's own `main.lua` runs them: open it in the Solar2D Simulator, and the console ends with
 
 ```text
-66 passed, 0 failed, 0 error(s), 0 skipped.
+70 passed, 0 failed, 0 error(s), 0 skipped.
 ```
 
-(September 2026, Simulator 2026.3731). The widgets themselves have no automated tests: check a change by running the examples in the Simulator. A button can be pressed from code with `button:press()`, and any widget's touch area can take touch events from `dispatchEvent()`, to test without a mouse or for a screenshot.
+(October 2026, Simulator 2026.3731). `main.lua` puts dmc-kolor in its test mode first: the tests give colors as raw numbers and expect them back as given. The widgets themselves have no automated tests: check a change by running the examples in the Simulator. A button can be pressed from code with `button:press()`, and any widget's touch area can take touch events from `dispatchEvent()`, to test without a mouse or for a screenshot.
 
 The API comments in the source are written for [LDoc](https://github.com/lunarmodules/LDoc); `config.ld` generates HTML into `docs/api/` (not kept in git).
 
@@ -48,7 +48,7 @@ The API comments in the source are written for [LDoc](https://github.com/lunarmo
 
 Each needs discussion and a concrete use case before it is worked on.
 
-- Fix the [Known Issues](api.md#known-issues): accept `inherit` in style constructors; export or remove the broken and missing functions; update the three examples that use `lib.dmc_widgets`; remove the spurious notices and the keyboard debug print.
+- Fix the [Known Issues](api.md#known-issues): fix or remove the broken and missing functions; update the three examples that use `lib.dmc_widgets`; remove the spurious notices and the keyboard debug print.
 - Port from the mimetic fork of this library: the SlideView's auto-advance and `scroll_to_slide` (fixing `type(index)=="integer"`, always false in Lua 5.1, and the undeclared global `params` in `scroll_one_slide`).
 - Check `View:setAnchor()` against dmc-objects' `ComponentBase:setAnchor()`, which reads its arguments from the wrong place.
 - Tests that run in plain Lua, like dmc-sockets' `tests/run_unit.sh`, so the style tests can run without the Simulator.

@@ -227,6 +227,63 @@ function test_inheritStyleByName()
 end
 
 
+function test_inheritStyleAtCreation()
+	-- print( "test_inheritStyleAtCreation" )
+	local s1, s2
+
+	s1 = dUI.newTextStyle{ fontSize=31 }
+	s2 = dUI.newTextStyle{ inherit=s1 }
+
+	styleInheritsFrom( s2, s1 )
+	assert_equal( 31, s2.fontSize, "property comes from the inherited style" )
+
+	s2 = dUI.newTextStyle{ inherit=s1, align='right' }
+	styleInheritsFrom( s2, s1 )
+	assert_equal( 'right', s2.align, "property given with inherit is kept" )
+	assert_equal( 31, s2.fontSize, "the others come from the inherited style" )
+end
+
+
+function test_inheritStyleByNameAtCreation()
+	-- print( "test_inheritStyleByNameAtCreation" )
+	local s1, s2
+	local name
+
+	name = 'text-style-inherit-at-creation'
+	s1 = dUI.newTextStyle{ fontSize=32 }
+	s1.name = name
+
+	s2 = dUI.newTextStyle{ inherit=name }
+
+	styleInheritsFrom( s2, s1 )
+	assert_equal( 32, s2.fontSize, "property comes from the named style" )
+
+	assert_error( function() dUI.newTextStyle{ inherit='no-such-style' } end, "unknown style name raises" )
+end
+
+
+function test_parentChangeReachesChildren()
+	-- print( "test_parentChangeReachesChildren" )
+	-- width is a BaseStyle setter: found on the parents of the child's class
+	local s1 = dUI.newButtonStyle()
+
+	s1.width = 123
+	assert_equal( 123, s1.inactive:_getRawProperty( 'width' ), "parent's change set on the child" )
+end
+
+
+function test_inheritStyleAtCreationChildren()
+	-- print( "test_inheritStyleAtCreationChildren" )
+	local s1, s2
+
+	s1 = dUI.newRoundedBackgroundStyle()
+	s2 = dUI.newRoundedBackgroundStyle{ inherit=s1 }
+
+	styleInheritsFrom( s2, s1 )
+	styleInheritsFrom( s2.view, s1.view )
+end
+
+
 --[[
 this test needs to be run by itself
 since we're using timer.performWithDelay()

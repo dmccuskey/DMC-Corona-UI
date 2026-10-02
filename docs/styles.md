@@ -19,6 +19,8 @@ Each widget type has its own style type, and takes only that type:
 | `newButton()`, `newPushButton()`, `newRadioButton()`, `newToggleButton()` | `newButtonStyle()` |
 | `newBackground()` and its variants | `newBackgroundStyle()` and its variants |
 | `newNavBar()`, `newNavItem()` | `newNavBarStyle()`, `newNavItemStyle()` |
+| `newScrollView()` | `newScrollViewStyle()` |
+| `newTableView()` | `newTableViewStyle()` |
 | `newTableViewCell()` | `newTableViewCellStyle()` |
 
 A widget always has a style: without one, it uses the default style of its type. The properties each style takes are listed with its widget in [Widgets](widgets.md).
@@ -143,14 +145,14 @@ Styles cascade: a style gets every property it doesn't set from the style it inh
 ```lua
 local body = dUI.newTextStyle{ name='body', fontSize=18, textColor={ 0.1, 0.1, 0.1 } }
 
-local note = dUI.newTextStyle()
-note.inherit = body          -- or: note.inherit = 'body'
-note.fontSize = 14           -- set after inherit: see below
+local note = dUI.newTextStyle{ inherit=body, fontSize=14 }   -- or: inherit='body'
 ```
 
 `note` now has `body`'s color at its own size. Change `body.textColor`, and every widget using `note` changes too.
 
-Set `inherit` first, then the properties: setting `inherit` resets the style, and erases the properties it had set. `inherit` can't be given in the constructor ([Known Issues](api.md#known-issues)).
+`inherit` works in an inline style too: `style={ inherit='body', fontSize=14 }`. A name must belong to a style of the same type that already exists, or making the style raises an error.
+
+To change it later, set `note.inherit` first, then the properties: setting `inherit` resets the style, and erases the properties it had set.
 
 ## Themes
 

@@ -34,8 +34,9 @@ The path follows where `dmc_ui.lua` is: `lib.dmc_ui` for the layout in the [Quic
 | `dUI.newBackgroundStyle( [properties] )` | a Background style; `newRectangleBackgroundStyle()`, `newRoundedBackgroundStyle()`, `newNineSliceBackgroundStyle()`, `newImageBackgroundStyle()` for one type |
 | `dUI.newTextStyle()`, `newTextFieldStyle()`, `newButtonStyle()` | a style for that widget |
 | `dUI.newNavBarStyle()`, `newNavItemStyle()`, `newTableViewCellStyle()` | a style for that widget |
+| `dUI.newScrollViewStyle()`, `newTableViewStyle()` | a style for that widget |
 
-`properties` is a table of the style's properties and child styles, plus `name` to register it as a named style.
+`properties` is a table of the style's properties and child styles, plus `name` to register it as a named style and `inherit` (a style, or a style's name) to inherit from ([Inheritance](styles.md#inheritance)).
 
 | Function | Does |
 |---|---|
@@ -52,7 +53,7 @@ The path follows where `dmc_ui.lua` is: `lib.dmc_ui` for the layout in the [Quic
 | `dUI.loadThemes( folder )` | loads every `.lua` file in a folder of the project |
 | `dUI.createTheme( id [, { name=... } ] )` | makes a theme, or returns the one with that id; its `addStyle( name, style )` adds a named style to it |
 | `dUI.activateTheme( id )` | makes a theme the active one; widgets using a style by name redraw |
-| `dUI.getActiveThemeId()` | the active theme's id, or `nil` |
+| `dUI.getActiveThemeId()`, `getActiveThemeName()` | the active theme's id or name, or `nil` |
 | `dUI.getAvailableThemeIds()` | a list of the loaded themes' ids |
 
 A theme file is a module that returns `{ initialize=function( Style ) ... end }`; see [Themes](styles.md#themes).
@@ -97,10 +98,8 @@ The `dmc_corona.cfg` in this repository has further sections, `[DMC_KOLOR]`, `[D
 
 Checked in the Solar2D Simulator (2026.3731) in September 2026.
 
-- **`inherit` can't be given when a style is made.** `dUI.newTextStyle{ inherit=parent }` and an inline `style={ inherit='name' }` skip it with `[NOTICE] Skipping invalid style property 'inherit'`. Set `style.inherit` after making the style ([Inheritance](styles.md#inheritance)).
-- **Some functions fail or are missing.** `dUI.newButtonGroup()` (radio groups), `dUI.newFormatter()` and `dUI.newSlideView()` raise an error; `dUI.newPopover()`, `newPopoverControl()`, `newTableViewStyle()`, `newScrollViewStyle()` and `addThemeStyle()` are `nil`. The table view and scroll view styles exist, but their constructors are named `newTableView` and `newScrollView` inside the style module and aren't exported.
+- **Some functions fail or are missing.** `dUI.newButtonGroup()` (radio groups), `dUI.newFormatter()` and `dUI.newSlideView()` raise an error; `dUI.newPopover()` and `newPopoverControl()` are `nil`.
 - **Three examples use the old module name** `lib.dmc_widgets` and don't run: `background-themed`, `button-radio-group` and `button-text-simple`.
 - **Harmless console notices:** a text field prints `Skipping invalid style property` for `align`, `marginX` and `marginY` of its background, and a Navigation Control prints `StyleMgr.addStyle improper TYPE on Style, got 'nil'`. Every keyboard event prints `UI._keyboardMgr_handler`.
 - A Background widget's `type` property is `nil`; use `widget.style.type`.
 - The Navigation Control expects each view to be anchored top center, and hides popped views instead of removing them ([Views](controls.md#views)).
-- The module doesn't export its version (1.1.0).

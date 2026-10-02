@@ -18,6 +18,11 @@ print( '\n\n##############################################\n\n' )
 
 require 'tests.lunatest'
 
+-- the tests use raw values (0-255, some larger) and expect them back
+-- untranslated: dmc-kolor 2.x translates and range-checks them otherwise
+require 'dmc_corona_boot'
+require( 'dmc_kolor' ).setRunMode( 'test' )
+
 
 
 --===================================================================--
