@@ -1,7 +1,7 @@
 --====================================================================--
 -- dmc_ui/dmc_control/core/view_control.lua
 --
--- Documentation:
+-- Documentation: https://github.com/dmccuskey/DMC-Corona-UI
 --====================================================================--
 
 --[[

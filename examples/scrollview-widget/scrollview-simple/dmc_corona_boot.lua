@@ -3,7 +3,7 @@
 --
 --  utility to read in configuration file for dmc-corona-library
 --
--- Documentation:
+-- Documentation: https://github.com/dmccuskey/dmc-corona-boot
 --====================================================================--
 
 --[[

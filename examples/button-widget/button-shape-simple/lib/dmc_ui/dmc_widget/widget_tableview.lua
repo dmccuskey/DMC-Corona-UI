@@ -1,7 +1,7 @@
 --====================================================================--
 -- dmc_ui/dmc_widget/widget_tableview.lua
 --
--- Documentation: http://docs.davidmccuskey.com/
+-- Documentation: https://github.com/dmccuskey/DMC-Corona-UI
 --====================================================================--
 
 --[[

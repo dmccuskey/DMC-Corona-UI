@@ -1,7 +1,7 @@
 --====================================================================--
 -- dmc_ui/dmc_widget/widget_scrollview.lua
 --
--- Documentation: http://docs.davidmccuskey.com/dmc+corona+ui
+-- Documentation: https://github.com/dmccuskey/DMC-Corona-UI
 --====================================================================--
 
 --[[

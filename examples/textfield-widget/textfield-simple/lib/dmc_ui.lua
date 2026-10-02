@@ -3,7 +3,7 @@
 --
 -- entry point into dmc-corona-ui
 --
--- Documentation: http://docs.davidmccuskey.com/
+-- Documentation: https://github.com/dmccuskey/DMC-Corona-UI
 --====================================================================--
 
 --[[

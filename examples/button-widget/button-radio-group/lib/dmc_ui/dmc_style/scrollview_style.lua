@@ -1,7 +1,7 @@
 --====================================================================--
 -- dmc_ui/dmc_style/scrollview_style.lua
 --
--- Documentation: http://docs.davidmccuskey.com/
+-- Documentation: https://github.com/dmccuskey/DMC-Corona-UI
 --====================================================================--
 
 --[[

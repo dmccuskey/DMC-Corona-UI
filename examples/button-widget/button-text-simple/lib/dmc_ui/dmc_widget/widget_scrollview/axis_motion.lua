@@ -1,7 +1,7 @@
 --====================================================================--
 -- dmc_ui/dmc_widget/widget_scrollview/axis_motion.lua
 --
--- Documentation:
+-- Documentation: https://github.com/dmccuskey/DMC-Corona-UI
 --====================================================================--
 
 --[[

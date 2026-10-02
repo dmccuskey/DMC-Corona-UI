@@ -1,7 +1,7 @@
 --====================================================================--
 -- dmc_ui/dmc_control/popover_control.lua
 --
--- Documentation: http://docs.davidmccuskey.com/
+-- Documentation: https://github.com/dmccuskey/DMC-Corona-UI
 --====================================================================--
 
 --[[
