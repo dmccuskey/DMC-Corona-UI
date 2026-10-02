@@ -90,6 +90,24 @@ local type = type
 local Style = nil
 
 
+-- findSetter()
+-- a setter on an object's class or its parents (lua-class 0.2.0 looks
+-- them up at use instead of copying them into each class)
+--
+local function findSetter( t, k )
+	local tbl = rawget( t, '__setters' )
+	local f = tbl and rawget( tbl, k )
+	if f then return f end
+	local par = rawget( t, '__parents' )
+	if not par then return nil end
+	for i = 1, #par do
+		f = findSetter( par[i], k )
+		if f then return f end
+	end
+	return nil
+end
+
+
 
 --====================================================================--
 --== Style Base Class
@@ -209,12 +227,20 @@ function BaseStyle:__init__( params )
 	self._isClearing = false
 	self._isDestroying = false
 
-	-- inheritance style
+	-- inheritance style: params.inherit, or 'inherit' in the style data
+	-- (a style or a style name); children inherit from its children
+	if params.inherit==nil and type(params.data)=='table' then
+		params.inherit = params.data.inherit
+	end
+	if type(params.inherit)=='string' then
+		local name = params.inherit
+		params.inherit = Style.Manager.getStyle( self, name )
+		assert( params.inherit, sfmt( "Style 'inherit': no %s style named '%s'", tostring(self.TYPE), name ) )
+	end
 	if params.inherit==nil then
 		params.inherit = self:getBaseStyle( params.data )
 	end
 
-	-- @TODO: fix inherit,
 	self._inherit = params.inherit
 	self._inherit_f = nil
 
@@ -1038,11 +1064,13 @@ function BaseStyle:_parseData( data )
 
 	for prop, value in pairs( data ) do
 		-- print( prop, value )
-		if DEF[ prop ]==nil and not EXCL[ prop ] then
+		if prop=='inherit' then
+			-- set up in __init__
+		elseif DEF[ prop ]==nil and not EXCL[ prop ] then
 			pnotice( sfmt("Skipping invalid style property '%s'", tostring(prop)), {newline=false})
 			pnotice( sfmt("located in style definition for '%s'", tostring(self.NAME)), {newline=false})
 		end
-		if not self:isChild( prop ) then
+		if prop~='inherit' and not self:isChild( prop ) then
 			self[ prop ]=value
 		end
 	end
@@ -1192,7 +1220,7 @@ function BaseStyle:_parentStyleEvent_handler( event )
 		-- however, check to see if property is valid
 		-- parent could have other properties
 		if self._VALID_PROPERTIES[property] then
-			local func = self.__setters[property]
+			local func = findSetter( self, property )
 			if func then
 				func( self, value, true )
 			else
