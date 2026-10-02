@@ -1,7 +1,7 @@
 --====================================================================--
 -- dmc_ui/core/style_help.lua
 --
--- Documentation: http://docs.davidmccuskey.com/
+-- Documentation: https://github.com/dmccuskey/DMC-Corona-UI
 --====================================================================--
 
 --[[

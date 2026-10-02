@@ -1,7 +1,7 @@
 --====================================================================--
 -- dmc_ui/dmc_widget/widget_scrollview/scale_motion.lua
 --
--- Documentation:
+-- Documentation: https://github.com/dmccuskey/DMC-Corona-UI
 --====================================================================--
 
 --[[

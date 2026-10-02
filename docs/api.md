@@ -1,0 +1,106 @@
+# API Reference
+
+Everything the `dmc_ui` module provides. Each widget's own options, properties and methods are in [Widgets](widgets.md), the Navigation Control's in [Controls](controls.md), how styles work in [Using Styles](styles.md).
+
+## The Module
+
+```lua
+local dUI = require 'lib.dmc_ui'
+```
+
+The path follows where `dmc_ui.lua` is: `lib.dmc_ui` for the layout in the [Quick Start](../README.md#1-copy-the-library-into-your-project). The module sets itself up when it is first required, and loads each widget's code the first time one is made.
+
+## Widgets
+
+| Function | Makes |
+|---|---|
+| `dUI.newBackground( [options] )` | a [Background](widgets.md#background) of the style's `type` |
+| `dUI.newRectangleBackground()`, `newRoundedBackground()`, `new9SliceBackground()`, `newImageBackground()` | a Background of that type |
+| `dUI.newText( [options] )` | a [Text](widgets.md#text) |
+| `dUI.newTextField( [options] )` | a [TextField](widgets.md#textfield) |
+| `dUI.newButton( [options] )`, `newPushButton()` | a push [Button](widgets.md#button) |
+| `dUI.newToggleButton()`, `newRadioButton()` | a toggle or radio button |
+| `dUI.newNavBar( [options] )`, `newNavItem()` | a [NavBar](widgets.md#navbar-and-navitem) and its items |
+| `dUI.newScrollView( [options] )` | a [ScrollView](widgets.md#scrollview) |
+| `dUI.newTableView( [options] )`, `newTableViewCell()` | a [TableView](widgets.md#tableview-and-tableviewcell) and its rows |
+| `dUI.newNavigationControl( [options] )` | a [Navigation Control](controls.md#navigation-control) |
+
+`options` is a table: the widget's own options, plus `x`, `y`, `id`, `style` and `autoMask` ([What All Widgets Share](widgets.md#what-all-widgets-share)).
+
+## Styles
+
+| Function | Makes |
+|---|---|
+| `dUI.newBackgroundStyle( [properties] )` | a Background style; `newRectangleBackgroundStyle()`, `newRoundedBackgroundStyle()`, `newNineSliceBackgroundStyle()`, `newImageBackgroundStyle()` for one type |
+| `dUI.newTextStyle()`, `newTextFieldStyle()`, `newButtonStyle()` | a style for that widget |
+| `dUI.newNavBarStyle()`, `newNavItemStyle()`, `newTableViewCellStyle()` | a style for that widget |
+
+`properties` is a table of the style's properties and child styles, plus `name` to register it as a named style.
+
+| Function | Does |
+|---|---|
+| `dUI.getStyle( type, name )` | returns the named style of that type (`'Text'`, `'Button'`, ...), from the active theme first; `nil` if there is none |
+| `dUI.removeStyle( type, name )` | unregisters a named style |
+| `dUI.addStyle( style )` | registers a style under its `name` (a style with a `name` is registered when it is made) |
+| `dUI.purgeStyles()` | unregisters every named style outside themes |
+
+## Themes
+
+| Function | Does |
+|---|---|
+| `dUI.loadTheme( path )` | loads a theme file, such as `'theme/blue-theme.lua'`, relative to the project folder |
+| `dUI.loadThemes( folder )` | loads every `.lua` file in a folder of the project |
+| `dUI.createTheme( id [, { name=... } ] )` | makes a theme, or returns the one with that id; its `addStyle( name, style )` adds a named style to it |
+| `dUI.activateTheme( id )` | makes a theme the active one; widgets using a style by name redraw |
+| `dUI.getActiveThemeId()` | the active theme's id, or `nil` |
+| `dUI.getAvailableThemeIds()` | a list of the loaded themes' ids |
+
+A theme file is a module that returns `{ initialize=function( Style ) ... end }`; see [Themes](styles.md#themes).
+
+## Keyboard
+
+| | |
+|---|---|
+| `dUI:addEventListener( dUI.EVENT, f )` | keyboard events: `event.type` is `dUI.KEYBOARD_SHOWING` or `dUI.KEYBOARD_HIDING` |
+| `dUI.adjustForKeyboard( group [, { proxy=, offset= } ] )` | the first call slides a display group up so that `proxy` (a text field in it; default the group itself) is above the keyboard, `offset` more; the next call slides it back |
+
+```lua
+dUI:addEventListener( dUI.EVENT, function( event )
+	if event.type == dUI.KEYBOARD_SHOWING then
+		dUI.adjustForKeyboard( screen, { proxy=field, offset=-10 } )
+	elseif event.type == dUI.KEYBOARD_HIDING then
+		dUI.adjustForKeyboard( screen )
+	end
+end )
+```
+
+From `examples/textfield-widget/textfield-keyboard`.
+
+## Constants
+
+| Name | Value |
+|---|---|
+| `dUI.WIDTH`, `dUI.HEIGHT` | `display.contentWidth`, `display.contentHeight` when the module was loaded |
+| `dUI.RECTANGLE`, `dUI.ROUNDED`, `dUI.NINE_SLICE` | `'rectangle'`, `'rounded'`, `'9-slice'`: Background types |
+| `dUI.EVENT` | `'dmc-ui-event'`, the name of the module's events |
+| `dUI.POPOVER` | a modal style for the unfinished Popover Control |
+
+`dUI.setOS( platform [, version] )` picks the look for `'iOS'` or `'android'`; the module calls it at load for the device it runs on (iOS in the Simulator).
+
+## Configuration
+
+DMC Corona UI has no settings of its own: there is no `[DMC_UI]` section in `dmc_corona.cfg`. The file must still be there, with the `[DMC_CORONA]` section, so that the libraries in `lib/dmc_corona/` can be found; its format is described in [dmc-corona-boot's Configuration](https://github.com/dmccuskey/dmc-corona-boot/blob/master/docs/configuration.md).
+
+The `dmc_corona.cfg` in this repository has further sections, `[DMC_KOLOR]`, `[DMC_OBJECTS]` and `[DMC_STATES]`, for libraries DMC Corona UI uses; they can be left out. `[DMC_KOLOR]` sets how [dmc-kolor](https://github.com/dmccuskey/dmc-kolor) reads colors, including the colors in styles.
+
+## Known Issues
+
+Checked in the Solar2D Simulator (2026.3731) in September 2026.
+
+- **`inherit` can't be given when a style is made.** `dUI.newTextStyle{ inherit=parent }` and an inline `style={ inherit='name' }` skip it with `[NOTICE] Skipping invalid style property 'inherit'`. Set `style.inherit` after making the style ([Inheritance](styles.md#inheritance)).
+- **Some functions fail or are missing.** `dUI.newButtonGroup()` (radio groups), `dUI.newFormatter()` and `dUI.newSlideView()` raise an error; `dUI.newPopover()`, `newPopoverControl()`, `newTableViewStyle()`, `newScrollViewStyle()` and `addThemeStyle()` are `nil`. The table view and scroll view styles exist, but their constructors are named `newTableView` and `newScrollView` inside the style module and aren't exported.
+- **Three examples use the old module name** `lib.dmc_widgets` and don't run: `background-themed`, `button-radio-group` and `button-text-simple`.
+- **Harmless console notices:** a text field prints `Skipping invalid style property` for `align`, `marginX` and `marginY` of its background, and a Navigation Control prints `StyleMgr.addStyle improper TYPE on Style, got 'nil'`. Every keyboard event prints `UI._keyboardMgr_handler`.
+- A Background widget's `type` property is `nil`; use `widget.style.type`.
+- The Navigation Control expects each view to be anchored top center, and hides popped views instead of removing them ([Views](controls.md#views)).
+- The module doesn't export its version (1.1.0).

@@ -1,7 +1,7 @@
 --====================================================================--
 -- dmc_widget/widget_style/button_style.lua
 --
--- Documentation: http://docs.davidmccuskey.com/
+-- Documentation: https://github.com/dmccuskey/DMC-Corona-UI
 --====================================================================--
 
 --[[

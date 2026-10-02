@@ -1,7 +1,7 @@
 --====================================================================--
 -- dmc_ui/dmc_style/tableviewcell_style/tableviewcell_state.lua
 --
--- Documentation: http://docs.davidmccuskey.com/
+-- Documentation: https://github.com/dmccuskey/DMC-Corona-UI
 --====================================================================--
 
 --[[

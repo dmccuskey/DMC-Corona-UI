@@ -1,7 +1,7 @@
 --====================================================================--
 -- dmc_widget/widget_text.lua
 --
--- Documentation: http://docs.davidmccuskey.com/
+-- Documentation: https://github.com/dmccuskey/DMC-Corona-UI
 --====================================================================--
 
 --[[

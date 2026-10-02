@@ -1,132 +1,166 @@
-# Overview #
+# DMC Corona UI
 
-The **DMC Corona UI** library is collection of advanced widgets for the Corona SDK. They can be used in any size or type of application.
+Widgets for Solar2D (formerly Corona SDK): buttons, text, text fields, backgrounds, navigation bars, scroll and table views, each drawn from a style you can share, cascade and swap as a theme.
 
-The module architecture is heavily object-oriented, but each module can be used with any style of coding. The OO-nature ensures that the modules can be easily re-used or modified as necessary.
-
-**Features**
-
-* Robust and efficient widgets
-* Cascading style sheets
-* Powerful controls
-
-**Documentation & Examples**
-
-There are examples and documentation available for the modules. Look in the `examples` folder for available examples which can be run directly in the Corona SDK. Documentation and some simple screencasts of examples are online at: [docs.davidmccuskey.com](http://docs.davidmccuskey.com/dmc+corona+ui)
-
-**Questions or Comments**
-
-If you have questions or comments you can either (preferred order):
-* send me an email: corona-lib at davidmccuskey com
-* post an issue here on github
-* send a PM @ coronalabs.com: @dmccuskey
-* post to the Corona forums: http://forums.coronalabs.com
-
-**Issues**
-
-If you have any issues, please post them here on github: [dmc-corona-ui issues](http://github.com/dmccuskey/dmc-corona-ui/issues)
-
-
-
-## Installation & Use ##
-
-For easy installation, copy the following setup in your project:
-
-```lua
-dmc_corona.cfg
-dmc_corona_boot.lua
-lib/
-  dmc_ui.lua
-  dmc_corona/
-  dmc_ui/
-```
-
-With this setup the widgets module would be imported like so:
+Every widget takes its look from a Style object. Give it the style inline, as a shared object, or by name; change the style, and every widget using it redraws:
 
 ```lua
 local dUI = require 'lib.dmc_ui'
 
-local button = dUI.newPushButton( params )
-...
+dUI.newButtonStyle{ name='big-button', width=240, height=70 }
+
+local button = dUI.newPushButton{
+	labelText="Save",
+	style='big-button',
+	onRelease=function( event ) print( 'saved' ) end,
+}
 ```
 
-For more detailed info about installation, visit [Install DMC Corona UI](http://docs.davidmccuskey.com/install+dmc-corona-ui).
+## Features
 
+- Text, text field, push, radio and toggle buttons, backgrounds (rectangle, rounded, 9-slice, image), navigation bar, scroll view and table view
+- Any property can be changed at any time, including those Solar2D's own objects fix at creation (a text's font, a text field's size)
+- Styles cascade: a style inherits every property it doesn't set from another one
+- Named styles, usable anywhere in the app by name, and themes: sets of named styles you switch at run time
+- A Navigation Control: a navigation bar with a back button over a stack of views you push and pop
+- Text shrinks to its content or truncates with an ellipsis; a text field shows styled text until it is edited
+- Pure Lua, no plugins needed; MIT licensed
 
+## Quick Start
 
-## Current Widgets & Styles ##
+The following code will get you up and running in about 10 minutes in the Solar2D Simulator on macOS or Windows. It makes a text and a button, then three buttons that share a named style.
 
-* Background
+Prerequisites: the [Solar2D](https://solar2d.com/) Simulator and a copy of this repository (`git clone https://github.com/dmccuskey/DMC-Corona-UI.git`, or download the ZIP from GitHub).
 
-  A widget used to provide a backing image. This is used in other widgets, eg TextField, Button, TableViewCell, etc. Several display types – image, rectangle shape, rounded shape, 9-slice, etc.
+### 1. Copy the Library into Your Project
 
-* Button
+Copy these from this repository into the root of your project folder:
 
-  A fancy button set.
+```text
+dmc_corona_boot.lua     loader for the DMC libraries
+dmc_corona.cfg          configuration: says the libraries are in lib/dmc_corona/
+lib/
+├── dmc_ui.lua          the module you require
+├── dmc_ui/             the widgets, styles and controls
+└── dmc_corona/         the DMC libraries DMC Corona UI uses
+```
 
-* NavBar
+**Going further:** keep the libraries somewhere else, or combine several DMC libraries ([dmc-corona-boot Configuration](https://github.com/dmccuskey/dmc-corona-boot/blob/master/docs/configuration.md)).
 
-  A navigation bar.
+### 2. A Text and a Button
 
-* NavItem
+Create `main.lua` in the project folder:
 
-  An item used in the NavBar.
+```lua
+local dUI = require 'lib.dmc_ui'
 
-* ScrollView
+local W, H = display.contentWidth, display.contentHeight
+display.setDefault( 'background', 0.95 )
 
-  A robust 2D scroll surface.
-  
-* Segmented Control
+local title = dUI.newText{
+	text="Hello, DMC UI",
+	style={ width=280, height=40, fontSize=24, textColor={ 0.1, 0.1, 0.1 } }
+}
+title.x, title.y = W/2, 80
 
-  A horizontal control made of multiple segments, each segment functioning as a discrete button.
+local count = 0
 
-* TableView
+local button = dUI.newPushButton{
+	labelText="Press Me",
+	style={
+		width=160, height=50,
+		inactive={
+			label={ textColor={ 1, 1, 1 } },
+			background={ type='rounded', view={ fillColor={ 0.2, 0.5, 0.9 } } },
+		},
+		active={
+			label={ textColor={ 1, 1, 1 } },
+			background={ type='rounded', view={ fillColor={ 0.1, 0.3, 0.6 } } },
+		},
+	},
+	onRelease=function( event )
+		count = count + 1
+		title.text = "Pressed " .. count .. " times"
+	end,
+}
+button.x, button.y = W/2, 200
+```
 
-  A high-performance TableView widget, inherits from ScrollView.
+Open the project in the Simulator. A title is at the top, a blue button below it. Click the button: it turns dark blue while pressed, and the title counts the presses.
 
-* TableViewCell
+The `style` tables hold everything about the look. A button has one set for each state (`inactive`, `active` while pressed, `disabled`), each with a `label` (a text style) and a `background` (a background style, here `rounded`). Anything left out comes from the default style.
 
-  A general-purpose row for a TableView.
+If the console shows `module 'lib.dmc_ui' not found` instead, `lib/` is missing from the root of the project folder. `module 'dmc_events_mix' not found` means `dmc_corona.cfg` is missing there.
 
-* Text
+### 3. Share a Style by Name
 
-  A widget to display textual information.
+Replace `main.lua` with this. The buttons now use a named style, and each one changes that style when pressed:
 
-* TextField
+```lua
+local dUI = require 'lib.dmc_ui'
 
-  No-fuss, all action text-input widget.
+local W, H = display.contentWidth, display.contentHeight
+display.setDefault( 'background', 0.95 )
 
+-- a named style: any button can use it by its name
+local bigButton = dUI.newButtonStyle{
+	name='big-button',
+	width=240, height=70,
+	inactive={
+		label={ fontSize=26, textColor={ 1, 1, 1 } },
+		background={ type='rounded', view={ cornerRadius=10, fillColor={ 0.2, 0.5, 0.9 } } },
+	},
+	active={
+		label={ fontSize=26, textColor={ 1, 1, 1 } },
+		background={ type='rounded', view={ cornerRadius=10, fillColor={ 0.1, 0.3, 0.6 } } },
+	},
+}
 
+local status = dUI.newText{
+	text="Pick a color",
+	style={ width=400, height=50, fontSize=30, textColor={ 0.1, 0.1, 0.1 } }
+}
+status.x, status.y = W/2, 120
 
-## Current Controls ##
+local function newColorButton( label, color, y )
+	local button = dUI.newPushButton{
+		labelText=label,
+		style='big-button',
+		onRelease=function( event )
+			-- change the named style: every button using it follows
+			bigButton.inactive.background.view.fillColor = color
+			status.text = label
+		end,
+	}
+	button.x, button.y = W/2, y
+	return button
+end
 
+newColorButton( "Orange", { 0.9, 0.4, 0.1 }, 260 )
+newColorButton( "Green", { 0.2, 0.6, 0.3 }, 360 )
+newColorButton( "Blue", { 0.2, 0.5, 0.9 }, 460 )
+```
 
-* Navigation Control
+The Simulator restarts the app when the file is saved. Three blue buttons share the style `big-button`. Click Green: all three turn green, and the text says which one you picked.
 
-  Builds on NavBar to deliver precise page navigation.
-  
+<img src="docs/images/quick-start-named-style.png" width="320" alt="The text 'Green' above three green buttons labeled Orange, Green and Blue">
 
+Each button gets its own copy of the style, which inherits from `big-button`: change `big-button` and they all change; change `button.style` and only that button does ([Using Styles](docs/styles.md)).
 
-## License ##
+**Going further:** make a set of named styles into a theme and switch themes at run time ([Themes](docs/styles.md#themes)), put a navigation bar over your screens ([Navigation Control](docs/controls.md)), or see complete apps in [examples](examples/).
 
-The MIT License (MIT)
+To update, copy `dmc_corona_boot.lua` and `lib/` again from the newer version. Keep your own `dmc_corona.cfg` if you have changed it.
 
-Copyright (c) 2013-2015 David McCuskey
+## Documentation
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+- [Using Styles](docs/styles.md): styles and widgets, inline, shared and named styles, child styles, inheritance, themes
+- [Widgets](docs/widgets.md): each widget's options, properties, methods and events
+- [Controls](docs/controls.md): the Navigation Control
+- [API reference](docs/api.md): the module's functions, constants, configuration, known issues
+- [Examples](examples/): an app for each widget and control
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+Everything else is listed on the [documentation home](docs/README.md).
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+## License
+
+DMC Corona UI is released under the [MIT License](LICENSE).

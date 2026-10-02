@@ -1,7 +1,7 @@
 --====================================================================--
 -- dmc_widget/widget_background/view_factory.lua
 --
--- Documentation: http://docs.davidmccuskey.com/
+-- Documentation: https://github.com/dmccuskey/DMC-Corona-UI
 --====================================================================--
 
 --[[

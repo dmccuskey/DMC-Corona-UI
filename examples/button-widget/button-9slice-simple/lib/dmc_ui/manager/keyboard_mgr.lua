@@ -1,7 +1,7 @@
 --====================================================================--
 -- manager/keyboard_mgr.lua
 --
--- Documentation: http://docs.davidmccuskey.com/
+-- Documentation: https://github.com/dmccuskey/DMC-Corona-UI
 --====================================================================--
 
 --[[
