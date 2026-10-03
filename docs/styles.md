@@ -75,7 +75,7 @@ local text = dUI.newText{ text="Big Title", style='title' }
 -- or later: text.style = 'title'
 ```
 
-Names are kept per style type: a text style and a button style can both be called `'title'`. A second style with a name already in use isn't registered (`[NOTICE] StyleMgr.addStyle already have style with name`). `dUI.getStyle( 'Text', 'title' )` returns a named style, `dUI.removeStyle( 'Text', 'title' )` unregisters one, and so does setting its `name` to `nil`. The type names are `'Background'`, `'Button'`, `'NavBar'`, `'Text'`, `'TextField'` and so on (a style's `TYPE`).
+Names are kept per style type: a text style and a button style can both be called `'title'`. A second style with a name already in use isn't registered (`[NOTICE] StyleMgr.addStyle already have style with name`). `dUI.getStyle( 'Text', 'title' )` returns a named style, `dUI.removeStyle( 'Text', 'title' )` unregisters one, and so do setting its `name` to `nil` and removing the style (`removeSelf()`). The type names are `'Background'`, `'Button'`, `'NavBar'`, `'Text'`, `'TextField'` and so on (a style's `TYPE`).
 
 `widget.style = nil` puts the widget back on the default style.
 
@@ -152,7 +152,7 @@ local note = dUI.newTextStyle{ inherit=body, fontSize=14 }   -- or: inherit='bod
 
 `inherit` works in an inline style too: `style={ inherit='body', fontSize=14 }`. A name must belong to a style of the same type that already exists, or making the style raises an error.
 
-To change it later, set `note.inherit` first, then the properties: setting `inherit` resets the style, and erases the properties it had set.
+Setting `note.inherit` later changes only where the missing properties come from: the properties `note` sets itself stay, and its widgets redraw. `note:clearProperties()` drops them, back to everything inherited. Setting `inherit` to `nil` inherits from the default style again, and so does a style whose `inherit` is removed (`removeSelf()`). A background style keeps its own `type` too; when the change gives it another view type, its `view` starts over, as view properties belong to a type.
 
 ## Themes
 

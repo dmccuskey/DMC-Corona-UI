@@ -106,6 +106,8 @@ function Style.initialize( manager, params )
 	--==--
 
 	dUI = manager
+	-- for the style classes loaded later, on first use
+	Style._mode = params.mode
 
 	--== Base Components
 
@@ -168,7 +170,7 @@ function Style.loadBaseStyleSupport( params )
 	-- print( "Style.loadBaseStyleSupport" )
 	if Style.Base then return end
 	params = params or {}
-	if params.mode==nil then params.mode=uiConst.RUN_MODE end
+	if params.mode==nil then params.mode=Style._mode or uiConst.RUN_MODE end
 	--==--
 	local kmode
 	if params.mode==uiConst.TEST_MODE then
@@ -193,7 +195,7 @@ function Style._loadBackgroundStyleSupport( params )
 	-- print( "Style._loadBackgroundStyleSupport" )
 	if Style.Background then return end
 	params = params or {}
-	if params.mode==nil then params.mode=uiConst.RUN_MODE end
+	if params.mode==nil then params.mode=Style._mode or uiConst.RUN_MODE end
 	--==--
 	local kmode
 	if params.mode==uiConst.TEST_MODE then
@@ -277,7 +279,7 @@ function Style._loadButtonStyleSupport( params )
 	-- print( "Style._loadButtonStyleSupport" )
 	if Style.Button then return end
 	params = params or {}
-	if params.mode==nil then params.mode=uiConst.RUN_MODE end
+	if params.mode==nil then params.mode=Style._mode or uiConst.RUN_MODE end
 	--==--
 	local kmode
 	if params.mode==uiConst.TEST_MODE then
@@ -325,7 +327,7 @@ function Style._loadNavBarStyleSupport( params )
 	-- print( "Style._loadNavBarStyleSupport" )
 	if Style.NavBar then return end
 	params = params or {}
-	if params.mode==nil then params.mode=uiConst.RUN_MODE end
+	if params.mode==nil then params.mode=Style._mode or uiConst.RUN_MODE end
 	--==--
 	local kmode
 	if params.mode==uiConst.TEST_MODE then
@@ -383,7 +385,7 @@ function Style.loadScrollViewStyleSupport( params )
 	-- print( "Style.loadScrollViewStyleSupport" )
 	if Style.ScrollView then return end
 	params = params or {}
-	if params.mode==nil then params.mode=uiConst.RUN_MODE end
+	if params.mode==nil then params.mode=Style._mode or uiConst.RUN_MODE end
 	--==--
 	local kmode
 	if params.mode==uiConst.TEST_MODE then
@@ -426,7 +428,7 @@ function Style.loadTableViewStyleSupport( params )
 	-- print( "Style.loadTableViewStyleSupport" )
 	if Style.TableView then return end
 	params = params or {}
-	if params.mode==nil then params.mode=uiConst.RUN_MODE end
+	if params.mode==nil then params.mode=Style._mode or uiConst.RUN_MODE end
 	--==--
 	local kmode
 	if params.mode==uiConst.TEST_MODE then
@@ -469,7 +471,7 @@ function Style.loadTableViewCellStyleSupport( params )
 	-- print( "Style.loadTableViewCellStyleSupport" )
 	if Style.TableViewCell then return end
 	params = params or {}
-	if params.mode==nil then params.mode=uiConst.RUN_MODE end
+	if params.mode==nil then params.mode=Style._mode or uiConst.RUN_MODE end
 	--==--
 	local kmode
 	if params.mode==uiConst.TEST_MODE then
@@ -518,7 +520,7 @@ function Style._loadTextStyleSupport( params )
 	-- print( "Style._loadTextStyleSupport" )
 	if Style.Text then return end
 	params = params or {}
-	if params.mode==nil then params.mode=uiConst.RUN_MODE end
+	if params.mode==nil then params.mode=Style._mode or uiConst.RUN_MODE end
 	--==--
 	local kmode
 	if params.mode==uiConst.TEST_MODE then
@@ -561,7 +563,7 @@ function Style._loadTextFieldStyleSupport( params )
 	-- print( "Style._loadTextFieldStyleSupport" )
 	if Style.TextField then return end
 	params = params or {}
-	if params.mode==nil then params.mode=uiConst.RUN_MODE end
+	if params.mode==nil then params.mode=Style._mode or uiConst.RUN_MODE end
 	--==--
 	local kmode
 	if params.mode==uiConst.TEST_MODE then

@@ -1689,16 +1689,17 @@ function test_updateView_deltaINHERIT_setI_setSameT()
 
 	-- Check properties
 
+	-- local type and view properties kept
 	styleInheritsFrom( style, StyleBase )
-	styleInheritsPropertyValue( style, 'type', dUI.ROUNDED )
+	styleHasPropertyValue( style, 'type', dUI.ROUNDED )
 
 	styleInheritsFrom( sView, sbView )
 	hasPropertyValue( sView, 'type', dUI.ROUNDED )
 
-	styleInheritsPropertyValue( sView, 'cornerRadius', sbView.cornerRadius )
-	styleInheritsPropertyValue( sView, 'fillColor', sbView.fillColor )
-	styleInheritsPropertyValue( sView, 'strokeColor', sbView.strokeColor )
-	styleInheritsPropertyValue( sView, 'strokeWidth', sbView.strokeWidth )
+	styleHasPropertyValue( sView, 'cornerRadius', sbView.cornerRadius )
+	styleHasPropertyValue( sView, 'fillColor', sbView.fillColor )
+	styleHasPropertyValue( sView, 'strokeColor', sbView.strokeColor )
+	styleHasPropertyValue( sView, 'strokeWidth', sbView.strokeWidth )
 
 	--== Setup Inherit Style
 
@@ -1709,7 +1710,7 @@ function test_updateView_deltaINHERIT_setI_setSameT()
 
 	-- value should stay same, inheritance is stopped for view
 
-	styleInheritsPropertyValue( sView, 'strokeWidth', sbView.strokeWidth )
+	styleHasPropertyValue( sView, 'strokeWidth', sbView.strokeWidth )
 
 end
 
@@ -1794,29 +1795,29 @@ function test_updateView_deltaINHERIT_setI_setDiffT()
 
 	sView = style.view -- attach to new view
 
-	StyleBase = Background:getBaseStyle( style.type )
+	StyleBase = Background:getBaseStyle( dUI.RECTANGLE ) -- of its own (local) type
 	sbView = StyleBase.view
 
 	styleInheritsFrom( style, StyleBase )
-	styleInheritsPropertyValue( style, 'type', dUI.ROUNDED )
+	styleHasPropertyValue( style, 'type', dUI.RECTANGLE ) -- local, kept
 
 	styleInheritsFrom( sView, sbView )
-	styleInheritsPropertyValue( sView, 'strokeWidth', sbView.strokeWidth )
+	styleHasPropertyValue( sView, 'strokeWidth', 101 ) -- local, kept
 
 	assert_equal( 1, sReset, "incorrect count for sReset" )
 
 	-- Check properties
 
 	styleInheritsFrom( style, StyleBase )
-	styleInheritsPropertyValue( style, 'type', dUI.ROUNDED )
+	styleHasPropertyValue( style, 'type', dUI.RECTANGLE ) -- local, kept
 
 	styleInheritsFrom( sView, sbView )
-	hasPropertyValue( sView, 'type', dUI.ROUNDED )
+	hasPropertyValue( sView, 'type', dUI.RECTANGLE )
 
 	styleRawPropertyValueIs( sView, 'cornerRadius', nil )
-	styleInheritsPropertyValue( sView, 'fillColor', sbView.fillColor )
-	styleInheritsPropertyValue( sView, 'strokeColor', sbView.strokeColor )
-	styleInheritsPropertyValue( sView, 'strokeWidth', sView.strokeWidth )
+	styleHasPropertyValue( sView, 'fillColor', sbView.fillColor ) -- local (copied at type change)
+	styleHasPropertyValue( sView, 'strokeColor', sbView.strokeColor ) -- local (copied at type change)
+	styleHasPropertyValue( sView, 'strokeWidth', 101 ) -- local, kept
 
 	--== Setup Inherit Style
 
@@ -1827,7 +1828,7 @@ function test_updateView_deltaINHERIT_setI_setDiffT()
 
 	-- value should stay same, inheritance is stopped for view
 
-	styleInheritsPropertyValue( sView, 'strokeWidth', sView.strokeWidth )
+	styleHasPropertyValue( sView, 'strokeWidth', 101 ) -- local, kept
 
 end
 
@@ -2159,8 +2160,8 @@ function test_clearProperties()
 	styleInheritsPropertyValue( style, 'type', inherit.type )
 	hasPropertyValue( sView, 'type', style.type )
 
-	styleInheritsPropertyValue( sView, 'cornerRadius', sbView.cornerRadius )
-	styleInheritsPropertyValue( sView, 'fillColor', sbView.fillColor )
+	styleHasPropertyValue( sView, 'cornerRadius', cR ) -- local, kept
+	styleHasPropertyValue( sView, 'fillColor', fC ) -- local, kept
 	styleInheritsPropertyValue( sView, 'strokeColor', sbView.strokeColor )
 	styleInheritsPropertyValue( sView, 'strokeWidth', sbView.strokeWidth )
 

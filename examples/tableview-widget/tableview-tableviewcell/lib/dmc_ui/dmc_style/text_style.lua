@@ -437,7 +437,7 @@ function TextStyle.__getters:fontSizeMinimum()
 end
 function TextStyle.__setters:fontSizeMinimum( value )
 	-- print( "TextStyle.__setters:fontSizeMinimum", self._fontSizeMinimum, value, self._isClearing )
-	assert( type(value)=='number' or (value==nil and (self._inherit or self._isClearing)) )
+	assert( type(value)=='number' or (value==nil and (self:_hasInherit() or self._isClearing)) )
 	--==--
 	self._fontSizeMinimum = value
 	self:_dispatchChangeEvent( 'fontSizeMinimum', value )

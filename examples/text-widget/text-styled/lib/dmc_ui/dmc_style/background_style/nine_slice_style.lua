@@ -379,7 +379,7 @@ function NineSliceStyle.__getters:spriteFrames()
 end
 function NineSliceStyle.__setters:spriteFrames( value )
 	-- print( "NineSliceStyle.__setters:spriteFrames", value )
-	assert( type(value)=='table' or (value==nil and (self._inherit or self._isClearing) ) )
+	assert( type(value)=='table' or (value==nil and (self:_hasInherit() or self._isClearing) ) )
 	--==--
 	if value == self._spriteFrames then return end
 	self._spriteFrames = value
@@ -398,7 +398,7 @@ function NineSliceStyle.__getters:offsetLeft()
 end
 function NineSliceStyle.__setters:offsetLeft( value )
 	-- print( "NineSliceStyle.__setters:offsetLeft", value )
-	assert( type(value)=='number' or (value==nil and (self._inherit or self._isClearing) ) )
+	assert( type(value)=='number' or (value==nil and (self:_hasInherit() or self._isClearing) ) )
 	--==--
 	if value == self._offsetLeft then return end
 	self._offsetLeft = value
@@ -417,7 +417,7 @@ function NineSliceStyle.__getters:offsetRight()
 end
 function NineSliceStyle.__setters:offsetRight( value )
 	-- print( "NineSliceStyle.__setters:offsetRight", value )
-	assert( type(value)=='number' or (value==nil and (self._inherit or self._isClearing) ) )
+	assert( type(value)=='number' or (value==nil and (self:_hasInherit() or self._isClearing) ) )
 	--==--
 	if value == self._offsetRight then return end
 	self._offsetRight = value
@@ -436,7 +436,7 @@ function NineSliceStyle.__getters:offsetTop()
 end
 function NineSliceStyle.__setters:offsetTop( value )
 	-- print( "NineSliceStyle.__setters:offsetTop", value )
-	assert( type(value)=='number' or (value==nil and (self._inherit or self._isClearing) ) )
+	assert( type(value)=='number' or (value==nil and (self:_hasInherit() or self._isClearing) ) )
 	--==--
 	if value == self._offsetTop then return end
 	self._offsetTop = value
@@ -455,7 +455,7 @@ function NineSliceStyle.__getters:offsetBottom()
 end
 function NineSliceStyle.__setters:offsetBottom( value )
 	-- print( "NineSliceStyle.__setters:offsetBottom", value )
-	assert( type(value)=='number' or (value==nil and (self._inherit or self._isClearing) ) )
+	assert( type(value)=='number' or (value==nil and (self:_hasInherit() or self._isClearing) ) )
 	--==--
 	if value == self._offsetBottom then return end
 	self._offsetBottom = value
@@ -474,7 +474,7 @@ function NineSliceStyle.__getters:sheetInfo()
 end
 function NineSliceStyle.__setters:sheetInfo( value )
 	-- print( "NineSliceStyle.__setters:sheetInfo", value )
-	assert( type(value)=='string' or (value==nil and (self._inherit or self._isClearing) ) )
+	assert( type(value)=='string' or (value==nil and (self:_hasInherit() or self._isClearing) ) )
 	--==--
 	if value == self._sheetInfo then return end
 	self._sheetInfo = value
@@ -493,7 +493,7 @@ function NineSliceStyle.__getters:sheetImage()
 end
 function NineSliceStyle.__setters:sheetImage( value )
 	-- print( "NineSliceStyle.__setters:sheetImage", value )
-	assert( type(value)=='string' or (value==nil and (self._inherit or self._isClearing) ) )
+	assert( type(value)=='string' or (value==nil and (self:_hasInherit() or self._isClearing) ) )
 	--==--
 	if value == self._sheetImage then return end
 	self._sheetImage = value

@@ -229,16 +229,15 @@ function StyleMgr.getStyle( style, name )
 		assert( type(style.TYPE)=='string', sfmt("StyleMgr:getStyle arg 'name' must be a string, got '%s'", tostring(name) ) )
 		sType = style.TYPE
 	end
-	-- look for style in theme collection or style collection
-	local cType, collection
+	-- look for style in theme collection, then style collection
+	local found
 	if StyleMgr._activeTheme then
-		cType = StyleMgr._activeTheme.style[ sType ]
+		found = ( StyleMgr._activeTheme.style[ sType ] or {} )[ name ]
 	end
-	if not cType then
-		cType = StyleMgr._style[ sType ]
+	if not found then
+		found = ( StyleMgr._style[ sType ] or {} )[ name ]
 	end
-	collection = cType or {}
-	return collection[ name ]
+	return found
 end
 
 
@@ -256,6 +255,8 @@ function StyleMgr.removeStyle( style, name )
 	end
 
 	local styles = StyleMgr._style[ sType ] or {}
+	-- given a style, only remove it, not another style with its name
+	if type(style)=='table' and styles[ name ]~=style then return end
 	return tpop( styles, name )
 end
 

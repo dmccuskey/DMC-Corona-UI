@@ -145,6 +145,7 @@ end
 
 function StyleMix.__undoInitComplete__( self )
 	-- print( "StyleMix.__undoInitComplete__" )
+	StyleMix._removeThemeListener( self )
 	self:_purgeActiveStyle( self.__curr_style )
 	self:_destroyDefaultStyle( self.__default_style )
 	self.__default_style=nil
@@ -221,18 +222,18 @@ function StyleMix.__getters:style()
 end
 function StyleMix.__setters:style( value )
 	-- print( "StyleMix.__setters:style", value, self )
-	if self.__theme_f then
-		StyleMgr:removeEventListener( StyleMgr.EVENT, self.__theme_f )
-		self.__theme_f = nil
-	end
+	StyleMix._removeThemeListener( self )
 	if type(value)=='string' then
 		-- get named style from Style Mgr
 		-- will be Style instance or 'nil'
 		local name = value
 		value = StyleMgr.getStyle( self.STYLE_TYPE, name )
 		if value then
-			local f = function(e)
+			local f
+			f = function(e)
 				tdelay( 1, function()
+					-- skip if widget removed or restyled meanwhile
+					if self.__theme_f~=f then return end
 					StyleMix.__setters.style( self, name )
 				end)
 			end
@@ -241,6 +242,14 @@ function StyleMix.__setters:style( value )
 		end
 	end
 	self:setActiveStyle( value )
+end
+
+
+function StyleMix._removeThemeListener( self )
+	if self.__theme_f then
+		StyleMgr:removeEventListener( StyleMgr.EVENT, self.__theme_f )
+		self.__theme_f = nil
+	end
 end
 
 

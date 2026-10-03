@@ -650,11 +650,11 @@ function test_clearPropertiesWithoutInherit()
 
 	-- verify all properties have been copied
 
-	styleInheritsPropertyValue( s1, 'align', StyleBase.align )
+	styleHasPropertyValue( s1, 'align', 'left' ) -- local, kept
 	styleInheritsPropertyValue( s1, 'fillColor', StyleBase.fillColor )
 	styleInheritsPropertyValue( s1, 'font', StyleBase.font )
 	styleInheritsPropertyValue( s1, 'fontSize', StyleBase.fontSize )
-	styleInheritsPropertyValue( s1, 'marginX', StyleBase.marginX )
+	styleHasPropertyValue( s1, 'marginX', 99 ) -- local, kept
 	styleInheritsPropertyValue( s1, 'marginY', StyleBase.marginY )
 	styleInheritsPropertyValue( s1, 'strokeColor', StyleBase.strokeColor )
 	styleInheritsPropertyValue( s1, 'strokeWidth', StyleBase.strokeWidth )
@@ -783,11 +783,11 @@ function test_clearPropertiesWithInherit()
 
 	-- verify all properties have been copied, except for our changes
 
-	styleInheritsPropertyValue( s1, 'align', inherit.align )
+	styleHasPropertyValue( s1, 'align', 'left' ) -- local, kept
 	styleInheritsPropertyValue( s1, 'fillColor', inherit.fillColor )
 	styleInheritsPropertyValue( s1, 'font', inherit.font )
 	styleInheritsPropertyValue( s1, 'fontSize', inherit.fontSize )
-	styleInheritsPropertyValue( s1, 'marginX', inherit.marginX )
+	styleHasPropertyValue( s1, 'marginX', 99 ) -- local, kept
 	styleInheritsPropertyValue( s1, 'marginY', inherit.marginY )
 	styleInheritsPropertyValue( s1, 'strokeColor', inherit.strokeColor )
 	styleInheritsPropertyValue( s1, 'strokeWidth', inherit.strokeWidth )
@@ -895,15 +895,15 @@ function test_initializeStyleWithLuaStructure()
 	styleInheritsFrom( s1, inherit )
 	assert_true( receivedClearedEvent, "missing clear event" )
 
-	styleInheritsPropertyValue( s1, 'width', inherit.width )
-	styleInheritsPropertyValue( s1, 'height', inherit.height )
+	styleHasPropertyValue( s1, 'width', 10 ) -- local, kept
+	styleHasPropertyValue( s1, 'height', 100 ) -- local, kept
 	styleInheritsPropertyValue( s1, 'anchorX', inherit.anchorX )
 	styleInheritsPropertyValue( s1, 'anchorY', inherit.anchorY )
-	styleInheritsPropertyValue( s1, 'align', inherit.align )
+	styleHasPropertyValue( s1, 'align', 'left' ) -- local, kept
 	styleInheritsPropertyValue( s1, 'fillColor', inherit.fillColor )
 	styleInheritsPropertyValue( s1, 'font', inherit.font )
-	styleInheritsPropertyValue( s1, 'fontSize', inherit.fontSize )
-	styleInheritsPropertyValue( s1, 'marginX', inherit.marginX )
+	styleHasPropertyValue( s1, 'fontSize', 100 ) -- local, kept
+	styleHasPropertyValue( s1, 'marginX', 99 ) -- local, kept
 	styleInheritsPropertyValue( s1, 'marginY', inherit.marginY )
 	styleInheritsPropertyValue( s1, 'strokeColor', inherit.strokeColor )
 	styleInheritsPropertyValue( s1, 'strokeWidth', inherit.strokeWidth )
@@ -927,15 +927,15 @@ function test_initializeStyleWithLuaStructure()
 
 	-- verify all properties have been copied, except for our changes
 
-	hasPropertyValue( s1, 'width', StyleBase.width )
-	hasPropertyValue( s1, 'height', StyleBase.height )
+	styleHasPropertyValue( s1, 'width', 10 ) -- local, kept
+	styleHasPropertyValue( s1, 'height', 100 ) -- local, kept
 	styleInheritsPropertyValue( s1, 'anchorX', StyleBase.anchorX )
 	styleInheritsPropertyValue( s1, 'anchorY', StyleBase.anchorY )
-	styleInheritsPropertyValue( s1, 'align', StyleBase.align )
+	styleHasPropertyValue( s1, 'align', 'left' ) -- local, kept
 	styleInheritsPropertyValue( s1, 'fillColor', StyleBase.fillColor )
 	styleInheritsPropertyValue( s1, 'font', StyleBase.font )
-	styleInheritsPropertyValue( s1, 'fontSize', StyleBase.fontSize )
-	styleInheritsPropertyValue( s1, 'marginX', StyleBase.marginX )
+	styleHasPropertyValue( s1, 'fontSize', 100 ) -- local, kept
+	styleHasPropertyValue( s1, 'marginX', 99 ) -- local, kept
 	styleInheritsPropertyValue( s1, 'marginY', StyleBase.marginY )
 	styleInheritsPropertyValue( s1, 'strokeColor', StyleBase.strokeColor )
 	styleInheritsPropertyValue( s1, 'strokeWidth', StyleBase.strokeWidth )

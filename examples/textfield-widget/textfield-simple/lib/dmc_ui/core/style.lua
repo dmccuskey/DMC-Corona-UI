@@ -303,6 +303,7 @@ function BaseStyle:__undoInitComplete__()
 
 	self:_dispatchDestroyEvent()
 
+	self.name = nil -- out of the Style Manager
 	self.widget = nil
 	self.parent = nil
 	self.inherit = nil
@@ -331,6 +332,13 @@ function BaseStyle:getChildren( name )
 end
 function BaseStyle:nilProperty( name )
 	return (self._EXCLUDE_PROPERTY_CHECK[ name ]~=nil)
+end
+-- _hasInherit()
+-- true when the style inherits from another style
+-- (a class base style has NO_INHERIT, so its properties can't be nil)
+function BaseStyle:_hasInherit()
+	local inherit = self._inherit
+	return (inherit~=nil and inherit~=BaseStyle.NO_INHERIT)
 end
 
 
@@ -584,14 +592,17 @@ function BaseStyle:clearProperties( src, params )
 	if params.force==nil then params.force=true end
 	--==--
 	local StyleClass = self.class
-	local inherit = self._inherit
 
 	if src then
 		-- have source, 'gentle' copy
 		params.force=false
-	elseif inherit then
+	elseif self:_hasInherit() then
 		-- have inherit, then use empty to clear all properties
 		src = {}
+		params.force=true
+	elseif self==StyleClass:getBaseStyle( self ) then
+		-- class base style, back to its defaults
+		src = StyleClass:getDefaultStyleValues( self )
 		params.force=true
 	else
 		-- no source
@@ -677,10 +688,15 @@ end
 
 function BaseStyle:_doClearPropertiesInherit( reset, params )
 	-- print( "BaseStyle:_doClearPropertiesInherit", self, reset, params )
-	-- params, clearChildren, force
+	-- params, clearChildren, force, keep
 	params = params or {}
 	if params.clearChildren==nil then params.clearChildren=true end
 	--==--
+	if params.keep then
+		-- local properties kept, only redraw
+		self:_dispatchResetEvent()
+		return
+	end
 	if not self._isInitialized then
 		-- skip this if we're being created
 		-- because children have already been init'd
@@ -709,11 +725,10 @@ function BaseStyle.__setters:inherit( value )
 	end
 
 	local StyleClass = self.class
-	local StyleBase = StyleClass:getBaseStyle()
+	local StyleBase = StyleClass:getBaseStyle( self ) -- Background: of its type
 	-- current / new inherit
 	local cInherit, cInherit_f = self._inherit, self._inherit_f
 	local nInherit = value or StyleBase
-	local reset = nil
 
 	--== Remove old inherit link
 
@@ -731,20 +746,17 @@ function BaseStyle.__setters:inherit( value )
 
 	self:_doChildrenInherit( value, {curr=cInherit, next=nInherit} )
 
-	--== Clear properties
+	--== Update properties
 
-	-- Choose Reset method
-	if nInherit~=BaseStyle.NO_INHERIT then
-		-- we have inherit, so clear all properties
-		reset = nil
-	elseif self._isInitialized then
-		-- no inherit, so reset with previous inherit
-		reset = cInherit -- could be nil
+	-- local properties are kept: the new inherit
+	-- only fills what the style doesn't set itself
+	-- (clearProperties() for a clean slate)
+	if nInherit==BaseStyle.NO_INHERIT then
+		-- no inherit, so fill missing values from previous inherit
+		self:_doClearPropertiesInherit( cInherit )
 	else
-		reset = StyleBase -- reset with class base
+		self:_doClearPropertiesInherit( nil, {keep=true} )
 	end
-
-	self:_doClearPropertiesInherit( reset )
 end
 
 --== parent
@@ -833,7 +845,7 @@ function BaseStyle.__setters:name( value )
 	self._name = value
 
 	if cName then
-		Style.Manager.removeStyle( self.TYPE, cName )
+		Style.Manager.removeStyle( self, cName )
 	end
 	if nName then
 		Style.Manager.addStyle( self )
@@ -860,7 +872,7 @@ function BaseStyle.__getters:debugOn()
 end
 function BaseStyle.__setters:debugOn( value )
 	-- print( "BaseStyle.__setters:debugOn", value, self, self._isInitialized, self._isClearing )
-	assert( type(value)=='boolean' or (value==nil and (self._inherit or self._isClearing)) )
+	assert( type(value)=='boolean' or (value==nil and (self:_hasInherit() or self._isClearing)) )
 	--==--
 	if value == self._debugOn then return end
 	self._debugOn = value
@@ -879,7 +891,7 @@ function BaseStyle.__getters:x()
 end
 function BaseStyle.__setters:x( value )
 	-- print( "BaseStyle.__setters:x", value )
-	assert( type(value)=='number' or (value==nil and (self._inherit or self._isClearing)) )
+	assert( type(value)=='number' or (value==nil and (self:_hasInherit() or self._isClearing)) )
 	--==--
 	if value == self._x then return end
 	self._x = value
@@ -897,7 +909,7 @@ function BaseStyle.__getters:y()
 end
 function BaseStyle.__setters:y( value )
 	-- print( "BaseStyle.__setters:y", value )
-	assert( type(value)=='number' or (value==nil and (self._inherit or self._isClearing)) )
+	assert( type(value)=='number' or (value==nil and (self:_hasInherit() or self._isClearing)) )
 	--==--
 	if value == self._y then return end
 	self._y = value
@@ -924,7 +936,7 @@ function BaseStyle.__getters:width()
 end
 function BaseStyle.__setters:width( value, force )
 	-- print( "BaseStyle.__setters:width", self, self._width, value, force )
-	assert( type(value)=='number' or (value==nil and ( self._inherit or self:nilProperty('width') or self._isClearing) ) )
+	assert( type(value)=='number' or (value==nil and ( self:_hasInherit() or self:nilProperty('width') or self._isClearing) ) )
 	--==--
 	if value==self._width and not force then return end
 	self._width = value
@@ -949,7 +961,7 @@ function BaseStyle.__getters:height()
 end
 function BaseStyle.__setters:height( value )
 	-- print( "BaseStyle.__setters:height", self, value )
-	assert( type(value)=='number' or (value==nil and ( self._inherit or self:nilProperty('height')  or self._isClearing ) ) )
+	assert( type(value)=='number' or (value==nil and ( self:_hasInherit() or self:nilProperty('height')  or self._isClearing ) ) )
 	--==--
 	if value == self._height then return end
 	self._height = value
@@ -974,7 +986,7 @@ function BaseStyle.__getters:anchorX()
 end
 function BaseStyle.__setters:anchorX( value )
 	-- print( "BaseStyle.__setters:anchorX", value, self )
-	assert( type(value)=='number' or (value==nil and (self._inherit or self._isClearing)) )
+	assert( type(value)=='number' or (value==nil and (self:_hasInherit() or self._isClearing)) )
 	--==--
 	if value==self._anchorX then return end
 	self._anchorX = value
@@ -999,7 +1011,7 @@ function BaseStyle.__getters:anchorY()
 end
 function BaseStyle.__setters:anchorY( value )
 	-- print( "BaseStyle.__setters:anchorY", value )
-	assert( type(value)=='number' or (value==nil and (self._inherit or self._isClearing)) )
+	assert( type(value)=='number' or (value==nil and (self:_hasInherit() or self._isClearing)) )
 	--==--
 	if value==self._anchorY then return end
 	self._anchorY = value
@@ -1192,6 +1204,12 @@ function BaseStyle:_inheritedStyleEvent_handler( event )
 
 	if etype==style.STYLE_RESET then
 		self:_dispatchResetEvent()
+
+	elseif etype==style.STYLE_DESTROYED then
+		-- our inherit is gone, fall back to the class base style
+		if style==self._inherit and not self._isDestroying then
+			self.inherit = nil
+		end
 
 	elseif etype==style.PROPERTY_CHANGED then
 		-- only re-dispatch property changes if our property is empty

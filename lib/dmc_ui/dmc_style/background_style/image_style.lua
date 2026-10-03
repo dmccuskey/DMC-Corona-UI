@@ -336,7 +336,7 @@ function ImageStyle.__getters:imagePath()
 end
 function ImageStyle.__setters:imagePath( value )
 	-- print( "ImageStyle.__setters:imagePath", value )
-	assert( type(value)=='string' or (value==nil and (self._inherit or self._isClearing) ) )
+	assert( type(value)=='string' or (value==nil and (self:_hasInherit() or self._isClearing) ) )
 	--==--
 	if value == self._imagePath then return end
 	self._imagePath = value
@@ -355,7 +355,7 @@ function ImageStyle.__getters:offsetBottom()
 end
 function ImageStyle.__setters:offsetBottom( value )
 	-- print( "ImageStyle.__setters:offsetBottom", value )
-	assert( type(value)=='number' or (value==nil and (self._inherit or self._isClearing) ) )
+	assert( type(value)=='number' or (value==nil and (self:_hasInherit() or self._isClearing) ) )
 	--==--
 	if value == self._offsetBottom then return end
 	self._offsetBottom = value
@@ -374,7 +374,7 @@ function ImageStyle.__getters:offsetLeft()
 end
 function ImageStyle.__setters:offsetLeft( value )
 	-- print( "ImageStyle.__setters:offsetLeft", value )
-	assert( type(value)=='number' or (value==nil and (self._inherit or self._isClearing) ) )
+	assert( type(value)=='number' or (value==nil and (self:_hasInherit() or self._isClearing) ) )
 	--==--
 	if value == self._offsetLeft then return end
 	self._offsetLeft = value
@@ -393,7 +393,7 @@ function ImageStyle.__getters:offsetRight()
 end
 function ImageStyle.__setters:offsetRight( value )
 	-- print( "ImageStyle.__setters:offsetRight", value )
-	assert( type(value)=='number' or (value==nil and (self._inherit or self._isClearing) ) )
+	assert( type(value)=='number' or (value==nil and (self:_hasInherit() or self._isClearing) ) )
 	--==--
 	if value == self._offsetRight then return end
 	self._offsetRight = value
@@ -412,7 +412,7 @@ function ImageStyle.__getters:offsetTop()
 end
 function ImageStyle.__setters:offsetTop( value )
 	-- print( "ImageStyle.__setters:offsetTop", value )
-	assert( type(value)=='number' or (value==nil and (self._inherit or self._isClearing) ) )
+	assert( type(value)=='number' or (value==nil and (self:_hasInherit() or self._isClearing) ) )
 	--==--
 	if value == self._offsetTop then return end
 	self._offsetTop = value
