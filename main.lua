@@ -82,6 +82,7 @@ lunatest.suite( 'tests.textfield_style_spec' )
 -- managers
 
 lunatest.suite( 'tests.style_mgr_spec' )
+lunatest.suite( 'tests.style_engine_spec' )
 
 -- widgets
 

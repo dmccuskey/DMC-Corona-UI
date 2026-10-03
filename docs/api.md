@@ -100,5 +100,5 @@ Checked in the Solar2D Simulator (2026.3731) in September 2026.
 
 - **Some functions fail or are missing.** `dUI.newButtonGroup()` (radio groups), `dUI.newFormatter()` and `dUI.newSlideView()` raise an error; `dUI.newPopover()` and `newPopoverControl()` are `nil`.
 - **Two examples use the old module name** `lib.dmc_widgets` and don't run: `button-radio-group` and `button-text-simple`.
-- **Harmless console notices:** a text field prints `Skipping invalid style property` for `align`, `marginX` and `marginY` of its background, and a Navigation Control prints `StyleMgr.addStyle improper TYPE on Style, got 'nil'`. Every keyboard event prints `UI._keyboardMgr_handler`.
+- **Harmless console notice:** every keyboard event prints `UI._keyboardMgr_handler`.
 - The Navigation Control expects each view to be anchored top center, and hides popped views instead of removing them ([Views](controls.md#views)).

@@ -442,10 +442,10 @@ function test_clearProperties()
 
 	-- verify all properties have been copied
 
-	styleInheritsPropertyValue( s1, 'cornerRadius', BaseStyle.cornerRadius )
+	styleHasPropertyValue( s1, 'cornerRadius', 99 ) -- local, kept
 	styleInheritsPropertyValue( s1, 'fillColor', BaseStyle.fillColor )
 	styleInheritsPropertyValue( s1, 'strokeColor', BaseStyle.strokeColor )
-	styleInheritsPropertyValue( s1, 'strokeWidth', BaseStyle.strokeWidth )
+	styleHasPropertyValue( s1, 'strokeWidth', 98 ) -- local, kept
 
 
 	--== Clear Properties, without Inherit

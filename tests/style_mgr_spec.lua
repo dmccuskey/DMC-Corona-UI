@@ -175,8 +175,8 @@ function test_errorRemoveStyle_badNames()
 	assert_error( function() StyleMgr.removeStyle( nil, 4 ) end, "style can't be nil" )
 end
 
-function test_removeStyleViaNameChange()
-	-- print( "test_removeStyleViaNameChange" )
+function test_removeStyle()
+	-- print( "test_removeStyle" )
 	local s1, name
 
 	name = 'rounded-background-style'
@@ -185,7 +185,7 @@ function test_removeStyleViaNameChange()
 
 	assert_equal( StyleMgr.getStyle( s1.TYPE, name ), s1, "style should be added" )
 
-	s1.name = nil
+	dUI.removeStyle( s1.TYPE, name )
 	assert_equal( StyleMgr.getStyle( s1.TYPE, name ), nil, "style should be removed")
 
 end
