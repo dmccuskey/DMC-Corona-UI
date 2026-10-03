@@ -167,6 +167,8 @@ function GroupBase:add( obj, params )
 	local num = Utils.tableSize( self._buttons )
 
 	if params.set_active or ( self._set_first_active and num==0 ) then
+		-- one active button at most
+		self:_setButtonGroupState( obj.STATE_INACTIVE )
 		obj:gotoState( obj.STATE_ACTIVE )
 		self._selected = obj
 	end
@@ -183,6 +185,7 @@ function GroupBase:remove( obj )
 	local key = tostring( obj )
 	self._buttons[ key ] = nil
 	obj:removeEventListener( obj.EVENT, self._button_handler )
+	if self._selected == obj then self._selected = nil end
 
 end
 
@@ -211,7 +214,8 @@ end
 function GroupBase:_setButtonGroupState( state )
 	-- print( "GroupBase:_setButtonGroupState" )
 	for _, button in pairs( self._buttons ) do
-		button:gotoState( state )
+		-- a disabled button keeps its state
+		if button.isEnabled then button:gotoState( state ) end
 	end
 end
 

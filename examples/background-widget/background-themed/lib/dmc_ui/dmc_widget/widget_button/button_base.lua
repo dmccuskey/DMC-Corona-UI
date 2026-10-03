@@ -338,7 +338,7 @@ end
 --== .isHitActive
 
 --- set/get button press *action*.
--- this gets the *action* of the button, whether a press is handled or not. this property is also controlled by changes to .isEnabled.
+-- this gets the *action* of the button, whether a press is handled or not. a disabled button ignores presses whatever this value.
 --
 -- @within Properties
 -- @function .isHitActive
@@ -465,7 +465,7 @@ function ButtonBase.__getters:isActive()
 end
 
 --- set/get whether button is 'disabled' or can be pressed/activated.
--- property to set button disabled state or to see if it's enabled. this sets both the *look* of the button and the button action. setting .isEnabled will also set .isHitActive accordingly.
+-- property to set button disabled state or to see if it's enabled. this sets both the *look* of the button and the button action; it leaves the style's .isHitActive as is.
 -- @within Properties
 -- @function .isEnabled
 -- @usage widget.isEnabled = false
@@ -477,9 +477,7 @@ end
 function ButtonBase.__setters:isEnabled( value )
 	assert( type(value)=='boolean', "newButton: expected boolean for property 'enabled'")
 	--==--
-	if self.curr_style.isHitActive == value then return end
-
-	self.curr_style.isHitActive = value
+	if value == self.isEnabled then return end
 
 	if value == true then
 		self:gotoState( ButtonBase.STATE_INACTIVE, { isEnabled=value } )
@@ -584,6 +582,24 @@ end
 
 --====================================================================--
 --== Private Methods
+
+
+-- presses are handled when the button is enabled and its style's
+-- isHitActive is true
+--
+function ButtonBase:_isPressable()
+	return ( self.isEnabled and self.curr_style.isHitActive==true )
+end
+
+-- release the touch focus, eg when a button is disabled while pressed
+--
+function ButtonBase:_dropFocus()
+	if self._has_focus then
+		display.getCurrentStage():setFocus( nil )
+		self._has_focus = false
+	end
+	return true
+end
 
 
 -- dispatch 'press' events
@@ -772,20 +788,33 @@ function ButtonBase:__commitProperties__()
 
 	--== Set Styles
 
+	local state = self._widgetViewState
+	local stateStyle
+	if state==ButtonBase.INACTIVE then
+		stateStyle = style.inactive
+	elseif state==ButtonBase.ACTIVE then
+		stateStyle = style.active
+	else
+		stateStyle = style.disabled
+	end
+
 	if self._widgetStyle_dirty or self._widgetViewState_dirty then
-		local state = self._widgetViewState
-		if state==ButtonBase.INACTIVE then
-			text:setActiveStyle( style.inactive.label, {copy=false} )
-			bg:setActiveStyle( style.inactive.background, {copy=false} )
-		elseif state==ButtonBase.ACTIVE then
-			text:setActiveStyle( style.active.label, {copy=false} )
-			bg:setActiveStyle( style.active.background, {copy=false} )
-		else
-			text:setActiveStyle( style.disabled.label, {copy=false} )
-			bg:setActiveStyle( style.disabled.background, {copy=false} )
-		end
+		text:setActiveStyle( stateStyle.label, {copy=false} )
+		bg:setActiveStyle( stateStyle.background, {copy=false} )
 		self._widgetStyle_dirty=false
 		self._widgetViewState_dirty=false
+		self._offsetX_dirty=true
+		self._offsetY_dirty=true
+	end
+
+	-- the state's offset moves the label
+	if self._offsetX_dirty then
+		text.x = stateStyle.offsetX or 0
+		self._offsetX_dirty=false
+	end
+	if self._offsetY_dirty then
+		text.y = stateStyle.offsetY or 0
+		self._offsetY_dirty=false
 	end
 
 	--== Hit
@@ -872,7 +901,7 @@ function ButtonBase:stylePropertyChangeHandler( event )
 		property = etype
 
 	else
-		if property=='debugActive' then
+		if property=='debugOn' then
 			self._debugOn_dirty=true
 		elseif property=='width' then
 			self._width_dirty=true

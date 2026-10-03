@@ -378,7 +378,7 @@ function ButtonStateStyle._verifyStyleProperties( src, exclude )
 	if not src.align then
 		print(sfmt(emsg,'align')) ; is_valid=false
 	end
-	if not src.isHitActive then
+	if src.isHitActive==nil then
 		print(sfmt(emsg,'isHitActive')) ; is_valid=false
 	end
 	if not src.marginX then
@@ -564,7 +564,7 @@ function ButtonStateStyle.__getters:offsetX()
 end
 function ButtonStateStyle.__setters:offsetX( value )
 	-- print( "ButtonStateStyle.__setters:offsetX", value )
-	assert( (type(value)=='number' and value>=0) or (value==nil and (self:_hasInherit() or self._isClearing)) )
+	assert( type(value)=='number' or (value==nil and (self:_hasInherit() or self._isClearing)) )
 	--==--
 	if value == self._offsetX then return end
 	self._offsetX = value
@@ -583,7 +583,7 @@ function ButtonStateStyle.__getters:offsetY()
 end
 function ButtonStateStyle.__setters:offsetY( value )
 	-- print( "ButtonStateStyle.__setters:offsetY", value, self )
-	assert( (type(value)=='number' and value>=0) or (value==nil and (self:_hasInherit() or self._isClearing)) )
+	assert( type(value)=='number' or (value==nil and (self:_hasInherit() or self._isClearing)) )
 	--==--
 	if value==self._offsetY then return end
 	self._offsetY = value

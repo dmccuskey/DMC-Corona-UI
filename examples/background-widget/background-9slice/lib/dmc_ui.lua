@@ -46,7 +46,7 @@ SOFTWARE.
 
 -- Semantic Versioning Specification: http://semver.org/
 
-local VERSION = "1.4.0"
+local VERSION = "1.5.0"
 
 
 
@@ -352,6 +352,14 @@ Documentation items should be copied in manually
 
 --== Button Group
 
+--- constructor for Button Groups.
+-- a group of Radio or Toggle Buttons, of which one at most is active.
+--
+-- @function newButtonGroup
+-- @tab options parameters used to create Button Group: `type` ('radio' or 'toggle')
+-- @treturn object Button Group
+-- @usage local group = dUI.newButtonGroup{ type='radio' }
+--
 
 --== Nav Bar
 

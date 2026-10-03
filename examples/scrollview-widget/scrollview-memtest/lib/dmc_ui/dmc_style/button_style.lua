@@ -132,6 +132,8 @@ ButtonStyle._VALID_PROPERTIES = {
 	isHitActive=true,
 	marginX=true,
 	marginY=true,
+	offsetX=true,
+	offsetY=true,
 }
 
 ButtonStyle._EXCLUDE_PROPERTY_CHECK = {
@@ -154,6 +156,8 @@ ButtonStyle._STYLE_DEFAULTS = {
 	isHitActive=true,
 	marginX=0,
 	marginY=0,
+	offsetX=0,
+	offsetY=0,
 
 	--[[
 	TODO: update this
@@ -171,6 +175,7 @@ ButtonStyle._STYLE_DEFAULTS = {
 		* align
 		* isHitActive
 		* marginX/marginY
+		* offsetX/offsetY
 		--]]
 		label={
 			--[[
@@ -268,6 +273,8 @@ ButtonStyle._TEST_DEFAULTS = {
 	isHitActive=true,
 	marginX=400,
 	marginY=402,
+	offsetX=405,
+	offsetY=406,
 
 	font=native.systemFontBold,
 	fontSize=401,
@@ -283,6 +290,7 @@ ButtonStyle._TEST_DEFAULTS = {
 		* align
 		* isHitActive
 		* marginX/marginY
+		* offsetX/offsetY
 		--]]
 		label={
 			--[[
@@ -401,6 +409,8 @@ function ButtonStyle:__init__( params )
 	self._isHitActive = nil
 	self._marginX = nil
 	self._marginY = nil
+	self._offsetX = nil
+	self._offsetY = nil
 
 	--== Object Refs ==--
 
@@ -469,6 +479,8 @@ function ButtonStyle.addMissingDestProperties( dest, src )
 		if dest.isHitActive==nil then dest.isHitActive=src.isHitActive end
 		if dest.marginX==nil then dest.marginX=src.marginX end
 		if dest.marginY==nil then dest.marginY=src.marginY end
+		if dest.offsetX==nil then dest.offsetX=src.offsetX end
+		if dest.offsetY==nil then dest.offsetY=src.offsetY end
 
 		--== Additional properties to be handed down to children
 
@@ -539,6 +551,12 @@ function ButtonStyle.copyExistingSrcProperties( dest, src, params )
 	if (src.marginY~=nil and dest.marginY==nil) or force then
 		dest.marginY=src.marginY
 	end
+	if (src.offsetX~=nil and dest.offsetX==nil) or force then
+		dest.offsetX=src.offsetX
+	end
+	if (src.offsetY~=nil and dest.offsetY==nil) or force then
+		dest.offsetY=src.offsetY
+	end
 
 	return dest
 end
@@ -561,7 +579,7 @@ function ButtonStyle._verifyStyleProperties( src, exclude )
 	if not src.hitMarginY then
 		print(sfmt(emsg,'hitMarginY')) ; is_valid=false
 	end
-	if not src.isHitActive then
+	if src.isHitActive==nil then
 		print(sfmt(emsg,'isHitActive')) ; is_valid=false
 	end
 	if not src.marginX then
@@ -569,6 +587,12 @@ function ButtonStyle._verifyStyleProperties( src, exclude )
 	end
 	if not src.marginY then
 		print(sfmt(emsg,'marginY')) ; is_valid=false
+	end
+	if not src.offsetX then
+		print(sfmt(emsg,'offsetX')) ; is_valid=false
+	end
+	if not src.offsetY then
+		print(sfmt(emsg,'offsetY')) ; is_valid=false
 	end
 
 	local StyleClass = Style.ButtonState
@@ -783,6 +807,60 @@ ButtonStyle.__setters.marginX = StyleHelp.__setters.marginX
 ButtonStyle.__getters.marginY = StyleHelp.__getters.marginY
 ButtonStyle.__setters.marginY = StyleHelp.__setters.marginY
 
+--== .offsetX
+
+--- [**style**] set/get Style value for the label's X-axis offset.
+-- handed down to the state styles, which move their label by it.
+--
+-- @within Properties
+-- @function .offsetX
+-- @usage style.offsetX = 5
+-- @usage print( style.offsetX )
+
+function ButtonStyle.__getters:offsetX()
+	-- print( "ButtonStyle.__getters:offsetX" )
+	local value = self._offsetX
+	if value==nil and self._inherit then
+		value = self._inherit.offsetX
+	end
+	return value
+end
+function ButtonStyle.__setters:offsetX( value )
+	-- print( "ButtonStyle.__setters:offsetX", value )
+	assert( type(value)=='number' or (value==nil and (self:_hasInherit() or self._isClearing)) )
+	--==--
+	if value == self._offsetX then return end
+	self._offsetX = value
+	self:_dispatchChangeEvent( 'offsetX', value )
+end
+
+--== .offsetY
+
+--- [**style**] set/get Style value for the label's Y-axis offset.
+-- handed down to the state styles, which move their label by it.
+--
+-- @within Properties
+-- @function .offsetY
+-- @usage style.offsetY = 5
+-- @usage print( style.offsetY )
+
+function ButtonStyle.__getters:offsetY()
+	-- print( "ButtonStyle.__getters:offsetY" )
+	local value = self._offsetY
+	if value==nil and self._inherit then
+		value = self._inherit.offsetY
+	end
+	return value
+end
+function ButtonStyle.__setters:offsetY( value )
+	-- print( "ButtonStyle.__setters:offsetY", value )
+	assert( type(value)=='number' or (value==nil and (self:_hasInherit() or self._isClearing)) )
+	--==--
+	if value == self._offsetY then return end
+	self._offsetY = value
+	self:_dispatchChangeEvent( 'offsetY', value )
+end
+
 
 --======================================================--
 -- Misc
@@ -806,10 +884,10 @@ function ButtonStyle:_clearChildrenProperties( style, params )
 	--==--
 	local substyle
 
-	substyle = style and style.active
+	substyle = style and style.inactive
 	self._inactive:_clearProperties( substyle, params )
 
-	substyle = style and style.inactive
+	substyle = style and style.active
 	self._active:_clearProperties( substyle, params )
 
 	substyle = style and style.disabled
@@ -865,7 +943,7 @@ function ButtonStyle:_prepareData( data, dataSrc, params )
 		src.active = StyleClass.createStyleStructure( tmp )
 	end
 	if not src.disabled then
-		tmp = dataSrc and dataSrc.active
+		tmp = dataSrc and dataSrc.disabled
 		src.disabled = StyleClass.createStyleStructure( tmp )
 	end
 
