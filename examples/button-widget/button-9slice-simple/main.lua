@@ -1,7 +1,12 @@
 --====================================================================--
 -- Simple 9-Slice Button
 --
--- Shows basic use of the DMC Widget: Button
+-- A push button with a 9-slice background (the cloud image sheet in
+-- asset/image/cloud_button/), anchored at its bottom center on the red
+-- square. Its size animates between 60x40 and 225x100; when narrow, the
+-- label "Press Here for Fun" ends in "...". The pressed state uses the
+-- default rounded style. run_example1a() is the same button at a fixed
+-- 200x100; run_example3() adds debugOn.
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License

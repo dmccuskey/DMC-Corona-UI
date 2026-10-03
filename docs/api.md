@@ -20,6 +20,7 @@ The path follows where `dmc_ui.lua` is: `lib.dmc_ui` for the layout in the [Quic
 | `dUI.newTextField( [options] )` | a [TextField](widgets.md#textfield) |
 | `dUI.newButton( [options] )`, `newPushButton()` | a push [Button](widgets.md#button) |
 | `dUI.newToggleButton()`, `newRadioButton()` | a toggle or radio button |
+| `dUI.newButtonGroup{ type=... }` | a [Button Group](widgets.md#button-group) (`'radio'` or `'toggle'`) |
 | `dUI.newNavBar( [options] )`, `newNavItem()` | a [NavBar](widgets.md#navbar-and-navitem) and its items |
 | `dUI.newScrollView( [options] )` | a [ScrollView](widgets.md#scrollview) |
 | `dUI.newTableView( [options] )`, `newTableViewCell()` | a [TableView](widgets.md#tableview-and-tableviewcell) and its rows |
@@ -98,7 +99,7 @@ The `dmc_corona.cfg` in this repository has further sections, `[DMC_KOLOR]`, `[D
 
 Checked in the Solar2D Simulator (2026.3731) in September 2026.
 
-- **Some functions fail or are missing.** `dUI.newButtonGroup()` (radio groups), `dUI.newFormatter()` and `dUI.newSlideView()` raise an error; `dUI.newPopover()` and `newPopoverControl()` are `nil`.
-- **Two examples use the old module name** `lib.dmc_widgets` and don't run: `button-radio-group` and `button-text-simple`.
+- **Some functions fail or are missing.** `dUI.newFormatter()` and `dUI.newSlideView()` raise an error; `dUI.newPopover()` and `newPopoverControl()` are `nil`.
 - **Harmless console notice:** every keyboard event prints `UI._keyboardMgr_handler`.
+- **A button's label keeps its alignment and margins** when `align`, `marginX` or `marginY` change on the button style or a state style after the button is made: they reach the state, not its `label`. Change them on the label itself (`button.inactiveStyle.label.align = 'left'`). `offsetX` and `offsetY` do follow.
 - The Navigation Control expects each view to be anchored top center, and hides popped views instead of removing them ([Views](controls.md#views)).

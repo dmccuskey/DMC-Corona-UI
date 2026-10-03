@@ -636,6 +636,8 @@ function test_verifyStyleProperties()
 		isHitActive=true,
 		marginX=4,
 		marginY=5,
+		offsetX=2,
+		offsetY=3,
 
 		inactive={
 			debugOn=true,
@@ -821,6 +823,8 @@ function test_verifyStyleProperties()
 		isHitActive=true,
 		marginX=4,
 		marginY=5,
+		offsetX=2,
+		offsetY=3,
 
 		inactive={
 			debugOn=true,

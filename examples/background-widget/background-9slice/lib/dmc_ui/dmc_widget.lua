@@ -414,7 +414,24 @@ end
 --======================================================--
 -- newButtonGroup Support
 
+function Widget._loadButtonGroupSupport( params )
+	-- print( "Widget._loadButtonGroupSupport" )
+	if Widget.ButtonGroup then return end
+	--==--
+	Widget.ButtonGroup = require( ui_find( 'dmc_widget.button_group' ) )
+end
+
+--- constructor for Button Groups.
+-- a group of Radio or Toggle Buttons, of which one at most is active.
+--
+-- @function newButtonGroup
+-- @tab options parameters used to create Button Group: `type` ('radio' or 'toggle')
+-- @treturn object Button Group
+-- @usage local group = dUI.newButtonGroup{ type='radio' }
+--
 function Widget.newButtonGroup( options )
+	if not Widget.ButtonGroup then Widget._loadButtonGroupSupport() end
+	--==--
 	return Widget.ButtonGroup.create( options )
 end
 

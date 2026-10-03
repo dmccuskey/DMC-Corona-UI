@@ -1,7 +1,12 @@
 --====================================================================--
 -- Shape Button Simple
 --
--- Shows simple use of the DMC Widget: Button
+-- A "Press" button drawn with shapes: a grey rectangle with a yellow
+-- stroke, a green rounded rectangle while pressed. The outlined frame marks
+-- its position: after 1 second its anchor becomes (1,0) and its hit margin
+-- grows, after 2 seconds the anchor is (1,1), so the button moves to the
+-- frame's top left. run_example1() shows the four button types with the
+-- default style; run_example3() a shared style and clearStyle().
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License

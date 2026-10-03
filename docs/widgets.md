@@ -160,7 +160,7 @@ A button with a label and a background for each of its states: `inactive`, `acti
 
 - `newPushButton()` (or `newButton()`): active while pressed.
 - `newToggleButton()`: each press switches it between active and inactive.
-- `newRadioButton()`: a press makes it active; it stays active. Radio groups don't work yet ([Known Issues](api.md#known-issues)).
+- `newRadioButton()`: a press makes it active; it stays active. A [Button Group](#button-group) makes the others inactive.
 
 ```lua
 local ok = dUI.newPushButton{
@@ -186,16 +186,39 @@ local ok = dUI.newPushButton{
 
 | Property | Meaning |
 |---|---|
-| `inactive`, `active`, `disabled` | child styles, one for each state: `label` (a Text style), `background` (a Background style), `align`, `marginX`, `marginY`, `offsetX`, `offsetY` (moves the label) |
-| `align`, `marginX`, `marginY` | the label's alignment and margins |
+| `inactive`, `active`, `disabled` | child styles, one for each state: `label` (a Text style), `background` (a Background style), `align`, `marginX`, `marginY`, `offsetX`, `offsetY` (moves the label; negative values too) |
+| `align`, `marginX`, `marginY`, `offsetX`, `offsetY` | the label's alignment, margins and offset, handed to each state that doesn't set its own (later changes to `align` and the margins don't reach the label: [Known Issues](api.md#known-issues)) |
 | `hitMarginX`, `hitMarginY` | extra touch area around the button |
 | `isHitActive` | `false` ignores touches |
 
-**Widget properties**: `labelText`, `id`, `data`, `isEnabled` (`false` shows `disabled` and ignores touches), `isActive` (read only), `hitMarginX`, `hitMarginY`, `isHitActive`, `onPress`, `onRelease`, `onEvent` (set only); the state styles `inactiveStyle`, `activeStyle`, `disabledStyle` (read only). `setHitMargin( x, y )` or `setHitMargin( { x, y } )`.
+**Widget properties**: `labelText`, `id`, `data`, `isEnabled` (`false` shows `disabled` and ignores touches; the style, which other buttons may share, is left as is), `isActive` (read only), `hitMarginX`, `hitMarginY`, `isHitActive`, `onPress`, `onRelease`, `onEvent` (set only); the state styles `inactiveStyle`, `activeStyle`, `disabledStyle` (read only). `setHitMargin( x, y )` or `setHitMargin( { x, y } )`.
 
 **Methods**: `press()` presses and releases the button from code.
 
 **Events**: each press calls `onPress` then `onEvent`, each release `onRelease` then `onEvent`, and dispatches `button.EVENT` (`'button-event'`) to listeners. The event has `phase` (`button.PRESSED` or `button.RELEASED`), `target` (the button), `id`, `data` and `state`.
+
+### Button Group
+
+Keeps one button of a set active, like a row of tabs or options. Add radio or toggle buttons to it:
+
+```lua
+local group = dUI.newButtonGroup{ type='radio' }
+group:addEventListener( group.EVENT, function( event )
+	print( 'selected', event.id )
+end )
+for i, size in ipairs{ 'Small', 'Large' } do
+	local bn = dUI.newRadioButton{ id=size, labelText=size }
+	bn.x, bn.y = 60+i*100, 100
+	group:add( bn )
+end
+```
+
+- `type='radio'`: one button is always active, the first one added to start with; a press on another makes it the active one.
+- `type='toggle'`: at most one is active, none to start with (`set_first_active=true` makes it the first); pressing the active one turns it off.
+
+**Methods**: `add( button [, { set_active=true } ] )`, `remove( button )`, `getButton( id )`. **Properties**: `selected` (the active button, or `nil`).
+
+**Events**: on each change the group dispatches `group.EVENT` (`'button_group_event'`) with `type` `group.CHANGED`, `button`, `id` and `state` (the pressed button's). The group doesn't draw anything or remove its buttons; remove them yourself, then the group with `removeSelf()`.
 
 ## NavBar and NavItem
 
