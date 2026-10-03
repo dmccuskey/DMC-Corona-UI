@@ -1,7 +1,11 @@
 --====================================================================--
 -- Simple Text
 --
--- Shows basic use of the DMC Widget: Text
+-- A purple Text whose width animates between 40 and 250. With fontSizeMinimum,
+-- text that doesn't fit first shrinks (down to size 8), then ends in "...".
+-- It starts sized to its text: its size event (DIMENSION_CHANGED) prints that.
+-- run_example1() changes properties on a timer, then sets them back to nil;
+-- 2() and 3() animate the width (3() also anchor, align, font and colors).
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License

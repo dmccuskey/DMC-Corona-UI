@@ -11,7 +11,7 @@ Each app folder is a complete Solar2D project with its own copy of the library: 
 | `popover-control/` | `popover-control-simple` | [Popover Control](../docs/controls.md#popover-control) |
 | `scrollview-widget/` | `scrollview-simple`, `scrollview-zoom`, `scrollview-memtest` | [ScrollView](../docs/widgets.md#scrollview) |
 | `tableview-widget/` | `tableview-simple`, `tableview-modify`, `tableview-scroll`, `tableview-tableviewcell`, `tableview-memtest` | [TableView](../docs/widgets.md#tableview-and-tableviewcell) |
-| `text-widget/` | `text-simple`, `text-styled`, `text-themed`, `text-memtest` | [Text](../docs/widgets.md#text) |
+| `text-widget/` | `text-simple`, `text-styled`, `text-themed`, `text-memtest` | [Text](../docs/widgets.md#text); [below](#text) |
 | `textfield-widget/` | `textfield-simple`, `textfield-styled`, `textfield-keyboard` | [TextField](../docs/widgets.md#textfield) |
 
 `button-radio-group` and `button-text-simple` use the library's old module name and don't run ([Known Issues](../docs/api.md#known-issues)).
@@ -30,3 +30,12 @@ The sections below describe each app, with a screenshot; the other widgets' apps
 | <img src="screenshots/background-themed.png" width="240" alt="background-themed: two green rounded backgrounds, from the green theme"> | **background-themed**: three themes in `theme/` (red, green, blue), each with a background style named `home-background`: a rectangle, a rounded and a 9-slice background. Both backgrounds use the style by name, so they change with the active theme, every second (`dUI.loadThemes()`, `dUI.activateTheme()`). The screenshot is the green theme. |
 | <img src="screenshots/background-memtest.png" width="240" alt="background-memtest: a small default 9-slice background, a blue pill, in the white box"> | **background-memtest**: creates and removes a default 9-slice background every 75 ms and prints memory use with [dmc-performance](https://github.com/dmccuskey/dmc-performance); `run_example1()` does the same with a rectangle. Each background is up for about a frame; for the screenshot, one was kept on the screen. |
 
+
+## Text
+
+| | |
+|---|---|
+| <img src="screenshots/text-simple.png" width="240" alt="text-simple: a narrow purple Text in the white box, its text in a smaller font and cut short with an ellipsis"> | **text-simple**: a Text whose width animates between 40 and 250. With `fontSizeMinimum`, text that doesn't fit first shrinks, then ends in `...` (the screenshot). It starts sized to its text, which its size event (`DIMENSION_CHANGED`) prints. `run_example1()` to `3()` change properties on a timer, set them back to `nil`, and animate the width with anchors, fonts and colors. |
+| <img src="screenshots/text-styled.png" width="240" alt="text-styled: pink text 'pizza' on a dark blue box with a red border, its top-left corner on the red dot"> | **text-styled**: an inline style, then the default style (`style=nil`); after two seconds "hamburger" in a 300x70 box anchored at its bottom-right, then "pizza" sized to its text and anchored at its top-left (the screenshot). `run_example1()` to `6()` show the default style, shared and named styles, `clearStyle()` and long text. |
+| <img src="screenshots/text-themed.png" width="240" alt="text-themed: 'One Two Three' and 'Four Five' in red on teal boxes, from the green theme"> | **text-themed**: three themes in `theme/` (red, green, blue), each with a text style named `home-text`. Both Texts use the style by name, so they change with the active theme, every second (`dUI.loadThemes()`, `dUI.activateTheme()`). The screenshot is the green theme. |
+| <img src="screenshots/text-memtest.png" width="240" alt="text-memtest: the word 'memtest' in the white box"> | **text-memtest**: creates and removes a Text every 50 ms and prints memory use with [dmc-performance](https://github.com/dmccuskey/dmc-performance); `run_example1()` and `2()` do the same with a text style (new, and `copyStyle()`). Each Text is up for about a frame; for the screenshot, one was kept on the screen. |

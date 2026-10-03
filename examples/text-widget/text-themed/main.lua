@@ -1,7 +1,9 @@
 --====================================================================--
 -- Themed Text
 --
--- Shows theme setup and selection
+-- Three themes in theme/ (red, green, blue), each with a text style named
+-- 'home-text'. Both Texts use the style by name, so they change with the
+-- active theme, every second (dUI.loadThemes(), dUI.activateTheme()).
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
