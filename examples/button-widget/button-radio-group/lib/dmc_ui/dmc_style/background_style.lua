@@ -586,8 +586,8 @@ function BackgroundStyle:_updateViewStyle( params )
 	params.nInherit = params.nInherit
 	params.clearProperties = params.clearProperties
 	--==--
-	local actionInherit = (delta=='inherit')
-	local actionType = (delta=='type')
+	local actionInherit = (params.delta=='inherit')
+	local actionType = (params.delta=='type')
 	local viewStyle = self._view
 	local viewType = viewStyle.type
 	local viewInherit = viewStyle._inherit
@@ -620,21 +620,27 @@ function BackgroundStyle:_updateViewStyle( params )
 
 	--== Process Matrix
 
+	-- local properties are kept on an inherit change
+	-- (a new view type starts empty, its properties are type specific)
 	if delta=='inherit' and nInherit~=BaseStyle.NO_INHERIT then
 		if nInherit.type==viewType then
 			-- new Inherit is of SAME type as current View
 			-- bgType_dirty=false ; bgType = nil -- no change
 			bgInherit_dirty=true ; bgInherit = nInherit
-			bgData_dirty=true ; bgData = {src={}, force=true, clearChildren=false}
 			-- vType_dirty=false ; vType = viewType -- no change
 			vInherit_dirty=true ; vInherit = nInherit.view
-			vData_dirty=true ; vData = {src={}, force=true, clearChildren=false}
+
+		elseif not cActiveInherit then
+			-- new Inherit is of DIFFERENT type, local type kept
+			-- view inherits from the base of its type
+			bgInherit_dirty=true ; bgInherit = nInherit
+			StyleBase = self:getBaseStyle( viewType )
+			vInherit_dirty=true ; vInherit = StyleBase.view
 
 		else
 			-- new Inherit is of DIFFERENT type as current View
 			bgType_dirty=true ; bgType = nil
 			bgInherit_dirty=true ; bgInherit = nInherit
-			bgData_dirty=true ; bgData = {src={}, force=true, clearChildren=false}
 			vType_dirty=true ; vType = nInherit.type
 			vInherit_dirty=true ; vInherit = nInherit.view
 			vData_dirty=true ; vData = {src={}, force=true, clearChildren=false}

@@ -62,6 +62,19 @@ local StyleHelp = {
 }
 
 
+-- colors already translated by a setter, so a color
+-- read from one style (event value, copy) and given to
+-- another isn't translated twice (eg, 0-255 formats)
+local translated = setmetatable( {}, {__mode='k'} )
+
+local function translateColor( value )
+	if translated[ value ] then return value end
+	local color = Kolor.translateColor( value )
+	if type(color)=='table' then translated[ color ] = true end
+	return color
+end
+
+
 
 --== .align
 
@@ -86,7 +99,7 @@ function StyleHelp.__getters:align()
 end
 function StyleHelp.__setters:align( value )
 	-- print( "StyleHelp.__setters:align", value )
-	assert( type(value)=='string' or (value==nil and (self._inherit or self._isClearing)) )
+	assert( type(value)=='string' or (value==nil and (self:_hasInherit() or self._isClearing)) )
 	--==--
 	if value==self._align then return end
 	self._align = value
@@ -116,10 +129,10 @@ function StyleHelp.__getters:fillColor()
 end
 function StyleHelp.__setters:fillColor( value )
 	-- print( "StyleHelp.__setters:fillColor", self._fillColor, value, self._isClearing )
-	assert( value or (value==nil and (self._inherit or self._isClearing)) )
+	assert( value or (value==nil and (self:_hasInherit() or self._isClearing)) )
 	--==--
-	self._fillColor = Kolor.translateColor( value )
-	self:_dispatchChangeEvent( 'fillColor', value )
+	self._fillColor = translateColor( value )
+	self:_dispatchChangeEvent( 'fillColor', self._fillColor )
 end
 
 
@@ -144,7 +157,7 @@ function StyleHelp.__getters:font()
 end
 function StyleHelp.__setters:font( value )
 	-- print( "StyleHelp.__setters:font", value )
-	assert( value or (value==nil and (self._inherit or self._isClearing)) )
+	assert( value or (value==nil and (self:_hasInherit() or self._isClearing)) )
 	--==--
 	self._font = value
 	self:_dispatchChangeEvent( 'font', value )
@@ -172,7 +185,7 @@ function StyleHelp.__getters:fontSize()
 end
 function StyleHelp.__setters:fontSize( value )
 	-- print( "StyleHelp.__setters:fontSize", value )
-	assert( type(value)=='number' or (value==nil and (self._inherit or self._isClearing)) )
+	assert( type(value)=='number' or (value==nil and (self:_hasInherit() or self._isClearing)) )
 	--==--
 	self._fontSize = value
 	self:_dispatchChangeEvent( 'fontSize', value )
@@ -200,7 +213,7 @@ function StyleHelp.__getters:marginX()
 end
 function StyleHelp.__setters:marginX( value )
 	-- print( "StyleHelp.__setters:marginX", value )
-	assert( type(value)=='number' or (value==nil and (self._inherit or self._isClearing)) )
+	assert( type(value)=='number' or (value==nil and (self:_hasInherit() or self._isClearing)) )
 	--==--
 	self._marginX = value
 	self:_dispatchChangeEvent( 'marginX', value )
@@ -228,7 +241,7 @@ function StyleHelp.__getters:marginY()
 end
 function StyleHelp.__setters:marginY( value )
 	-- print( "StyleHelp.__setters:marginY", value )
-	assert( type(value)=='number' or (value==nil and (self._inherit or self._isClearing)) )
+	assert( type(value)=='number' or (value==nil and (self:_hasInherit() or self._isClearing)) )
 	--==--
 	self._marginY = value
 	self:_dispatchChangeEvent( 'marginY', value )
@@ -256,10 +269,10 @@ function StyleHelp.__getters:strokeColor()
 end
 function StyleHelp.__setters:strokeColor( value )
 	-- print( "StyleHelp.__setters:strokeColor", value )
-	assert( value or (value==nil and (self._inherit or self._isClearing)) )
+	assert( value or (value==nil and (self:_hasInherit() or self._isClearing)) )
 	--==--
-	self._strokeColor = Kolor.translateColor( value )
-	self:_dispatchChangeEvent( 'strokeColor', value )
+	self._strokeColor = translateColor( value )
+	self:_dispatchChangeEvent( 'strokeColor', self._strokeColor )
 end
 
 
@@ -284,7 +297,7 @@ function StyleHelp.__getters:strokeWidth( value )
 end
 function StyleHelp.__setters:strokeWidth( value )
 	-- print( "StyleHelp.__setters:strokeWidth", self._strokeWidth, value, self._isClearing )
-	assert( value or (value==nil and (self._inherit or self._isClearing)) )
+	assert( value or (value==nil and (self:_hasInherit() or self._isClearing)) )
 	--==--
 	if value == self._strokeWidth then return end
 	self._strokeWidth = value
@@ -314,10 +327,10 @@ function StyleHelp.__getters:textColor()
 end
 function StyleHelp.__setters:textColor( value )
 	-- print( "StyleHelp.__setters:textColor", value )
-	assert( value or (value==nil and (self._inherit or self._isClearing)) )
+	assert( value or (value==nil and (self:_hasInherit() or self._isClearing)) )
 	--==--
-	self._textColor = Kolor.translateColor( value )
-	self:_dispatchChangeEvent( 'textColor', value )
+	self._textColor = translateColor( value )
+	self:_dispatchChangeEvent( 'textColor', self._textColor )
 end
 
 

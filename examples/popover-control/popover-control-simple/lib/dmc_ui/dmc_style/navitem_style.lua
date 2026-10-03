@@ -93,7 +93,7 @@ local NavItemStyle = newClass( BaseStyle, {name="NavItem Style"} )
 
 --== Class Constants
 
-NavItemStyle.TYPE = uiConst.NavItem
+NavItemStyle.TYPE = uiConst.NAVITEM
 
 NavItemStyle.__base_style__ = nil
 
@@ -938,7 +938,7 @@ function NavItemStyle:_prepareData( data, dataSrc, params )
 	--== process children
 
 	dest = src.title
-	src.title = StyleClass.copyExistingSrcProperties( dest, src )
+	src.title = Style.Text.copyExistingSrcProperties( dest, src )
 
 	dest = src.backButton
 	src.backButton = StyleClass.copyExistingSrcProperties( dest, src )
