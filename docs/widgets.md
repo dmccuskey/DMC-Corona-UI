@@ -91,9 +91,19 @@ title.text = "World"
 | `marginX`, `marginY` | space between the edge and the text |
 | `fillColor`, `strokeColor`, `strokeWidth` | the background rectangle; clear by default. Meant as a guide for checking margins while building a screen, but usable as a plain background. |
 
-`height` sets the widget's height; the text inside keeps the height of its font.
+`height` sets the widget's height; the text inside keeps the height of its font. A `width` or `height` of `0` (the default) fits the text plus its margins; setting `text.width = nil` goes back to the style's width. A size that comes from the text is up to date as soon as you read it, even before the next frame redraws the widget.
 
 **Widget properties**: `text`. Helpers for the style: `align`, `font`, `fontSize`, `marginX`, `textColor`, `fillColor`, `strokeWidth`, and the methods `setTextColor( r, g, b [, a] )`, `setFillColor()`, `setStrokeColor()`. `getTextHeight()` returns the height of the text.
+
+**Events**: while the widget is sized to its text, it sends `text.EVENT`, type `text.DIMENSION_CHANGED`, with the new `width` and `height` each time it redraws its text:
+
+```lua
+title:addEventListener( title.EVENT, function( event )
+	if event.type == title.DIMENSION_CHANGED then
+		print( event.width, event.height )
+	end
+end )
+```
 
 ## TextField
 

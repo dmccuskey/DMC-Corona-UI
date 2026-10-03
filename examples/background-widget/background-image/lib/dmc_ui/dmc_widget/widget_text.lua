@@ -77,7 +77,9 @@ local WidgetHelp = require( ui_find( 'core.widget_helper' ) )
 --== Setup, Constants
 
 
+local mfloor = math.floor
 local newText = display.newText
+local sbyte = string.byte
 local ssub = string.sub
 
 --== To be set in initialize()
@@ -138,24 +140,29 @@ local function testTextLength( text, params )
 
 	--== check for ellipses
 
-	local cnt = 0
-	local prev = '...'
-	while true do
-		local t = ssub( text, 0, cnt )..'...'
+	-- the longest start of the text that fits with '...': a binary search
+	-- (the whole text doesn't fit), cut at the end of a whole UTF-8 character
+	local function fits( n )
 		local o = _newText{
-			text=t,
+			text=_ssub( text, 1, n )..'...',
 			font=f,
 			fontSize=fs
 		}
 		local tw = o.width
 		o:removeSelf()
-		if tw <= w then
-			cnt = cnt + 1 ;	prev = t
-		else
-			break
-		end
+		return tw <= w
 	end
-	return prev, fs
+	local lo, hi = 0, #text
+	while hi-lo > 1 do
+		local mid = mfloor( (lo+hi)/2 )
+		if fits( mid ) then lo = mid else hi = mid end
+	end
+	-- back off while the next byte continues a character (10xxxxxx)
+	local b = sbyte( text, lo+1 )
+	while lo > 0 and b and b >= 0x80 and b < 0xC0 do
+		lo = lo-1 ; b = sbyte( text, lo+1 )
+	end
+	return _ssub( text, 1, lo )..'...', fs
 end
 
 
@@ -247,6 +254,7 @@ function Text:__init__( params )
 	self._fillColor_dirty = true
 	self._font_dirty=true
 	self._fontSize_dirty=true
+	self._fontSizeMinimum_dirty=true
 	self._marginX_dirty=true
 	self._marginY_dirty=true
 	self._strokeColor_dirty=true
@@ -449,9 +457,11 @@ from text object after creation
 function Text.__getters:width()
 	-- print( 'Text.__getters:width' )
 	local style = self.curr_style
-	local w, t = style.width, self._txtText
-	if w==0 and t then
-		w=t.width+style.marginX*2
+	local w = style.width
+	if w==0 then
+		self:_commitNow()
+		local t = self._txtText
+		if t then w=t.width+style.marginX*2 end
 	end
 	return w
 end
@@ -473,7 +483,7 @@ end
 function Text.__getters:height()
 	-- print( 'Text.__getters:height' )
 	local style = self.curr_style
-	local h, t = style.height, self._txtText
+	local h = style.height
 	if h==0 then
 		h = self:getTextHeight()+style.marginY*2
 	end
@@ -509,7 +519,7 @@ end
 
 
 --- get height of Corona Text object.
--- return the height of the encapsulated Corona text object, not height of the DMC Text Widget. returns 0 if Corona Text has yet to be created.
+-- return the height of the encapsulated Corona text object, not height of the DMC Text Widget.
 --
 -- @within Methods
 -- @function :getTextHeight
@@ -518,6 +528,7 @@ end
 
 function Text:getTextHeight()
 	-- print( "Text:getTextHeight", self._txtText )
+	self:_commitNow()
 	local val = 0
 	local o = self._txtText
 	if o then val = o.height end
@@ -539,7 +550,6 @@ end
 -- widget:setFillColor( gradient )
 
 Text.setFillColor = WidgetHelp.setFillColor
-Text.setFillColor = WidgetHelp.setFillColor
 
 --== .setStrokeColor
 
@@ -553,7 +563,6 @@ Text.setFillColor = WidgetHelp.setFillColor
 -- widget:setStrokeColor( r, g, b, a )
 -- widget:setStrokeColor( gradient )
 
-Text.setStrokeColor = WidgetHelp.setStrokeColor
 Text.setStrokeColor = WidgetHelp.setStrokeColor
 
 --== .setTextColor
@@ -569,13 +578,18 @@ Text.setStrokeColor = WidgetHelp.setStrokeColor
 -- widget:setTextColor( gradient )
 
 Text.setTextColor = WidgetHelp.setTextColor
-Text.setTextColor = WidgetHelp.setTextColor
 
 
 
 --====================================================================--
 --== Private Methods
 
+
+-- a size that comes from the text needs the text object up to date: commit
+-- pending changes now rather than next frame (a no-op during a commit)
+function Text:_commitNow()
+	if self.__commit_dirty then self:__validate__() end
+end
 
 function Text:_removeText()
 	-- print( "Text:_removeText" )
@@ -624,10 +638,11 @@ function Text:_createText()
 
 	--== Reset properties
 
-	self._x_dirty=true
-	self._y_dirty=true
-	self._width_dirty=true
-	self._height_dirty=true
+	-- the new object: place it, and size the background to it
+	self._rectBgWidth_dirty=true
+	self._rectBgHeight_dirty=true
+	self._textX_dirty=true
+	self._textY_dirty=true
 	if w==0 or h==0 then
 		self._textDimension_dirty=true
 	end
@@ -660,11 +675,14 @@ function Text:__commitProperties__()
 	end
 
 	-- create new text if necessary
-	if self._align_dirty or self._font_dirty or self._fontSize_dirty or self._textObject_dirty then
+	if self._align_dirty or self._font_dirty or self._fontSize_dirty
+		or self._fontSizeMinimum_dirty or self._text_dirty or self._textObject_dirty
+	then
 		self:_createText()
 		self._align_dirty=false
 		self._font_dirty=false
 		self._fontSize_dirty=false
+		self._fontSizeMinimum_dirty=false
 		self._textObject_dirty=false
 	end
 
@@ -673,12 +691,6 @@ function Text:__commitProperties__()
 	local txt = self._txtText
 
 	--== position sensitive
-
-	-- set text string
-
-	if self._text_dirty then
-		self._text_dirty=false
-	end
 
 	if self._marginX_dirty then
 		self._marginX_dirty=false
@@ -754,22 +766,15 @@ function Text:__commitProperties__()
 
 	if self._textX_dirty then
 		local align = style.align
-		local w = style.width
 		local width = self.width -- use getter, it's smart
 		local offset
 		if align == self.LEFT then
 			txt.anchorX = 0
-			offset = -width*(style.anchorX)
-			if w~=nil then
-				offset = offset+style.marginX
-			end
+			offset = -width*(style.anchorX)+style.marginX
 			txt.x=offset
 		elseif align == self.RIGHT then
 			txt.anchorX = 1
-			offset = width*(1-style.anchorX)
-			if w~=nil then
-				offset = offset-style.marginX
-			end
+			offset = width*(1-style.anchorX)-style.marginX
 			txt.x=offset
 		else
 			txt.anchorX = 0.5
@@ -816,7 +821,7 @@ function Text:__commitProperties__()
 	end
 
 	if self._textDimension_dirty then
-		self:dispatchEvent( self.EVENT, {width=self.width,height=self.height}, {merge=true} )
+		self:dispatchEvent( self.DIMENSION_CHANGED, {width=self.width,height=self.height}, {merge=true} )
 		self._textDimension_dirty=false
 	end
 
@@ -848,6 +853,7 @@ function Text:stylePropertyChangeHandler( event )
 		self._fillColor_dirty = true
 		self._font_dirty=true
 		self._fontSize_dirty=true
+		self._fontSizeMinimum_dirty=true
 		self._marginX_dirty=true
 		self._marginY_dirty=true
 		self._strokeColor_dirty=true
@@ -859,16 +865,16 @@ function Text:stylePropertyChangeHandler( event )
 		property = etype
 
 	else
-		if property=='debugActive' then
+		if property=='debugOn' then
 			self._debugOn_dirty=true
 		elseif property=='width' then
 			self._width_dirty=true
 		elseif property=='height' then
 			self._height_dirty=true
-			elseif property=='anchorX' then
-				self._anchorX_dirty=true
-			elseif property=='anchorY' then
-				self._anchorY_dirty=true
+		elseif property=='anchorX' then
+			self._anchorX_dirty=true
+		elseif property=='anchorY' then
+			self._anchorY_dirty=true
 
 		elseif property=='align' then
 			self._align_dirty=true
@@ -878,6 +884,8 @@ function Text:stylePropertyChangeHandler( event )
 			self._font_dirty=true
 		elseif property=='fontSize' then
 			self._fontSize_dirty=true
+		elseif property=='fontSizeMinimum' then
+			self._fontSizeMinimum_dirty=true
 		elseif property=='marginX' then
 			self._marginX_dirty=true
 		elseif property=='marginY' then

@@ -1,7 +1,10 @@
 --====================================================================--
 -- Styled Text
 --
--- Shows styled use of the DMC Text Widget
+-- An inline style, then the default style (style=nil); after two seconds
+-- "hamburger" in a 300x70 box anchored at its bottom-right, then "pizza" sized
+-- to its text and anchored at its top-left. run_example1() to 6() show the
+-- default style, shared and named styles, clearStyle() and long text.
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
@@ -185,7 +188,7 @@ end
 
 function run_example3()
 
-	local st1, txt3, txt4
+	local st3, txt3, txt4
 
 	st3 = dUI.newTextStyle{
 		name='my-text-style',
@@ -328,7 +331,7 @@ end
 
 function run_example5()
 
-	local st1, txt3, txt4
+	local st3, txt3, txt4
 
 	st3 = dUI.newTextStyle{
 		name='my-text-style',

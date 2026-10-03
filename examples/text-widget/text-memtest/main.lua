@@ -1,7 +1,9 @@
 --====================================================================--
--- Themed Text
+-- Text Memory Test
 --
--- Shows theme setup and selection
+-- Creates and removes a Text every 50 ms and prints memory use with
+-- dmc-performance; run_example1() and 2() do the same with a text style
+-- (new, and copyStyle()).
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
@@ -163,7 +165,8 @@ function run_example3()
 
 	createItem = function()
 		count=count+1
-		o = dUI.newText()
+		o = dUI.newText{ text="memtest" }
+		o.x, o.y = H_CENTER, V_CENTER
 		tdelay( DELAY, function()
 			destroyItem()
 		end)
