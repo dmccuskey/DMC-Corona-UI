@@ -242,6 +242,7 @@ UI.TEST_MODE = uiConst.TEST_MODE
 
 -- background types
 
+UI.IMAGE = uiConst.IMAGE
 UI.NINE_SLICE = uiConst.NINE_SLICE
 UI.RECTANGLE = uiConst.RECTANGLE
 UI.ROUNDED = uiConst.ROUNDED
@@ -284,7 +285,7 @@ Documentation items should be copied in manually
 -- @table newBackgroundParams
 
 
---- convenience function for Rectangle Background widgets.
+--- convenience function for 9-Slice Background widgets.
 --
 -- @function new9SliceBackground
 -- @tab options parameters used to create Background
@@ -292,6 +293,13 @@ Documentation items should be copied in manually
 -- @param options.frames table of frames
 -- @treturn object @{Widget.Background}
 -- @usage local widget = dUI.new9SliceBackground()
+
+--- convenience function for Image Background widgets.
+--
+-- @function newImageBackground
+-- @tab options parameters used to create Background
+-- @treturn object @{Widget.Background}
+-- @usage local widget = dUI.newImageBackground()
 
 --- convenience function for Rectangle Background widgets.
 --

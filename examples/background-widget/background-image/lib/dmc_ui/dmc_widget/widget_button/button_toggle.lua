@@ -1,7 +1,7 @@
 --====================================================================--
 -- widget_button/view_image.lua
 --
--- Documentation: http://docs.davidmccuskey.com/
+-- Documentation: https://github.com/dmccuskey/DMC-Corona-UI
 --====================================================================--
 
 --[[

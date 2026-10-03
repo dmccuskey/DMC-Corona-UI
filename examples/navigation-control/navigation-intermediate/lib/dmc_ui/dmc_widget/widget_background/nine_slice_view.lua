@@ -262,59 +262,38 @@ function NineSliceView:_adjustSliceLayout( width, height, off )
 	-- print( "NineSliceView:_adjustSliceLayout", width, height )
 	local leftW = self._tl.width-off.L
 	local rightW = self._tr.width-off.R
-	local midW = width - leftW - rightW
 	local topH = self._tl.height-off.T
 	local bottomH = self._bl.height-off.B
-	local midH = height - topH - bottomH - off.T
-	local o, tmp, tmp2, s
+	-- a size smaller than the corners leaves no room for the middle: hide it
+	local midW = math.max( 0, width - leftW - rightW )
+	local midH = math.max( 0, height - topH - bottomH )
+	-- column and row edges; the offsets lie outside 0..width, 0..height
+	local x0, y0 = -off.L, -off.T
+	local x1, y1 = x0+self._tl.width, y0+self._tl.height
+	local x2, y2 = x1+midW, y1+midH
 
-	--== Top
+	local function place( o, x, y, w, h )
+		o.x, o.y = x, y
+		if w==0 or h==0 then
+			o.isVisible=false
+			return
+		end
+		o.isVisible=true
+		if w then o.width=w end
+		if h then o.height=h end
+	end
 
-	o = self._tl
-	o.x, o.y = 0-off.L, 0-off.T
+	place( self._tl, x0, y0 )
+	place( self._tm, x1, y0, midW, nil )
+	place( self._tr, x2, y0 )
 
-	tmp = o
-	o = self._tm
-	o.x, o.y = tmp.x+tmp.width, tmp.y
-	s = midW / o.width
-	o.width = midW
+	place( self._ml, x0, y1, nil, midH )
+	place( self._mm, x1, y1, midW, midH )
+	place( self._mr, x2, y1, nil, midH )
 
-	tmp2 = o
-	o = self._tr
-	o.x, o.y = tmp2.x+tmp2.width, tmp.y
-
-	--== Middle
-
-	tmp = self._tl
-	x = 0-off.L
-	o = self._ml
-	o.height = midH
-	o.x, o.y = tmp.x, tmp.y+tmp.height
-
-	tmp = o
-	o = self._mm
-	o.width, o.height = midW, midH
-	o.x, o.y = tmp.x+tmp.width, tmp.y
-
-	tmp2 = o
-	o = self._mr
-	o.height = midH
-	o.x, o.y = tmp2.x+tmp2.width, tmp.y
-
-	--== Bottom
-
-	tmp = self._ml
-	o = self._bl
-	o.x, o.y = tmp.x, tmp.y+tmp.height
-
-	tmp = o
-	o = self._bm
-	o.width = midW
-	o.x, o.y = tmp.x+tmp.width, tmp.y
-
-	tmp2 = o
-	o = self._br
-	o.x, o.y = tmp2.x+tmp2.width, tmp.y
+	place( self._bl, x0, y2 )
+	place( self._bm, x1, y2, midW, nil )
+	place( self._br, x2, y2 )
 
 end
 
@@ -382,6 +361,7 @@ end
 function NineSliceView:_createImageSlices( sheet, frames )
 	-- print( "NineSliceView:_createImageSlices", sheet, frames )
 	local dg = self._dgSlice
+	local o
 
 	self:_removeImageSlices()
 

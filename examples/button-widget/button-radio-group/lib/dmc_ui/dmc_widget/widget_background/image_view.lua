@@ -352,7 +352,7 @@ function ImageView:__commitProperties__()
 		self._offsetLeft_dirty=false
 		self._offsetRight_dirty=false
 
-		self._backgroundX_dirty=true
+		self._backgroundScaleX_dirty=true
 	end
 	if self._offsetBottom_dirty or self._offsetTop_dirty then
 		img.y = -offset.top
@@ -360,7 +360,7 @@ function ImageView:__commitProperties__()
 		self._offsetBottom_dirty=false
 		self._offsetTop_dirty=false
 
-		self._backgroundY_dirty=true
+		self._backgroundScaleY_dirty=true
 	end
 
 	-- anchorX/anchorY

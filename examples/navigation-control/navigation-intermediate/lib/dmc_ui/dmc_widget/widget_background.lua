@@ -132,7 +132,8 @@ Background._DEFAULT_VIEWTYPE = uiConst.DEFAULT_BACKGROUND_TYPE
 function Background:__init__( params )
 	-- print( "Background:__init__", params )
 	params = params or {}
-	if params.viewType==nil then params.viewType=uiConst._DEFAULT_VIEWTYPE end
+	-- viewType: set by the typed constructors (newRectangleBackground, ...);
+	-- nil for newBackground(), where the style's own type (or its default) applies
 
 	self:superCall( '__init__', params )
 	--==--
@@ -255,6 +256,21 @@ end
 -- Local Properties
 
 
+--- [**style**] set/get the background type: 'rectangle', 'rounded', '9-slice' or 'image'.
+--
+-- @within Properties
+-- @function .type
+-- @usage widget.type = dUI.RECTANGLE
+-- @usage print( widget.type )
+
+function Background.__getters:type()
+	return self.curr_style.type
+end
+function Background.__setters:type( value )
+	self.curr_style.type = value
+end
+
+
 --- get a reference to view's Style object.
 --
 -- @within Properties
@@ -286,7 +302,9 @@ function Background:_createDefaultStyleParams( vType, vStyle )
 	if vStyle==nil then
 		vStyle = { name=nil }
 	end
-	vStyle.type = vType
+	-- a style name or a Style object keeps its own type (it's shared: never change it)
+	if type(vStyle)~='table' or type(vStyle.isa)=='function' then return vStyle end
+	if vType~=nil then vStyle.type = vType end
 	return vStyle
 end
 

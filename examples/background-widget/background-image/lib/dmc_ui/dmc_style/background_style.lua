@@ -1,7 +1,7 @@
 --====================================================================--
 -- dmc_widget/widget_style/background_style.lua
 --
--- Documentation: http://docs.davidmccuskey.com/
+-- Documentation: https://github.com/dmccuskey/DMC-Corona-UI
 --====================================================================--
 
 --[[
@@ -924,7 +924,7 @@ end
 
 function BackgroundStyle:_destroyChildren()
 	-- print( 'BackgroundStyle:_destroyChildren', self )
-	self:_destroyView()
+	self:_destroyView( self._view )
 end
 
 

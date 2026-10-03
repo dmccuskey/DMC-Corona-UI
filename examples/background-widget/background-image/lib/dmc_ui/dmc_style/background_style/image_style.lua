@@ -1,7 +1,7 @@
 --====================================================================--
 -- dmc_widget/background_style/image_style.lua
 --
--- Documentation: http://docs.davidmccuskey.com/
+-- Documentation: https://github.com/dmccuskey/DMC-Corona-UI
 --====================================================================--
 
 --[[
@@ -158,7 +158,7 @@ ImageStyle._TEST_DEFAULTS = {
 	anchorX=303,
 	anchorY=304,
 
-	imagePath=306,
+	imagePath='image-306.png',
 
 	offsetBottom=303,
 	offsetLeft=300,

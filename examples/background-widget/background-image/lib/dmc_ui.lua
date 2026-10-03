@@ -3,7 +3,7 @@
 --
 -- entry point into dmc-corona-ui
 --
--- Documentation: http://docs.davidmccuskey.com/
+-- Documentation: https://github.com/dmccuskey/DMC-Corona-UI
 --====================================================================--
 
 --[[
@@ -46,7 +46,7 @@ SOFTWARE.
 
 -- Semantic Versioning Specification: http://semver.org/
 
-local VERSION = "1.1.0"
+local VERSION = "1.2.0"
 
 
 
@@ -208,6 +208,7 @@ end
 
 --== Class Constants
 
+UI.VERSION = VERSION
 UI.WIDTH = WIDTH
 UI.HEIGHT = HEIGHT
 
@@ -284,7 +285,7 @@ Documentation items should be copied in manually
 -- @table newBackgroundParams
 
 
---- convenience function for Rectangle Background widgets.
+--- convenience function for 9-Slice Background widgets.
 --
 -- @function new9SliceBackground
 -- @tab options parameters used to create Background

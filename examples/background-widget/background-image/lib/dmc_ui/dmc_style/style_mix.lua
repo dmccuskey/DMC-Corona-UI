@@ -1,7 +1,7 @@
 --====================================================================--
 -- dmc_ui/dmc_style/style_mix.lua
 --
--- Documentation: http://docs.davidmccuskey.com/
+-- Documentation: https://github.com/dmccuskey/DMC-Corona-UI
 --====================================================================--
 
 --[[
@@ -47,8 +47,7 @@ local VERSION = "0.1.0"
 --== Imports
 
 
-local Utils = require 'dmc_utils'
-
+-- local Utils = require 'dmc_utils'
 
 
 
@@ -56,7 +55,9 @@ local Utils = require 'dmc_utils'
 --== Setup, Constants
 
 
+local assert, tostring = assert, tostring
 local sfmt = string.format
+local tdelay = timer.performWithDelay
 
 --== To be set in initialize()
 local Style = nil
@@ -110,11 +111,9 @@ StyleMix.__setters = {}
 -- START: Mixin Setup for Lua Objects
 
 function StyleMix.__init__( self, params )
-	-- print( 'StyleMix.__init__x', params )
+	-- print( "StyleMix.__init__", params )
 	params = params or {}
 	--==--
-
-	--== Sanity Check ==--
 
 	if self.is_class then return end
 
@@ -124,13 +123,11 @@ function StyleMix.__init__( self, params )
 		print( "\n\n\n DOING THEME INIT: widget", self)
 	end
 	self:resetStyle( params )
-
-	self.__default_style = params.defaultStyle
-
 	if LOCAL_DEBUG then
 		print( "\n\n\n DONE WITH THEME INIT")
 	end
 end
+
 
 
 function StyleMix.__undoInit__( self )
@@ -139,7 +136,7 @@ function StyleMix.__undoInit__( self )
 end
 
 function StyleMix.__initComplete__( self )
-	-- print( 'StyleMix.__initComplete__' )
+	-- print( "StyleMix.__initComplete__" )
 	if not self.__default_style then
 		self.__default_style = self:_createDefaultStyle()
 	end
@@ -147,9 +144,10 @@ function StyleMix.__initComplete__( self )
 end
 
 function StyleMix.__undoInitComplete__( self )
-	-- print( 'StyleMix.__undoInitComplete__' )
-	local o = self.__default_style
-	self.__default_style = self:_destroyDefaultStyle( o )
+	-- print( "StyleMix.__undoInitComplete__" )
+	self:_purgeActiveStyle( self.__curr_style )
+	self:_destroyDefaultStyle( self.__default_style )
+	self.__default_style=nil
 end
 
 -- END: Mixin Setup for Lua Objects
@@ -162,6 +160,7 @@ end
 
 
 function StyleMix.resetStyle( self, params )
+	-- print( "StyleMix:resetStyle" )
 	params = params or {}
 	if params.debug_on==nil then params.debug_on=false end
 	--==--
@@ -171,7 +170,7 @@ function StyleMix.resetStyle( self, params )
 	self.__collection_name = nil -- 'navbar-home'
 	self.__curr_style_collection = nil -- <style collection obj>
 	self.__curr_style = nil -- <style obj>
-	self.__default_style = nil
+	self.__default_style = params.defaultStyle
 	self.__curr_style_f = nil
 	self.__theme_f = nil -- theme callback
 	self.__styles = {}
@@ -233,7 +232,7 @@ function StyleMix.__setters:style( value )
 		value = StyleMgr.getStyle( self.STYLE_TYPE, name )
 		if value then
 			local f = function(e)
-				timer.performWithDelay( 1, function()
+				tdelay( 1, function()
 					StyleMix.__setters.style( self, name )
 				end)
 			end
@@ -253,6 +252,17 @@ function StyleMix.beforeRemoveStyle( self )
 end
 
 
+function StyleMix._purgeActiveStyle( self, style )
+	-- print( "StyleMix._purgeActiveStyle", self, style )
+	if not style then return end
+	self:beforeRemoveStyle()
+	style.widget = nil
+	self:_destroyStyle( style )
+	self.__curr_style = nil
+	self.curr_style = nil
+end
+
+
 function StyleMix.setActiveStyle( self, data, params )
 	-- print( "\n\n\n>>>>>>>StyleMix.setActiveStyle", self, data, self.STYLE_CLASS )
 	params = params or {}
@@ -266,14 +276,7 @@ function StyleMix.setActiveStyle( self, data, params )
 	local style = self.__curr_style
 	local o = self.__curr_style
 
-	if style then
-		self:beforeRemoveStyle()
-		style.widget = nil
-
-		self:_destroyStyle( style )
-		self.__curr_style = nil
-		self.curr_style = nil
-	end
+	self:_purgeActiveStyle( style )
 
 	if data==nil then
 		-- use our default style
@@ -284,6 +287,7 @@ function StyleMix.setActiveStyle( self, data, params )
 			style = data
 		else
 			style = data:copyStyle()
+			style.__active_create=true
 		end
 	else
 		-- Utils.print( data )
@@ -331,7 +335,7 @@ end
 function StyleMix._createStyle( self, StyleClass, data )
 	-- print( "StyleMix._createStyle", self, StyleClass, data )
 	-- create copied style
-	local name = string.format( "copied-style-%s", tostring( self ) )
+	local name = sfmt( "copied-style-%s", tostring( self ) )
 	local style = StyleClass:createStyleFrom{
 		data=data,
 		name=name
@@ -354,11 +358,8 @@ end
 -- _createDefaultStyle()
 -- create the default Style instance for this Widget
 --
-function StyleMix._createDefaultStyle( self, params )
+function StyleMix._createDefaultStyle( self )
 	-- print( "StyleMix._createDefaultStyle", self.STYLE_CLASS )
-	params = params or {}
-	if params.copy==nil then params.copy=true end
-	--==--
 	local StyleClass = self.STYLE_CLASS
 	assert( StyleClass, "[ERROR] Widget is missing property 'STYLE_CLASS'" )
 	local BaseStyle = StyleClass:getBaseStyle()
@@ -371,9 +372,9 @@ end
 
 function StyleMix._destroyDefaultStyle( self, style )
 	-- print( "StyleMix._destroyDefaultStyle", style )
-	if not style or not style.__mix_created then return nil end
+	if not style or not style.__mix_created then return end
+	style.__mix_created=nil
 	style:removeSelf()
-	return nil
 end
 
 

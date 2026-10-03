@@ -1,7 +1,7 @@
 --====================================================================--
 -- dmc_corona/dmc_websockets/frame.lua
 --
--- Documentation: http://docs.davidmccuskey.com/
+-- Documentation: https://github.com/dmccuskey/dmc-websockets
 --====================================================================--
 
 --[[
@@ -60,6 +60,8 @@ local VERSION = "1.2.0"
 local bit = require 'lib.dmc_lua.bit'
 local ByteArray = require 'lib.dmc_lua.lua_bytearray'
 local Error = require 'dmc_websockets.exception'
+local Patch = require 'lib.dmc_lua.lua_patch'
+local UTF8 = require 'dmc_websockets.utf8'
 local Utils = require 'lib.dmc_lua.lua_utils'
 
 
@@ -67,6 +69,8 @@ local Utils = require 'lib.dmc_lua.lua_utils'
 --====================================================================--
 --== Setup, Constants
 
+
+Patch.addPatch( 'string-format' ) -- the close-code error messages use it
 
 local ProtocolError = Error.ProtocolError
 
@@ -130,6 +134,9 @@ local CLOSE_CODES = {
 	MSG_SIZE_ERR = { code=1009, reason="message is too big for processing" },
 	EXTENSION_ERR = { code=1010, reason="expected extension negotiation (client)" },
 	UNEXPECTED_ERR = { code=1011, reason="unexpected internal error" },
+	SERVICE_RESTART = { code=1012, reason="Service Restart" },
+	TRY_AGAIN_LATER = { code=1013, reason="Try Again Later" },
+	BAD_GATEWAY = { code=1014, reason="Bad Gateway" },
 	-- 1015, internal use only, TLS handshake error
 	TLS_HANDSHAKE_ERR = { code=1015, reason="TLS handshake failure" },
 
@@ -143,7 +150,10 @@ local VALID_CLOSE_CODES = {
 	CLOSE_CODES.POLICY_VIOLATION.code,
 	CLOSE_CODES.MSG_SIZE_ERR.code,
 	CLOSE_CODES.EXTENSION_ERR.code,
-	CLOSE_CODES.UNEXPECTED_ERR.code
+	CLOSE_CODES.UNEXPECTED_ERR.code,
+	CLOSE_CODES.SERVICE_RESTART.code,
+	CLOSE_CODES.TRY_AGAIN_LATER.code,
+	CLOSE_CODES.BAD_GATEWAY.code
 }
 
 
@@ -204,23 +214,52 @@ local function bytes_to_int( str )
 end
 
 local xor_mask = function( encoded, mask, payload )
-	local transformed_arr = {}
+	-- small payloads: building the tables below costs more
+	-- than xor-ing each byte
+	if payload <= 1024 then
+		local transformed = { sbyte( encoded, 1, payload ) }
+		for i=1,payload do
+			transformed[i] = bxor( transformed[i], mask[(i-1)%4+1] )
+		end
+		return schar( unpack( transformed ) )
+	end
+
+	-- one lookup table per mask byte, x1[b] == b xor mask[1]:
+	-- a table lookup is much faster than a bxor() call, especially
+	-- with the pure-Lua bit library
+	local x1, x2, x3, x4 = {}, {}, {}, {}
+	for b=0,255 do
+		x1[b], x2[b] = bxor( b, mask[1] ), bxor( b, mask[2] )
+		x3[b], x4[b] = bxor( b, mask[3] ), bxor( b, mask[4] )
+	end
+
+	local transformed_arr, n = {}, 0
+	local transformed = {}
 	-- xor chunk-wise to prevent stack overflow.
 	-- sbyte and schar multiple in/out values
 	-- which require stack
+	-- chunk size must be a multiple of 4 to keep the mask aligned
 	for p=1,payload,2000 do
-		local transformed = {}
-		local last = mmin(p+1999,payload)
-		local original = {sbyte(encoded,p,last)}
-		for i=1,#original do
-			local j = (i-1) % 4 + 1
-			transformed[i] = bxor(original[i],mask[j])
-			-- transformed[i] = band(bxor(original[i],mask[j]), 0xFF)
+		local len = mmin(p+1999,payload) - p + 1
+		local b1, b2, b3, b4
+		for i=0,len-4,4 do
+			b1, b2, b3, b4 = sbyte( encoded, p+i, p+i+3 )
+			transformed[i+1], transformed[i+2] = x1[b1], x2[b2]
+			transformed[i+3], transformed[i+4] = x3[b3], x4[b4]
 		end
-		local xored = schar(unpack(transformed))
-		tinsert(transformed_arr,xored)
+		-- 1-3 trailing bytes, last chunk only
+		local rem = len % 4
+		if rem > 0 then
+			local base = len - rem
+			local xs = { x1, x2, x3 }
+			for k=1,rem do
+				transformed[base+k] = xs[k][ sbyte( encoded, p+base+k-1 ) ]
+			end
+		end
+		n = n + 1
+		transformed_arr[n] = schar( unpack( transformed, 1, len ) )
 	end
-	return tconcat(transformed_arr)
+	return tconcat( transformed_arr )
 end
 
 
@@ -257,21 +296,21 @@ processFrameType = function( frame )
 
 	if band( frame.type, bit_6_4 ) ~= 0 then
 		error( ProtocolError{
-			code=CLOSE_CODES.PROTO_ERR.code, reason=CLOSE_CODES.PROTO_ERR.code,
-			message="Data packet too large for control frame" })
+			code=CLOSE_CODES.PROTO_ERR.code, reason=CLOSE_CODES.PROTO_ERR.reason,
+			message="Reserved bits set without a negotiated extension" })
 		return
 	end
 
 	if frame.opcode >= 0x3 and frame.opcode <= 0x7 then
 		error( ProtocolError{
-			code=CLOSE_CODES.PROTO_ERR.code, reason=CLOSE_CODES.PROTO_ERR.code,
+			code=CLOSE_CODES.PROTO_ERR.code, reason=CLOSE_CODES.PROTO_ERR.reason,
 			message="Received reserved non-control frame" } )
 		return
 	end
 
 	if frame.opcode >= 0xb and frame.opcode <= 0xf then
 		error( ProtocolError{
-			code=CLOSE_CODES.PROTO_ERR.code, reason=CLOSE_CODES.PROTO_ERR.code,
+			code=CLOSE_CODES.PROTO_ERR.code, reason=CLOSE_CODES.PROTO_ERR.reason,
 			message="Received reserved control frame" } )
 		return
 	end
@@ -283,6 +322,14 @@ processFramePayload = function( frame, bytearray )
 
 	frame.masked = band( frame.payload, bit_7 ) ~= 0
 	frame.payload_len = band( frame.payload, bit_6_0 )
+
+	-- RFC 6455 5.1: a client must fail on a masked frame from the server
+	if frame.masked then
+		error( ProtocolError{
+			code=CLOSE_CODES.PROTO_ERR.code, reason=CLOSE_CODES.PROTO_ERR.reason,
+			message="Received masked frame from server" } )
+		return
+	end
 
 	local payload_len = frame.payload_len
 	local data
@@ -301,7 +348,7 @@ processFramePayload = function( frame, bytearray )
 			data:byte(3) ~= 0 or data:byte(4) ~= 0
 		then
 			error( ProtocolError{
-				code=CLOSE_CODES.PROTO_ERR.code, reason=CLOSE_CODES.PROTO_ERR.code,
+				code=CLOSE_CODES.PROTO_ERR.code, reason=CLOSE_CODES.PROTO_ERR.reason,
 				message="Payload length too large" } )
 			return
 		end
@@ -309,7 +356,7 @@ processFramePayload = function( frame, bytearray )
 		local byte_5 = data:byte(5)
 		if band( byte_5, bit_7 ) ~= 0 then
 			error( ProtocolError{
-				code=CLOSE_CODES.PROTO_ERR.code, reason=CLOSE_CODES.PROTO_ERR.code,
+				code=CLOSE_CODES.PROTO_ERR.code, reason=CLOSE_CODES.PROTO_ERR.reason,
 				message="Payload length too large" } )
 			return
 		end
@@ -321,7 +368,7 @@ processFramePayload = function( frame, bytearray )
 
 	else
 		error( ProtocolError{
-			code=CLOSE_CODES.PROTO_ERR.code, reason=CLOSE_CODES.PROTO_ERR.code,
+			code=CLOSE_CODES.PROTO_ERR.code, reason=CLOSE_CODES.PROTO_ERR.reason,
 			message="Invalid payload size" } )
 
 	end
@@ -336,13 +383,13 @@ verifyFramePayload = function( frame, bytearray )
 	if band( frame.opcode, bit_4 ) ~= 0 then
 		if frame.payload_len > SML_FRAME_SIZE then
 			error( ProtocolError{
-				code=CLOSE_CODES.PROTO_ERR.code, reason=CLOSE_CODES.PROTO_ERR.code,
-				message="Data packet too large for control frame<<<" } )
+				code=CLOSE_CODES.PROTO_ERR.code, reason=CLOSE_CODES.PROTO_ERR.reason,
+				message="Data packet too large for control frame" } )
 			return
 		end
 		if not frame.fin then
 			error( ProtocolError{
-				code=CLOSE_CODES.PROTO_ERR.code, reason=CLOSE_CODES.PROTO_ERR.code,
+				code=CLOSE_CODES.PROTO_ERR.code, reason=CLOSE_CODES.PROTO_ERR.reason,
 				message="Fragmented control frame" } )
 			return
 		end
@@ -375,7 +422,7 @@ readPayloadData = function( frame, bytearray )
 	-- Verify Close frame size
 	if frame.opcode == FRAME_TYPE.close and not ( bytes == 0 or bytes >= 2 ) then
 		error( ProtocolError{
-			code=CLOSE_CODES.PROTO_ERR.code, reason=CLOSE_CODES.PROTO_ERR.code,
+			code=CLOSE_CODES.PROTO_ERR.code, reason=CLOSE_CODES.PROTO_ERR.reason,
 			message="Data packet wrong size for Close frame" } )
 		return
 	end
@@ -400,18 +447,32 @@ readPayloadData = function( frame, bytearray )
 
 		if code >=0 and code <= 999 then
 			error( ProtocolError{
-				code=CLOSE_CODES.PROTO_ERR.code, reason=CLOSE_CODES.PROTO_ERR.code,
+				code=CLOSE_CODES.PROTO_ERR.code, reason=CLOSE_CODES.PROTO_ERR.reason,
 				message="Invalid close code: %s" % code } )
 			return
 
 		elseif code >= 1000 and code <= 2999 then
 			if not Utils.propertyIn( VALID_CLOSE_CODES, code ) then
 				error( ProtocolError{
-					code=CLOSE_CODES.PROTO_ERR.code, reason=CLOSE_CODES.PROTO_ERR.code,
+					code=CLOSE_CODES.PROTO_ERR.code, reason=CLOSE_CODES.PROTO_ERR.reason,
 					message="Invalid close code: %s" % code } )
 				return
 			end
 
+		elseif code >= 5000 then
+			-- 3000-3999 registered, 4000-4999 private use, above is undefined
+			error( ProtocolError{
+				code=CLOSE_CODES.PROTO_ERR.code, reason=CLOSE_CODES.PROTO_ERR.reason,
+				message="Invalid close code: %s" % code } )
+			return
+
+		end
+
+		if reason and not UTF8.isValid( reason ) then
+			error( ProtocolError{
+				code=CLOSE_CODES.INVALID_DATA.code, reason=CLOSE_CODES.INVALID_DATA.reason,
+				message="Invalid UTF-8 in close reason" } )
+			return
 		end
 	end
 end
@@ -449,6 +510,45 @@ local function receiveWSFrame( bytearray )
 		data=frame.data,
 		fin=frame.fin
 	}
+end
+
+
+-- bytes the frame at the start of str takes in all (header, mask and
+-- payload), so a caller can wait until that much has arrived; nil
+-- when str doesn't hold the whole header yet. A frame that will fail
+-- anyway (masked, or too long) gives its header size, so receiveFrame()
+-- reports the error without waiting for the payload
+--
+local function frameSize( str )
+	local len = #str
+	if len < 2 then return nil end
+
+	local b2 = sbyte( str, 2 )
+	local payload_len = band( b2, bit_6_0 )
+	local size = 2
+
+	if payload_len == MED_FRAME_TOKEN then
+		size = 4
+		if len < size then return nil end
+		local h1, h2 = sbyte( str, 3, 4 )
+		payload_len = h1 * 256 + h2
+
+	elseif payload_len == LRG_FRAME_TOKEN then
+		size = 10
+		if len < size then return nil end
+		local h1, h2, h3, h4, h5 = sbyte( str, 3, 7 )
+		if h1 ~= 0 or h2 ~= 0 or h3 ~= 0 or h4 ~= 0 or h5 >= 0x80 then
+			return size
+		end
+		payload_len = 0
+		for i = 7, 10 do
+			payload_len = payload_len * 256 + sbyte( str, i )
+		end
+	end
+
+	if band( b2, bit_7 ) ~= 0 then return size end
+
+	return size + payload_len
 end
 
 
@@ -502,7 +602,7 @@ local function buildFrame( params )
 
 	else
 		error( ProtocolError{
-			code=CLOSE_CODES.PROTO_ERR.code, reason=CLOSE_CODES.PROTO_ERR.code,
+			code=CLOSE_CODES.PROTO_ERR.code, reason=CLOSE_CODES.PROTO_ERR.reason,
 			message="Data packet too big for protocol" } )
 
 	end
@@ -556,7 +656,7 @@ local function buildWSFrames( params )
 	if band( opcode, bit_4 ) ~= 0 then
 		if data_len > SML_FRAME_SIZE then
 			error( ProtocolError{
-				code=CLOSE_CODES.PROTO_ERR.code, reason=CLOSE_CODES.PROTO_ERR.code,
+				code=CLOSE_CODES.PROTO_ERR.code, reason=CLOSE_CODES.PROTO_ERR.reason,
 				message="Data packet too large for control frame" } )
 			return
 		end
@@ -635,6 +735,7 @@ return {
 	},
 
 	receiveFrame = receiveWSFrame,
+	frameSize = frameSize,
 	buildFrames = buildWSFrames,
 	encodeCloseFrameData = encodeCloseFrameData,
 	decodeCloseFrameData = decodeCloseFrameData

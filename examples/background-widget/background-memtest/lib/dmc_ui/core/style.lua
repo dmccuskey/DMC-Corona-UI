@@ -1066,7 +1066,7 @@ function BaseStyle:_parseData( data )
 		-- print( prop, value )
 		if prop=='inherit' then
 			-- set up in __init__
-		elseif DEF[ prop ]==nil and not EXCL[ prop ] then
+		elseif prop~='name' and DEF[ prop ]==nil and not EXCL[ prop ] then
 			pnotice( sfmt("Skipping invalid style property '%s'", tostring(prop)), {newline=false})
 			pnotice( sfmt("located in style definition for '%s'", tostring(self.NAME)), {newline=false})
 		end
