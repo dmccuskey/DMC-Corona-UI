@@ -88,6 +88,7 @@ lunatest.suite( 'tests.style_engine_spec' )
 
 lunatest.suite( 'tests.background_widget_spec' )
 lunatest.suite( 'tests.text_widget_spec' )
+lunatest.suite( 'tests.button_widget_spec' )
 
 
 lunatest.run({

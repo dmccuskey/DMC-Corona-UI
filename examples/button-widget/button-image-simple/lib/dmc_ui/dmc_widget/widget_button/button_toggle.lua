@@ -199,14 +199,14 @@ Inherited - from dmc_ui.dmc_widget.widget_button
 -- @usage print( widget.isActive )
 
 --- set/get whether button is 'disabled' or can be pressed/activated.
--- property to set button disabled state or to see if it's enabled. this sets both the *look* of the button and the button action. setting .isEnabled will also set .isHitActive accordingly.
+-- property to set button disabled state or to see if it's enabled. this sets both the *look* of the button and the button action; it leaves the style's .isHitActive as is.
 -- @within Properties
 -- @function .isEnabled
 -- @usage widget.isEnabled = false
 -- @usage print( widget.isEnabled )
 
 --- set/get button press *action*.
--- this gets the *action* of the button, whether a press is handled or not. this property is also controlled by changes to .isEnabled.
+-- this gets the *action* of the button, whether a press is handled or not. a disabled button ignores presses whatever this value.
 -- @within Properties
 -- @function .isHitActive
 -- @usage widget.isHitActive = false
@@ -315,7 +315,7 @@ end
 function ToggleButton:_hitAreaTouch_handler( event )
 	-- print( "ToggleButton:_hitAreaTouch_handler", event.phase )
 
-	if not self.isEnabled then return true end
+	if not self:_isPressable() then return self:_dropFocus() end
 
 	local target = event.target
 	local bounds = target.contentBounds

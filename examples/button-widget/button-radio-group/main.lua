@@ -1,7 +1,12 @@
 --====================================================================--
 -- Radio Group Simple
 --
--- Shows simple use of the DMC Widget: Button Group
+-- Two button groups. The top row is a radio group: one of "Small",
+-- "Medium" and "Large" is always active (the first to start with), and a
+-- press makes another one active. The bottom row is a toggle group: at most
+-- one of "Left" and "Right" is active, and pressing the active one turns it
+-- off. The line at the bottom shows the selection, updated from each
+-- group's change event (also printed).
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
@@ -13,15 +18,12 @@
 print( "\n\n#########################################################\n\n" )
 
 
-error("\n\n SORRY THIS EXAMPLE NOT READY\n\n")
-
 
 --===================================================================--
 --== Imports
 
 
-local Widgets = require 'lib.dmc_widgets'
-local Utils = require 'dmc_utils'
+local dUI = require 'lib.dmc_ui'
 
 
 
@@ -29,7 +31,31 @@ local Utils = require 'dmc_utils'
 --== Setup, Constants
 
 
-local o
+local W, H = display.contentWidth, display.contentHeight
+local H_CENTER, V_CENTER = W*0.5, H*0.5
+
+-- one look for every button here: green while active
+local buttonStyle = dUI.newButtonStyle{
+	width=90,
+	height=50,
+	inactive={
+		label={ textColor={ 0.2, 0.2, 0.2 } },
+	},
+	active={
+		label={ textColor={ 1, 1, 1 } },
+		background={
+			type='rounded',
+			view={
+				cornerRadius=9,
+				fillColor={ 0.2, 0.6, 0.2 },
+				strokeWidth=2,
+				strokeColor={ 0.1, 0.3, 0.1 },
+			}
+		},
+	},
+}
+
+local radioGroup, toggleGroup, status
 
 
 
@@ -37,13 +63,39 @@ local o
 --== Support Functions
 
 
-local function radioGroupEvent_handler( event )
-	print( 'Main: radioGroupEvent_handler: type', event.type )
-	print( 'Main: button: ', event.id, event.state )
+local function setupBackground()
+	local o = display.newRect( 0, 0, W, H )
+	o:setFillColor( 0.5, 0.5, 0.5 )
+	o.x, o.y = H_CENTER, V_CENTER
+end
 
-	local group = event.target
-	local button = event.button
 
+local function updateStatus()
+	local radio = radioGroup.selected
+	local toggle = toggleGroup.selected
+	status.text = "size: "..( radio and radio.labelText or "none" )
+		.."   side: "..( toggle and toggle.labelText or "none" )
+end
+
+
+local function groupEvent_handler( event )
+	print( 'Main: groupEvent_handler', event.type, event.id, event.state )
+	updateStatus()
+end
+
+
+local function newRow( group, action, labels, y )
+	local x = H_CENTER - ( #labels-1 )*50
+	for i, label in ipairs( labels ) do
+		local bn = dUI.newButton{
+			action=action,
+			id=string.lower( label ),
+			labelText=label,
+			style=buttonStyle,
+		}
+		bn.x, bn.y = x+( i-1 )*100, y
+		group:add( bn )
+	end
 end
 
 
@@ -53,239 +105,22 @@ end
 --===================================================================--
 
 
-local radioGroup = Widgets.newButtonGroup{ type='radio' }
+setupBackground()
 
+-- radio group: one button always active
+radioGroup = dUI.newButtonGroup{ type='radio' }
+radioGroup:addEventListener( radioGroup.EVENT, groupEvent_handler )
+newRow( radioGroup, 'radio', { "Small", "Medium", "Large" }, 120 )
 
--- we only need to listen to the group
-radioGroup:addEventListener( radioGroup.EVENT, radioGroupEvent_handler )
+-- toggle group: at most one button active
+toggleGroup = dUI.newButtonGroup{ type='toggle' }
+toggleGroup:addEventListener( toggleGroup.EVENT, groupEvent_handler )
+newRow( toggleGroup, 'toggle', { "Left", "Right" }, 220 )
 
-
---== Create Buttons
-
---[[
-	button shows:
-	* complex label
-	* more complex 'down' view (label change)
-	* bigger hit area
---]]
-o = Widgets.newButton{
-	-- button info
-	id='button-middle',
-	type='radio',
-	hit_width = 150,
-	hit_height = 110,
-
-
-	-- label info
-	label = {
-		text='Inactive',
-		align='center',
-		-- margin = 0,
-		x_offset = 0,
-		y_offset = 0,
-		color = { 1,0,0.5 },
-		font = native.systemFontBold,
-		font_size = 20,
-	},
-
-	-- view info
-	view='shape',
-	width = 100,
-	height = 60,
-	shape='roundedRect',
-	corner_radius = 2,
-	fill_color={1,1,0.5, 0.5},
-	stroke_width=2,
-	stroke_color={1,0,0,0.5},
-
-	active = {
-		label = {
-			text='Active',
-			color={0,0,0}
-		},
-		fill_color={1,0,0}
-	},
-
-	-- handlers
-	onPress = onPress_handler,
-	onRelease = onRelease_handler,
-	onEvent = onEvent_handler,
-
+status = dUI.newText{
+	text="",
+	style={ fontSize=16, textColor={ 1, 1, 1 } },
 }
-o.x, o.y = 150, 75
+status.x, status.y = H_CENTER, 320
 
-radioGroup:add( o )
-
-
-
---[[
-	button shows:
-	* complex label
-	* more complex 'down' view (label change)
-	* bigger hit area
---]]
-o = Widgets.newButton{
-	-- button info
-	id='button-bottom',
-	type='radio',
-	hit_width = 150,
-	hit_height = 110,
-
-	-- label info
-	label = {
-		text='Inactive',
-		align='center',
-		-- margin = 0,
-		x_offset = 0,
-		y_offset = 0,
-		color = { 1,0,0.5 },
-		font = native.systemFontBold,
-		font_size = 20,
-	},
-
-	-- view info
-	view='shape',
-	width = 100,
-	height = 60,
-	shape='roundedRect',
-	corner_radius = 2,
-	fill_color={1,1,0.5, 0.5},
-	stroke_width=2,
-	stroke_color={1,0,0,0.5},
-
-	active = {
-		label = {
-			text='Active',
-			color={0,0,0}
-		},
-		fill_color={1,0,0}
-	},
-
-	-- handlers
-	onPress = onPress_handler,
-	onRelease = onRelease_handler,
-	onEvent = onEvent_handler,
-
-}
-o.x, o.y = 150, 150
-
-radioGroup:add( o )
-
-
-
-
-local toggleGroup = Widgets.newButtonGroup{ type='toggle' }
-
-
--- we only need to listen to the group
-toggleGroup:addEventListener( toggleGroup.EVENT, radioGroupEvent_handler )
-
---[[
-	button shows:
-	* complex label
-	* more complex 'down' view (label change)
-	* bigger hit area
---]]
-o = Widgets.newButton{
-	-- button info
-	id='button-middle',
-	type='toggle',
-	hit_width = 150,
-	hit_height = 110,
-
-	-- label info
-	label = {
-		text='Inactive',
-		align='center',
-		-- margin = 0,
-		x_offset = 0,
-		y_offset = 0,
-		color = { 1,0,0.5 },
-		font = native.systemFontBold,
-		font_size = 20,
-	},
-
-	-- view info
-	view='shape',
-	width = 100,
-	height = 60,
-	shape='roundedRect',
-	corner_radius = 2,
-	fill_color={1,1,0.5, 0.5},
-	stroke_width=2,
-	stroke_color={1,0,0,0.5},
-
-	active = {
-		label = {
-			text='Inactive',
-			color={0,0,0}
-		},
-		fill_color={1,0,0}
-	},
-
-	-- handlers
-	onPress = onPress_handler,
-	onRelease = onRelease_handler,
-	onEvent = onEvent_handler,
-
-}
-o.x, o.y = 150, 275
-
-toggleGroup:add( o )
-
-
-
---[[
-	button shows:
-	* complex label
-	* more complex 'down' view (label change)
-	* bigger hit area
---]]
-o = Widgets.newButton{
-	-- button info
-	id='button-bottom',
-	type='toggle',
-	hit_width = 150,
-	hit_height = 110,
-
-	-- label stuff
-	label = {
-		text='Inactive',
-		align='center',
-		-- margin = 0,
-		x_offset = 0,
-		y_offset = 0,
-		color = { 1,0,0.5 },
-		font = native.systemFontBold,
-		font_size = 20,
-	},
-
-	-- view info
-	view='shape',
-	width = 100,
-	height = 60,
-	shape='roundedRect',
-	corner_radius = 2,
-	fill_color={1,1,0.5, 0.5},
-	stroke_width=2,
-	stroke_color={1,0,0,0.5},
-
-	active = {
-		label = {
-			text='Active',
-			color={0,0,0}
-		},
-		fill_color={1,0,0}
-	},
-
-	-- handlers
-	onPress = onPress_handler,
-	onRelease = onRelease_handler,
-	onEvent = onEvent_handler,
-
-}
-o.x, o.y = 150, 350
-
-toggleGroup:add( o )
-
-
+updateStatus()

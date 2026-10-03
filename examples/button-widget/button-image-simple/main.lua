@@ -1,7 +1,9 @@
 --====================================================================--
 -- Simple Image Button
 --
--- Shows basic use of the DMC Widget: Button
+-- An "OK" push button made of two images, orange and a darker orange
+-- while pressed (asset/image/). A background width and height of 0 draws
+-- each image at its own size. Each press and release prints the event.
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
@@ -101,21 +103,23 @@ function run_example1()
 			width=100,
 			height=30,
 			inactive={
-				type='image',
 				background={
+					type='image',
 					width=0,
 					height=0,
-					imagePath='asset/image/btn_bg_orange.png',
-					-- offsetBottom=10
+					view={
+						imagePath='asset/image/btn_bg_orange.png',
+					}
 				}
 			},
 			active={
-				type='image',
 				background={
+					type='image',
 					width=0,
 					height=0,
-					imagePath='asset/image/btn_bg_orange_down.png',
-					-- offsetBottom=10
+					view={
+						imagePath='asset/image/btn_bg_orange_down.png',
+					}
 				}
 			}
 		}
