@@ -1,7 +1,9 @@
 --====================================================================--
--- Simple 9-Slice Background
+-- Rectangle Background
 --
--- Shows 9-slice setup with DMC Background Widget
+-- An orange rectangle background with a red border, anchored at its bottom
+-- center; after a second it's grey with a thin pink border, anchored at its
+-- top-left. The red dot marks its position.
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
@@ -67,7 +69,7 @@ setupBackground()
 
 
 --======================================================--
---== create 9-slice background, from sprite sheet
+--== create a rectangle background
 
 function run_example1()
 

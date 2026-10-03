@@ -1,7 +1,9 @@
 --====================================================================--
--- Simple 9-Slice Background
+-- Background Memory Test
 --
--- Shows 9-slice setup with DMC Background Widget
+-- Creates and removes a default 9-slice background in a loop (every 75 ms)
+-- and prints memory use with dmc-performance; run_example1() does the same
+-- with a rectangle background.
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
@@ -71,7 +73,7 @@ setupBackground()
 
 
 --======================================================--
---== stress test basic background
+--== stress test: rectangle background
 
 function run_example1()
 
@@ -124,7 +126,7 @@ end
 
 
 --======================================================--
---== stress test basic background
+--== stress test: default 9-slice background
 
 function run_example2()
 

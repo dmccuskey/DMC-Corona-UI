@@ -69,7 +69,7 @@ local marker = TestUtils.outputMarker
 
 function suite_setup()
 
-	dUI.Style._loadTextFieldStyleSupport( {dUI.TEST_MODE} )
+	dUI.Style._loadTextFieldStyleSupport( {mode=dUI.TEST_MODE} )
 
 end
 

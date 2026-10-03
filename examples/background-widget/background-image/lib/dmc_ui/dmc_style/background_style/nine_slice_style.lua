@@ -1,7 +1,7 @@
 --====================================================================--
 -- dmc_widget/widget_background/rounded_style.lua
 --
--- Documentation: http://docs.davidmccuskey.com/
+-- Documentation: https://github.com/dmccuskey/DMC-Corona-UI
 --====================================================================--
 
 --[[
@@ -161,8 +161,8 @@ NineSliceStyle._STYLE_DEFAULTS = {
 	offsetBottom=0,
 
 	-- @TODO: make sprite sheet
-	sheetInfo=ui_find('theme.default.background.nine_slice-sheet'),
-	sheetImage=ui_file('theme/default/background/nice_slice-sheet.jpg'),
+	sheetInfo=ui_find('theme.default.background.nine-slice-sheet'),
+	sheetImage=ui_file('theme/default/background/nine-slice-sheet.png'),
 }
 
 NineSliceStyle._TEST_DEFAULTS = {

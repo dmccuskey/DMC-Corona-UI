@@ -1,7 +1,7 @@
 --====================================================================--
 -- dmc_ui/dmc_style/tableview_style.lua
 --
--- Documentation: http://docs.davidmccuskey.com/
+-- Documentation: https://github.com/dmccuskey/DMC-Corona-UI
 --====================================================================--
 
 --[[
@@ -267,6 +267,13 @@ function TableViewCell:__init__( params )
 	-- self._height
 	-- self._anchorX
 	-- self._anchorY
+
+	--== Object Refs ==--
+
+	-- these are other style objects
+	-- TableViewCellState
+	self._active = nil
+	self._inactive = nil
 
 end
 

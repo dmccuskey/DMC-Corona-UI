@@ -42,7 +42,7 @@ local bg = dUI.newBackground{
 bg.x, bg.y = 160, 120
 ```
 
-`newRectangleBackground()`, `newRoundedBackground()`, `new9SliceBackground()` and `newImageBackground()` make one of that type; its style then leaves out `type`. The same goes for `newBackgroundStyle()` and `newRectangleBackgroundStyle()` and so on.
+`newRectangleBackground()`, `newRoundedBackground()`, `new9SliceBackground()` and `newImageBackground()` make one of that type; its style then leaves out `type`. The same goes for `newBackgroundStyle()` and `newRectangleBackgroundStyle()` and so on. A shared style or a style's name keeps its own type, whichever constructor it's given to.
 
 **Style**: `type` and a child style `view`, whose properties depend on the type:
 
@@ -53,9 +53,11 @@ bg.x, bg.y = 160, 120
 | `'9-slice'` | `sheetImage`, `sheetInfo` (an image sheet and its Texture Packer info module), `spriteFrames` (which frame is `topLeft`, `topMiddle`, ... `bottomRight`), `offsetLeft`, `offsetRight`, `offsetTop`, `offsetBottom` |
 | `'image'` | `imagePath`, `offsetLeft`, `offsetRight`, `offsetTop`, `offsetBottom` |
 
-The constants `dUI.RECTANGLE`, `dUI.ROUNDED` and `dUI.NINE_SLICE` hold the type names. The default 9-slice image is in `lib/dmc_ui/theme/default/background/`.
+The offsets are the image's margins, in pixels, that lie outside the background's size, such as a drop shadow: a 9-slice or image background of 100x50 draws its body at 100x50 and its shadow around it. A 9-slice background smaller than its corners draws only the corners. An image background is scaled to fit; with a `width` and `height` of 0 it's drawn at the image's own size.
 
-**Widget properties**: `viewStyle` (the `view` child style).
+The constants `dUI.RECTANGLE`, `dUI.ROUNDED`, `dUI.NINE_SLICE` and `dUI.IMAGE` hold the type names. The default 9-slice image is in `lib/dmc_ui/theme/default/background/`; the default offsets (1, 0, 0, 0) draw its shadow inside the size, and offsets of 6, 7, 4 and 12 draw it outside. `debugOn=true` covers the background in translucent red.
+
+**Widget properties**: `type` (the style's `type`: setting it changes the drawing), `viewStyle` (the `view` child style).
 
 ## Text
 

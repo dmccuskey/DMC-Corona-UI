@@ -1,7 +1,9 @@
 --====================================================================--
--- Simple 9-Slice Background
+-- 9-Slice Background
 --
--- Shows 9-slice setup with DMC Background Widget
+-- A 9-slice background from an image sheet (Texture Packer), 150x100,
+-- anchored at its bottom-right corner; after a second it's 100 wide and
+-- anchored at its top-left. The red dot marks its position.
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License

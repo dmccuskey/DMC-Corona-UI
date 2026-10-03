@@ -82,7 +82,7 @@ From `examples/textfield-widget/textfield-keyboard`.
 | Name | Value |
 |---|---|
 | `dUI.WIDTH`, `dUI.HEIGHT` | `display.contentWidth`, `display.contentHeight` when the module was loaded |
-| `dUI.RECTANGLE`, `dUI.ROUNDED`, `dUI.NINE_SLICE` | `'rectangle'`, `'rounded'`, `'9-slice'`: Background types |
+| `dUI.RECTANGLE`, `dUI.ROUNDED`, `dUI.NINE_SLICE`, `dUI.IMAGE` | `'rectangle'`, `'rounded'`, `'9-slice'`, `'image'`: Background types |
 | `dUI.EVENT` | `'dmc-ui-event'`, the name of the module's events |
 | `dUI.POPOVER` | a modal style for the unfinished Popover Control |
 
@@ -99,7 +99,6 @@ The `dmc_corona.cfg` in this repository has further sections, `[DMC_KOLOR]`, `[D
 Checked in the Solar2D Simulator (2026.3731) in September 2026.
 
 - **Some functions fail or are missing.** `dUI.newButtonGroup()` (radio groups), `dUI.newFormatter()` and `dUI.newSlideView()` raise an error; `dUI.newPopover()` and `newPopoverControl()` are `nil`.
-- **Three examples use the old module name** `lib.dmc_widgets` and don't run: `background-themed`, `button-radio-group` and `button-text-simple`.
+- **Two examples use the old module name** `lib.dmc_widgets` and don't run: `button-radio-group` and `button-text-simple`.
 - **Harmless console notices:** a text field prints `Skipping invalid style property` for `align`, `marginX` and `marginY` of its background, and a Navigation Control prints `StyleMgr.addStyle improper TYPE on Style, got 'nil'`. Every keyboard event prints `UI._keyboardMgr_handler`.
-- A Background widget's `type` property is `nil`; use `widget.style.type`.
 - The Navigation Control expects each view to be anchored top center, and hides popped views instead of removing them ([Views](controls.md#views)).

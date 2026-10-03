@@ -1,7 +1,7 @@
 --====================================================================--
 -- dmc_widget/base_style.lua
 --
--- Documentation: http://docs.davidmccuskey.com/
+-- Documentation: https://github.com/dmccuskey/DMC-Corona-UI
 --====================================================================--
 
 --[[
@@ -81,11 +81,31 @@ Patch.addPatch( 'print-output' )
 
 local ObjectBase = Objects.ObjectBase
 
+local assert, tostring = assert, tostring
 local sfmt = string.format
 local tinsert = table.insert
+local type = type
 
 --== To be set in initialize()
 local Style = nil
+
+
+-- findSetter()
+-- a setter on an object's class or its parents (lua-class 0.2.0 looks
+-- them up at use instead of copying them into each class)
+--
+local function findSetter( t, k )
+	local tbl = rawget( t, '__setters' )
+	local f = tbl and rawget( tbl, k )
+	if f then return f end
+	local par = rawget( t, '__parents' )
+	if not par then return nil end
+	for i = 1, #par do
+		f = findSetter( par[i], k )
+		if f then return f end
+	end
+	return nil
+end
 
 
 
@@ -201,11 +221,22 @@ function BaseStyle:__init__( params )
 
   if self.is_class then return end
 
+  self._sc_tmp_params = params
+
 	self._isInitialized = false
 	self._isClearing = false
 	self._isDestroying = false
 
-	-- inheritance style
+	-- inheritance style: params.inherit, or 'inherit' in the style data
+	-- (a style or a style name); children inherit from its children
+	if params.inherit==nil and type(params.data)=='table' then
+		params.inherit = params.data.inherit
+	end
+	if type(params.inherit)=='string' then
+		local name = params.inherit
+		params.inherit = Style.Manager.getStyle( self, name )
+		assert( params.inherit, sfmt( "Style 'inherit': no %s style named '%s'", tostring(self.TYPE), name ) )
+	end
 	if params.inherit==nil then
 		params.inherit = self:getBaseStyle( params.data )
 	end
@@ -214,16 +245,13 @@ function BaseStyle:__init__( params )
 	self._inherit_f = nil
 
 	-- parent style
-	self._parent = params.parent
+	self._parent = nil
 	self._parent_f = nil
 
 	-- widget delegate
-	self._widget = params.widget
+	self._widget = nil
 
-	self._onPropertyChange_f = params.onPropertyChange
-
-	self._tmp_data = params.data -- temporary save of data
-	self._tmp_dataSrc = params.dataSrc -- temporary save of data
+	self._onPropertyChange_f = nil
 
 	self._name = params.name
 	self._debugOn = params.debugOn
@@ -232,34 +260,45 @@ function BaseStyle:__init__( params )
 	self._anchorX = params.anchorX
 	self._anchorY = params.anchorY
 end
+--[[
+function BaseStyle:__undoInit__()
+	-- print( "BaseStyle:__undoInit__" )
+	--==--
+	self:superCall( '__undoInit__' )
+end
+--]]
+
 
 function BaseStyle:__initComplete__()
 	-- print( "BaseStyle:__initComplete__", self )
 	self:superCall( '__initComplete__' )
 	--==--
-	self._isDestroying = false
+	local tmp = self._sc_tmp_params
+	self._sc_tmp_params = nil
 
-	local data = self:_prepareData( self._tmp_data,
-		self._tmp_dataSrc, {inherit=self._inherit} )
-	self._tmp_data = nil
-	self._tmp_dataSrc = nil
+	-- create children
+	local data = self:_prepareData( tmp.data,
+		tmp.dataSrc, {inherit=tmp.inherit} )
+	-- @TODO: fix inherit,
 	self:_parseData( data )
 
 	-- do this after style/children constructed --
 
-	self.inherit = self._inherit -- use setter
-	self.parent = self._parent -- use setter
-	self.widget = self._widget -- use setter
+	self.onPropertyChange = tmp.onPropertyChange -- use setter
+
+	self.inherit = tmp.inherit -- use setter
+	self.parent = tmp.parent -- use setter
+	self.widget = tmp.widget -- use setter
 
 	assert( self:verifyProperties(), sfmt( "Missing properties for Style '%s'", tostring(self.class) ) )
 
+	self._isDestroying = false
 	self._isInitialized = true
 end
 
 function BaseStyle:__undoInitComplete__()
 	-- print( "BaseStyle:__undoInitComplete__", self )
 	--==--
-
 	self._isDestroying = true
 
 	self:_dispatchDestroyEvent()
@@ -267,9 +306,9 @@ function BaseStyle:__undoInitComplete__()
 	self.widget = nil
 	self.parent = nil
 	self.inherit = nil
+	self.onPropertyChange = nil
 
 	self:_destroyChildren()
-
 	--==--
 	self:superCall( '__undoInitComplete__' )
 end
@@ -747,7 +786,8 @@ end
 function BaseStyle.__setters:widget( value )
 	-- print( "BaseStyle.__setters:widget", value )
 	-- TODO: update to check class, not table
-	assert( value==nil or type(value)=='table' )
+	local t = type(value)
+	assert( t=='nil' or t=='table' )
 	self._widget = value
 end
 
@@ -756,7 +796,8 @@ end
 --
 function BaseStyle.__setters:onPropertyChange( func )
 	-- print( "BaseStyle.__setters:onPropertyChange", func )
-	assert( type(func)=='function' )
+	local t = type(func)
+	assert( t=='nil' or t=='function' )
 	--==--
 	self._onPropertyChange_f = func
 end
@@ -1023,11 +1064,13 @@ function BaseStyle:_parseData( data )
 
 	for prop, value in pairs( data ) do
 		-- print( prop, value )
-		if DEF[ prop ]==nil and not EXCL[ prop ] then
+		if prop=='inherit' then
+			-- set up in __init__
+		elseif prop~='name' and DEF[ prop ]==nil and not EXCL[ prop ] then
 			pnotice( sfmt("Skipping invalid style property '%s'", tostring(prop)), {newline=false})
 			pnotice( sfmt("located in style definition for '%s'", tostring(self.NAME)), {newline=false})
 		end
-		if not self:isChild( prop ) then
+		if prop~='inherit' and not self:isChild( prop ) then
 			self[ prop ]=value
 		end
 	end
@@ -1091,6 +1134,8 @@ end
 --
 function BaseStyle:_dispatchDestroyEvent( prop, value )
 	-- print( "BaseStyle:_dispatchDestroyEvent", prop, value, self )
+	local widget = self._widget
+	local callback = self._onPropertyChange_f
 
 	local e = self:createEvent( self.STYLE_DESTROYED )
 
@@ -1175,7 +1220,7 @@ function BaseStyle:_parentStyleEvent_handler( event )
 		-- however, check to see if property is valid
 		-- parent could have other properties
 		if self._VALID_PROPERTIES[property] then
-			local func = self.__setters[property]
+			local func = findSetter( self, property )
 			if func then
 				func( self, value, true )
 			else

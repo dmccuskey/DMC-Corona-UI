@@ -1,7 +1,7 @@
 --====================================================================--
 -- dmc_ui/dmc_style/tableviewcell_style/tableviewcell_state.lua
 --
--- Documentation: http://docs.davidmccuskey.com/
+-- Documentation: https://github.com/dmccuskey/DMC-Corona-UI
 --====================================================================--
 
 --[[
@@ -668,6 +668,21 @@ end
 
 --====================================================================--
 --== Private Methods
+
+
+function TableViewCellStateStyle:_destroyChildren()
+	-- print( 'TableViewCellStateStyle:_destroyChildren', self )
+
+	self._background:removeSelf()
+	self._background=nil
+
+	self._detail:removeSelf()
+	self._detail=nil
+
+	self._label:removeSelf()
+	self._label=nil
+end
+
 
 
 function TableViewCellStateStyle:_prepareData( data, dataSrc, params )

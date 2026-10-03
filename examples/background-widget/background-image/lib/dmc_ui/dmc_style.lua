@@ -1,7 +1,7 @@
 --====================================================================--
 -- dmc_ui/dmc_style.lua
 --
--- Documentation: http://docs.davidmccuskey.com/
+-- Documentation: https://github.com/dmccuskey/DMC-Corona-UI
 --====================================================================--
 
 --[[
@@ -123,8 +123,6 @@ function Style.initialize( manager, params )
 	-- Style Manager
 
 	dUI.addStyle = Style.addStyle
-	dUI.addThemeStyle = Style.addThemeStyle
-	dUI.createTheme = Style.createTheme
 	dUI.getStyle = Style.getStyle
 	dUI.purgeStyles = Style.purgeStyles
 	dUI.registerWidget = Style.registerWidget
@@ -133,6 +131,7 @@ function Style.initialize( manager, params )
 	dUI.activateTheme = Style.activateTheme
 	dUI.createTheme = Style.createTheme
 	dUI.getActiveThemeId = Style.getActiveThemeId
+	dUI.getActiveThemeName = Style.getActiveThemeName
 	dUI.getAvailableThemeIds = Style.getAvailableThemeIds
 	dUI.loadTheme = Style.loadTheme
 	dUI.loadThemes = Style.loadThemes
@@ -148,6 +147,7 @@ function Style.initialize( manager, params )
 	dUI.newButtonStyle = Style.newButtonStyle
 	dUI.newNavBarStyle = Style.newNavBarStyle
 	dUI.newNavItemStyle = Style.newNavItemStyle
+	dUI.newScrollViewStyle = Style.newScrollViewStyle
 	dUI.newTableViewStyle = Style.newTableViewStyle
 	dUI.newTableViewCellStyle = Style.newTableViewCellStyle
 	dUI.newTextFieldStyle = Style.newTextFieldStyle
@@ -377,7 +377,7 @@ end
 
 
 --======================================================--
--- newScrollView Support
+-- newScrollViewStyle Support
 
 function Style.loadScrollViewStyleSupport( params )
 	-- print( "Style.loadScrollViewStyleSupport" )
@@ -408,8 +408,8 @@ function Style.loadScrollViewStyleSupport( params )
 	)
 end
 
-function Style.newScrollView( style_info, params )
-	-- print( "Style.newScrollView" )
+function Style.newScrollViewStyle( style_info, params )
+	-- print( "Style.newScrollViewStyle" )
 	style_info = style_info or {}
 	params = params or {}
 	--==--
@@ -420,7 +420,7 @@ end
 
 
 --======================================================--
--- newTableView Support
+-- newTableViewStyle Support
 
 function Style.loadTableViewStyleSupport( params )
 	-- print( "Style.loadTableViewStyleSupport" )
@@ -440,7 +440,6 @@ function Style.loadTableViewStyleSupport( params )
 	--== Components
 
 	local TableViewStyle = require( ui_find( 'dmc_style.tableview_style' ) )
-	local TableViewStyle = require( ui_find( 'dmc_style.tableview_style' ) )
 
 	Style.TableView=TableViewStyle
 
@@ -452,8 +451,8 @@ function Style.loadTableViewStyleSupport( params )
 	)
 end
 
-function Style.newTableView( style_info, params )
-	-- print( "Style.newTableView" )
+function Style.newTableViewStyle( style_info, params )
+	-- print( "Style.newTableViewStyle" )
 	style_info = style_info or {}
 	params = params or {}
 	--==--

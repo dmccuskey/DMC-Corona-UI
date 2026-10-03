@@ -65,7 +65,7 @@ local marker = TestUtils.outputMarker
 
 function suite_setup()
 
-	dUI.Style._loadBackgroundStyleSupport( {dUI.TEST_MODE} )
+	dUI.Style._loadBackgroundStyleSupport( {mode=dUI.TEST_MODE} )
 
 end
 

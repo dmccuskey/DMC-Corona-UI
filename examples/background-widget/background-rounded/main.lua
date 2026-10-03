@@ -1,7 +1,9 @@
 --====================================================================--
--- Simple 9-Slice Background
+-- Rounded Background
 --
--- Shows 9-slice setup with DMC Background Widget
+-- A blue rounded background with a red border, 150x100; after a second it's
+-- 100 wide, grey with a thin pink border and a corner radius of 20, anchored
+-- at its top-left. The red dot marks its position.
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
@@ -68,7 +70,7 @@ setupBackground()
 
 
 --======================================================--
---== create 9-slice background, from sprite sheet
+--== create a rounded background
 
 function run_example1a()
 
