@@ -83,6 +83,10 @@ lunatest.suite( 'tests.textfield_style_spec' )
 
 lunatest.suite( 'tests.style_mgr_spec' )
 
+-- widgets
+
+lunatest.suite( 'tests.background_widget_spec' )
+
 
 lunatest.run({
 	-- verbose=true,

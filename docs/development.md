@@ -24,7 +24,7 @@ snakemake --cores 1 build_all     # lib/ and every example's lib/
 snakemake --cores 1 -n build_all  # dry run: show what would be copied
 ```
 
-The build copies the sibling checkouts as they are on disk, on whatever branch each one has checked out. `examples/background-widget/background-image` isn't in the `Snakefile`: its copy of the library isn't rebuilt.
+The build copies the sibling checkouts as they are on disk, on whatever branch each one has checked out.
 
 ## How Widgets Draw
 

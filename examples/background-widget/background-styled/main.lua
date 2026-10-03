@@ -1,7 +1,10 @@
 --====================================================================--
 -- Background Styled
 --
--- Shows styling of the DMC Widget: Background
+-- Styles on backgrounds: default styles changed through viewStyle, a shared
+-- style made with newBackgroundStyle(), and a moving widget whose style is
+-- swapped (rounded, rectangle, then rounded again). debugOn=true covers a
+-- widget in translucent red.
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
@@ -78,7 +81,7 @@ function run_example1a()
 
 	bw1.viewStyle:setFillColor( 1, 1, 0 )
 	bw1.viewStyle:setStrokeColor( 1, 0, 0 )
-	bw1.viewStrokeWidth = 5
+	bw1.viewStyle.strokeWidth = 5
 
 	timer.performWithDelay( 1000, function()
 		bw1.y=100
@@ -164,7 +167,7 @@ function run_example2()
 		bw2:setAnchor( {0,0} )
 		bw2:setAnchor( {0.5,0.5} )
 		bw2:setAnchor( {1,1} )
-		bw2.viewStrokeWidth = 1
+		bw2.viewStyle.strokeWidth = 1
 		bw2.viewStyle:setFillColor( 1,0,0,1 )
 		bw2.viewStyle:setStrokeColor( 0,1,0,1 )
 
@@ -240,7 +243,7 @@ function run_example3()
 		-- bw3:setAnchor( {1,1})
 		bw3.viewStyle:setFillColor( 1,0,0,1)
 		bw3.viewStyle:setStrokeColor( 0,1,0,1)
-		bw3.cornerRadius = 20
+		bw3.viewStyle.cornerRadius = 20
 
 		-- bw3.width=100
 		-- bw3.height=40
