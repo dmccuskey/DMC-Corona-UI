@@ -141,16 +141,16 @@ end )
 | `returnKey` | the return key's label: `'done'`, `'go'`, `'next'`, `'search'`, `'send'`, ... (constants `RETURN_DONE` and so on) |
 | `isHitActive` | `false` ignores taps |
 | `backgroundStyle` | background type, as a Background's `type` |
-| `background` | child style: a Background style |
+| `background` | child style: a Background style; with no `type`, the default 9-slice skin (drawn for a white page) |
 | `hint`, `display` | child styles: Text styles for the hint and for the text |
 
-**Widget properties**: `text`, `hintText`, `inputType`, `isSecure`, `isEditing` (read only), `delegate` (below). Child styles: `backgroundStyle`, `hintStyle`, `displayStyle`. Helpers: `align`, `marginX`, `marginY`, `hintFont`, `hintFontSize`, `displayFont`, `displayFontSize` (set only), `setHintTextColor()`, `setDisplayTextColor()`.
+**Widget properties**: `text`, `hintText`, `inputType`, `isSecure`, `isHitActive`, `isEditing` (read only), `delegate` (below). Child styles: `backgroundStyle`, `hintStyle`, `displayStyle`. Helpers: `align`, `marginX`, `marginY`, `hintFont`, `hintFontSize`, `displayFont`, `displayFontSize` (set only), `setHintTextColor()`, `setDisplayTextColor()`.
 
-**Methods**: `setKeyboardFocus()` starts editing and shows the keyboard, `unsetKeyboardFocus()` ends it; `setEditActive( true | false )` shows or hides the native field; `setReturnKey( key )`.
+**Methods**: `setKeyboardFocus()` starts editing and shows the keyboard (while editing, it does nothing), `unsetKeyboardFocus()` ends it; `setEditActive( true | false )` shows or hides the native field; `setReturnKey( key )` sets the style's `returnKey`.
 
-**Events**: `TextField.EVENT` (`'userInput'`), with Solar2D's `userInput` fields (`phase`: `'began'`, `'editing'`, `'ended'`, `'submitted'`; `text`, ...) and `target`, the widget. `widget.text` is up to date in every phase.
+**Events**: `TextField.EVENT` (`'userInput'`), with Solar2D's `userInput` fields (`phase`: `'began'`, `'editing'`, `'ended'`, `'submitted'`; `text`, ...) and `target`, the widget. `widget.text` is up to date in every phase. As in Solar2D, `'submitted'` (the return key) is followed by `'ended'`.
 
-**Delegate**: an object with any of these methods can accept or refuse edits; each is called on the delegate (`delegate:shouldBeginEditing( textfield )`) and returns `true` or `false`: `shouldBeginEditing( textfield )`, `shouldEndEditing( textfield )`, `shouldClearTextField( textfield )`, and `shouldChangeCharacters( event )` (`event.target` is the text field; `startPosition`, `newCharacters`, `numDeleted` and `text` as in Solar2D's `userInput`). Set it with the `delegate` option or property.
+**Delegate**: an object with any of these methods can accept or refuse edits; each is called on the delegate (`delegate:shouldBeginEditing( textfield )`) and returns `true` or `false`: `shouldBeginEditing( textfield )` on a tap, `shouldEndEditing( textfield )` on `'submitted'` and `'ended'` (`false` keeps editing; a field that lost the focus takes it back), and `shouldChangeCharacters( event )` (`event.target` is the text field; `startPosition`, `newCharacters`, `numDeleted` and `text` as in Solar2D's `userInput`; `false` puts the text back). `shouldClearTextField( textfield )` is never called: the field has no clear button. Set it with the `delegate` option or property.
 
 **Keyboard**: `dUI.adjustForKeyboard()` slides a display group up so that the field being edited stays above the keyboard, and back when it closes ([Keyboard](api.md#keyboard)).
 

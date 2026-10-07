@@ -104,7 +104,7 @@ local function getActualKeyboardHeight()
 	if isLandscape then
 		scale = display.pixelWidth/display.actualContentHeight
 	else
-		scale = display.pixelHeight/display.actualContentWidth
+		scale = display.pixelWidth/display.actualContentWidth
 	end
 
 	local h = getPlatformKeyboardHeight()
@@ -121,7 +121,8 @@ local function calculateYOffset( obj )
 	local adjH = obj.height*0.5
 	local bottom = y+adjH
 	local kbActualH = getActualKeyboardHeight()
-	local keyboardY = display.actualContentHeight - kbActualH
+	-- top of the keyboard, in content coordinates like y
+	local keyboardY = display.screenOriginY + display.actualContentHeight - kbActualH
 	return (keyboardY-bottom)
 end
 
@@ -205,9 +206,30 @@ function KeyboardMgr.adjustForKeyboard( obj, params )
 	local HEIGHT = KeyboardMgr._KB_HEIGHT
 	local TIME = KeyboardMgr._KB_TRANS
 
-	if obj.__keymgr then
+	local data = obj.__keymgr
+
+	if data and data.phase==KeyboardMgr.HIDING then
+		-- keyboard back while sliding down: slide up again, to where
+		-- the first call put it (the proxy has moved by obj.y-data.y)
+		local callback
+		local offset = calculateYOffset( proxy ) + (obj.y-data.y) + params.offset
+
+		callback = function(e)
+			data.trans=nil
+		end
+		if data.trans then
+			trcancel( data.trans )
+			data.trans=nil
+		end
+		data.phase=KeyboardMgr.SHOWING
+		if offset < 0 then
+			data.trans = trto( obj, {y=data.y+offset, time=TIME, onComplete=callback })
+		else
+			data.trans = trto( obj, {y=data.y, time=TIME, onComplete=callback })
+		end
+
+	elseif data then
 		-- keyboard to hide
-		local data = obj.__keymgr
 		local callback
 
 		callback = function(e)
@@ -282,9 +304,17 @@ function KeyboardMgr._startKeyboardFocus( obj )
 	local count = KeyboardMgr._focus_count
 	count = count + 1
 	local f = function()
+		local status = KeyboardMgr._keyboard_status
 		native.setKeyboardFocus( obj )
 		KeyboardMgr._keyboard_status = KeyboardMgr.SHOWN
 		KeyboardMgr._start_focus_timer=nil
+		-- back while hiding: it won't be hidden
+		if KeyboardMgr._trans_timer then
+			tcancel( KeyboardMgr._trans_timer )
+			KeyboardMgr._trans_timer = nil
+		end
+		-- the focus moved to another field: the keyboard stays up
+		if status==KeyboardMgr.SHOWN then return end
 		KeyboardMgr._dispatchKeyboardStatus( KeyboardMgr.SHOWING )
 	end
 	KeyboardMgr._focus_count = count
