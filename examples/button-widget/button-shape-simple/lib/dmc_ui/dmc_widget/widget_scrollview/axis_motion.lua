@@ -882,6 +882,18 @@ function AxisMotion:do_state_at_rest( params )
 	Runtime:removeEventListener( 'enterFrame', self )
 
 	self:setState( AxisMotion.STATE_AT_REST )
+
+	-- coming to rest outside of enterFrame (eg, a touch which ends
+	-- without speed) gets its 'scrolled' here
+	if self._hasMoved then
+		self._hasMoved = false
+		self._callback{
+			id=self._id,
+			state=AxisMotion.SCROLLED,
+			value=self._value,
+			velocity=0
+		}
+	end
 end
 
 function AxisMotion:state_at_rest( next_state, params )

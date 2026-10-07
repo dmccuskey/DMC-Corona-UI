@@ -323,3 +323,133 @@ function test_removeWhileMoving()
 	assert_nil( axis._enterFrameIterator )
 	assert_nil( scale._enterFrameIterator )
 end
+
+
+
+--====================================================================--
+--== Test Scroll Indicators
+
+
+--[[
+an indicator shows while its axis scrolls, sized and placed from the
+content, and is let go when the content stops
+--]]
+function test_indicatorFollowsScroll()
+	local w = newScrollView()
+	local x, y = w._indicators.x, w._indicators.y
+	assert_true( x.canShow, "300 of content in 200" )
+	assert_true( y.canShow )
+	assert_false( y.isShown, "hidden at rest" )
+	assert_equal( 0, y.view.alpha )
+
+	w:setContentPosition{ y=-500, time=300 }
+	frame( w, 150 )
+	assert_true( y.isShown )
+	assert_equal( 1, y.view.alpha )
+	assert_false( x.isShown, "the other axis didn't move" )
+
+	frame( w, 301 )
+	assert_false( y.isShown, "fading" )
+	-- track: 300 less a margin of 3 at each end; bar: its 300/800
+	assert_equal( 294*300/800, y.view.path.height, 0.01 )
+	assert_equal( 197-3, y.view.x )
+	assert_equal( 3+294-294*300/800, y.view.y, 0.01, "at the end of its track" )
+
+	w:setContentPosition{ y=-250, time=0 }
+	frame( w )
+	assert_equal( 3+(294-294*300/800)/2, y.view.y, 0.01, "half way" )
+end
+
+
+--[[
+a drag which ends without speed lets the indicator go too
+(the axis then comes to rest outside of a frame)
+--]]
+function test_indicatorAfterDrag()
+	local w = newScrollView()
+	local y = w._indicators.y
+	local axis = w._axisY
+	local t = system.getTimer()
+
+	axis:touch{ phase='began', time=t, value=200, start=200 }
+	axis:touch{ phase='moved', time=t+50, value=150, start=200 }
+	frame( w, 60 )
+	assert_true( y.isShown )
+	-- held still, until the speed is gone
+	for i = 1, 6 do frame( w, 60+i*33 ) end
+	assert_true( y.isShown, "still down" )
+	axis:touch{ phase='ended', time=t+400, value=150, start=200 }
+	assert_false( y.isShown )
+	local _, pos = w:getContentPosition()
+	assert_equal( -50, pos )
+end
+
+
+--[[
+pulled past an edge, the bar is squeezed against it
+--]]
+function test_indicatorInBounce()
+	local w = newScrollView()
+	local y = w._indicators.y
+	local axis = w._axisY
+	local t = system.getTimer()
+
+	axis:touch{ phase='began', time=t, value=100, start=100 }
+	axis:touch{ phase='moved', time=t+50, value=160, start=100 }
+	frame( w, 60 )
+	local _, pos = w:getContentPosition()
+	assert_gt( 0, pos, "past the top" )
+	assert_equal( 3, y.view.y )
+	assert_equal( 294*300/800 - pos, y.view.path.height, 0.01 )
+end
+
+
+--[[
+no indicator on an axis which is switched off, whose content fits,
+or whose indicator is turned off, as an option or later
+--]]
+function test_indicatorCanShow()
+	local w = newScrollView{ scrollWidth=200, showVerticalScrollIndicator=false }
+	local x, y = w._indicators.x, w._indicators.y
+	assert_false( x.canShow, "content fits" )
+	assert_false( y.canShow, "option" )
+	assert_false( w.showVerticalScrollIndicator )
+
+	w.showVerticalScrollIndicator = true
+	assert_true( y.canShow )
+	w:flashScrollIndicators()
+	assert_equal( 1, y.view.alpha )
+	assert_equal( 0, x.view.alpha )
+	assert_false( y.isShown, "on its way out" )
+
+	w.verticalScrollEnabled = false
+	assert_false( y.canShow )
+	assert_equal( 0, y.view.alpha, "hidden at once" )
+	w.verticalScrollEnabled = true
+	assert_true( y.canShow )
+
+	w.scrollHeight = 300
+	commit( w )
+	assert_false( y.canShow, "content fits now" )
+end
+
+
+--[[
+the track leaves out the offsets, and the color comes from the style
+--]]
+function test_indicatorOffsetsAndColor()
+	local w = newScrollView()
+	local y = w._indicators.y
+	w.upperVerticalOffset = 50
+	w.lowerVerticalOffset = 20
+	w:setContentPosition{ y=50, time=0 }
+	frame( w )
+	assert_equal( 53, y.view.y )
+	assert_equal( (300-70-6)*300/800, y.view.path.height, 0.01 )
+
+	w.style.indicatorColor = { 1, 0, 0, 1 }
+	commit( w )
+	local fill = y.view.fill
+	assert_equal( 1, fill.r )
+	assert_equal( 0, fill.g )
+end

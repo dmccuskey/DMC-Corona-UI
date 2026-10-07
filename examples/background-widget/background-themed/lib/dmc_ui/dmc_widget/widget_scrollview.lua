@@ -87,6 +87,7 @@ local Scroller = require( ui_find( 'dmc_widget.widget_scrollview.scroller' ) )
 Patch.addPatch( 'print-output' )
 
 local newRect = display.newRect
+local mmax = math.max
 local mmin = math.min
 local sfmt = string.format
 local tcancel = timer.cancel
@@ -124,6 +125,16 @@ ScrollView.HIT_TOP_LIMIT = 'top_limit_hit'
 ScrollView.HIT_BOTTOM_LIMIT = 'bottom_limit_hit'
 ScrollView.HIT_LEFT_LIMIT = 'left_limit_hit'
 ScrollView.HIT_RIGHT_LIMIT = 'right_limit_hit'
+
+--== Scroll Indicators
+
+ScrollView.INDICATOR_THICKNESS = 3
+ScrollView.INDICATOR_MARGIN = 3 -- from the edges of the view
+ScrollView.INDICATOR_MIN_LENGTH = 24
+ScrollView.INDICATOR_FADE_DELAY = 150 -- after the content stops
+ScrollView.INDICATOR_FADE_TIME = 300
+ScrollView.INDICATOR_FLASH_TIME = 800 -- flashScrollIndicators()
+ScrollView.INDICATOR_COLOR = { 0, 0, 0, 0.4 } -- if the style has none
 
 --== Style/Theme Constants
 
@@ -166,6 +177,8 @@ function ScrollView:__init__( params )
 	if params.height==nil then params.height=dUI.HEIGHT end
 	if params.scrollWidth==nil then params.scrollWidth=params.width end
 	if params.scrollHeight==nil then params.scrollHeight=params.height end
+	if params.showHorizontalScrollIndicator==nil then params.showHorizontalScrollIndicator=true end
+	if params.showVerticalScrollIndicator==nil then params.showVerticalScrollIndicator=true end
 	if params.upperHorizontalOffset==nil then params.upperHorizontalOffset = 0 end
 	if params.upperVerticalOffset==nil then params.upperVerticalOffset = 0 end
 	if params.verticalScrollEnabled==nil then params.verticalScrollEnabled=true end
@@ -229,8 +242,13 @@ function ScrollView:__init__( params )
 
 	self._isDirectionalLockEnabled = false
 
-	self._showHorizontalScrollIndicator = false
-	self._showVerticalScrollIndicator = false
+	self._showHorizontalScrollIndicator = params.showHorizontalScrollIndicator
+	self._showVerticalScrollIndicator = params.showVerticalScrollIndicator
+
+	-- scroll indicators, by axis id ('x', 'y'). each is
+	-- { view=<rounded rect>, canShow=<bool>, isShown=<bool>, trans=<fade> }
+	self._indicators = {}
+	self._indicatorColor_dirty=true
 
 	self._stopMotion = false
 
@@ -253,6 +271,8 @@ function ScrollView:__init__( params )
 
 	self._scroller = nil -- our scroll area
 	self._scroller_dirty=true
+
+	self._dgIndicators = nil -- scroll indicators, over the scroll area
 end
 
 --[[
@@ -316,6 +336,9 @@ function ScrollView:__initComplete__()
 
 	self._gesture_f = f
 
+	-- after the scroller is in the view (superCall), to be above it
+	self:_createScrollIndicators()
+
 	-- before axis creation
 	self.width = tmp.width
 	self.height = tmp.height
@@ -353,6 +376,8 @@ end
 function ScrollView:__undoInitComplete__()
 	-- print( "ScrollView:__undoInitComplete__" )
 	local o, f
+
+	self:_removeScrollIndicators()
 
 	self:_removeScaleMotion()
 	self._scale_f = nil
@@ -554,6 +579,7 @@ end
 function ScrollView.__setters:lowerHorizontalOffset( value )
 	-- print( "ScrollView.__setters:lowerHorizontalOffset", value )
 	self._axisX.lowerOffset = value
+	self:_updateScrollIndicator( 'x' )
 end
 
 --== .lowerVerticalOffset
@@ -573,6 +599,7 @@ end
 function ScrollView.__setters:lowerVerticalOffset( value )
 	-- print( "ScrollView.__setters:lowerVerticalOffset", value )
 	self._axisY.lowerOffset = value
+	self:_updateScrollIndicator( 'y' )
 end
 
 --== .isDirectionalLockEnabled
@@ -610,6 +637,7 @@ end
 function ScrollView.__setters:horizontalScrollEnabled( value )
 	-- print( "ScrollView.__setters:horizontalScrollEnabled", value )
 	self._axisX.scrollIsEnabled = value
+	self:_updateScrollIndicator( 'x' )
 end
 
 --== .horizontalAxisAutoAlign
@@ -703,6 +731,47 @@ end
 function ScrollView.__setters:verticalScrollEnabled( value )
 	-- print( "ScrollView.__setters:verticalScrollEnabled", value )
 	self._axisY.scrollIsEnabled = value
+	self:_updateScrollIndicator( 'y' )
+end
+
+--== .showHorizontalScrollIndicator
+
+--- set/get whether the horizontal scroll indicator is shown while scrolling.
+-- defaults to true.
+--
+-- @within Properties
+-- @function .showHorizontalScrollIndicator
+-- @usage widget.showHorizontalScrollIndicator = false
+-- @usage print( widget.showHorizontalScrollIndicator )
+
+function ScrollView.__getters:showHorizontalScrollIndicator()
+	return self._showHorizontalScrollIndicator
+end
+function ScrollView.__setters:showHorizontalScrollIndicator( value )
+	assert( type(value)=='boolean' )
+	--==--
+	self._showHorizontalScrollIndicator = value
+	self:_updateScrollIndicator( 'x' )
+end
+
+--== .showVerticalScrollIndicator
+
+--- set/get whether the vertical scroll indicator is shown while scrolling.
+-- defaults to true.
+--
+-- @within Properties
+-- @function .showVerticalScrollIndicator
+-- @usage widget.showVerticalScrollIndicator = false
+-- @usage print( widget.showVerticalScrollIndicator )
+
+function ScrollView.__getters:showVerticalScrollIndicator()
+	return self._showVerticalScrollIndicator
+end
+function ScrollView.__setters:showVerticalScrollIndicator( value )
+	assert( type(value)=='boolean' )
+	--==--
+	self._showVerticalScrollIndicator = value
+	self:_updateScrollIndicator( 'y' )
 end
 
 --== .panGesture
@@ -827,6 +896,7 @@ end
 function ScrollView.__setters:upperHorizontalOffset( value )
 	-- print( "ScrollView.__setters:upperHorizontalOffset", value )
 	self._axisX.upperOffset = value
+	self:_updateScrollIndicator( 'x' )
 end
 
 --== .upperVerticalOffset
@@ -846,6 +916,7 @@ end
 function ScrollView.__setters:upperVerticalOffset( value )
 	-- print( "ScrollView.__setters:upperVerticalOffset", value )
 	self._axisY.upperOffset = value
+	self:_updateScrollIndicator( 'y' )
 end
 
 
@@ -905,6 +976,23 @@ function ScrollView:setContentPosition( params )
 		self._axisY:scrollToPosition( params.y, {
 			onComplete=tcf, time=params.time
 		})
+	end
+end
+
+
+--- show the scroll indicators for a moment.
+-- eg, when a view comes on screen, to show that it scrolls.
+--
+-- @within Methods
+-- @function :flashScrollIndicators
+-- @usage widget:flashScrollIndicators()
+
+function ScrollView:flashScrollIndicators()
+	-- print( "ScrollView:flashScrollIndicators" )
+	for id in pairs( self._indicators ) do
+		self:_updateScrollIndicator( id )
+		self:_showScrollIndicator( id )
+		self:_hideScrollIndicator( id, ScrollView.INDICATOR_FLASH_TIME )
 	end
 end
 
@@ -1115,6 +1203,155 @@ function ScrollView:_createScroller()
 end
 
 
+--== Scroll Indicators
+
+function ScrollView:_removeScrollIndicators()
+	-- print( "ScrollView:_removeScrollIndicators" )
+	for id, ind in pairs( self._indicators ) do
+		if ind.trans then transition.cancel( ind.trans ) end
+		ind.view:removeSelf()
+	end
+	self._indicators = {}
+	local dg = self._dgIndicators
+	if dg then
+		dg:removeSelf()
+		self._dgIndicators = nil
+	end
+end
+
+function ScrollView:_createScrollIndicators()
+	-- print( "ScrollView:_createScrollIndicators" )
+	self:_removeScrollIndicators()
+	local T = ScrollView.INDICATOR_THICKNESS
+	local dg = display.newGroup()
+	self.view:insert( dg )
+	self._dgIndicators = dg
+
+	for _, id in ipairs( { 'x', 'y' } ) do
+		local o = display.newRoundedRect( 0, 0, T, T, T*0.5 )
+		o.anchorX, o.anchorY = 0, 0
+		o.alpha = 0
+		dg:insert( o )
+		self._indicators[ id ] = { view=o, canShow=false, isShown=false, trans=nil }
+	end
+end
+
+-- size and place the indicator of an axis ('x', 'y') from the
+-- position of the content, and decide if it has anything to show
+--
+function ScrollView:_updateScrollIndicator( id )
+	-- print( "ScrollView:_updateScrollIndicator", id )
+	local ind = self._indicators[ id ]
+	local axis, show
+	if id=='x' then
+		axis, show = self._axisX, self._showHorizontalScrollIndicator
+	else
+		axis, show = self._axisY, self._showVerticalScrollIndicator
+	end
+	if not ind or not axis then return end
+
+	local T = ScrollView.INDICATOR_THICKNESS
+	local M = ScrollView.INDICATOR_MARGIN
+	local MIN = ScrollView.INDICATOR_MIN_LENGTH
+
+	local length = axis.length -- of the view
+	local content = axis.scaledScrollLength
+	-- the track: the view less its margins, and less the offsets
+	-- (eg, what a navigation bar covers)
+	local upper = mmax( 0, axis.upperOffset )
+	local lower = mmax( 0, axis.lowerOffset )
+	local track = length - upper - lower - 2*M
+
+	local canShow = ( show and axis.scrollIsEnabled and content > length and track >= MIN )
+	ind.canShow = canShow
+	if not canShow then
+		self:_hideScrollIndicator( id, 0, true )
+		return
+	end
+
+	local bar = mmax( MIN, track * length/content )
+	local value = axis.value
+	local top = axis.upperOffset -- limits of 'value'
+	local bottom = ( length - content ) - axis.lowerOffset
+	local pos
+
+	if value > top then
+		-- pulled past the start: the bar is squeezed against it
+		bar = mmax( T*2, bar - ( value - top ) )
+		pos = 0
+	elseif value < bottom then
+		bar = mmax( T*2, bar - ( bottom - value ) )
+		pos = track - bar
+	else
+		local range = top - bottom
+		pos = ( range > 0 ) and ( top - value )/range * ( track - bar ) or 0
+	end
+	pos = upper + M + pos
+
+	local o = ind.view
+	if id=='x' then
+		o.path.width = bar
+		o.x, o.y = pos, self.height - T - M
+	else
+		o.path.height = bar
+		o.x, o.y = self.width - T - M, pos
+	end
+end
+
+function ScrollView:_showScrollIndicator( id )
+	local ind = self._indicators[ id ]
+	if not ind or not ind.canShow then return end
+	if ind.trans then
+		transition.cancel( ind.trans )
+		ind.trans = nil
+	end
+	ind.view.alpha = 1
+	ind.isShown = true
+end
+
+-- fade an indicator out after 'delay', or hide it at once ('now')
+--
+function ScrollView:_hideScrollIndicator( id, delay, now )
+	local ind = self._indicators[ id ]
+	if not ind then return end
+	if now then
+		-- also one which is fading
+		if ind.trans then
+			transition.cancel( ind.trans )
+			ind.trans = nil
+		end
+		ind.isShown = false
+		ind.view.alpha = 0
+		return
+	end
+	if not ind.isShown then return end
+	ind.isShown = false
+	if ind.trans then
+		transition.cancel( ind.trans )
+		ind.trans = nil
+	end
+	ind.trans = transition.to( ind.view, {
+		alpha=0,
+		delay=delay or ScrollView.INDICATOR_FADE_DELAY,
+		time=ScrollView.INDICATOR_FADE_TIME,
+		onComplete=function() ind.trans = nil end
+	})
+end
+
+-- an axis moved, or stopped: its indicator follows.
+-- called with the events of the Axis Motion objects
+--
+function ScrollView:_scrollIndicatorEvent( event )
+	local id = event.id
+	self:_updateScrollIndicator( id )
+	if event.state==AxisMotion.SCROLLING then
+		self:_showScrollIndicator( id )
+	else
+		self:_hideScrollIndicator( id )
+	end
+end
+
+
 function ScrollView:_loadViews()
 	self:_createScroller()
 end
@@ -1297,6 +1534,19 @@ function ScrollView:__commitProperties__()
 		self._textColor_dirty=false
 	end
 
+	--== scroll indicators
+
+	if self._indicatorColor_dirty then
+		local color = style.indicatorColor or ScrollView.INDICATOR_COLOR
+		for _, ind in pairs( self._indicators ) do
+			ind.view:setFillColor( unpack( color ) )
+		end
+		self._indicatorColor_dirty=false
+	end
+	-- sizes, scale or scroll area may have changed
+	self:_updateScrollIndicator( 'x' )
+	self:_updateScrollIndicator( 'y' )
+
 end
 
 
@@ -1323,6 +1573,7 @@ function ScrollView:stylePropertyChangeHandler( event )
 
 		self._align_dirty=true
 		self._fillColor_dirty = true
+		self._indicatorColor_dirty = true
 		self._font_dirty=true
 		self._fontSize_dirty=true
 		self._marginX_dirty=true
@@ -1351,6 +1602,8 @@ function ScrollView:stylePropertyChangeHandler( event )
 			self._align_dirty=true
 		elseif property=='fillColor' then
 			self._fillColor_dirty=true
+		elseif property=='indicatorColor' then
+			self._indicatorColor_dirty=true
 		elseif property=='font' then
 			self._font_dirty=true
 		elseif property=='fontSize' then
@@ -1487,6 +1740,7 @@ function ScrollView:_axisEvent_handler( event )
 	else
 		self._scroller.y = event.value -- *self.__zoomScale
 	end
+	self:_scrollIndicatorEvent( event )
 end
 
 

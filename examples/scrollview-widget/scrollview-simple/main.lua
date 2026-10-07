@@ -7,6 +7,7 @@
 -- width, so horizontal scrolling is off. After a second it scrolls to
 -- row 2 (setContentPosition()); after four scrolling is locked; after
 -- eight it is back, and the content rests 10 higher (upperVerticalOffset).
+-- A scroll indicator shows on the right while the content moves.
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License

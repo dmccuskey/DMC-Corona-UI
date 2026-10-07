@@ -1393,6 +1393,7 @@ function TableView:_axisEvent_handler( event )
 	if event.id=='y' then
 		self._scroller.y = event.value
 	end
+	self:_scrollIndicatorEvent( event )
 	self:_renderDisplay()
 end
 
