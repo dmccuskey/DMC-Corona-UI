@@ -212,6 +212,7 @@ function AxisMotion:__init__( params )
 	self._velocity = { value=0, vector=0 }
 
 	self._enterFrameIterator = nil
+	self._checkPosition_f = nil -- see _checkScaledPosition()
 
 	self._bounceIsActive = false
 	self._alwaysBounce = false
@@ -251,6 +252,11 @@ end
 
 function AxisMotion:__undoInitComplete__()
 	-- print( "AxisMotion:__undoInitComplete__" )
+	-- stop any motion in progress
+	self._enterFrameIterator = nil
+	self._isMoving = false
+	self._hasMoved = false
+	Runtime:removeEventListener( 'enterFrame', self )
 	--==--
 	self:superCall( '__undoInitComplete__' )
 end
@@ -310,6 +316,7 @@ function AxisMotion.__setters:length( value )
 	--==--
 	self._length = value
 	self:_setScrollbackLimit()
+	self:_checkScaledPosition()
 end
 
 
@@ -327,6 +334,7 @@ function AxisMotion.__setters:lowerOffset( value )
 	assert( type(value)=='number' )
 	--==--
 	self._lowerOffset = value
+	self:_checkScaledPosition()
 end
 
 
@@ -408,6 +416,7 @@ function AxisMotion.__setters:scrollLength( value )
 	--==--
 	self._scrollLength = value
 	self:_setScaledScrollLength()
+	self:_checkScaledPosition()
 end
 
 
@@ -418,6 +427,7 @@ function AxisMotion.__setters:upperOffset( value )
 	assert( type(value)=='number' )
 	--==--
 	self._upperOffset = value
+	self:_checkScaledPosition()
 end
 
 
@@ -454,7 +464,7 @@ function AxisMotion:scrollToPosition( pos, params )
 			time=system.getTimer()
 		}
 		self._isMoving = true
-		local delta = self._value + pos
+		local delta = pos - val
 		if params.limitIsActive then
 			local velocity = mabs( delta/time )
 			if velocity > AxisMotion.VELOCITY_LIMIT then
@@ -471,7 +481,7 @@ function AxisMotion:scrollToPosition( pos, params )
 			else
 				self._isMoving = false
 				self._hasMoved = true
-				self._value = delta
+				self._value = pos
 				self._enterFrameIterator=nil
 				if params.onComplete then params.onComplete() end
 			end
@@ -497,15 +507,69 @@ function AxisMotion:_setScrollbackLimit()
 end
 
 
+-- the position to rest at: inside the scroll limits, without the
+-- allowance for bounce, or aligned if the content is shorter than the view
+--
+function AxisMotion:_getRestPosition( value )
+	-- print( "AxisMotion:_getRestPosition", value )
+	if not self._scrollEnabled then return value end
+	local length, scrollLength = self._length, self._scaledScrollLength
+	-- no scroll area yet (it is set after creation)
+	if scrollLength<=0 then return value end
+
+	if scrollLength < length then
+		local align = self._autoAlign
+		if align==nil then
+			return value
+		elseif align==AxisMotion.MIDDLE then
+			return length*0.5 - scrollLength*0.5
+		elseif align==AxisMotion.LOWER then
+			return length - scrollLength
+		else
+			return 0
+		end
+	end
+
+	local upper = self._upperOffset
+	local lower = (length-scrollLength) - self._lowerOffset
+	if value > upper then
+		return upper
+	elseif value < lower then
+		return lower
+	end
+	return value
+end
+
+-- after a change in size or scale while at rest,
+-- bring the position back inside the scroll limits
+--
 function AxisMotion:_checkScaledPosition()
 	-- print( "AxisMotion:_checkScaledPosition" )
 	if self:getState() ~= AxisMotion.STATE_AT_REST then return end
-	local value = self._value
-	if value==nil then return end
-	local newVal = self:_constrainPosition( value, 0 )
-	if value==newVal then return end
-	if newVal==nil then return end
-	self:scrollToPosition( newVal, {time=0} )
+	local check_f = self._checkPosition_f
+	local eFI = self._enterFrameIterator
+	if eFI~=nil then
+		-- either a check is pending, or scrollToPosition() is running
+		return
+	end
+	if self._value==self:_getRestPosition( self._value ) then return end
+
+	-- done on the next frame, when all of the changes are in
+	-- (eg, a new length and a new scroll length)
+	if check_f==nil then
+		check_f = function()
+			local value = self._value
+			local newVal = self:_getRestPosition( value )
+			self._enterFrameIterator = nil
+			if newVal~=value then
+				self._value = newVal
+				self._hasMoved = true
+			end
+		end
+		self._checkPosition_f = check_f
+	end
+	self._enterFrameIterator = check_f
+	Runtime:addEventListener( 'enterFrame', self )
 end
 
 
@@ -555,7 +619,7 @@ function AxisMotion:_constrainPosition( value, delta )
 	if scrollLimit==AxisMotion.HIT_SIZE_LIMIT then
 		local align = self._autoAlign
 		if align==nil then
-			newVal = newValue
+			-- no alignment, leave as is
 		elseif align==AxisMotion.MIDDLE then
 			newVal = self._length*0.5 - self._scaledScrollLength*0.5
 		elseif align==AxisMotion.LOWER then
@@ -899,7 +963,7 @@ function AxisMotion:do_state_decelerate( params )
 	local enterFrameFunc = function( e )
 		-- print( "AxisMotion: enterFrameFunc: do_state_decelerate" )
 
-		local frameEvt = self._tmpFrameEvent
+		local frameEvt = self._tmpFrameEvent or startEvt -- none yet: ended in the frame it began
 		local scrollLimit = self._scrollLimit
 
 		local deltaStart = e.time - startEvt.time
@@ -1061,7 +1125,7 @@ function AxisMotion:do_state_restraint( params )
 	local enterFrameFunc = function( e )
 		-- print( "AxisMotion: enterFrameFunc: do_state_restraint" )
 
-		local frameEvt = self._tmpFrameEvent
+		local frameEvt = self._tmpFrameEvent or startEvt -- none yet: ended in the frame it began
 
 		local deltaStart = e.time - startEvt.time -- total
 		local deltaFrame = e.time - frameEvt.time
