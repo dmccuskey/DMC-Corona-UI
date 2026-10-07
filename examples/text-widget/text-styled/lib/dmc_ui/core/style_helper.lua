@@ -136,6 +136,35 @@ function StyleHelp.__setters:fillColor( value )
 end
 
 
+--== .indicatorColor
+
+--- [**style**] set/get Style value for the color of a Widget's scroll indicators.
+--
+-- @within Properties
+-- @function .indicatorColor
+-- @usage style.indicatorColor = { 0, 0, 0, 0.4 }
+-- @usage print( style.indicatorColor )
+
+-- CLASS.__getters.indicatorColor = StyleHelp.__getters.indicatorColor
+-- CLASS.__setters.indicatorColor = StyleHelp.__setters.indicatorColor
+
+function StyleHelp.__getters:indicatorColor()
+	-- print( "StyleHelp.__getters:indicatorColor", self, self._indicatorColor )
+	local value = self._indicatorColor
+	if value==nil and self._inherit then
+		value = self._inherit.indicatorColor
+	end
+	return value
+end
+function StyleHelp.__setters:indicatorColor( value )
+	-- print( "StyleHelp.__setters:indicatorColor", self._indicatorColor, value, self._isClearing )
+	assert( value or (value==nil and (self:_hasInherit() or self._isClearing)) )
+	--==--
+	self._indicatorColor = translateColor( value )
+	self:_dispatchChangeEvent( 'indicatorColor', self._indicatorColor )
+end
+
+
 --== .font
 
 --- [**style**] set/get Style value for Widget font.

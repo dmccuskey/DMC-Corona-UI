@@ -120,6 +120,7 @@ TableView._VALID_PROPERTIES = {
 	anchorY=true,
 
 	fillColor=true,
+	indicatorColor=true,
 	marginX=true,
 	marginY=true,
 }
@@ -134,6 +135,7 @@ TableView._STYLE_DEFAULTS = {
 	anchorY=0.5,
 
 	fillColor={0,0,0,0},
+	indicatorColor={0,0,0,0.4},
 	marginX=0,
 	marginY=0,
 }
@@ -146,6 +148,7 @@ TableView._TEST_DEFAULTS = {
 	anchorY=102,
 
 	fillColor={101,102,103,104},
+	indicatorColor={105,106,107},
 	marginX=102,
 	marginY=103,
 }
@@ -182,6 +185,7 @@ function TableView:__init__( params )
 	-- self._anchorY
 
 	self._fillColor = nil
+	self._indicatorColor = nil
 	self._font = nil
 	self._marginX = nil
 	self._marginY = nil
@@ -226,6 +230,7 @@ function TableView.addMissingDestProperties( dest, src )
 		local src = srcs[i]
 
 		if dest.fillColor==nil then dest.fillColor=src.fillColor end
+		if dest.indicatorColor==nil then dest.indicatorColor=src.indicatorColor end
 		if dest.marginX==nil then dest.marginX=src.marginX end
 		if dest.marginY==nil then dest.marginY=src.marginY end
 
@@ -251,6 +256,9 @@ function TableView.copyExistingSrcProperties( dest, src, params )
 	if (src.fillColor~=nil and dest.fillColor==nil) or force then
 		dest.fillColor=src.fillColor
 	end
+	if (src.indicatorColor~=nil and dest.indicatorColor==nil) or force then
+		dest.indicatorColor=src.indicatorColor
+	end
 	if (src.marginX~=nil and dest.marginX==nil) or force then
 		dest.marginX=src.marginX
 	end
@@ -273,6 +281,9 @@ function TableView._verifyStyleProperties( src )
 
 	if not src.fillColor then
 		print(sfmt(emsg,'fillColor')) ; is_valid=false
+	end
+	if not src.indicatorColor then
+		print(sfmt(emsg,'indicatorColor')) ; is_valid=false
 	end
 	if not src.marginX then
 		print(sfmt(emsg,'marginX')) ; is_valid=false
@@ -301,6 +312,18 @@ end
 
 TableView.__getters.fillColor = StyleHelp.__getters.fillColor
 TableView.__setters.fillColor = StyleHelp.__setters.fillColor
+
+--== .indicatorColor
+
+--- [**style**] set/get Style value for the color of the scroll indicators.
+--
+-- @within Properties
+-- @function .indicatorColor
+-- @usage style.indicatorColor = { 1, 1, 1, 0.5 }
+-- @usage print( style.indicatorColor )
+
+TableView.__getters.indicatorColor = StyleHelp.__getters.indicatorColor
+TableView.__setters.indicatorColor = StyleHelp.__setters.indicatorColor
 
 --== .marginX
 

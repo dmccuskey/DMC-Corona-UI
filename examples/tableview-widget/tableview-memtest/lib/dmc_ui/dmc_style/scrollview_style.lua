@@ -115,7 +115,8 @@ ScrollView._VALID_PROPERTIES = {
 	height=true,
 	anchorX=true,
 	anchorY=true,
-	fillColor=true
+	fillColor=true,
+	indicatorColor=true,
 }
 
 ScrollView._EXCLUDE_PROPERTY_CHECK = {}
@@ -126,7 +127,8 @@ ScrollView._STYLE_DEFAULTS = {
 	height=nil,
 	anchorX=0.5,
 	anchorY=0.5,
-	fillColor={1,1,1,1}
+	fillColor={1,1,1,1},
+	indicatorColor={0,0,0,0.4},
 }
 
 ScrollView._TEST_DEFAULTS = {
@@ -135,7 +137,8 @@ ScrollView._TEST_DEFAULTS = {
 	height=nil,
 	anchorX=101,
 	anchorY=102,
-	fillColor={102,103,104}
+	fillColor={102,103,104},
+	indicatorColor={105,106,107},
 }
 
 ScrollView.MODE = uiConst.RUN_MODE
@@ -170,6 +173,7 @@ function ScrollView:__init__( params )
 	-- self._anchorY
 
 	self._fillColor = nil
+	self._indicatorColor = nil
 end
 
 -- END: Setup DMC Objects
@@ -210,6 +214,7 @@ function ScrollView.addMissingDestProperties( dest, src )
 	for i=1,#srcs do
 		local src = srcs[i]
 		if dest.fillColor==nil then dest.fillColor=src.fillColor end
+		if dest.indicatorColor==nil then dest.indicatorColor=src.indicatorColor end
 	end
 
 	return dest
@@ -232,6 +237,9 @@ function ScrollView.copyExistingSrcProperties( dest, src, params )
 	if (src.fillColor~=nil and dest.fillColor==nil) or force then
 		dest.fillColor=src.fillColor
 	end
+	if (src.indicatorColor~=nil and dest.indicatorColor==nil) or force then
+		dest.indicatorColor=src.indicatorColor
+	end
 
 	return dest
 end
@@ -248,6 +256,9 @@ function ScrollView._verifyStyleProperties( src )
 
 	if not src.fillColor then
 		print(sfmt(emsg,'fillColor')) ; is_valid=false
+	end
+	if not src.indicatorColor then
+		print(sfmt(emsg,'indicatorColor')) ; is_valid=false
 	end
 
 	return is_valid
@@ -270,6 +281,18 @@ end
 
 ScrollView.__getters.fillColor = StyleHelp.__getters.fillColor
 ScrollView.__setters.fillColor = StyleHelp.__setters.fillColor
+
+--== .indicatorColor
+
+--- [**style**] set/get Style value for the color of the scroll indicators.
+--
+-- @within Properties
+-- @function .indicatorColor
+-- @usage style.indicatorColor = { 1, 1, 1, 0.5 }
+-- @usage print( style.indicatorColor )
+
+ScrollView.__getters.indicatorColor = StyleHelp.__getters.indicatorColor
+ScrollView.__setters.indicatorColor = StyleHelp.__setters.indicatorColor
 
 
 --== verifyProperties
