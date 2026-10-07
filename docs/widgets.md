@@ -245,10 +245,34 @@ A surface larger than the widget, scrolled by touch in both directions, with bou
 local sv = dUI.newScrollView{
 	width=200, height=300,              -- the visible area
 	scrollWidth=300, scrollHeight=800,  -- the content
+	autoMask=true,                      -- clip the content to the visible area
 }
+
+-- the content goes into its scroller, at 0,0 for the top left
+local photo = display.newImage( 'photo.jpg' )
+photo.anchorX, photo.anchorY = 0, 0
+sv.scroller:insert( photo )
 ```
 
-Options and properties: `width`, `height`, `scrollWidth`, `scrollHeight`, `horizontalScrollEnabled`, `verticalScrollEnabled`, `bounceIsActive`, `upperHorizontalOffset`, `lowerHorizontalOffset`, `upperVerticalOffset`, `lowerVerticalOffset`, `zoomScale`. Methods: `getContentPosition()`, `setContentPosition{ x=, y= [, time=, onComplete=] }`, `setZoomScale()`, `takeFocus( event )` (take over a touch from a child).
+Without `autoMask=true` the content shows outside the widget too, which is fine for one that fills the screen ([What All Widgets Share](#what-all-widgets-share)).
+
+Options and properties: `width`, `height`, `scrollWidth`, `scrollHeight` (never smaller than the widget), `horizontalScrollEnabled`, `verticalScrollEnabled`, `bounceIsActive`, `upperHorizontalOffset`, `lowerHorizontalOffset`, `upperVerticalOffset`, `lowerVerticalOffset` (each moves the place where the content comes to rest at that edge). All can change later: the content comes back inside the new limits. Content no larger than the widget on an axis can still be pulled along it and bounces back; turn that axis off (`horizontalScrollEnabled=false`) for a list that only scrolls up and down.
+
+Methods: `getContentPosition()` returns the content's x and y, 0 at the top left and negative as it scrolls; `setContentPosition{ x=, y= [, time=, onComplete=] }` scrolls there, in 500 ms unless `time` says otherwise (0 for at once); `takeFocus( event )` takes over a touch from a child.
+
+**Zoom** needs a delegate whose `getViewForZoom( self, event )` returns the object to scale (something in the scroller), and `minimumZoom` and `maximumZoom` (options or properties). Then a pinch zooms, and so does `setZoomScale( scale [, { time=, onComplete= } ] )`; `zoomScale` reads the scale (there is no `zoomScale` option: zoom once the content is in). The delegate's optional `willBeginZooming`, `didZoom` and `didEndZooming` get `self, event` with `event.view` and `event.scale`.
+
+```lua
+local sv = dUI.newScrollView{
+	width=200, height=300, scrollWidth=1024, scrollHeight=680,
+	minimumZoom=0.2, maximumZoom=1,
+	delegate={ getViewForZoom=function( self, event ) return photo end },
+}
+sv.scroller:insert( photo )
+sv:setZoomScale( 0.5 )
+```
+
+A ScrollView sends no events of its own.
 
 See `examples/scrollview-widget/` for content, locking and zoom.
 

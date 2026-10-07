@@ -562,6 +562,7 @@ setmetatable(verbose_hooks, {__index = default_hooks })
 -- ################
 
 local suites = {}
+local suite_order = {}
 local failed_suites = {}
 
 ---Check if a function name should be considered a test key.
@@ -593,6 +594,7 @@ function suite(modname)
    local ok, err = pcall(
       function()
          local mod, r_err = require(modname)
+         if not suites[modname] then suite_order[#suite_order+1] = modname end
          suites[modname] = get_tests(mod)
       end)
    if not ok then
@@ -734,8 +736,14 @@ function run(opts)
    if hooks.begin then hooks.begin(results, suites) end
 
    local suite_filter = opts.suite_pat or suite_filter
-   for sname,suite in pairs(suites) do
-      run_suite(hooks, opts, results, suite_filter, sname, suite)
+   -- [DMC 2026-10] run the suites in the order they were added: pairs()
+   -- changed the order whenever a suite was added, and with it the
+   -- results of tests which depend on what ran before
+   for _,sname in ipairs(suite_order) do
+      run_suite(hooks, opts, results, suite_filter, sname, suites[sname])
+   end
+   if suites.main then
+      run_suite(hooks, opts, results, suite_filter, 'main', suites.main)
    end
    if now then results.t_post = now() end
    if hooks.done then hooks.done(results) end
