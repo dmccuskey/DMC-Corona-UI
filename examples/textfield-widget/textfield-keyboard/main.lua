@@ -1,7 +1,11 @@
 --====================================================================--
 -- Keyboard TextField
 --
--- Shows how to work with keyboard events
+-- Two text fields, "Email" and a secure "Password", in a blue panel low on
+-- the screen; the dark gray bar at the bottom stands in for the keyboard.
+-- When a field takes the focus, dUI's KEYBOARD_SHOWING event slides the panel
+-- up (dUI.adjustForKeyboard) until "Password" is above the keyboard, with 10
+-- to spare; KEYBOARD_HIDING slides it back when editing ends.
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
@@ -75,12 +79,13 @@ function run_example1()
 
 	local dg, bg, tf1, tf2
 
-	-- fake keyboard
+	-- fake keyboard, where dUI expects the keyboard in portrait:
+	-- the bottom quarter of the screen
 
-	kb = display.newRect( 0, 0, W, 120 )
+	local kb = display.newRect( 0, 0, display.actualContentWidth, display.actualContentHeight*0.25 )
 	kb:setFillColor( 0.2 )
 	kb.anchorX, kb.anchorY=0.5, 1
-	kb.x, kb.y = H_CENTER, H
+	kb.x, kb.y = H_CENTER, display.screenOriginY+display.actualContentHeight
 
 
 	-- setup dUI Event handler, keyboard events
@@ -122,12 +127,13 @@ function run_example1()
 	tf1 = dUI.newTextField{
 		text="",
 		hintText="Email",
+		style={ inputType='email' },
 	}
 	tf1.x, tf1.y = 0, 0-40
 	tf1.width=200
 	dg:insert( tf1.view )
 
-	-- create 1st text field
+	-- create 2nd text field
 
 	tf2 = dUI.newTextField{
 		text="",

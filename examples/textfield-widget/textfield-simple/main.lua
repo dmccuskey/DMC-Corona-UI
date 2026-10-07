@@ -1,12 +1,16 @@
 --====================================================================--
 -- Simple TextField
 --
--- Shows basic use of the DMC Widget: Text Field
+-- Two text fields in the default style: "Pizza Topping:" near the top and,
+-- in the middle, a secure one whose text shows as dots. Tap one to edit it;
+-- the end of each edit prints its text. run_example2() (not called) gives a
+-- field a style object, then a second later changes the style (size,
+-- anchor) and the field (margin, colors, align, isSecure).
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
 -- Copyright (C) 2015 David McCuskey. All Rights Reserved.
---====================================================================--
+--====================================================================
 
 
 
@@ -19,7 +23,6 @@ print( "\n\n#########################################################\n\n" )
 
 
 local dUI = require 'lib.dmc_ui'
--- local Utils = require 'lib.dmc_corona.dmc_utils'
 
 
 
@@ -58,21 +61,21 @@ local function setupBackground()
 end
 
 
+
 --======================================================--
 -- Widget Handlers
 
 local function textFieldOnEvent_handler( event )
-	-- print( 'Main: textFieldOnEvent_handler', event.id, event.phase )
+	-- print( 'Main: textFieldOnEvent_handler', event.target.id, event.phase )
 	local phase = event.phase
 
 	if phase=='began' then
 		-- print( "Begin text:", event.text )
 	elseif phase=='ended' or phase=='submitted' then
-		print( "End text:", event.text )
+		print( "End text:", event.target.id, event.text )
 	else
 		-- print( "Edit text:", event.text )
 	end
-
 end
 
 
@@ -85,86 +88,34 @@ end
 setupBackground()
 
 
+
 --======================================================--
---== create textfield widget, default style
+--== create textfield widgets, default style
 
 function run_example1()
 
-	local tf1
+	local tf1, tf2
+
+	-- a plain field
 
 	tf1 = dUI.newTextField{
 		text="",
 		hintText="Pizza Topping:",
 	}
 	tf1:addEventListener( tf1.EVENT, textFieldOnEvent_handler )
-	-- tf1.onProperty = widgetOnPropertyEvent_handler
-	-- tf1.debugOn=true
-	tf1.x, tf1.y = H_CENTER, V_CENTER
-	tf1.id="BOTTOM"
+	tf1.id="TOP"
+	tf1.x, tf1.y = H_CENTER, 100
 
-	tf1:setAnchor( {0.5,0.5} )
-
-	-- tf1.align='left'
-	tf1.hintFontSize=18
-
-	tf1.isSecure=true
-	tf1.isHitActive=true
+	-- a secure field: its text shows as dots
 
 	tf2 = dUI.newTextField{
 		text="",
-		hintText="Pizza Topping:",
+		hintText="Secret Ingredient:",
 	}
-	tf2.x, tf2.y = H_CENTER, 100
-	tf2.id="TOP"
-
-	-- timer.performWithDelay( 1000, function()
-	-- 	print("\n\n Update Properties")
-	-- 	-- test background props
-
-	-- 	tf1.x = H_CENTER-50
-	-- 	tf1.y = V_CENTER+100
-
-	-- 	tf1.isSecure=false
-
-	-- 	tf1.align='center'
-	-- 	tf1.text="hello"
-	-- 	tf1.marginX=10
-
-	-- 	tf1.width=200
-	-- 	tf1.height=100
-
-	-- 	-- tf1.isHitActive=false
-
-	-- 	tf1:setHintTextColor( 1,1,0 )
-	-- 	tf1.hintFontSize = 18
-
-	-- 	tf1:setAnchor( {0,0} )
-
-	-- 	tf1.hintFont = native.systemFontBold
-	-- 	tf1.hintFontSize = 30
-	-- 	tf1:setHintTextColor(1,0,0,1)
-
-	-- 	tf1.displayFont = native.systemFontBold
-	-- 	tf1.displayFontSize = 30
-	-- 	tf1:setDisplayTextColor(1,0,0,1)
-
-	-- end)
-
-	-- timer.performWithDelay( 2000, function()
-	-- 	print("\n\n Update Properties")
-		-- test background props
-		-- tf1.width=100
-		-- tf1.height=80
-		-- tf1.x = 100
-
-		-- tf1.isSecure=true
-
-		-- tf1.x = H_CENTER+50
-		-- tf1.y = V_CENTER+50
-
-		-- tf1.isHitActive=false
-
-	-- end)
+	tf2:addEventListener( tf2.EVENT, textFieldOnEvent_handler )
+	tf2.id="BOTTOM"
+	tf2.isSecure=true
+	tf2.x, tf2.y = H_CENTER, V_CENTER
 
 end
 
@@ -172,16 +123,14 @@ run_example1()
 
 
 
-
 --======================================================--
---== create textfield widget, default style
+--== create textfield widget with a style object, then change it
 
 function run_example2()
 
 	local ts1, tf1
 
 	ts1 = dUI.newTextFieldStyle{
-		debugOn=false,
 		width=280,
 		height=30,
 		align='left',
@@ -193,30 +142,24 @@ function run_example2()
 		text="hello",
 		hintText="Pizza:",
 	}
+	tf1:addEventListener( tf1.EVENT, textFieldOnEvent_handler )
+	tf1.id="STYLED"
 	tf1.style=ts1
 	tf1.x, tf1.y = H_CENTER, V_CENTER
-	tf1.id="TOP"
 
 	timer.performWithDelay( 1000, function()
-		print("\n\n Update Properties")
-		-- test background props
-
+		print( "Update Properties" )
+		-- the style object
 		ts1.width = 150
 		ts1.height = 40
-		-- ts1.marginX = 40
-		-- ts1.align='right'
 		ts1.anchorX=1
 		ts1.anchorY=1
-		tf1.isHitActive=true
+		-- the field
 		tf1.isSecure=true
 		tf1.marginX=30
-
 		tf1:setHintTextColor( 1, 0, 0 )
 		tf1:setDisplayTextColor( 1, 0, 0 )
-
-		-- tf1.text="done"
 		tf1.align='right'
-		-- tf1.hintText="input:"
 	end)
 
 	timer.performWithDelay( 2000, function()

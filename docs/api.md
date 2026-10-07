@@ -63,8 +63,12 @@ A theme file is a module that returns `{ initialize=function( Style ) ... end }`
 
 | | |
 |---|---|
-| `dUI:addEventListener( dUI.EVENT, f )` | keyboard events: `event.type` is `dUI.KEYBOARD_SHOWING` or `dUI.KEYBOARD_HIDING` |
-| `dUI.adjustForKeyboard( group [, { proxy=, offset= } ] )` | the first call slides a display group up so that `proxy` (a text field in it; default the group itself) is above the keyboard, `offset` more; the next call slides it back |
+| `dUI:addEventListener( dUI.EVENT, f )` | keyboard events: `event.type` is `dUI.KEYBOARD_SHOWING` when a text field takes the focus (not when the focus moves to another field while the keyboard is up), `dUI.KEYBOARD_HIDING` when editing ends, then `'hidden'` |
+| `dUI.adjustForKeyboard( group [, { proxy=, offset= } ] )` | the first call slides a display group up so that `proxy` (a text field in it; default the group itself) is above the keyboard, `offset` more; the next call slides it back, and a call while it slides back slides it up again |
+| `dUI.cancelAdjustForKeyboard( group )` | stops a slide and forgets it, without moving the group back |
+| `dUI.getKeyboardStatus()` | `'shown'`, `'hiding'` or `'hidden'` |
+
+The keyboard's height isn't known to Solar2D, so `adjustForKeyboard()` assumes one: the bottom quarter of the screen in portrait, a little under half of it in landscape.
 
 ```lua
 dUI:addEventListener( dUI.EVENT, function( event )
@@ -100,6 +104,5 @@ The `dmc_corona.cfg` in this repository has further sections, `[DMC_KOLOR]`, `[D
 Checked in the Solar2D Simulator (2026.3731) in September 2026.
 
 - **Some functions fail or are missing.** `dUI.newFormatter()` and `dUI.newSlideView()` raise an error; `dUI.newPopover()` and `newPopoverControl()` are `nil`.
-- **Harmless console notice:** every keyboard event prints `UI._keyboardMgr_handler`.
 - **A button's label keeps its alignment and margins** when `align`, `marginX` or `marginY` change on the button style or a state style after the button is made: they reach the state, not its `label`. Change them on the label itself (`button.inactiveStyle.label.align = 'left'`). `offsetX` and `offsetY` do follow.
 - The Navigation Control expects each view to be anchored top center, and hides popped views instead of removing them ([Views](controls.md#views)).
