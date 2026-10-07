@@ -9,7 +9,8 @@
 -- fits, the maximum twice its size. After a second the app zooms out to
 -- show all of it, after four back in to full size (setZoomScale()); then
 -- drag to move around, pinch to zoom (on a device: the Simulator has one
--- touch).
+-- touch). The scroll indicators are light, from the style's
+-- indicatorColor, to show on the dark photo.
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
@@ -138,6 +139,7 @@ local widget = dUI.newScrollView{
 	delegate=delegate,
 	style={
 		fillColor={0,0,0,1}, -- black around the photo when it is smaller
+		indicatorColor={1,1,1,0.6}, -- light scroll indicators, for a dark photo
 	}
 }
 widget.x, widget.y = 0, STATUS_BAR_H

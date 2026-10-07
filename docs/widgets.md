@@ -260,6 +260,8 @@ Options and properties: `width`, `height`, `scrollWidth`, `scrollHeight` (never 
 
 Methods: `getContentPosition()` returns the content's x and y, 0 at the top left and negative as it scrolls; `setContentPosition{ x=, y= [, time=, onComplete=] }` scrolls there, in 500 ms unless `time` says otherwise (0 for at once); `takeFocus( event )` takes over a touch from a child.
 
+**Scroll indicators**, thin bars at the right and bottom edges, show while the content moves and fade when it stops; each is as long as the share of the content in view, and is squeezed against its end during a bounce. An axis that is turned off or whose content fits has none. `showVerticalScrollIndicator=false` or `showHorizontalScrollIndicator=false` (options or properties) turns one off; `flashScrollIndicators()` shows them for a moment, to say that a view scrolls. Their color is the style's `indicatorColor` (translucent black by default; set a light one over dark content: `style={ indicatorColor={ 1, 1, 1, 0.6 } }`). The upper and lower offsets shorten an indicator's track, so it stays clear of a bar which covers part of the widget.
+
 **Zoom** needs a delegate whose `getViewForZoom( self, event )` returns the object to scale (something in the scroller), and `minimumZoom` and `maximumZoom` (options or properties). Then a pinch zooms, and so does `setZoomScale( scale [, { time=, onComplete= } ] )`; `zoomScale` reads the scale (there is no `zoomScale` option: zoom once the content is in). The delegate's optional `willBeginZooming`, `didZoom` and `didEndZooming` get `self, event` with `event.view` and `event.scale`.
 
 ```lua
@@ -274,7 +276,7 @@ sv:setZoomScale( 0.5 )
 
 A ScrollView sends no events of its own.
 
-See `examples/scrollview-widget/` for content, locking and zoom.
+See `examples/scrollview-widget/` for content, locking, zoom and the indicator color.
 
 ## TableView and TableViewCell
 
