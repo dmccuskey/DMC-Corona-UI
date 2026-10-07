@@ -46,7 +46,7 @@ SOFTWARE.
 
 -- Semantic Versioning Specification: http://semver.org/
 
-local VERSION = "1.5.0"
+local VERSION = "1.6.0"
 
 
 
@@ -459,7 +459,7 @@ Documentation items should be copied in manually
 
 
 function UI._keyboardMgr_handler( event )
-	print( "UI._keyboardMgr_handler", event )
+	-- print( "UI._keyboardMgr_handler", event )
 
 	-- Utils.print( event )
 	event.name=UI.EVENT

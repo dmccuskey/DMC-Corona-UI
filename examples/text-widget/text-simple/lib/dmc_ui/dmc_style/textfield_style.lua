@@ -331,6 +331,22 @@ end
 
 
 --====================================================================--
+--== Support Functions
+
+
+-- a Background structure without Background's default type ('rounded'):
+-- a background with no type then inherits its type (the 9-slice)
+local function createBackgroundStructure( src )
+	src = src or {}
+	return {
+		type=src.type,
+		view={}
+	}
+end
+
+
+
+--====================================================================--
 --== Static Methods
 
 
@@ -357,7 +373,7 @@ function TextFieldStyle.createStyleStructure( src )
 	src = src or {}
 	--==--
 	return {
-		background=Style.Background.createStyleStructure( src.background ),
+		background=createBackgroundStructure( src.background ),
 		hint=Style.Text.createStyleStructure( src.hint ),
 		display=Style.Text.createStyleStructure( src.display ),
 	}
@@ -862,8 +878,9 @@ function TextFieldStyle.__setters:returnKey( value )
 	-- print( "TextFieldStyle.__setters:returnKey", value )
 	assert( (value==nil and (self:_hasInherit() or self._isClearing)) or type(value)=='string' )
 	--==--
-	if value == self._inputType then return end
+	if value == self._returnKey then return end
 	self._returnKey = value
+	self:_dispatchChangeEvent( 'returnKey', value )
 end
 
 
@@ -936,10 +953,9 @@ function TextFieldStyle:_prepareData( data, dataSrc, params )
 
 	--== make sure we have structure for children
 
-	StyleClass = Style.Background
 	if not src.background then
 		tmp = dataSrc and dataSrc.background
-		src.background = StyleClass.createStyleStructure( tmp )
+		src.background = createBackgroundStructure( tmp )
 	end
 
 	StyleClass = Style.Text

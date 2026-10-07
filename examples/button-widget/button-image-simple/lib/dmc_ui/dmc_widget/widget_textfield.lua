@@ -228,7 +228,7 @@ function TextField:__init__( params )
 
 	self._keyboardFocus=false
 	self._keyboardFocus_dirty=true
-	self._keyboardFocus_timer=nil
+	self._hasKeyboardFocus=false -- holds one of dUI's focus counts
 
 	-- properties stored in Style
 
@@ -509,6 +509,9 @@ end
 -- @function .isHitActive
 -- @usage widget.isHitActive = true
 
+function TextField.__getters:isHitActive()
+	return self.curr_style.isHitActive
+end
 function TextField.__setters:isHitActive( value, params )
 	-- print( "TextField.__setters:isHitActive", value )
 	self.curr_style.isHitActive = value
@@ -568,6 +571,8 @@ TextField.__setters.marginY = WidgetHelp.__setters.marginY
 -- @usage print( widget.text )
 
 function TextField.__getters:text()
+	-- while editing, the text in the native field
+	if self._tmp_text~=nil then return self._tmp_text end
 	return self._displayText
 end
 function TextField.__setters:text( value )
@@ -609,7 +614,7 @@ end
 --== :setKeyboardFocus()
 
 --- set keyboard cursor-focus on this TextField.
--- this will show the keyboard.
+-- this starts editing and shows the keyboard.
 --
 -- @within Methods
 -- @function :setKeyboardFocus
@@ -617,9 +622,11 @@ end
 
 function TextField:setKeyboardFocus()
 	-- print( "TextField:setKeyboardFocus" )
-	self._keyboardFocus = true
-	self._keyboardFocus_dirty = true
-	self:__invalidateProperties__()
+	-- already editing: the native field has the focus (focusing it
+	-- again ends and restarts the edit in the Simulator)
+	if self._isEditActive.state then return end
+	-- show the native field, which takes the focus
+	self:_startEdit( true )
 end
 
 --== :unsetKeyboardFocus()
@@ -639,8 +646,8 @@ end
 
 --== setReturnKey()
 
--- set value for Return Key.
--- @TODO
+--- set the keyboard's Return Key.
+-- the same as setting the style's `returnKey`.
 -- @within Methods
 -- @function :setReturnKey
 
@@ -648,11 +655,7 @@ function TextField:setReturnKey( value )
 	-- print( "TextField:setReturnKey", value )
 	assert( type(value)=='string' )
 	--==--
-	if value==self._returnKey then return end
-	--==--
-	self._returnKey = value
-	self._returnKey_dirty = true
-	self:__invalidateProperties__()
+	self.curr_style.returnKey = value
 end
 
 
@@ -872,7 +875,7 @@ function TextField:_createText()
 	self:_removeText()
 
 	local o = Widget.newText{
-		defaultStyle = self.defaultStyle.label
+		defaultStyle = self.defaultStyle.display
 	}
 	o.onUpdate = self._wgtText_f
 	self:insert( o.view )
@@ -919,8 +922,10 @@ function TextField:_createTextField()
 	--== Reset properties
 
 	self._hasBackground_dirty=true
+	self._inputType_dirty=true
 	self._isEditActive_dirty=true
 	self._keyboardFocus_dirty=true
+	self._returnKey_dirty=true
 
 	self._inputFieldX_dirty=true
 	self._inputFieldY_dirty=true
@@ -952,10 +957,9 @@ function TextField:__commitProperties__()
 		self._inputFieldHeight_dirty=true
 	end
 
-	if self._inputField_dirty or self._inputFieldHeight_dirty then
+	if self._inputField_dirty then
 		self:_createTextField()
 		self._inputField_dirty=false
-		self._inputFieldHeight_dirty=false
 	end
 
 
@@ -1044,6 +1048,13 @@ function TextField:__commitProperties__()
 
 		self._isSecure_dirty=true
 		self._inputType_dirty=false
+	end
+
+	-- returnKey
+
+	if self._returnKey_dirty then
+		if input.setReturnKey then input:setReturnKey( style.returnKey ) end
+		self._returnKey_dirty=false
 	end
 
 	-- isSecure
@@ -1259,13 +1270,22 @@ function TextField:__commitProperties__()
 end
 
 
+-- each field holds at most one of dUI's focus counts, and gives back only
+-- its own: creating or removing a field leaves another one's edit alone
 function TextField:_startKeyboardFocus( focus )
 	-- print( "TextField:_startKeyboardFocus", self.id )
+	if self._hasKeyboardFocus then
+		native.setKeyboardFocus( focus )
+		return
+	end
+	self._hasKeyboardFocus = true
 	dUI.setKeyboardFocus( focus )
 end
 
 function TextField:_stopKeyboardFocus()
 	-- print( "TextField:_stopKeyboardFocus", self.id )
+	if not self._hasKeyboardFocus then return end
+	self._hasKeyboardFocus = false
 	dUI.unsetKeyboardFocus()
 end
 
@@ -1288,10 +1308,14 @@ end
 function TextField:_dispatchStateBegan( event )
 	-- print( "TextField:_dispatchStateBegan", event )
 
-	self._tmp_text = self._displayText -- start last ok state
+	-- start last ok state: the native field's text (event.text is
+	-- broken in the simulator)
+	local text = event.target.text
+	if text==nil then text=self._displayText end
+	self._tmp_text = text
 
 	event.target=self
-	event.text=self._displayText -- fix broken simulator
+	event.text=text
 	self:dispatchEvent( event )
 end
 
@@ -1383,20 +1407,18 @@ function TextField:_textFieldEvent_handler( event )
 			self:_stopEdit( false )
 			self:unsetKeyboardFocus()
 			self:_dispatchStateEnded( event )
-		else
-			self:setKeyboardFocus()
+		elseif phase==TextField.ENDED then
+			-- keep editing: take back the focus it lost
+			-- (on 'submitted' the field still has it)
+			self:_startKeyboardFocus( textfield )
 		end
 
 	end
 end
 
 
---[[
-right now we only need this one time through
-later, when backgrounds get more complex (ie, they redraw)
-then we'll need a new strategy
---]]
 -- _wgtTextWidgetUpdate_handler()
+-- the native field takes the height of the text widget
 --
 function TextField:_wgtTextWidgetUpdate_handler( event )
 	-- print( "TextField:_wgtTextWidgetUpdate_handler", event.type )
@@ -1406,11 +1428,8 @@ function TextField:_wgtTextWidgetUpdate_handler( event )
 	-- Utils.print( event )
 
 	if etype==widget.LIFECYCLE_UPDATED then
-		widget.onUpdate=nil
-
 		self._wgtTextHeight_dirty=true
 		self:__invalidateProperties__()
-		self:__dispatchInvalidateNotification__( property, value )
 	end
 end
 
@@ -1455,7 +1474,7 @@ function TextField:textStyleChange_handler( event )
 		property = etype
 
 	else
-		if property=='debugActive' then
+		if property=='debugOn' then
 			self._debugOn_dirty=true
 
 		elseif property=='width' then
@@ -1529,7 +1548,7 @@ function TextField:stylePropertyChangeHandler( event )
 		property = etype
 
 	else
-		if property=='debugActive' then
+		if property=='debugOn' then
 			self._debugOn_dirty=true
 		elseif property=='width' then
 			self._width_dirty=true
