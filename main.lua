@@ -90,6 +90,7 @@ lunatest.suite( 'tests.background_widget_spec' )
 lunatest.suite( 'tests.text_widget_spec' )
 lunatest.suite( 'tests.button_widget_spec' )
 lunatest.suite( 'tests.textfield_widget_spec' )
+lunatest.suite( 'tests.scrollview_widget_spec' )
 
 
 lunatest.run({

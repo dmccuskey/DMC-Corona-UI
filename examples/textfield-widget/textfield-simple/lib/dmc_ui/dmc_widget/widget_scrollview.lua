@@ -86,10 +86,9 @@ local Scroller = require( ui_find( 'dmc_widget.widget_scrollview.scroller' ) )
 
 Patch.addPatch( 'print-output' )
 
-local circle
-
 local newRect = display.newRect
 local mmin = math.min
+local sfmt = string.format
 local tcancel = timer.cancel
 local tdelay = timer.performWithDelay
 local type = _G.type
@@ -170,13 +169,15 @@ function ScrollView:__init__( params )
 	if params.upperHorizontalOffset==nil then params.upperHorizontalOffset = 0 end
 	if params.upperVerticalOffset==nil then params.upperVerticalOffset = 0 end
 	if params.verticalScrollEnabled==nil then params.verticalScrollEnabled=true end
-	if params.zoomScale==nil then params.zoomScale=1.0 end
 
 	self:superCall( '__init__', params )
 	--==--
 
 	-- save params for later
 	self._sv_tmp_params = params -- tmp
+
+	-- with autoMask, the view is a container, sized with the widget
+	self._autoMask = params.autoMask
 
 	--== Create Properties ==--
 
@@ -334,7 +335,8 @@ function ScrollView:__initComplete__()
 
 	self.minimumZoom = tmp.minimumZoom
 	self.maximumZoom = tmp.maximumZoom
-	-- self:setZoomScale( tmp.zoomScale )
+	-- no zoomScale option: the view to zoom is added after creation,
+	-- use setZoomScale() then
 
 	self.decelerateTransitionTime = tmp.decelerateTransitionTime
 
@@ -732,7 +734,6 @@ end
 
 --== .setFillColor
 
-ScrollView.setFillColor = WidgetHelp.setFillColor
 ScrollView.setFillColor = WidgetHelp.setFillColor
 
 
@@ -1154,12 +1155,28 @@ function ScrollView:__commitProperties__()
 	end
 
 	if self._width_dirty then
-		-- print("width", self._width)
-		bg.width = self.width
+		local width = self.width
+		bg.width = width
+		if self._autoMask then view.width = width end
+		self._axisX.length = width
+		-- scroll area is never smaller than the view
+		if self._scrollWidth < width then
+			self._scrollWidth = width
+			self._scrollWidth_dirty=true
+		end
+		self:_calculateMinScale()
 		self._width_dirty=false
 	end
 	if self._height_dirty then
-		bg.height = self.height
+		local height = self.height
+		bg.height = height
+		if self._autoMask then view.height = height end
+		self._axisY.length = height
+		if self._scrollHeight < height then
+			self._scrollHeight = height
+			self._scrollHeight_dirty=true
+		end
+		self:_calculateMinScale()
 		self._height_dirty=false
 	end
 
@@ -1319,7 +1336,7 @@ function ScrollView:stylePropertyChangeHandler( event )
 		property = etype
 
 	else
-		if property=='debugActive' then
+		if property=='debugOn' then
 			self._debugOn_dirty=true
 		elseif property=='width' then
 			self._width_dirty=true
@@ -1396,7 +1413,6 @@ function ScrollView:_gestureEvent_handler( event )
 			end
 
 			if event.gesture=='pinch' and self._canZoom then
-				circle = display.newCircle( event.x, event.y, 6 )
 				local zView = self:_getZoomView()
 				if zView then
 					evt.value = event.scale
@@ -1426,7 +1442,6 @@ function ScrollView:_gestureEvent_handler( event )
 			end
 
 			if event.gesture=='pinch' and self._zoomView then
-				circle.x, circle.y = event.x, event.y
 				evt.value = event.scale
 				evt.start = event.start
 				self._scaleMotion:touch( evt )
@@ -1448,7 +1463,6 @@ function ScrollView:_gestureEvent_handler( event )
 			end
 
 			if event.gesture=='pinch' and self._zoomView then
-				if circle then circle:removeSelf() ; circle=nil end
 				evt.value = event.scale
 				evt.start = event.start
 				self._scaleMotion:touch( evt )
@@ -1500,7 +1514,7 @@ function ScrollView:_scaleEvent_handler( event )
 		if zF then zF( delegate, {target=self,view=zView,scale=scale} ) end
 
 	elseif state==target.DID_ZOOM then
-		zView.xScale, zView.xScale = scale, scale
+		zView.xScale, zView.yScale = scale, scale
 		zF = delegate and delegate.didEndZooming
 		if zF then zF( delegate, {target=self,view=zView,scale=scale} ) end
 		self._zoomView = nil

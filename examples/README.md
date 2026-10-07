@@ -9,7 +9,7 @@ Each app folder is a complete Solar2D project with its own copy of the library: 
 | `navbar-widget/` | `navbar-simple` | [NavBar](../docs/widgets.md#navbar-and-navitem) |
 | `navigation-control/` | `navigation-control-simple`, `navigation-intermediate` | [Navigation Control](../docs/controls.md#navigation-control) |
 | `popover-control/` | `popover-control-simple` | [Popover Control](../docs/controls.md#popover-control) |
-| `scrollview-widget/` | `scrollview-simple`, `scrollview-zoom`, `scrollview-memtest` | [ScrollView](../docs/widgets.md#scrollview) |
+| `scrollview-widget/` | `scrollview-simple`, `scrollview-zoom`, `scrollview-memtest` | [ScrollView](../docs/widgets.md#scrollview); [below](#scrollview) |
 | `tableview-widget/` | `tableview-simple`, `tableview-modify`, `tableview-scroll`, `tableview-tableviewcell`, `tableview-memtest` | [TableView](../docs/widgets.md#tableview-and-tableviewcell) |
 | `text-widget/` | `text-simple`, `text-styled`, `text-themed`, `text-memtest` | [Text](../docs/widgets.md#text); [below](#text) |
 | `textfield-widget/` | `textfield-simple`, `textfield-styled`, `textfield-keyboard` | [TextField](../docs/widgets.md#textfield); [below](#textfield) |
@@ -39,6 +39,14 @@ The sections below describe each app, with a screenshot; the other widgets' apps
 | <img src="screenshots/button-text-simple.png" width="240" alt="button-text-simple: four buttons, Back, Middle in translucent red with a larger red hit area, Orange held down with a yellow left-aligned label on a dark background, and a greyed-out Disabled"> | **button-text-simple**: four push buttons that differ in their label, each state styled on its own: "Back" turns red and moves right while pressed; "Middle" has a hit area larger than the button (`hitMarginX`, `hitMarginY`), shown in red by `debugOn`; "Orange" sits right with an offset and jumps left while pressed (each state's `align`, `offsetX`, `offsetY`; held down in the screenshot); "Disabled" shows the disabled style and ignores presses. |
 | <img src="screenshots/button-radio-group.png" width="240" alt="button-radio-group: a row of Small, Medium and Large with Large green, a row of Left and Right with Right green, and the line 'size: Large   side: Right'"> | **button-radio-group**: two button groups (`newButtonGroup()`). In the radio group one of "Small", "Medium" and "Large" is always active; in the toggle group at most one of "Left" and "Right" is, and pressing it again turns it off. The line below shows the selection, from each group's change event. In the screenshot "Large" and "Right" were pressed. |
 
+
+## ScrollView
+
+| | |
+|---|---|
+| <img src="screenshots/scrollview-simple.png" width="240" alt="scrollview-simple: a scroll view filling the screen below the status bar, showing rows 2 to 8 of its content, numbered colored bands"> | **scrollview-simple**: a scroll view which fills the screen below the status bar, sized from what the device reports (`dUI.WIDTH`, `dUI.HEIGHT`, `display.topStatusBarContentHeight`), over 20 numbered rows (`NUM_ROWS`, `ROW_HEIGHT`), masked to its size (`autoMask`). Drag or flick it up and down; it bounces at the edges. The rows fit its width, so `horizontalScrollEnabled=false`: content that fits can otherwise still be pulled sideways. After a second it scrolls to row 2 (`setContentPosition()`, the screenshot); after four scrolling is locked (`verticalScrollEnabled`); after eight it is back, and the content rests 10 higher (`upperVerticalOffset`). |
+| <img src="screenshots/scrollview-zoom.png" width="240" alt="scrollview-zoom: a photo of a harbor at sunset, zoomed out so that all of it fits across the screen, black above and below"> | **scrollview-zoom**: a photo of 1024x680 in a scroll view which fills the screen below the status bar; at full size it scrolls in both directions. The delegate's `getViewForZoom()` names the photo as the object to scale; `minimumZoom` is the scale at which all of it fits, `maximumZoom` twice its size. After a second the app zooms out to show the whole photo (`setZoomScale()`, the screenshot), after four back in to full size; then drag to move around, pinch to zoom (on a device: the Simulator has one touch). |
+| <img src="screenshots/scrollview-memtest.png" width="240" alt="scrollview-memtest: an empty white scroll view on a black screen"> | **scrollview-memtest**: creates an empty scroll view and removes it 200 ms later, over and over, and prints memory use with [dmc-performance](https://github.com/dmccuskey/dmc-performance); `run_example1()` does the same with a scroll view style. |
 
 ## Text
 

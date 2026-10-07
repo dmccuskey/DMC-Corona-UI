@@ -1,7 +1,10 @@
 --====================================================================--
--- ScrollView Zoom
+-- ScrollView Memtest
 --
--- shows basic use of zoom action with scrollview widget
+-- Creates a scroll view (with a zoom delegate) and removes it 200 ms later,
+-- over and over, and prints memory use every 2.5 seconds with
+-- dmc-performance. run_example1() (not called) does the same with a
+-- scroll view style.
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License

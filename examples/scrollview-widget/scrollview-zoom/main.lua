@@ -1,7 +1,15 @@
 --====================================================================--
 -- ScrollView Zoom
 --
--- shows basic use of zoom action with scrollview widget
+-- A photo of 1024x680 in a scroll view which fills the screen below the
+-- status bar. The photo is larger than the screen, so at full size it
+-- scrolls in both directions. Zooming needs three things: a delegate whose
+-- getViewForZoom() returns the object to scale, minimumZoom and
+-- maximumZoom. Here the minimum is the scale at which the whole photo
+-- fits, the maximum twice its size. After a second the app zooms out to
+-- show all of it, after four back in to full size (setZoomScale()); then
+-- drag to move around, pinch to zoom (on a device: the Simulator has one
+-- touch).
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
@@ -32,6 +40,13 @@ local H_CENTER, V_CENTER = W*0.5, H*0.5
 local tdelay = timer.performWithDelay
 
 local view, viewPos
+
+-- the screen, as the device reports it
+local STATUS_BAR_H = display.topStatusBarContentHeight
+
+-- the photo
+local PHOTO = 'asset/aci-trezza-faraglioni-sunset.jpg'
+local PHOTO_W, PHOTO_H = 1024, 680
 
 
 
@@ -106,41 +121,45 @@ local delegate = {
 
 
 --== Create ScrollView
-local w, h = 200, 300
+
+local w, h = W, H-STATUS_BAR_H
+
+-- the scale at which the whole photo fits in the scroll view
+local fitScale = math.min( w/PHOTO_W, h/PHOTO_H )
 
 local widget = dUI.newScrollView{
 	width=w,
 	height=h,
-	scrollWidth=1024,
-	scrollHeight=680,
-	delegate=delegate
+	scrollWidth=PHOTO_W,
+	scrollHeight=PHOTO_H,
+	minimumZoom=fitScale,
+	maximumZoom=2,
+	autoMask=true, -- clip the content to the scroll view
+	delegate=delegate,
+	style={
+		fillColor={0,0,0,1}, -- black around the photo when it is smaller
+	}
 }
-widget.x, widget.y = H_CENTER-w/2, V_CENTER-h/2
-
-widget.minimumZoom=0.2
-widget.maximumZoom=1
-
+widget.x, widget.y = 0, STATUS_BAR_H
 
 
 --== Create our object to display
 
-view = display.newImage( 'asset/aci-trezza-faraglioni-sunset.jpg', viewPos.x, viewPos.y, true )
+view = display.newImageRect( PHOTO, PHOTO_W, PHOTO_H )
 view.anchorX, view.anchorY = 0,0
-view.alpha = 0.3
+view.x, view.y = viewPos.x, viewPos.y
 
 widget.scroller:insert( view )
 
 
+--== Zoom out to the whole photo, then back in
 
-
-tdelay( 500, function()
-	print("Main:start")
-	local function callback()
-		print( "here in motion callback" )
-	end
-	widget:setZoomScale( 0.5 )
-	-- widget:setContentPosition{
-	-- 	-- x=-40, y=0, onComplete=callback
-	-- }
+tdelay( 1000, function()
+	print( "Main: zoom out to fit", fitScale )
+	widget:setZoomScale( fitScale )
 end)
 
+tdelay( 4000, function()
+	print( "Main: zoom in to full size" )
+	widget:setZoomScale( 1 )
+end)

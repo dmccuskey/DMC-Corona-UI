@@ -218,6 +218,11 @@ end
 
 function ScaleMotion:__undoInitComplete__()
 	-- print( "ScaleMotion:__undoInitComplete__" )
+	-- stop any motion in progress
+	self._enterFrameIterator = nil
+	self._isMoving = false
+	self._hasMoved = false
+	Runtime:removeEventListener( 'enterFrame', self )
 	--==--
 	self:superCall( '__undoInitComplete__' )
 end
@@ -319,10 +324,12 @@ function ScaleMotion:setZoomScale( scale, params )
 
 		-- this will be run once
 		eFI = function()
+			self:_dispatchBeginZoom()
 			self._scale = scale
 			self._isMoving=false
 			self._hasMoved=true
 			self._enterFrameIterator=nil
+			self:_dispatchEndZoom()
 			if params.onComplete then params.onComplete() end
 		end
 
@@ -773,7 +780,7 @@ function ScaleMotion:do_state_decelerate( params )
 	local enterFrameFunc = function( e )
 		-- print( "ScaleMotion: enterFrameFunc: do_state_decelerate" )
 
-		local frameEvt = self._tmpFrameEvent
+		local frameEvt = self._tmpFrameEvent or startEvt -- none yet: ended in the frame it began
 		local scrollLimit = self._scaleLimit
 
 		local deltaStart = e.time - startEvt.time
@@ -932,7 +939,7 @@ function ScaleMotion:do_state_restraint( params )
 	local enterFrameFunc = function( e )
 		-- print( "ScaleMotion: enterFrameFunc: do_state_restraint" )
 
-		local frameEvt = self._tmpFrameEvent
+		local frameEvt = self._tmpFrameEvent or startEvt -- none yet: ended in the frame it began
 
 		local deltaStart = e.time - startEvt.time -- total
 		local deltaFrame = e.time - frameEvt.time
