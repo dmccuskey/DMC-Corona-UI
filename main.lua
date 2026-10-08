@@ -94,6 +94,10 @@ lunatest.suite( 'tests.scrollview_widget_spec' )
 lunatest.suite( 'tests.tableview_widget_spec' )
 lunatest.suite( 'tests.navbar_widget_spec' )
 
+-- controls
+
+lunatest.suite( 'tests.navigation_control_spec' )
+
 
 lunatest.run({
 	-- verbose=true,

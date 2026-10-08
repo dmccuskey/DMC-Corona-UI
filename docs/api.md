@@ -108,4 +108,4 @@ Checked in the Solar2D Simulator (2026.3731) in September 2026.
 - **A TableView's rows all have one height** (`estimatedRowHeight`): the common case, and cheap to compute. Rows of different heights (section headers, separate row types) are planned.
 - **A TableViewCell's two lines of text sit where its style says** (`labelY`, `detailY`), whatever its height.
 - **A NavItem's title isn't shortened** to fit between its buttons: a long one runs under them. And a left or right button given to an item which is already on a bar isn't shown: set an item's buttons before it is pushed.
-- The Navigation Control expects each view to be anchored top center, and hides popped views instead of removing them ([Views](controls.md#views)).
+- The Navigation Control anchors each view top center, doesn't size a view which is a display group, and hides popped views instead of removing them ([Views](controls.md#views)).

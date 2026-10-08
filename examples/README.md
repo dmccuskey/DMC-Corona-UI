@@ -7,7 +7,7 @@ Each app folder is a complete Solar2D project with its own copy of the library: 
 | `background-widget/` | `background-9slice`, `background-image`, `background-rectangle`, `background-rounded`, `background-styled`, `background-themed`, `background-memtest` | [Background](../docs/widgets.md#background); [below](#background) |
 | `button-widget/` | `button-shape-simple`, `button-9slice-simple`, `button-image-simple`, `button-text-simple`, `button-radio-group` | [Button](../docs/widgets.md#button); [below](#button) |
 | `navbar-widget/` | `navbar-simple` | [NavBar](../docs/widgets.md#navbar-and-navitem); [below](#navbar) |
-| `navigation-control/` | `navigation-control-simple`, `navigation-intermediate` | [Navigation Control](../docs/controls.md#navigation-control) |
+| `navigation-control/` | `navigation-control-simple`, `navigation-intermediate` | [Navigation Control](../docs/controls.md#navigation-control); [below](#navigation-control) |
 | `popover-control/` | `popover-control-simple` | [Popover Control](../docs/controls.md#popover-control) |
 | `scrollview-widget/` | `scrollview-simple`, `scrollview-zoom`, `scrollview-memtest` | [ScrollView](../docs/widgets.md#scrollview); [below](#scrollview) |
 | `tableview-widget/` | `tableview-simple`, `tableview-modify`, `tableview-scroll`, `tableview-tableviewcell`, `tableview-memtest` | [TableView](../docs/widgets.md#tableview-and-tableviewcell); [below](#tableview) |
@@ -47,6 +47,15 @@ The bar is as wide as the screen and sits below the status bar, and the page beh
 | | |
 |---|---|
 | <img src="screenshots/navbar-simple.png" width="240" alt="navbar-simple: a light bar across the top with a blue Back button, the title Photo and a blue Edit button, over a gray page which reads Home > Albums > Photo"> | **navbar-simple**: a nav bar and its stack of items. The app pushes three by itself (`pushNavItem()`): "Home", the first one, with a left button (`leftButton`) and no Back; after a second "Albums" slides in with its "< Back" button; then "Photo", with a right button (`rightButton`; the screenshot). From there, tap the page to push another item, and "< Back" to pop the top one. A tap on the bar or its buttons stays with them, so "< Back" doesn't push. The page shows the stack; a delegate hears of each pop (`shouldPopItem`, `didPopItem`), and the left and right buttons print when released (`onRelease`). |
+
+## Navigation Control
+
+The control fills the screen below the status bar, sized from what the device reports (`display.actualContentWidth`, `actualContentHeight`, `screenOriginY`, `topStatusBarContentHeight`), and each view fills the control below its bar.
+
+| | |
+|---|---|
+| <img src="screenshots/navigation-control-simple.png" width="240" alt="navigation-control-simple: a light bar across the top with a blue Back button and the title View 3, over a brown view which fills the rest of the screen and says to tap the view to push another"> | **navigation-control-simple**: the control with the lightest kind of view, a display rectangle with a `title`: the control places it below its bar and gives it its size. The app pushes three by itself (`pushView()`): "View 1" at once, without a Back button; after a second "View 2" slides in from the right while the bar slides to its title and "< Back"; a second later "View 3" (the screenshot). From there, tap the view to push another, and "< Back" to pop the top one; the first view stays. A tap on the bar stays with it, so "< Back" doesn't push. A popped view is hidden, not removed: the app removes it when the control says so (`REMOVED_VIEW`). |
+| <img src="screenshots/navigation-intermediate.png" width="240" alt="navigation-intermediate: a bar with a blue Back button, the title Sea and a blue Info button, over a dark view with a large blue square"> | **navigation-intermediate**: a small app of three levels: a list of galleries, a gallery's list of images, an image (a colored square; the screenshot). Tap a button to go down a level, "< Back" to come back up. Each view (`view/`) is a plain table with a `title` and a display group (`view`), laid out for the room below the bar (`navCtrl.width`, `navCtrl.height`, `navCtrl.navBar.height`); it pushes the next view through `parent`, the control's reference to itself. Each has the functions the control calls as a view comes and goes (`willBeAdded`, `viewInMotion`, `viewDidAppear`, `viewDidDisappear`, `willBeRemoved`), which print, and removes its display group when it is popped. The image view brings its own `navItem`, for an "Info" button on the right of the bar (`rightButton`). |
 
 ## ScrollView
 

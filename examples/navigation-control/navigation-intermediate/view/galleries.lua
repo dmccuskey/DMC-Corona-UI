@@ -1,6 +1,7 @@
 --====================================================================--
--- Galleries View
+-- view/galleries.lua
 --
+-- the first view: a button for each gallery
 --====================================================================--
 
 
@@ -10,15 +11,9 @@
 
 
 local dUI = require 'lib.dmc_ui'
+
+local Common = require 'view.common'
 local GalleryView = require 'view.gallery'
-
-
-
---====================================================================--
---== Setup, Constants
-
-
-local W, H = dUI.WIDTH, dUI.HEIGHT
 
 
 
@@ -27,90 +22,54 @@ local W, H = dUI.WIDTH, dUI.HEIGHT
 --===================================================================--
 
 
+-- a button was released: push that gallery's view
+--
 local function buttonHandler( event )
-	local button = event.target
-	local data = event.data
+	local navView, gallery = unpack( event.data )
 
-	local navView, record = unpack( data )
-	local navControl = navView.parent
+	-- the Navigation Control put itself in the view's 'parent'
+	local navCtrl = navView.parent
 
-	local gV = GalleryView.new( record )
-
-	navControl:pushView( gV )
-
-end
-
-local function willBeRemoved_handler( view )
-	print( "View Will Be Removed" )
+	navCtrl:pushView( GalleryView.new( gallery, navCtrl ) )
 end
 
 
-local function createGalleriesView( data )
+local function createGalleriesView( data, navCtrl )
 	-- print( "createGalleriesView", data )
 
 	--[[
-	this is our view that the Nav Control
-	is going to show for us
-
-	it's just a very simple object/table
+	the view which the Navigation Control shows for us:
+	a plain table
 	--]]
 
 	local navView = {
 
 		_data = data,
 
-		-- title will show up in nav bar automatically
+		-- shown in the nav bar
 		title = "Galleries",
 
-		-- navItem is our "marker" in the navigation stack
-		-- one is created if we dont' supply it
-		-- and title is automatic
-		--[[
-		navItem = dUI.newNavItem{
-			title="Galleries"
-		},
-		--]]
-
-		-- this display group is our content
-		-- the Nav Control will modify view area as necessary
-		-- by default, will be full-screen less the Nav Bar
-		-- and anchor Top Center
-
+		-- our content: the control puts this display group
+		-- below its bar, anchored top center
 		view = display.newGroup(),
 
-
-		-- the Nav Control will put a reference to itself
-		-- inside of your view so that you can send messages
-
+		-- set by the control when the view is pushed:
+		-- the Navigation Control itself
 		parent = nil,
-
-
-		--== Some function callbacks
-
-		willBeAdded=nil,
-		viewInMotion=nil,
-		viewDidAppear=nil,
-		viewDidDisappear=nil,
-		willBeRemoved=willBeRemoved_handler,
 
 	}
 
+	Common.addViewFunctions( navView )
 
 	--== Setup the components of the view
 
-	local dg = navView.view -- reference to our 'view'
-	local o
+	local dg = navView.view
 
-	-- background
+	Common.newBackground( dg, navCtrl, { 0, 0.2, 0.1 } )
 
-	o = display.newRect(0, 0, W, H)
-	o:setFillColor(0,0.2,0.1)
-	o.anchorX, o.anchorY = 0.5, 0
-	dg:insert( o )
+	-- a button for each gallery
 
-	-- add buttons
-
-	local pos, offset = 100, 75
+	local pos, offset = 80, 75
 	for i, gallery in ipairs( data ) do
 		local o = dUI.newPushButton{
 			labelText = "Show "..gallery.title,
