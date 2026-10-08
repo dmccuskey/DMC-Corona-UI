@@ -77,6 +77,7 @@ local uiConst = require( ui_find( 'ui_constants' ) )
 local newClass = Objects.newClass
 local ComponentBase = Objects.ComponentBase
 
+local mmax = math.max
 local mmin = math.min
 local tinsert = table.insert
 
@@ -126,6 +127,10 @@ Presentation.DISMISSING = 'dismissing'
 
 Presentation.DEFAULT_TRANSITION = uiConst.SLIDE_UP
 Presentation.DEFAULT_DISMISS_ON_TAP_OUTSIDE = false
+Presentation.DEFAULT_DIM_COLOR = uiConst.PRESENT_CONTROL_DIM_COLOR
+
+-- the width of the panel's frame around the control, in the panel's color
+Presentation.BORDER = 0
 
 --== Event Constants
 
@@ -166,7 +171,7 @@ function Presentation:__init__( params )
 	-- the transition of this presentation, kept for its dismissal
 	self._transition = self.DEFAULT_TRANSITION
 
-	self._dimColor = params.dimColor or uiConst.PRESENT_CONTROL_DIM_COLOR
+	self._dimColor = params.dimColor or self.DEFAULT_DIM_COLOR
 	self._panelColor = params.panelColor or uiConst.PRESENT_CONTROL_PANEL_COLOR
 	self._dismissOnTap = params.dismissOnTapOutside
 
@@ -363,6 +368,7 @@ function Presentation.__setters:panelColor( value )
 	--==--
 	self._panelColor = value
 	self._rctHit:setFillColor( unpack( value ) )
+	self:_panelColorChanged()
 end
 
 --== .dismissOnTapOutside
@@ -489,6 +495,11 @@ end
 --== Private Methods
 
 
+function Presentation:_panelColorChanged()
+	-- print( "OVERRIDE Presentation:_panelColorChanged" )
+end
+
+
 function Presentation:_callDelegate( name )
 	local del = self._delegate
 	local f = del and del[ name ]
@@ -567,12 +578,18 @@ function Presentation:_getScreen()
 	}
 end
 
+-- the size asked for, nil for all of the room
+--
+function Presentation:_getPreferredSize()
+	return self._presentedControl.preferredContentSize
+end
+
 -- the panel's frame: x/y are its top center.
 -- here the control's preferred size centered below the status bar,
 -- or all of that room
 --
 function Presentation:_getPanelFrame( screen )
-	local size = self._presentedControl.preferredContentSize
+	local size = self:_getPreferredSize()
 	local roomH = screen.height - ( screen.top-screen.y )
 	local w, h = screen.width, roomH
 	if size then
@@ -593,6 +610,7 @@ function Presentation:_layout()
 	local screen = self:_getScreen()
 	local frame = self:_getPanelFrame( screen )
 	local w, h = frame.width, frame.height
+	local border = self.BORDER
 	local o
 
 	self._screen = screen
@@ -608,8 +626,9 @@ function Presentation:_layout()
 	o = self._rctHit
 	o.width, o.height = w, h
 
-	-- the control's view is placed by its top center
-	self._dgMain.y = -h*0.5
+	-- the control's view is placed by its top center, inside the frame
+	self._dgMain.y = -h*0.5 + border
+	w, h = mmax( 0, w-border*2 ), mmax( 0, h-border*2 )
 
 	if control.width~=w then control.width = w end
 	if control.height~=h then control.height = h end

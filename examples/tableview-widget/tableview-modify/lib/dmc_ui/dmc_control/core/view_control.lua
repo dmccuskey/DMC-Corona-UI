@@ -243,7 +243,8 @@ end
 --== .preferredContentSize
 
 -- the size of the Control when presented, a table { width=, height= }.
--- nil (the default for dUI.MODAL) is all of the screen below the status bar
+-- nil (the default) is all of the screen below the status bar for
+-- dUI.MODAL, and 320x600 or what fits the screen for dUI.POPOVER
 --
 function ViewControl.__getters:preferredContentSize()
 	-- print( "ViewControl.__getters:preferredContentSize" )
@@ -351,9 +352,6 @@ function ViewControl:_createPresentationControl()
 	local o
 	if self._modalStyle == dUI.POPOVER then
 		o = dUI.Control.newPopoverControl()
-		if not self._preferredContentSize then
-			self._preferredContentSize = uiConst.POPOVER_PREFERRED_SIZE
-		end
 	else
 		o = dUI.Control.newPresentationControl()
 	end

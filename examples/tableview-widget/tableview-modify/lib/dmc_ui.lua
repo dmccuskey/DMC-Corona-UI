@@ -46,7 +46,7 @@ SOFTWARE.
 
 -- Semantic Versioning Specification: http://semver.org/
 
-local VERSION = "1.12.0"
+local VERSION = "1.13.0"
 
 
 
@@ -251,6 +251,14 @@ UI.ROUNDED = uiConst.ROUNDED
 
 UI.MODAL = uiConst.MODAL
 UI.POPOVER = uiConst.POPOVER
+
+-- Popover Arrow Directions
+
+UI.ARROW_UP = uiConst.ARROW_UP
+UI.ARROW_DOWN = uiConst.ARROW_DOWN
+UI.ARROW_LEFT = uiConst.ARROW_LEFT
+UI.ARROW_RIGHT = uiConst.ARROW_RIGHT
+UI.ARROW_ANY = uiConst.ARROW_ANY
 
 -- Control Modal Transitions
 

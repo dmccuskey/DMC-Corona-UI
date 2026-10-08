@@ -206,6 +206,15 @@ Constant.TABLEVIEW_TOUCH_THRESHOLD = 10
 Constant.MODAL = 'modal'
 Constant.POPOVER = 'popover'
 Constant.POPOVER_PREFERRED_SIZE = {width=320,height=600}
+Constant.POPOVER_DIM_COLOR = { 0, 0, 0, 0.2 }
+
+-- Popover Arrow Directions, the way the arrow points
+
+Constant.ARROW_UP = 'up'
+Constant.ARROW_DOWN = 'down'
+Constant.ARROW_LEFT = 'left'
+Constant.ARROW_RIGHT = 'right'
+Constant.ARROW_ANY = 'all'
 
 -- Modal Transitions
 
