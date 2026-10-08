@@ -1,6 +1,6 @@
 # Controls
 
-A control coordinates several widgets and your own views; elsewhere it would be called a controller. DMC Corona UI has the Navigation Control, which can also be [shown as a page over your app](#presenting-a-control).
+A control coordinates several widgets and your own views; elsewhere it would be called a controller. DMC Corona UI has the Navigation Control, which can also be shown [as a page over your app](#presenting-a-control) or [as a popover at a button](#popover-control).
 
 ## Navigation Control
 
@@ -215,12 +215,72 @@ See `examples/modal-control/modal-simple` ([screenshot](../examples/README.md#mo
 
 ## Popover Control
 
-A popover is a panel which belongs to a button: it opens next to it, and a tap anywhere else closes it. It is a presentation like the page above, with `modalStyle = dUI.POPOVER`: the same methods, the same delegate, a fade for its transition, `dismissOnTapOutside` on, and a `preferredContentSize` of 320x600 unless set. The control's `popoverControl` is its Presentation Control, with one more property, `buttonItem`: the display object the popover belongs to.
+A popover is a panel which belongs to a button: it opens next to the button, with an arrow pointing at it, and a tap anywhere else closes it. It suits a short menu or a few settings, where a whole page would be too much. Give the control a `modalStyle` of `dUI.POPOVER`, and tell its Popover Control which object it belongs to:
 
 ```lua
-navCtrl.modalStyle = dUI.POPOVER
-navCtrl.popoverControl.buttonItem = button
-navCtrl:presentControl()
+local dUI = require 'lib.dmc_ui'
+
+local menu = dUI.newNavigationControl{
+	modalStyle=dUI.POPOVER,
+	preferredContentSize={ width=220, height=240 },
+}
+
+local view = display.newRect( 0, 0, 100, 100 )  -- the control sizes it
+view:setFillColor( 0.3, 0.4, 0.5 )
+view.title = "Menu"
+menu:pushView( view )
+
+local button -- forward
+button = dUI.newPushButton{
+	labelText="Menu",
+	onRelease=function()
+		menu.popoverControl.buttonItem = button
+		menu:presentControl()
+	end,
+}
+button.x, button.y = display.contentCenterX, 60
 ```
 
-It is being finished: today the panel is placed below its button and kept on the screen, without the arrow which points at the button ([Known Issues](api.md#known-issues)).
+A press on the button fades the popover in below it, its arrow at the middle of the button's lower edge. A tap outside the popover fades it out again; the tap goes no further, so it doesn't press what it lands on.
+
+A popover is a presentation like [the page above](#presenting-a-control): `presentControl()`, `dismissControl()`, `isPresented`, the transitions, and the same Presentation Control behind it, here called `popoverControl` (`presentationControl` is the same object). What differs:
+
+| | Page (`dUI.MODAL`) | Popover (`dUI.POPOVER`) |
+|---|---|---|
+| place | the middle of the screen | next to its `buttonItem`; the middle of the screen without one |
+| `preferredContentSize`, when `nil` | the screen below the status bar | 320x600, or what fits |
+| transition | `dUI.SLIDE_UP` | `dUI.FADE` |
+| `dismissOnTapOutside` | `false` | `true` |
+| `dimColor` | `{ 0, 0, 0, 0.4 }` | `{ 0, 0, 0, 0.2 }` |
+| frame | none | 4 wide around the control, in `panelColor`, which is also the arrow's color |
+
+### Placement
+
+The popover opens on the first side of its button which has room for it, tried in this order, each named for the way the arrow points:
+
+| Direction | The popover is |
+|---|---|
+| `dUI.ARROW_UP` | below the button |
+| `dUI.ARROW_DOWN` | above it |
+| `dUI.ARROW_LEFT` | to the right of it |
+| `dUI.ARROW_RIGHT` | to the left of it |
+
+It stays on the screen, 10 from the edges and below the status bar: near an edge the panel moves over while the arrow stays on the button. When no side has room for `preferredContentSize`, the side with the most room is used and the popover is made as small as that room.
+
+The Popover Control adds these to the [Presentation Control's](#methods-and-properties) properties:
+
+| | |
+|---|---|
+| `buttonItem` | the display object or component the popover belongs to; a constructor option of `dUI.newPopoverControl()` too. The popover is placed for where the object is when this is set: set it again when the object has moved, or to move the popover to another button. |
+| `arrowDirections` | the sides which may be used: one direction, a list of them, or `dUI.ARROW_ANY` (also `nil`, the default) |
+| `arrowDirection` (read only) | the direction in use; `nil` without a `buttonItem` |
+
+```lua
+local popover = menu.popoverControl
+popover.arrowDirections = { dUI.ARROW_LEFT, dUI.ARROW_RIGHT }  -- beside the button only
+popover.buttonItem = otherButton
+```
+
+One control can serve several buttons this way, as the example does.
+
+See `examples/popover-control/popover-control-simple` ([screenshot](../examples/README.md#popover-control)): three buttons which open the same menu, below, beside and above them.

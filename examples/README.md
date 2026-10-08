@@ -9,13 +9,13 @@ Each app folder is a complete Solar2D project with its own copy of the library: 
 | `modal-control/` | `modal-simple` | [Presenting a Control](../docs/controls.md#presenting-a-control); [below](#modal-control) |
 | `navbar-widget/` | `navbar-simple` | [NavBar](../docs/widgets.md#navbar-and-navitem); [below](#navbar) |
 | `navigation-control/` | `navigation-control-simple`, `navigation-intermediate` | [Navigation Control](../docs/controls.md#navigation-control); [below](#navigation-control) |
-| `popover-control/` | `popover-control-simple` | [Popover Control](../docs/controls.md#popover-control) |
+| `popover-control/` | `popover-control-simple` | [Popover Control](../docs/controls.md#popover-control); [below](#popover-control) |
 | `scrollview-widget/` | `scrollview-simple`, `scrollview-zoom`, `scrollview-memtest` | [ScrollView](../docs/widgets.md#scrollview); [below](#scrollview) |
 | `tableview-widget/` | `tableview-simple`, `tableview-modify`, `tableview-scroll`, `tableview-tableviewcell`, `tableview-memtest` | [TableView](../docs/widgets.md#tableview-and-tableviewcell); [below](#tableview) |
 | `text-widget/` | `text-simple`, `text-styled`, `text-themed`, `text-memtest` | [Text](../docs/widgets.md#text); [below](#text) |
 | `textfield-widget/` | `textfield-simple`, `textfield-styled`, `textfield-keyboard` | [TextField](../docs/widgets.md#textfield); [below](#textfield) |
 
-The sections below describe each app, with a screenshot; the other widgets' apps get theirs as each widget is checked. In most apps a white box with a red dot marks the widget's position.
+The sections below describe each app, with a screenshot. In most apps a white box with a red dot marks the widget's position.
 
 ## Background
 
@@ -63,6 +63,12 @@ The control fills the screen below the status bar, sized from what the device re
 |---|---|
 | <img src="screenshots/navigation-control-simple.png" width="240" alt="navigation-control-simple: a light bar across the top with a blue Back button and the title View 3, over a brown view which fills the rest of the screen and says to tap the view to push another"> | **navigation-control-simple**: the control with the lightest kind of view, a display rectangle with a `title`: the control places it below its bar and gives it its size. The app pushes three by itself (`pushView()`): "View 1" at once, without a Back button; after a second "View 2" slides in from the right while the bar slides to its title and "< Back"; a second later "View 3" (the screenshot). From there, tap the view to push another, and "< Back" to pop the top one; the first view stays. A tap on the bar stays with it, so "< Back" doesn't push. A popped view is hidden, not removed: the app removes it when the control says so (`REMOVED_VIEW`). |
 | <img src="screenshots/navigation-intermediate.png" width="240" alt="navigation-intermediate: a bar with a blue Back button, the title Sea and a blue Info button, over a dark view with a large blue square"> | **navigation-intermediate**: a small app of three levels: a list of galleries, a gallery's list of images, an image (a colored square; the screenshot). Tap a button to go down a level, "< Back" to come back up. Each view (`view/`) is a plain table with a `title` and a display group (`view`), laid out for the room below the bar (`navCtrl.width`, `navCtrl.height`, `navCtrl.navBar.height`); it pushes the next view through `parent`, the control's reference to itself. Each has the functions the control calls as a view comes and goes (`willBeAdded`, `viewInMotion`, `viewDidAppear`, `viewDidDisappear`, `willBeRemoved`), which print, and removes its display group when it is popped. The image view brings its own `navItem`, for an "Info" button on the right of the bar (`rightButton`). |
+
+## Popover Control
+
+| | |
+|---|---|
+| <img src="screenshots/popover-control-simple.png" width="240" alt="popover-control-simple: a white-framed panel titled Menu with two buttons, Summer and Winter, below the Top button at the top right of the app, its arrow pointing up at the button; the Side and Bottom buttons show on the lightly dimmed app"> | **popover-control-simple**: a control shown as a popover (`modalStyle = dUI.POPOVER`): a framed panel which belongs to a button, with an arrow pointing at it. The app has three buttons, and a press on one opens the same Navigation Control next to it (`popoverControl.buttonItem`, `presentControl()`). The popover opens on a side with room and stays on the screen: below "Top" at the top right, its arrow pointing up (the screenshot; the app opens it by itself after a second), and above "Bottom", its arrow pointing down. "Side" names its side (`arrowDirections = dUI.ARROW_LEFT`), so its popover opens to the right of it. A tap outside the popover closes it, after asking the delegate (`shouldDismiss`). Inside is a short menu of 220x240 (`preferredContentSize`): an entry pushes a second view, and "< Back" returns. |
 
 ## ScrollView
 

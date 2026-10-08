@@ -1,5 +1,5 @@
 --====================================================================--
--- Test: Presentation Control (the modal page)
+-- Test: Presentation Control (the modal page) and Popover Control
 --====================================================================--
 
 module(..., package.seeall)
@@ -31,7 +31,7 @@ local SCREEN_X, SCREEN_Y = display.screenOriginX, display.screenOriginY
 local TOP = SCREEN_Y + display.topStatusBarContentHeight
 local ROOM_H = SCREEN_H - display.topStatusBarContentHeight
 
-local controls
+local controls, buttons
 
 -- a Navigation Control with one view, to be presented.
 -- the style specs load the base styles with their test defaults
@@ -98,14 +98,17 @@ end
 
 
 function setup()
-	controls = {}
+	controls, buttons = {}, {}
 end
 
 function teardown()
 	for _, ctrl in ipairs( controls ) do
 		if ctrl.view then ctrl:removeSelf() end
 	end
-	controls = nil
+	for _, o in ipairs( buttons ) do
+		if o.removeSelf then o:removeSelf() end
+	end
+	controls, buttons = nil, nil
 end
 
 
@@ -559,9 +562,33 @@ function test_removeWhilePresented()
 end
 
 
+--====================================================================--
+--== Test Popover Control
+
+
+-- a control presented as a popover of 200x160 at a button
+-- of 40x20 centered at x, y
+local function newPopover( x, y, directions )
+	local button = display.newRect( x, y, 40, 20 )
+	local ctrl = newControl{
+		modalStyle=dUI.POPOVER, preferredContentSize={ width=200, height=160 }
+	}
+	local pop = ctrl.popoverControl
+	if directions then pop.arrowDirections = directions end
+	pop.buttonItem = button
+	ctrl:presentControl{ animated=false }
+	buttons[ #buttons+1 ] = button
+	return ctrl, pop, button
+end
+
+local CX, CY = SCREEN_X + SCREEN_W*0.5, SCREEN_Y + SCREEN_H*0.5
+local MARGIN, ARROW = 10, 12 -- PopoverControl.MARGIN, ARROW_LENGTH
+local BORDER = 4 -- PopoverControl.BORDER, the panel's frame around the control
+
+
 --[[
 the popover is a presentation too: its own control, the default size
-of a popover, a fade, and a tap outside dismisses
+of a popover, a fade, a lighter layer, and a tap outside dismisses
 --]]
 function test_popoverStyle()
 	local ctrl = newControl()
@@ -571,7 +598,10 @@ function test_popoverStyle()
 	assert_not_nil( pop )
 	assert_equal( pop, ctrl.presentationControl )
 	assert_true( pop.dismissOnTapOutside )
-	assert_equal( 320, ctrl.preferredContentSize.width )
+	assert_equal( 0.2, pop.dimColor[4] )
+	assert_nil( ctrl.preferredContentSize )
+	assert_nil( pop.buttonItem )
+	assert_nil( pop.arrowDirections )
 
 	ctrl:presentControl{ time=100 }
 	assert_equal( 0, pop._panel.alpha )
@@ -586,6 +616,192 @@ function test_popoverStyle()
 	assert_nil( pop.view )
 	assert_nil( ctrl.popoverControl )
 	assert_not_nil( ctrl.presentationControl )
+	ctrl:presentControl{ animated=false }
+	assert_equal( SCREEN_W, ctrl.width )
+end
+
+
+--[[
+without a button the popover is in the middle of the room, no arrow;
+without a size it is 320x600, or what fits
+--]]
+function test_popoverWithoutButton()
+	local ctrl = newControl{ modalStyle=dUI.POPOVER }
+	local pop = ctrl.popoverControl
+	ctrl:presentControl{ animated=false }
+
+	assert_nil( pop.arrowDirection )
+	assert_nil( pop._arrow )
+	assert_equal( math.min( 320+2*BORDER, SCREEN_W )-2*BORDER, ctrl.width )
+	assert_equal( math.min( 600+2*BORDER, ROOM_H )-2*BORDER, ctrl.height )
+
+	local b = pop._rctHit.contentBounds
+	assert_equal( CX, ( b.xMin+b.xMax )*0.5 )
+end
+
+
+--[[
+below its button when there is room: the arrow points up at the
+middle of the button's lower edge, the panel starts at the arrow's base
+--]]
+function test_popoverBelowButton()
+	local ctrl, pop, button = newPopover( CX, TOP+40 )
+
+	assert_equal( dUI.ARROW_UP, pop.arrowDirection )
+	assert_equal( 200, ctrl.width )
+	assert_equal( 160, ctrl.height )
+
+	local b = pop._rctHit.contentBounds
+	local a = pop._arrow.contentBounds
+	assert_equal( TOP+50, a.yMin )
+	assert_equal( TOP+50+ARROW, a.yMax )
+	assert_equal( a.yMax, b.yMin )
+	assert_equal( CX, ( a.xMin+a.xMax )*0.5 )
+	assert_equal( CX, ( b.xMin+b.xMax )*0.5 )
+	-- the panel is the control and its frame
+	assert_equal( 160+2*BORDER, b.yMax-b.yMin )
+	assert_equal( 200+2*BORDER, b.xMax-b.xMin )
+	local v = ctrl.view.contentBounds
+	assert_equal( b.yMin+BORDER, v.yMin )
+	assert_equal( b.xMin+BORDER, v.xMin )
+end
+
+
+--[[
+above its button when there is no room below
+--]]
+function test_popoverAboveButton()
+	local bottom = SCREEN_Y+SCREEN_H
+	local ctrl, pop = newPopover( CX, bottom-40 )
+
+	assert_equal( dUI.ARROW_DOWN, pop.arrowDirection )
+	local b = pop._rctHit.contentBounds
+	local a = pop._arrow.contentBounds
+	assert_equal( bottom-50, a.yMax )
+	assert_equal( a.yMin, b.yMax )
+	assert_equal( 160+2*BORDER, b.yMax-b.yMin )
+end
+
+
+--[[
+near a side the panel stays on the screen, and the arrow still
+points at the button
+--]]
+function test_popoverKeptOnScreen()
+	local ctrl, pop = newPopover( SCREEN_X+30, TOP+40 )
+
+	local b = pop._rctHit.contentBounds
+	local a = pop._arrow.contentBounds
+	assert_equal( SCREEN_X+MARGIN, b.xMin )
+	assert_equal( 200+2*BORDER, b.xMax-b.xMin )
+	assert_equal( SCREEN_X+30, ( a.xMin+a.xMax )*0.5 )
+
+	-- a button in the very corner: the arrow stays on the panel's edge
+	ctrl, pop = newPopover( SCREEN_X+SCREEN_W-5, TOP+40 )
+	b = pop._rctHit.contentBounds
+	a = pop._arrow.contentBounds
+	assert_equal( SCREEN_X+SCREEN_W-MARGIN, b.xMax )
+	assert_equal( b.xMax, a.xMax )
+end
+
+
+--[[
+arrowDirections: only the sides named are used, one or a list;
+dUI.ARROW_ANY and nil are all of them
+--]]
+function test_arrowDirections()
+	-- a button at the left, half way down: room on its right
+	local ctrl, pop, button = newPopover( SCREEN_X+40, CY, dUI.ARROW_LEFT )
+
+	assert_equal( dUI.ARROW_LEFT, pop.arrowDirections )
+	assert_equal( dUI.ARROW_LEFT, pop.arrowDirection )
+	local b = pop._rctHit.contentBounds
+	local a = pop._arrow.contentBounds
+	assert_equal( SCREEN_X+60, a.xMin )
+	assert_equal( a.xMax, b.xMin )
+	assert_equal( CY, ( a.yMin+a.yMax )*0.5 )
+	assert_equal( CY, ( b.yMin+b.yMax )*0.5 )
+
+	-- the first of a list with room
+	pop.arrowDirections = { dUI.ARROW_RIGHT, dUI.ARROW_DOWN }
+	assert_equal( dUI.ARROW_DOWN, pop.arrowDirection )
+
+	pop.arrowDirections = dUI.ARROW_ANY
+	assert_equal( dUI.ARROW_UP, pop.arrowDirection )
+	pop.arrowDirections = nil
+	assert_equal( dUI.ARROW_UP, pop.arrowDirection )
+
+	assert_error( function() pop.arrowDirections = 'sideways' end )
+	assert_error( function() pop.arrowDirections = {} end )
+
+	-- as a constructor option
+	local pop2 = dUI.newPopoverControl{ arrowDirections=dUI.ARROW_DOWN }
+	assert_equal( dUI.ARROW_DOWN, pop2.arrowDirections )
+	pop2:removeSelf()
+end
+
+
+--[[
+no side has room for the size: the side with the most room,
+and the panel as large as the room there
+--]]
+function test_popoverShrinksToFit()
+	local ctrl, pop = newPopover( CX, CY )
+	ctrl.preferredContentSize = { width=SCREEN_W*2, height=SCREEN_H }
+
+	assert_equal( SCREEN_W-2*MARGIN-2*BORDER, ctrl.width )
+	local b = pop._rctHit.contentBounds
+	assert_true( b.yMin >= TOP+MARGIN-0.01 )
+	assert_true( b.yMax <= SCREEN_Y+SCREEN_H-MARGIN+0.01 )
+	assert_true( ctrl.height < SCREEN_H*0.5 )
+	assert_not_nil( pop.arrowDirection )
+end
+
+
+--[[
+the popover follows its button when the button is set again,
+and a removed button leaves it in the middle
+--]]
+function test_buttonItemMoves()
+	local ctrl, pop, button = newPopover( CX, TOP+40 )
+
+	button.y = TOP+100
+	pop.buttonItem = button
+	assert_equal( TOP+110, pop._arrow.contentBounds.yMin )
+	assert_equal( TOP+110+ARROW, pop._rctHit.contentBounds.yMin )
+
+	-- a component, eg a dUI button, has contentBounds too
+	assert_error( function() pop.buttonItem = {} end )
+
+	pop.buttonItem = nil
+	assert_nil( pop._arrow )
+	assert_nil( pop.arrowDirection )
+end
+
+
+--[[
+the arrow has the panel's color, fades with it, keeps its touches,
+and goes with the popover
+--]]
+function test_arrow()
+	local ctrl, pop = newPopover( CX, TOP+40 )
+	local arrow = pop._arrow
+
+	assert_true( arrow:dispatchEvent{ name='touch', phase='began', target=arrow, x=0, y=0 } )
+	assert_true( arrow:dispatchEvent{ name='tap', target=arrow, x=0, y=0, numTaps=1 } )
+	assert_equal( pop.PRESENTED, pop.state )
+
+	pop.panelColor = { 0.2, 0.2, 0.2, 1 }
+	assert_equal( arrow, pop._arrow )
+
+	ctrl:dismissControl{ time=100 }
+	frame( pop, 50 )
+	assert_equal( 0.5, pop._arrow.alpha, 0.01 )
+	assert_equal( 0.5, pop._panel.alpha, 0.01 )
+
+	ctrl:removeSelf()
+	assert_nil( pop._arrow )
+	assert_nil( pop.view )
 end
 
 
