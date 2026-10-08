@@ -105,6 +105,8 @@ function Control.initialize( manager, params )
 	--== Add API calls
 
 	dUI.newNavigationControl = Control.newNavigationControl
+	dUI.newPopoverControl = Control.newPopoverControl
+	dUI.newPresentationControl = Control.newPresentationControl
 
 end
 
@@ -174,6 +176,18 @@ function Control.newPopoverControl( params )
 	--==--
 	if not Control.Popover then Control._loadPopoverControlSupport() end
 	return Control.Popover:new( params )
+end
+
+
+--======================================================--
+-- newPresentationControl Support
+
+function Control.newPresentationControl( params )
+	-- print( "Control.newPresentationControl" )
+	params = params or {}
+	--==--
+	if not Control.PresentationBase then Control._loadPresentationControlSupport() end
+	return Control.PresentationBase:new( params )
 end
 
 

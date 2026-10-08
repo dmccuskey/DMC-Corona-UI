@@ -155,7 +155,7 @@ To update, copy `dmc_corona_boot.lua` and `lib/` again from the newer version. K
 
 - [Using Styles](docs/styles.md): styles and widgets, inline, shared and named styles, child styles, inheritance, themes
 - [Widgets](docs/widgets.md): each widget's options, properties, methods and events
-- [Controls](docs/controls.md): the Navigation Control
+- [Controls](docs/controls.md): the Navigation Control, and a control shown as a page over the app or as a popover
 - [API reference](docs/api.md): the module's functions, constants, configuration, known issues
 - [Examples](examples/): an app for each widget and control
 

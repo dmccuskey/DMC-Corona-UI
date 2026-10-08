@@ -136,7 +136,6 @@ function Widget.initialize( manager, params )
 	dUI.newFormatter = Widget.newFormatter
 	dUI.newNavBar = Widget.newNavBar
 	dUI.newNavItem = Widget.newNavItem
-	dUI.newPopover = Widget.newPopover
 	dUI.newScrollView = Widget.newScrollView
 	dUI.newSlideView = Widget.newSlideView
 	dUI.newTableView = Widget.newTableView

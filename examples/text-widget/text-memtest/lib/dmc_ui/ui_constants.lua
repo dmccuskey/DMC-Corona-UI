@@ -197,13 +197,33 @@ Constant.TABLEVIEWCELL_NONE = 'no-accessory'
 
 Constant.NAVBAR_TRANSITION_TIME = 400
 Constant.PRESENT_CONTROL_TRANSITION_TIME = 100
+Constant.PRESENT_CONTROL_SLIDE_TIME = 300
 
 Constant.TABLEVIEW_TOUCH_THRESHOLD = 10
 
 -- Modal Types
 
+Constant.MODAL = 'modal'
 Constant.POPOVER = 'popover'
 Constant.POPOVER_PREFERRED_SIZE = {width=320,height=600}
+Constant.POPOVER_DIM_COLOR = { 0, 0, 0, 0.2 }
+
+-- Popover Arrow Directions, the way the arrow points
+
+Constant.ARROW_UP = 'up'
+Constant.ARROW_DOWN = 'down'
+Constant.ARROW_LEFT = 'left'
+Constant.ARROW_RIGHT = 'right'
+Constant.ARROW_ANY = 'all'
+
+-- Modal Transitions
+
+Constant.SLIDE_UP = 'slide-up'
+Constant.FADE = 'fade'
+Constant.NO_TRANSITION = 'no-transition'
+
+Constant.PRESENT_CONTROL_DIM_COLOR = { 0, 0, 0, 0.4 }
+Constant.PRESENT_CONTROL_PANEL_COLOR = { 1, 1, 1, 1 }
 
 
 

@@ -232,6 +232,16 @@ module_config = {
 				}
 			},
 			{
+				"exp_dir": "modal-control/modal-simple",
+				"requires": [],
+				"mod_dir_map": {
+					"default_dir": "",
+					"libs": {
+						"dmc-corona-boot":""
+					}
+				}
+			},
+			{
 				"exp_dir": "navigation-control/navigation-control-simple",
 				"requires": [],
 				"mod_dir_map": {
