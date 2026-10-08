@@ -24,6 +24,7 @@ The path follows where `dmc_ui.lua` is: `lib.dmc_ui` for the layout in the [Quic
 | `dUI.newNavBar( [options] )`, `newNavItem()` | a [NavBar](widgets.md#navbar-and-navitem) and its items |
 | `dUI.newScrollView( [options] )` | a [ScrollView](widgets.md#scrollview) |
 | `dUI.newSlideView( [options] )` | a [SlideView](widgets.md#slideview) |
+| `dUI.newPageIndicator( [options] )` | a [PageIndicator](widgets.md#pageindicator), the dots for a set of pages |
 | `dUI.newTableView( [options] )`, `newTableViewCell()` | a [TableView](widgets.md#tableview-and-tableviewcell) and its rows |
 | `dUI.newNavigationControl( [options] )` | a [Navigation Control](controls.md#navigation-control); with `modalStyle=dUI.MODAL`, [a page over the app](controls.md#presenting-a-control); with `dUI.POPOVER`, [a popover](controls.md#popover-control) |
 
@@ -36,7 +37,7 @@ The path follows where `dmc_ui.lua` is: `lib.dmc_ui` for the layout in the [Quic
 | `dUI.newBackgroundStyle( [properties] )` | a Background style; `newRectangleBackgroundStyle()`, `newRoundedBackgroundStyle()`, `newNineSliceBackgroundStyle()`, `newImageBackgroundStyle()` for one type |
 | `dUI.newTextStyle()`, `newTextFieldStyle()`, `newButtonStyle()` | a style for that widget |
 | `dUI.newNavBarStyle()`, `newNavItemStyle()`, `newTableViewCellStyle()` | a style for that widget |
-| `dUI.newScrollViewStyle()`, `newTableViewStyle()` | a style for that widget |
+| `dUI.newScrollViewStyle()`, `newTableViewStyle()`, `newPageIndicatorStyle()` | a style for that widget |
 
 `properties` is a table of the style's properties and child styles, plus `name` to register it as a named style and `inherit` (a style, or a style's name) to inherit from ([Inheritance](styles.md#inheritance)).
 

@@ -10,13 +10,20 @@
 -- A delegate supplies the slides: numberOfSlides() says how many,
 -- onSlideRender() fills the view of a slide when it comes near the
 -- screen (only the slide showing and its neighbors exist), and
--- didShowSlide() updates the line at the bottom, "2 of 5".
+-- didShowSlide() says which slide has come to rest.
+--
+-- A page indicator at the bottom has a dot for each slide, the one
+-- showing in white. The two widgets know nothing of each other: the
+-- app sets the indicator's currentPage in didShowSlide(), and a tap
+-- left or right of the white dot (didChangePage(), on the indicator's
+-- delegate) moves the slide view by one slide with gotoSlide().
 --
 -- After a second the app moves to the second slide by itself
 -- (gotoSlide()). A tap on a slide (didSelectSlide()) starts the
 -- auto-advance: every two seconds the next slide, and the first after
 -- the last (startAutoAdvance()). It waits while a finger is on the
--- view. Another tap stops it (stopAutoAdvance()).
+-- view. Another tap stops it (stopAutoAdvance()). A line above the
+-- dots says when it is on.
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
@@ -61,7 +68,8 @@ local SLIDES = {
 	{ color={ 0.75, 0.22, 0.17 }, text="The last slide bounces at its edge" },
 }
 
-local slideView, status = nil, nil -- the widget and the bottom line, later
+-- the widgets and the line above the dots, later
+local slideView, pageIndicator, status = nil, nil, nil
 
 
 
@@ -70,11 +78,7 @@ local slideView, status = nil, nil -- the widget and the bottom line, later
 
 
 local function updateStatus()
-	local str = string.format( "%d of %d", slideView.index, slideView.numberOfSlides )
-	if slideView.isAutoAdvancing then
-		str = str .. "  ·  auto-advance"
-	end
-	status.text = str
+	status.isVisible = slideView.isAutoAdvancing
 end
 
 
@@ -119,11 +123,11 @@ local delegate = {
 		print( "onSlideUnrender", event.index )
 	end,
 
-	-- a slide has come to rest in the view
+	-- a slide has come to rest in the view: its dot is the white one
 	--
 	didShowSlide=function( self, event )
 		print( "didShowSlide", event.index )
-		updateStatus()
+		pageIndicator.currentPage = event.index
 	end,
 
 	-- a tap on a slide
@@ -142,14 +146,43 @@ local delegate = {
 
 
 
+-- the delegate of the page indicator: a tap left or right
+-- of the current dot has moved it by one page
+--
+local indicatorDelegate = {
+
+	didChangePage=function( self, event )
+		print( "didChangePage", event.page )
+		slideView:gotoSlide( event.page )
+	end,
+}
+
+
+
 --===================================================================--
 --== Main
 --===================================================================--
 
 
--- the line at the bottom, over the slides
+-- the page indicator at the bottom, over the slides: a dot for each
+-- slide. its touch area is as wide as the screen
 
-status = display.newText( "", H_CENTER, SCREEN_Y+SCREEN_H-30, native.systemFont, 16 )
+pageIndicator = dUI.newPageIndicator{
+	numberOfPages=#SLIDES,
+	width=SCREEN_W,
+	height=44,
+	delegate=indicatorDelegate,
+	style={
+		dotColor={ 1, 1, 1, 0.4 },
+		currentDotColor={ 1, 1, 1, 1 },
+	},
+}
+pageIndicator.x, pageIndicator.y = H_CENTER, SCREEN_Y+SCREEN_H-34
+
+-- the line above the dots, while the auto-advance is on
+
+status = display.newText( "auto-advance", H_CENTER, pageIndicator.y-26, native.systemFont, 14 )
+status.isVisible = false
 
 -- the slide view: its slides are the size of the widget
 
@@ -162,6 +195,7 @@ slideView.x, slideView.y = SCREEN_X, SCREEN_Y+STATUS_BAR_H
 
 slideView:reloadData()
 status:toFront()
+pageIndicator:toFront()
 
 
 tdelay( 1000, function()

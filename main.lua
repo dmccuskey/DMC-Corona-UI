@@ -93,6 +93,7 @@ lunatest.suite( 'tests.textfield_widget_spec' )
 lunatest.suite( 'tests.scrollview_widget_spec' )
 lunatest.suite( 'tests.tableview_widget_spec' )
 lunatest.suite( 'tests.slideview_widget_spec' )
+lunatest.suite( 'tests.pageindicator_widget_spec' )
 lunatest.suite( 'tests.navbar_widget_spec' )
 
 -- controls

@@ -381,6 +381,81 @@ As an option, `autoAdvanceTime` starts the advance; setting the property to 0 st
 
 A SlideView is a ScrollView which scrolls sideways and stops on pages (`isPagingEnabled`): its options, properties and style apply (`autoMask`, `bounceIsActive`, `horizontalScrollEnabled` to lock it, a new `width` or `height` later, for which the slides are made again), and its delegate gets `willBeginScrolling`, `didScroll` and `didEndScrolling` too ([ScrollView](#scrollview)). Its scroll indicator is off unless `showHorizontalScrollIndicator=true`. A swipe which starts on a widget inside a slide (a Button, a TextField) goes to that widget, as in a ScrollView. A SlideView sends no events: it reports through its delegate.
 
+For the row of dots under the slides, see [PageIndicator](#pageindicator). See `examples/slideview-widget/slideview-simple`.
+
+## PageIndicator
+
+A row of dots, one for each page, with the dot of the current page in another color: the dots under a set of slides. A tap left or right of the current dot moves one page.
+
+```lua
+local dots = dUI.newPageIndicator{
+	numberOfPages=5,
+	currentPage=1,
+	delegate={
+		didChangePage=function( self, event )
+			print( "from", event.previousPage, "to", event.page )
+		end,
+	},
+}
+dots.x, dots.y = 160, 440   -- its middle: the anchors are 0.5, 0.5
+```
+
+| Option or property | |
+|---|---|
+| `numberOfPages` | how many dots: 0 at first. With fewer pages, the current page stays inside them |
+| `currentPage` | the page whose dot has the other color, from 1. A number outside the pages becomes the first or the last. Setting it doesn't call the delegate |
+| `hidesForSinglePage` | `true` hides the dots, and the touch area, while there is one page or none: `false` at first |
+| `isHidden` | whether that is the case now (read only) |
+| `width`, `height` | the size of the widget, which is its touch area. 0, the default, is the size of the row of dots and its margins |
+| `delegate` | a table or object with `didChangePage` |
+
+`didChangePage( self, event )` is called after a tap has moved the current page: `event.page` is the new page, `event.previousPage` the one before, `event.target` the page indicator. A tap moves one page however far from the dot it lands. A tap on the current dot, left of the first page or right of the last does nothing. The widget keeps the touches and taps in its area, so nothing behind it gets them.
+
+Its style, from `dUI.newPageIndicatorStyle()` or a `style` table:
+
+| Style property | |
+|---|---|
+| `dotColor` | the dots: `{ 0, 0, 0, 0.25 }` |
+| `currentDotColor` | the dot of the current page: `{ 0, 0, 0, 0.8 }` |
+| `dotSize` | the diameter of a dot: 7 |
+| `dotSpacing` | the space between two dots: 9 |
+| `marginX`, `marginY` | the space around the row of dots when the width or the height is 0: 12, which makes a touch area 31 high |
+| `width`, `height`, `anchorX`, `anchorY`, `debugOn` | as for every widget; `debugOn` shows the touch area |
+
+`dotColor` and `currentDotColor` are properties of the widget too.
+
+**With a SlideView.** A page indicator knows nothing of what shows the pages. Two lines tie it to a [SlideView](#slideview), one in each delegate:
+
+```lua
+local slides, dots
+
+slides = dUI.newSlideView{
+	width=320, height=200,
+	delegate={
+		numberOfSlides=function( self, slideView ) return 5 end,
+		onSlideRender=function( self, event ) --[[ fill event.view ]] end,
+		didShowSlide=function( self, event )
+			dots.currentPage = event.index          -- the slides moved: set the dot
+		end,
+	},
+}
+
+dots = dUI.newPageIndicator{
+	numberOfPages=5,
+	width=320, height=44,                           -- a touch area as wide as the slides
+	style={ dotColor={ 1, 1, 1, 0.4 }, currentDotColor={ 1, 1, 1, 1 } },
+	delegate={
+		didChangePage=function( self, event )
+			slides:gotoSlide( event.page )          -- a tap on the dots: move the slides
+		end,
+	},
+}
+dots.x, dots.y = 160, 180
+
+slides:reloadData()
+dots:toFront()
+```
+
 See `examples/slideview-widget/slideview-simple`.
 
 ## TableView and TableViewCell
