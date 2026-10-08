@@ -39,7 +39,7 @@ SOFTWARE.
 
 -- Semantic Versioning Specification: http://semver.org/
 
-local VERSION = "0.1.0"
+local VERSION = "0.2.0"
 
 
 
@@ -77,6 +77,9 @@ local PresentationControl = require( ui_find( 'dmc_control.core.presentation_con
 
 local newClass = Objects.newClass
 
+local mmax = math.max
+local mmin = math.min
+
 --== To be set in initialize()
 local dUI = nil
 
@@ -89,6 +92,13 @@ local dUI = nil
 
 local PopControl = newClass( PresentationControl, {name="Popover Control"} )
 
+--== Class Constants
+
+PopControl.DEFAULT_TRANSITION = uiConst.FADE
+PopControl.DEFAULT_DISMISS_ON_TAP_OUTSIDE = true
+
+PopControl.MARGIN = 10 -- between the panel and the screen's edge, the button
+
 
 --======================================================--
 -- Start: Setup DMC Objects
@@ -98,65 +108,27 @@ local PopControl = newClass( PresentationControl, {name="Popover Control"} )
 function PopControl:__init__( params )
 	-- print( "PopControl:__init__" )
 	params = params or {}
-	-- params.automask=true
 
 	self:superCall( '__init__', params )
 	--==--
 
+	if self.is_class then return end
+
 	--== Create Properties ==--
 
-	-- properties stored in Class
-
 	self._arrowDirs = params.arrowDirections
-	self._arrowDirs_dirty=true
 
+	-- the display object the popover belongs to
 	self._buttonItem = params.buttonItem
-	self._buttonItem_dirty=true
-
-	-- this is the position of the activating button
-	self._x_pos = params.x_pos
-	self._y_pos = params.y_pos
 
 end
---[[
+
 function PopControl:__undoInit__()
 	-- print( "PopControl:__undoInit__" )
+	self._buttonItem = nil
 	--==--
 	self:superCall( '__undoInit__' )
 end
---]]
-
---== createView
-
---[[
-function PopControl:__createView__()
-	print( "PopControl:__createView__" )
-	self:superCall( '__createView__' )
-	--==--
-end
-function PopControl:__undoCreateView__()
-	print( "PopControl:__undoCreateView__" )
-	--==--
-	self:superCall( '__undoCreateView__' )
-end
---]]
-
-
---== initComplete
-
---[[
-function PopControl:__initComplete__()
-	--print( "PopControl:__initComplete__" )
-	self:superCall( '__initComplete__' )
-	--==--
-end
-
-function PopControl:__undoInitComplete__()
-	--print( "PopControl:__undoInitComplete__" )
-	--==--
-	self:superCall( '__undoInitComplete__' )
-end
---]]
 
 -- END: Setup DMC Objects
 --======================================================--
@@ -178,76 +150,27 @@ end
 --== Public Methods
 
 
+--== .buttonItem
+
+-- the display object the popover belongs to, eg the button which opens it
+--
+function PopControl.__getters:buttonItem()
+	return self._buttonItem
+end
 function PopControl.__setters:buttonItem( value )
-	assert( value )
-	--==--
 	self._buttonItem = value
-	self:_recalculatePresentedViewLayout()
+	self:_layout()
 end
 
+--== .arrowDirections
 
-
-function PopControl:show( pos, params )
-	-- print( "PopControl:show", pos )
-	assert( pos.x and pos.y )
-	--==--
-	self.x, self.y = pos.x, pos.y
-	self.isVisible = true
+function PopControl.__getters:arrowDirections()
+	return self._arrowDirs
 end
-
-function PopControl:hide()
-	-- print( "PopControl:hide" )
-	local d = self._delegate
-	self.isVisible = false
-	if d and d.isDismissed then
-		timer.performWithDelay( 1, function() d:isDismissed() end)
-	end
+function PopControl.__setters:arrowDirections( value )
+	self._arrowDirs = value
+	self:_layout()
 end
-
-
---======================================================--
--- Delegate Methods
-
--- replaces: prepareForPopoverPresentation
---
-function PopControl:presentationWillBegin()
-	local del = self._delegate
-	local f = del and del.presentationWillBegin
-	if f then return f( del, self ) end
-end
-
--- replaces: popoverPresentationControllerShouldDismissPopover
---
-function PopControl:shouldDismissPopover()
-	-- print( "PopControl:shouldDismissPopover" )
-	local result = true
-	local del = self._delegate
-	local f = del and del.shouldDismissPopover
-	if f then result = f( del, self ) end
-	return result
-end
-
--- replaces: popoverPresentationControllerDidDismissPopover
---
-function PopControl:dismissalEnded()
-	local del = self._delegate
-	local f = del and del.dismissalEnded
-	if f then return f( del, self ) end
-end
-
--- replaces: willRepositionPopoverToRect
---
-function PopControl:_willRepositionPopover( params )
-	local del = self._delegate
-	local f = del and del.willRepositionPopover
-	if f then
-		return f( del, self, params )
-	else
-		return params
-	end
-end
-
-
 
 
 
@@ -255,104 +178,24 @@ end
 --== Private Methods
 
 
-function PopControl:_recalculateAnchorPosition( params )
-	-- TODO: hook up to rectangle
-	-- TODO: make much smarter
-	local posX, posY = 0, 0
-	if self._buttonItem then
-		local o = self._buttonItem
-		local bXc, bYc = o:localToContent( 0,0 )
-		local bW, bH = o.width, o.height
-		posX = (bXc-bW*0.5)
-		posY = (bYc-bH*0.5)
-	end
-	params.posX, params.posY = posX, posY
+-- the panel's frame: the control's preferred size, below the button
+-- and kept on the screen; centered without a button
+--
+function PopControl:_getPanelFrame( screen )
+	local MARGIN = PopControl.MARGIN
+	local frame = PresentationControl._getPanelFrame( self, screen )
+	local o = self._buttonItem
+	if not o or not o.contentBounds then return frame end
+
+	local b = o.contentBounds
+	local w, h = frame.width, frame.height
+	local xMin, xMax = screen.x+MARGIN+w*0.5, screen.x+screen.width-MARGIN-w*0.5
+	local yMin, yMax = screen.top+MARGIN, screen.y+screen.height-MARGIN-h
+
+	frame.x = mmax( xMin, mmin( xMax, ( b.xMin+b.xMax )*0.5 ) )
+	frame.y = mmax( yMin, mmin( yMax, b.yMax+MARGIN ) )
+	return frame
 end
-
-function PopControl:_recalculateDimensions( params )
-	-- TODO: hook up to keyboard event
-	local pc = self._presentedControl
-	local pcS = pc.preferredContentSize
-	local keyboard = false
-	local W, H = pcS.width, pcS.height
-	if keyboard then
-		local kbh = uiConst.getKeyboardHeight()
-		H = H - kbh
-	end
-	params.width, params.height = W, H
-end
-
-function PopControl:_recalculatePosition( params )
-	-- TODO: hook up to keyboard event
-	local W, H = dUI.WIDTH, dUI.HEIGHT
-	local H_CENTER, V_CENTER = W*0.5, H*0.5
-	local pc = self._presentedControl
-	local keyboard = false
-	local posX, posY = params.posX, params.posY
-	local MARGIN = { x=20,y=40 }
-	local X, Y
-	if keyboard then
-		local kbh = uiConst.getKeyboardHeight()
-		H = H - kbh
-	end
-	params.x = posX-H_CENTER-MARGIN.x-pc.width*0.5
-	params.y = posY-MARGIN.y
-
-end
-
-
-function PopControl:_recalculatePresentedViewLayout()
-	-- print( "PopControl:_recalculatePresentedViewLayout" )
-	if not self._presentedControl or not self._presentedControlSetView then return end
-	--==--
-	local pc = self._presentedControl
-	local oldW, oldH = pc.width, pc.height
-	local dg = self._presentedControlSetView
-	local oldX, oldY = dg.x, dg.y
-
-	local params = {
-		posX=0, posY=0,
-		x=dg.x, y=dg.y,
-		width=self._preferredWidth, height=self._preferredHeight,
-		view=dg
-	}
-
-	self:_recalculateAnchorPosition( params )
-	self:_recalculateDimensions( params )
-	self:_recalculatePosition( params )
-
-	params = self:_willRepositionPopover( params )
-
-	if params.x~=oldX or params.y~=oldY then
-		self._presentedControlPos = {
-			x=params.x, y=params.y
-		}
-		self._presentedControlPos_dirty=true
-		self:__invalidateProperties__()
-	end
-
-	if params.width~=oldW or params.height~=oldH then
-		pc.width, pc.height = params.width, params.height
-		self._dgMain_dirty=true
-		self:__invalidateProperties__()
-	end
-
-	if params.view ~= self._presentedControlSetView then
-		self._presentedControlSetView = params.view
-		self._presentedControlSetView_dirty=true
-		self:__invalidateProperties__()
-	end
-
-end
-
-
-
---====================================================================--
---== Event Handlers
-
-
--- none
-
 
 
 

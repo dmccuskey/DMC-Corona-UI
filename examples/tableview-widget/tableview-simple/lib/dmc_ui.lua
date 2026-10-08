@@ -46,7 +46,7 @@ SOFTWARE.
 
 -- Semantic Versioning Specification: http://semver.org/
 
-local VERSION = "1.11.0"
+local VERSION = "1.12.0"
 
 
 
@@ -249,7 +249,14 @@ UI.ROUNDED = uiConst.ROUNDED
 
 -- Control Modal Types
 
+UI.MODAL = uiConst.MODAL
 UI.POPOVER = uiConst.POPOVER
+
+-- Control Modal Transitions
+
+UI.SLIDE_UP = uiConst.SLIDE_UP
+UI.FADE = uiConst.FADE
+UI.NO_TRANSITION = uiConst.NO_TRANSITION
 
 
 

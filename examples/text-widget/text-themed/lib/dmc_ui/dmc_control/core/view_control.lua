@@ -39,7 +39,7 @@ SOFTWARE.
 
 -- Semantic Versioning Specification: http://semver.org/
 
-local VERSION = "0.1.0"
+local VERSION = "0.2.0"
 
 
 
@@ -66,7 +66,6 @@ local ui_find = dmc_ui_func.find
 
 local LifecycleMixModule = require 'dmc_lifecycle_mix'
 local Objects = require 'dmc_objects'
-local Patch = require 'dmc_patch'
 local uiConst = require( ui_find( 'ui_constants' ) )
 
 
@@ -75,15 +74,11 @@ local uiConst = require( ui_find( 'ui_constants' ) )
 --== Setup, Constants
 
 
-Patch.addPatch( 'table-pop' )
-
 -- setup some aliases to make code cleaner
 local newClass = Objects.newClass
 local ComponentBase = Objects.ComponentBase
 
 local LifecycleMix = LifecycleMixModule.LifecycleMix
-
-local tpop = table.pop
 
 --== To be set in initialize()
 local dUI = nil
@@ -122,24 +117,15 @@ function ViewControl:__init__( params )
 	self._width = params.width or dUI.WIDTH
 	self._height = params.height or dUI.HEIGHT
 
-	self._modalStyle = params.modalStyle
+	self._modalStyle = nil
+	self._modalStyle_init = params.modalStyle -- set in __initComplete__
 	self._preferredContentSize = params.preferredContentSize
 
 	--[[
-	the Control's parent, or nil if Control is presented
+	the Presentation Control which shows this Control,
+	made when modalStyle is set (a Popover Control for dUI.POPOVER)
 	--]]
-	self._parentControl = nil
-
-	--[[
-	the popover view control in the hierarchy
-	nil if not presented by popover
-	--]]
-	self._popoverControl = nil
-
-	--[[
-	the Control being presented
-	--]]
-	self._presentedControl = nil
+	self._presentationControl = nil
 
 end
 
@@ -170,10 +156,14 @@ function ViewControl:__initComplete__()
 	-- print( "ViewControl:__initComplete__" )
 	self:superCall( ComponentBase, '__initComplete__' )
 	--==--
+	local style = self._modalStyle_init
+	self._modalStyle_init = nil
+	if style then self.modalStyle = style end
 end
 
 function ViewControl:__undoInitComplete__()
 	-- print( "ViewControl:__undoInitComplete__" )
+	self:_destroyPresentationControl()
 	--==--
 	self:superCall( ComponentBase, '__undoInitComplete__' )
 end
@@ -227,82 +217,103 @@ end
 
 --== .modalStyle
 
+-- how the Control is shown by presentControl(): dUI.MODAL (a page over
+-- the app), dUI.POPOVER, or nil (it isn't presented, the default).
+-- setting it makes the Control's Presentation Control, which takes the
+-- Control's view; nil gives the view back to where it was
+--
 function ViewControl.__getters:modalStyle()
 	-- print( "ViewControl.__getters:modalStyle" )
 	return self._modalStyle
 end
 function ViewControl.__setters:modalStyle( value )
 	-- print( "ViewControl.__setters:modalStyle" )
+	assert(
+		value==nil or value==dUI.MODAL or value==dUI.POPOVER,
+		"[ERROR] ViewControl.modalStyle expected dUI.MODAL, dUI.POPOVER or nil"
+	)
+	--==--
 	if value == self._modalStyle then return end
 
+	self:_destroyPresentationControl()
 	self._modalStyle = value
-
-	if value == dUI.POPOVER then
-		self:_createPopoverControl()
-	else
-		self._destroyPopoverControl()
-	end
+	if value then self:_createPresentationControl() end
 end
 
 --== .preferredContentSize
 
+-- the size of the Control when presented, a table { width=, height= }.
+-- nil (the default for dUI.MODAL) is all of the screen below the status bar
+--
 function ViewControl.__getters:preferredContentSize()
 	-- print( "ViewControl.__getters:preferredContentSize" )
 	return self._preferredContentSize
 end
 function ViewControl.__setters:preferredContentSize( value )
 	-- print( "ViewControl.__setters:preferredContentSize" )
-	value = value or {}
-	assert( value.width and value.height )
+	assert(
+		value==nil or ( type(value)=='table' and value.width and value.height ),
+		"[ERROR] ViewControl.preferredContentSize expected a table { width=, height= } or nil"
+	)
 	--==--
 	self._preferredContentSize = value
+	local o = self._presentationControl
+	if o then o:_layout() end
+end
+
+--== .presentationControl
+
+-- the Presentation Control which shows this Control (read only),
+-- nil without a modalStyle
+--
+function ViewControl.__getters:presentationControl()
+	return self._presentationControl
 end
 
 --== .popoverControl
 
+-- the Popover Control which shows this Control (read only),
+-- nil unless modalStyle is dUI.POPOVER
+--
 function ViewControl.__getters:popoverControl()
 	-- print( "ViewControl.__getters:popoverControl" )
-	return self._popoverControl
+	if self._modalStyle ~= dUI.POPOVER then return nil end
+	return self._presentationControl
 end
 
---== .presentedControl
+--== .isPresented
 
-function ViewControl.__getters:presentedControl( value )
-	-- print( "ViewControl.__getters:presentedControl" )
-	self._presentedControl = value
+-- if the Control shows or is on its way in (read only)
+--
+function ViewControl.__getters:isPresented()
+	local o = self._presentationControl
+	return ( o~=nil and o.isPresented )
 end
 
 
-
+-- presentControl
+-- show the Control as its modalStyle says. params are optional:
+-- transition (dUI.SLIDE_UP, dUI.FADE, dUI.NO_TRANSITION), animated
+-- (false: no transition), time, onComplete
+--
 function ViewControl:presentControl( params )
 	-- print( "ViewControl:presentControl" )
-	params = params or {}
-	if params.animated==nil then params.animated=true end
-	if params.control==nil then params.control = self end
-	-- params.onComplete = params.onComplete
+	local o = self._presentationControl
+	assert( o, "[ERROR] ViewControl:presentControl needs a modalStyle, eg dUI.MODAL" )
 	--==--
-	local control = tpop( params, 'control' )
-
-	-- set vars on object
-	self._parentControl = nil
-	self._presentedControl = control
-
-	-- resize control view
-	local pcS = self.preferredContentSize
-	control.width, control.height = pcS.width, 400 --pcS.height
-
-	local popCtl = self._popoverControl
-	popCtl:init( self._presentedControl, self )
-	popCtl:presentControl( params )
+	o:presentControl( params )
 end
 
+-- dismissControl
+-- remove the presented Control from the screen. params are optional,
+-- as for presentControl()
+--
 function ViewControl:dismissControl( params )
 	-- print( "ViewControl:dismissControl" )
-	params = params or {}
-	if params.animated==nil then params.animated=true end
-	-- params.onComplete = params.onComplete
+	local o = self._presentationControl
+	assert( o, "[ERROR] ViewControl:dismissControl needs a modalStyle, eg dUI.MODAL" )
 	--==--
-	self._popoverControl:dismissControl( params )
+	o:dismissControl( params )
 end
 
 
@@ -326,20 +337,28 @@ end
 --== Private Methods
 
 
-function ViewControl:_destroyPopoverControl()
-	-- print( "ViewControl:_destroyPopoverControl" )
-	local o = self._popoverControl
+function ViewControl:_destroyPresentationControl()
+	-- print( "ViewControl:_destroyPresentationControl" )
+	local o = self._presentationControl
 	if not o then return end
+	self._presentationControl = nil
 	o:removeSelf()
-	self._popoverControl = nil
 end
 
 
-function ViewControl:_createPopoverControl()
-	-- print( "ViewControl:_createPopoverControl" )
-	self:_destroyPopoverControl()
-	self._popoverControl = dUI.Control.newPopoverControl()
-	self.preferredContentSize = uiConst.POPOVER_PREFERRED_SIZE
+function ViewControl:_createPresentationControl()
+	-- print( "ViewControl:_createPresentationControl" )
+	local o
+	if self._modalStyle == dUI.POPOVER then
+		o = dUI.Control.newPopoverControl()
+		if not self._preferredContentSize then
+			self._preferredContentSize = uiConst.POPOVER_PREFERRED_SIZE
+		end
+	else
+		o = dUI.Control.newPresentationControl()
+	end
+	self._presentationControl = o
+	o:init( self )
 end
 
 
