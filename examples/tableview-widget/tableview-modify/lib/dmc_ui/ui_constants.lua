@@ -168,6 +168,14 @@ Constant.AXIS_SCROLLTO_TIME = 500
 
 Constant.AXIS_VELOCITY_STACK_LENGTH = 4
 Constant.AXIS_VELOCITY_LIMIT = 1
+-- paging: from this speed (pixels per millisecond) a touch ends as a flick
+Constant.AXIS_PAGE_FLICK_VELOCITY = 0.15
+
+
+--======================================================--
+-- SlideView Widget
+
+Constant.SLIDEVIEW_TRANSITION_TIME = 400
 
 
 --======================================================--

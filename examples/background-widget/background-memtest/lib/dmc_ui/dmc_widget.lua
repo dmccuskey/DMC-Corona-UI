@@ -575,10 +575,39 @@ end
 --======================================================--
 -- newSlideView Support
 
+function Widget.loadSlideViewSupport( params )
+	-- print( "Widget.loadSlideViewSupport" )
+	if Widget.SlideView then return end
+	params = params or {}
+	if params.mode==nil then params.mode=uiConst.RUN_MODE end
+	--==--
+
+	--== Dependencies
+
+	Widget.loadScrollViewSupport( params )
+
+	--== Components
+
+	local SlideView = require( ui_find( 'dmc_widget.widget_slideview' ) )
+
+	Widget.SlideView=SlideView
+
+	initKolors( function()
+		SlideView.initialize( dUI, params )
+	end)
+end
+
+--- constructor for a Slide View widget.
+--
+-- @function newSlideView
+-- @tab[opt] options parameters used to create a Slide View
+-- @treturn object @{Widget.SlideView}
+-- @usage local uiBg = dUI.newSlideView()
+--
 function Widget.newSlideView( options )
-	local theme = nil
-	local _library = require( PATH .. '.' .. 'widget_slideview' )
-	return _library:new( options, theme )
+	-- print( "Widget.newSlideView" )
+	if not Widget.SlideView then Widget.loadSlideViewSupport() end
+	return Widget.SlideView:new( options )
 end
 
 
