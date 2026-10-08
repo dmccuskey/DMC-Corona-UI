@@ -6,7 +6,7 @@ Each app folder is a complete Solar2D project with its own copy of the library: 
 |---|---|---|
 | `background-widget/` | `background-9slice`, `background-image`, `background-rectangle`, `background-rounded`, `background-styled`, `background-themed`, `background-memtest` | [Background](../docs/widgets.md#background); [below](#background) |
 | `button-widget/` | `button-shape-simple`, `button-9slice-simple`, `button-image-simple`, `button-text-simple`, `button-radio-group` | [Button](../docs/widgets.md#button); [below](#button) |
-| `navbar-widget/` | `navbar-simple` | [NavBar](../docs/widgets.md#navbar-and-navitem) |
+| `navbar-widget/` | `navbar-simple` | [NavBar](../docs/widgets.md#navbar-and-navitem); [below](#navbar) |
 | `navigation-control/` | `navigation-control-simple`, `navigation-intermediate` | [Navigation Control](../docs/controls.md#navigation-control) |
 | `popover-control/` | `popover-control-simple` | [Popover Control](../docs/controls.md#popover-control) |
 | `scrollview-widget/` | `scrollview-simple`, `scrollview-zoom`, `scrollview-memtest` | [ScrollView](../docs/widgets.md#scrollview); [below](#scrollview) |
@@ -39,6 +39,14 @@ The sections below describe each app, with a screenshot; the other widgets' apps
 | <img src="screenshots/button-text-simple.png" width="240" alt="button-text-simple: four buttons, Back, Middle in translucent red with a larger red hit area, Orange held down with a yellow left-aligned label on a dark background, and a greyed-out Disabled"> | **button-text-simple**: four push buttons that differ in their label, each state styled on its own: "Back" turns red and moves right while pressed; "Middle" has a hit area larger than the button (`hitMarginX`, `hitMarginY`), shown in red by `debugOn`; "Orange" sits right with an offset and jumps left while pressed (each state's `align`, `offsetX`, `offsetY`; held down in the screenshot); "Disabled" shows the disabled style and ignores presses. |
 | <img src="screenshots/button-radio-group.png" width="240" alt="button-radio-group: a row of Small, Medium and Large with Large green, a row of Left and Right with Right green, and the line 'size: Large   side: Right'"> | **button-radio-group**: two button groups (`newButtonGroup()`). In the radio group one of "Small", "Medium" and "Large" is always active; in the toggle group at most one of "Left" and "Right" is, and pressing it again turns it off. The line below shows the selection, from each group's change event. In the screenshot "Large" and "Right" were pressed. |
 
+
+## NavBar
+
+The bar is as wide as the screen and sits below the status bar, and the page behind it is the size of the screen: both are sized from what the device reports (`display.actualContentWidth`, `actualContentHeight`, `screenOriginY`, `topStatusBarContentHeight`).
+
+| | |
+|---|---|
+| <img src="screenshots/navbar-simple.png" width="240" alt="navbar-simple: a light bar across the top with a blue Back button, the title Photo and a blue Edit button, over a gray page which reads Home > Albums > Photo"> | **navbar-simple**: a nav bar and its stack of items. The app pushes three by itself (`pushNavItem()`): "Home", the first one, with a left button (`leftButton`) and no Back; after a second "Albums" slides in with its "< Back" button; then "Photo", with a right button (`rightButton`; the screenshot). From there, tap the page to push another item, and "< Back" to pop the top one. A tap on the bar or its buttons stays with them, so "< Back" doesn't push. The page shows the stack; a delegate hears of each pop (`shouldPopItem`, `didPopItem`), and the left and right buttons print when released (`onRelease`). |
 
 ## ScrollView
 

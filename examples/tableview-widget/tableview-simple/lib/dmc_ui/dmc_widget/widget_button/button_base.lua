@@ -78,6 +78,12 @@ local WidgetBase = require( ui_find( 'core.widget' ) )
 --== Setup, Constants
 
 
+-- a tap on the widget stays with it: Solar2D sends 'tap' apart from
+-- 'touch', and it would reach what lies behind the widget
+local function tapBlock_handler( event )
+	return true
+end
+
 --== To be set in initialize()
 local dUI = nil
 
@@ -252,6 +258,7 @@ function ButtonBase:__initComplete__()
 	--==--
 	self._rctHit_f = self:createCallback( self._hitAreaTouch_handler )
 	self._rctHit:addEventListener( 'touch', self._rctHit_f )
+	self._rctHit:addEventListener( 'tap', tapBlock_handler )
 
 	-- self._textStyle_f = self:createCallback( self.textStyleChange_handler )
 	-- self._wgtText_f = self:createCallback( self._wgtTextWidgetUpdate_handler )
@@ -271,6 +278,7 @@ function ButtonBase:__undoInitComplete__()
 	self:_removeBackground()
 	self:_removeText()
 
+	self._rctHit:removeEventListener( 'tap', tapBlock_handler )
 	self._rctHit:removeEventListener( 'touch', self._rctHit_f )
 	self._rctHit_f = nil
 	--==--

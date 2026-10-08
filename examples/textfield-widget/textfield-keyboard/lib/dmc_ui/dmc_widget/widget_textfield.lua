@@ -82,6 +82,12 @@ local WidgetHelp = require( ui_find( 'core.widget_helper' ) )
 local tcancel = timer.cancel
 local tdelay = timer.performWithDelay
 
+-- a tap on the widget stays with it: Solar2D sends 'tap' apart from
+-- 'touch', and it would reach what lies behind the widget
+local function tapBlock_handler( event )
+	return true
+end
+
 --== To be set in initialize()
 local dUI = nil
 local Widget = nil
@@ -322,6 +328,7 @@ function TextField:__initComplete__()
 	--==--
 	self._rctHit_f = self:createCallback( self._hitAreaTouch_handler )
 	self._rctHit:addEventListener( 'touch', self._rctHit_f )
+	self._rctHit:addEventListener( 'tap', tapBlock_handler )
 
 	self._inputField_f = self:createCallback( self._textFieldEvent_handler )
 	self._textStyle_f = self:createCallback( self.textStyleChange_handler )
@@ -341,6 +348,7 @@ function TextField:__undoInitComplete__()
 	self._textStyle_f = nil
 	self._inputField_f = nil
 
+	self._rctHit:removeEventListener( 'tap', tapBlock_handler )
 	self._rctHit:removeEventListener( 'touch', self._rctHit_f )
 	self._rctHit_f = nil
 	--==--

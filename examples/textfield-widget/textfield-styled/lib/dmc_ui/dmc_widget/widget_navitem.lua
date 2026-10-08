@@ -207,7 +207,7 @@ function NavItem:__undoInitComplete__()
 
 	--== Though not default, check them
 
-	o = self._btnLeft
+	local o = self._btnLeft
 	if o then
 		o:removeSelf()
 		self._btnLeft = nil
@@ -281,6 +281,8 @@ function NavItem.__setters:leftButton( button )
 	--==--
 	if bType=='table' then
 		assert( button.isa and button:isa( Widget.ButtonFactory.Base ), "button not object" )
+		-- shown by the Nav Bar
+		button.isVisible = false
 	end
 	self._btnLeft = button
 	self._btnLeftStyle_dirty=true
@@ -306,6 +308,8 @@ function NavItem.__setters:rightButton( button )
 	--==--
 	if bType=='table' then
 		assert( button.isa and button:isa( Widget.ButtonFactory.Base ), "button not object" )
+		-- shown by the Nav Bar
+		button.isVisible = false
 	end
 	self._btnRight = button
 	self._btnRightStyle_dirty=true
@@ -391,6 +395,8 @@ function NavItem:_createBackButton()
 		labelText="< Back",
 		defaultStyle = self.defaultStyle.backButton
 	}
+	-- shown by the Nav Bar
+	o.isVisible = false
 	self._wgtBtnBack = o
 
 	--== Reset properties
@@ -418,6 +424,8 @@ function NavItem:_createText()
 	local o = Widget.newText{
 		defaultStyle = self.defaultStyle.title
 	}
+	-- shown by the Nav Bar
+	o.isVisible = false
 	self._wgtText = o
 
 	--== Reset properties
@@ -438,6 +446,9 @@ function NavItem:__commitProperties__()
 	local back = self._wgtBtnBack
 	local left = self._btnLeft
 	local right = self._btnRight
+
+	-- removed with a change still waiting
+	if not text or not back then return end
 
 	--== Set Styles
 
@@ -501,7 +512,7 @@ function NavItem:stylePropertyChangeHandler( event )
 		property = etype
 
 	else
-		if property=='debugActive' then
+		if property=='debugOn' then
 			self._debugOn_dirty=true
 		elseif property=='width' then
 			self._width_dirty=true

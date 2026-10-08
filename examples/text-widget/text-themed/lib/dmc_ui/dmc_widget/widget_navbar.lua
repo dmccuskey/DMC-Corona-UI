@@ -80,6 +80,15 @@ local WidgetHelp = require( ui_find( 'core.widget_helper' ) )
 local tinsert = table.insert
 local tremove = table.remove
 
+-- space between the bar's edge and its left, back and right buttons
+local MARGIN_X = 5
+
+-- a touch or a tap on the bar stays with it (Solar2D sends 'tap' apart
+-- from 'touch'): neither reaches what lies behind the bar
+local function eventBlock_handler( event )
+	return true
+end
+
 --== To be set in initialize()
 local dUI = nil
 local Widget = nil
@@ -170,7 +179,13 @@ function NavBar:__init__( params )
 	self._animation = nil
 	self._animation_dirty=false
 
+	-- the transition which is waiting or running, if any
+	-- { func=<transition>, final=<its last percent> }
+	self._transition = nil
+
 	self._enterFrame_f = nil
+
+	self._layout_dirty=true
 
 	-- properties stored in Style
 
@@ -222,6 +237,8 @@ end
 
 function NavBar:__undoCreateView__()
 	-- print( "NavBar:__undoCreateView__" )
+	self:_removeBackground()
+
 	self._rctHit:removeSelf()
 	self._rctHit=nil
 	--==--
@@ -235,7 +252,8 @@ function NavBar:__initComplete__()
 	-- print( "NavBar:__initComplete__" )
 	self:superCall( '__initComplete__' )
 	--==--
-	self:setTouchBlock( self._rctHit )
+	self._rctHit:addEventListener( 'touch', eventBlock_handler )
+	self._rctHit:addEventListener( 'tap', eventBlock_handler )
 
 	self._back_f = self:createCallback( self._backButtonEvent_handler )
 
@@ -243,9 +261,24 @@ end
 
 function NavBar:__undoInitComplete__()
 	-- print( "NavBar:__undoInitComplete__" )
+	self:_stopEnterFrame()
+	self._transition = nil
+	self._animation = nil
+	self._animation_dirty=false
+
+	-- the bar removes its items, as it does a popped one
+	local new_item = self._new_item
+	for i=#self._items, 1, -1 do
+		local item = tremove( self._items )
+		if item==new_item then new_item=nil end
+		self:_removeItemFromNavBar( item )
+	end
+	if new_item then self:_removeItemFromNavBar( new_item ) end
+
 	self._back_f = nil
 
-	self:unsetTouchBlock( self._rctHit )
+	self._rctHit:removeEventListener( 'tap', eventBlock_handler )
+	self._rctHit:removeEventListener( 'touch', eventBlock_handler )
 	--==--
 	self:superCall( '__undoInitComplete__' )
 end
@@ -290,7 +323,7 @@ NavBar.__setters.delegate = WidgetHelp.__setters.delegate
 
 
 --- add Nav Item to navigation stack.
--- push a new Nav Item, furthering the navigation stack. this typically will animate the new view on the screen.
+-- push a new Nav Item, furthering the navigation stack. this typically will animate the new view on the screen. a transition which is still running is taken to its end first.
 --
 -- @within Methods
 -- @function :pushNavItem
@@ -299,7 +332,7 @@ NavBar.__setters.delegate = WidgetHelp.__setters.delegate
 -- @usage widget:pushNavItem( navItem, params )
 
 --- pop Nav Item from navigation stack.
--- removes top-level Nav Item from navigation stack, animating the previous view on the screen.
+-- removes top-level Nav Item from navigation stack, animating the previous view on the screen. the popped Nav Item is removed, along with its buttons. the first (root) Nav Item stays: with one item on the stack this does nothing.
 --
 -- @within Methods
 -- @function :popNavItemAnimated
@@ -314,8 +347,10 @@ function NavBar:pushNavItem( item, params )
 	params = params or {}
 	assert( type(item)=='table' and item.isa and item:isa( Widget.NavItem ), "pushNavItem: item must be a NavItem" )
 	--==--
-	if self._enterFrame_f then
-		error("[ERROR] Animation already in progress !!!")
+	-- a transition which is waiting or running goes to its end first
+	self:_finishTransition()
+	for _, o in ipairs( self._items ) do
+		assert( o~=item, "pushNavItem: item is already on the stack" )
 	end
 	self:_setNextItem( item, params ) -- params.animate set here
 	self:_gotoNextItem( params.animate )
@@ -323,9 +358,9 @@ end
 
 function NavBar:popNavItemAnimated()
 	-- print( "NavBar:popNavItemAnimated" )
-	if self._enterFrame_f then
-		error("[ERROR] Animation already in progress !!!")
-	end
+	self:_finishTransition()
+	-- the root item stays
+	if #self._items<2 then return end
 	self:_gotoPrevItem( true )
 end
 
@@ -398,7 +433,6 @@ function NavBar:_setNextItem( item, params )
 	end
 	self._new_item = item
 
-	self._newItemSet_dirty=true
 	self:__invalidateProperties__()
 end
 
@@ -429,6 +463,58 @@ function NavBar:_addItemToNavBar( item )
 		o.isVisible=false
 	end
 
+	self:_layoutItem( item )
+end
+
+-- set what doesn't change in a transition: anchors and y.
+-- each part is centered on the bar's height
+--
+function NavBar:_layoutItem( item )
+	-- print( "NavBar:_layoutItem", item )
+	local style = self.curr_style
+	local y = (0.5-style.anchorY)*style.height
+	local o
+
+	o = item.title
+	if o then
+		o.anchorX, o.anchorY = 0.5, 0.5
+		o.y = y
+	end
+	o = item.backButton
+	if o then
+		o.anchorX, o.anchorY = 0, 0.5
+		o.y = y
+	end
+	o = item.leftButton
+	if o then
+		o.anchorX, o.anchorY = 0, 0.5
+		o.y = y
+	end
+	o = item.rightButton
+	if o then
+		o.anchorX, o.anchorY = 1, 0.5
+		o.y = y
+	end
+end
+
+-- put the top item's parts where they rest,
+-- eg after the bar's width has changed
+--
+function NavBar:_placeTopItem()
+	-- print( "NavBar:_placeTopItem" )
+	local item = self._top_item
+	if not item then return end
+	local style = self.curr_style
+	local W = style.width
+	local mX_OFF = W*(0.5-style.anchorX)
+	local o
+
+	o = item.leftButton or item.backButton
+	if o then o.x = mX_OFF-W*0.5+MARGIN_X end
+	o = item.title
+	if o then o.x = mX_OFF end
+	o = item.rightButton
+	if o then o.x = mX_OFF+W*0.5-MARGIN_X end
 end
 
 function NavBar:_removeItemFromNavBar( item )
@@ -451,6 +537,19 @@ function NavBar:_stopEnterFrame()
 	self._enterFrame_f = nil
 end
 
+-- take the transition which is waiting or running to its end
+--
+function NavBar:_finishTransition()
+	-- print( "NavBar:_finishTransition" )
+	local trans = self._transition
+	if not trans then return end
+	self:_stopEnterFrame()
+	self._transition = nil
+	self._animation = nil
+	self._animation_dirty=false
+	trans.func( trans.final, false )
+end
+
 
 function NavBar:_startForward( func )
 	local start_time = system.getTimer()
@@ -463,6 +562,7 @@ function NavBar:_startForward( func )
 		if perc > 100 then
 			perc = 100
 			self:_stopEnterFrame()
+			self._transition = nil
 		end
 		func( perc, true )
 	end
@@ -480,6 +580,7 @@ function NavBar:_startReverse( func )
 		if perc < 0 then
 			perc = 0
 			self:_stopEnterFrame()
+			self._transition = nil
 		end
 		func( perc, true )
 	end
@@ -490,9 +591,11 @@ end
 function NavBar:_gotoNextItem( animate )
 	-- print( "NavBar:_gotoNextItem" )
 	local func = self:_getNextTrans()
+	self._transition = { func=func, final=100 }
 
 	local animFunc = function()
 		if not animate then
+			self._transition = nil
 			func( 100, animate )
 		else
 			self:_startForward( func )
@@ -507,9 +610,11 @@ end
 function NavBar:_gotoPrevItem( animate )
 	-- print( "NavBar:_gotoPrevItem" )
 	local func = self:_getPrevTrans()
+	self._transition = { func=func, final=0 }
 
 	local animFunc = function()
 		if not animate then
+			self._transition = nil
 			func( 0, animate )
 		else
 			self:_startReverse( func )
@@ -539,9 +644,7 @@ end
 function NavBar:_getTransition( from_item, to_item, direction )
 	-- print( "NavBar:_getTransition", from_item, to_item, direction )
 	local style = self.curr_style
-	local W, H = style.width, style.height
-	local H_CENTER, V_CENTER = W*0.5, H*0.5
-	local MARGINS = {x=5,y=0}
+	local MARGINS = {x=MARGIN_X,y=0}
 	local isAtEdge = true -- if we're at the start/edge of our transition
 
 	-- display(left/back), back, left, title, right
@@ -588,11 +691,14 @@ function NavBar:_getTransition( from_item, to_item, direction )
 	end
 
 	local stack_size = #self._items
-	local anchorX, anchorY = style.anchorX, style.anchorY
-	local mX_OFF = W*(0.5-anchorX) -- master offset
 
 	animationFunc = function( percent, animate )
 		-- print( "NavBar:transition", percent )
+		-- read at each call: the bar's size can change during a transition
+		local W = style.width
+		local H_CENTER = W*0.5
+		local mX_OFF = W*(0.5-style.anchorX) -- master offset
+
 		local dec_p = percent/100
 		local from_a, to_a = 1-dec_p, dec_p
 
@@ -618,7 +724,6 @@ function NavBar:_getTransition( from_item, to_item, direction )
 				--popstack has to be before #self._items check below
 
 				local item = self:_popStackItem()
-				self:_removeItemFromNavBar( item )
 
 				self._top_item = from_item
 				self._new_item = nil
@@ -637,12 +742,14 @@ function NavBar:_getTransition( from_item, to_item, direction )
 					t_d.isVisible = false
 				end
 
-				if fHasLeft or #self._items>1 then
-					f_d.isVisible = true
-					f_d.x = mX_OFF-H_CENTER+MARGINS.x
-					f_d.alpha = 1
-				else
-					f_d.isVisible = false
+				if f_d then
+					if fHasLeft or #self._items>1 then
+						f_d.isVisible = true
+						f_d.x = mX_OFF-H_CENTER+MARGINS.x
+						f_d.alpha = 1
+					else
+						f_d.isVisible = false
+					end
 				end
 
 				--== Title
@@ -665,9 +772,17 @@ function NavBar:_getTransition( from_item, to_item, direction )
 
 				if f_r then
 					f_r.isVisible = true
-					f_r.x = mX_OFF+H_CENTER
+					f_r.x = mX_OFF+H_CENTER-MARGINS.x
 					f_r.alpha = 1
 				end
+
+				--== Tell the delegate, then remove the popped item
+
+				local del = self._delegate
+				local f = del and del.didPopItem
+				if f then f( del, self, item ) end
+
+				self:_removeItemFromNavBar( item )
 
 			end
 
@@ -756,12 +871,14 @@ function NavBar:_getTransition( from_item, to_item, direction )
 				t_d.isVisible = false
 			end
 
-			if fHasLeft or stack_size>(1+stack_offset) then
-				f_d.isVisible = true
-				f_d.x = mX_OFF-H_CENTER-aX_OFF+MARGINS.x
-				f_d.alpha = from_a
-			else
-				f_d.isVisible = false
+			if f_d then
+				if fHasLeft or stack_size>(1+stack_offset) then
+					f_d.isVisible = true
+					f_d.x = mX_OFF-H_CENTER-aX_OFF+MARGINS.x
+					f_d.alpha = from_a
+				else
+					f_d.isVisible = false
+				end
 			end
 
 			--== Title
@@ -782,13 +899,13 @@ function NavBar:_getTransition( from_item, to_item, direction )
 
 			if t_r then
 				t_r.isVisible = true
-				t_r.x = mX_OFF+W-aX_OFF
+				t_r.x = mX_OFF+W-aX_OFF-MARGINS.x
 				t_r.alpha = to_a
 			end
 
 			if f_r then
 				f_r.isVisible = true
-				f_r.x = mX_OFF+H_CENTER-aX_OFF
+				f_r.x = mX_OFF+H_CENTER-aX_OFF-MARGINS.x
 				f_r.alpha = from_a
 			end
 
@@ -862,11 +979,13 @@ function NavBar:__commitProperties__()
 		local width = style.width
 		hit.width = width
 		self._width_dirty=false
+		self._layout_dirty=true
 	end
 	if self._height_dirty then
 		local height = style.height
 		hit.height = height
 		self._height_dirty=false
+		self._layout_dirty=true
 	end
 
 	-- anchorX/anchorY
@@ -874,14 +993,12 @@ function NavBar:__commitProperties__()
 	if self._anchorX_dirty then
 		hit.anchorX = style.anchorX
 		self._anchorX_dirty = false
-
-		self._stackItemsAnchors_dirty=true
+		self._layout_dirty=true
 	end
 	if self._anchorY_dirty then
 		hit.anchorY = style.anchorY
 		self._anchorY_dirty = false
-
-		self._stackItemsAnchors_dirty=true
+		self._layout_dirty=true
 	end
 
 	--== Virtual
@@ -911,41 +1028,25 @@ function NavBar:__commitProperties__()
 	end
 
 
-	if self._stackItemsAnchors_dirty then
-		-- TODO: if anchor changes while view is set
-		-- will this ever happen ?
-		self._stackItemsAnchors_dirty=false
-	end
+	-- the items follow the bar's size and anchors
 
-	if self._newItemSet_dirty then
-		local anchorX, anchorY = style.anchorX, style.anchorY
-		local item = self._new_item
-		local o
-		o = item.title
-		if o then
-			o.y = (0.5-anchorY)*style.height
-			o.anchorX, o.anchorY = 0.5, 0.5
+	if self._layout_dirty then
+		local new_item = self._new_item
+		for _, item in ipairs( self._items ) do
+			if item==new_item then new_item=nil end
+			self:_layoutItem( item )
 		end
-		o = item.backButton
-		if o then
-			o.y = 0
-			o.anchorX, o.anchorY = 0, anchorY
-		end
-		o = item.leftButton
-		if o then
-			o.y = 0
-			o.anchorX, o.anchorY = 0, anchorY
-		end
-		o = item.rightButton
-		if o then
-			o.y = 0
-			o.anchorX, o.anchorY = 0, anchorY
-		end
-		self._newItemSet_dirty=false
+		if new_item then self:_layoutItem( new_item ) end
+		-- a transition places the parts itself
+		if not self._transition then self:_placeTopItem() end
+		self._layout_dirty=false
 	end
 
 	if self._animation_dirty then
-		self._animation()
+		local animFunc = self._animation
+		self._animation = nil
+		self._animation_dirty=false
+		animFunc()
 	end
 
 end
@@ -979,17 +1080,18 @@ function NavBar:_backButtonEvent_handler( event )
 	local del = self._delegate
 
 	if phase==target.RELEASED then
+		-- a press during a slide, eg a double tap, is ignored
+		if self._transition then return end
+
 		local f
 		local shouldPopItem = true
 		f = del and del.shouldPopItem
 		if f then shouldPopItem = f( del, self, self._top_item ) end
 
 		if shouldPopItem then
+			-- the delegate's didPopItem is called once the item is off
 			self:popNavItemAnimated()
 		end
-
-		f = del and del.didPopItem
-		if f then f( del, self, self._top_item ) end
 
 		self:dispatchEvent( NavBar.BACK_BUTTON )
 	end
@@ -1017,7 +1119,7 @@ function NavBar:stylePropertyChangeHandler( event )
 		property = etype
 
 	else
-		if property=='debugActive' then
+		if property=='debugOn' then
 			self._debugOn_dirty=true
 		elseif property=='width' then
 			self._width_dirty=true

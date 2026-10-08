@@ -245,6 +245,23 @@ end
 
 
 --====================================================================--
+--== Support Functions
+
+
+-- a Background structure without Background's default type ('rounded'):
+-- a background with no type then inherits its type (eg, the rectangle
+-- of a Nav Item's buttons)
+local function createBackgroundStructure( src )
+	src = src or {}
+	return {
+		type=src.type,
+		view={}
+	}
+end
+
+
+
+--====================================================================--
 --== Static Methods
 
 
@@ -271,7 +288,7 @@ function ButtonStateStyle.createStyleStructure( src )
 	--==--
 	return {
 		label=Style.Text.createStyleStructure( src.label ),
-		background=Style.Background.createStyleStructure( src.background )
+		background=createBackgroundStructure( src.background )
 	}
 end
 
@@ -649,7 +666,7 @@ function ButtonStateStyle:_prepareData( data, dataSrc, params )
 	StyleClass = Style.Background
 	if not src.background then
 		tmp = dataSrc and dataSrc.background
-		src.background = StyleClass.createStyleStructure( tmp )
+		src.background = createBackgroundStructure( tmp )
 	end
 
 	--== process children

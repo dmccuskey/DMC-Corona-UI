@@ -207,6 +207,22 @@ end
 
 
 --====================================================================--
+--== Support Functions
+
+
+-- a Background structure without Background's default type ('rounded'):
+-- a background with no type then inherits its type (the rectangle)
+local function createBackgroundStructure( src )
+	src = src or {}
+	return {
+		type=src.type,
+		view={}
+	}
+end
+
+
+
+--====================================================================--
 --== Static Methods
 
 
@@ -236,9 +252,8 @@ function NavBarStyle.createStyleStructure( src )
 	-- print( "NavBarStyle.createStyleStructure", src )
 	src = src or {}
 	--==--
-	local StyleClass = Style.Background
 	return {
-		background=StyleClass.createStyleStructure( src.background ),
+		background=createBackgroundStructure( src.background ),
 	}
 end
 
@@ -451,7 +466,7 @@ function NavBarStyle:_prepareData( data, dataSrc, params )
 	StyleClass = Style.Background
 	if not src.background then
 		tmp = dataSrc and dataSrc.background
-		src.background = StyleClass.createStyleStructure( tmp )
+		src.background = createBackgroundStructure( tmp )
 	end
 
 	--== process children

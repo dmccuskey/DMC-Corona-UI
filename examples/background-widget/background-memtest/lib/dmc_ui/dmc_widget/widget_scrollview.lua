@@ -94,6 +94,13 @@ local tcancel = timer.cancel
 local tdelay = timer.performWithDelay
 local type = _G.type
 
+-- a tap on the scroll view stays with it: Solar2D sends 'tap' apart from
+-- 'touch', and it would reach what lies behind the widget. the content
+-- is in front of this background, so its own tap listeners come first
+local function tapBlock_handler( event )
+	return true
+end
+
 --== To be set in initialize()
 local dUI = nil
 
@@ -339,6 +346,8 @@ function ScrollView:__initComplete__()
 
 	self._gesture_f = f
 
+	self._rectBg:addEventListener( 'tap', tapBlock_handler )
+
 	-- after the scroller is in the view (superCall), to be above it
 	self:_createScrollIndicators()
 
@@ -400,6 +409,8 @@ function ScrollView:__undoInitComplete__()
 	self._pinchGesture = nil
 
 	self._gesture_f = nil
+
+	self._rectBg:removeEventListener( 'tap', tapBlock_handler )
 
 	--==--
 	self:superCall( '__undoInitComplete__' )
