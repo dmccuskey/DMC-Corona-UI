@@ -540,3 +540,14 @@ function test_scrollDelegate()
 	local _, y = w:getContentPosition()
 	assert_equal( -200, y )
 end
+
+
+--[[
+a tap on the scroll view stays with it: Solar2D sends 'tap' apart from 'touch',
+and without a 'tap' listener of its own it reached what lies behind
+--]]
+function test_tapIsKept()
+	local w = newScrollView()
+	local o = w._rectBg
+	assert_true( o:dispatchEvent{ name='tap', target=o, x=0, y=0, numTaps=1 } )
+end

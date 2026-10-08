@@ -349,3 +349,13 @@ function test_styleBackgroundType()
 	style2:removeSelf()
 end
 
+
+--[[
+a tap on the text field stays with it: Solar2D sends 'tap' apart from 'touch',
+and without a 'tap' listener of its own it reached what lies behind
+--]]
+function test_tapIsKept()
+	local w = newTextField()
+	local o = w._rctHit
+	assert_true( o:dispatchEvent{ name='tap', target=o, x=0, y=0, numTaps=1 } )
+end

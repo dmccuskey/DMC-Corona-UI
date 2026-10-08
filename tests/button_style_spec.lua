@@ -1193,9 +1193,9 @@ function test_defaultInheritance()
 	s1Bg = s1State.background
 	styleInheritsFrom( s1Bg, bsBg )
 
-	bgBase = Background:getBaseStyle( s1Bg.type )
-
-	bsView = bgBase.view
+	-- the base's active background is a rectangle, not Background's
+	-- default type: its view is inherited too
+	bsView = bsBg.view
 	s1View = s1Bg.view
 	styleInheritsFrom( s1View, bsView )
 

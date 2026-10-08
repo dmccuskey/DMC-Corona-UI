@@ -27,6 +27,8 @@ Every style has `width`, `height`, `anchorX`, `anchorY` and `debugOn` (`true` dr
 
 A widget redraws after a change at the next frame, not at once, so several changes in a row cost one redraw ([Development](development.md#how-widgets-draw)).
 
+A widget which takes touches keeps them: a touch or a tap on a Button, a TextField, a NavBar, a ScrollView or a TableView doesn't reach what lies behind it. Background and Text draw only, and let both through.
+
 ## Background
 
 A backdrop: a rectangle, a rounded rectangle, a 9-slice image or an image, sized by its style. Other widgets use it for their own backgrounds: the button, the text field, the navigation bar.
@@ -233,7 +235,26 @@ navBar:pushNavItem( dUI.newNavItem{ titleText="Settings" } )
 -- a "< Back" button appears; pressing it pops "Settings"
 ```
 
-`pushNavItem( item [, { animate=true|false } ] )`, `popNavItemAnimated()`. A NavItem's options: `titleText`, `leftButton`, `rightButton` (buttons). The NavBar style has a `background` child, the NavItem style `title`, `backButton`, `leftButton` and `rightButton`.
+The bar is as wide as the content area (`dUI.WIDTH`) and 40 high unless its `width` and `height` say otherwise; they and its anchors can change later, and the item on show follows. Options: `delegate`, and `transitionTime`, how long a slide takes (400 ms).
+
+**The stack.** `pushNavItem( item [, { animate=false } ] )` puts an item on top and slides it in; the first one is shown at once. `popNavItemAnimated()` slides back to the item below, then removes the popped item, along with its buttons. The first item stays: with one item on the stack, a pop does nothing. A push or a pop during a slide takes that slide to its end first, so several pushes in a row are fine.
+
+**The Back button** pops the top item. Every item but the first shows one, unless it has a left button, which takes its place. A press during a slide is ignored. A delegate can step in:
+
+```lua
+navBar.delegate = {
+	-- Back was released: return false to keep the item
+	shouldPopItem=function( self, navBar, navItem ) return true end,
+	-- the item has slid off, and is about to be removed
+	didPopItem=function( self, navBar, navItem ) print( navItem.titleText ) end,
+}
+```
+
+Both are optional. Each release of Back also dispatches `navBar.EVENT` with `type` `navBar.BACK_BUTTON`, popped or not.
+
+**A NavItem** has the options `titleText`, `leftButton` and `rightButton` (buttons from `dUI.newButton()`); set the buttons before the item is pushed. `titleText` can change later. `item.title` is its Text widget and `item.backButton` its Back button, e.g. `item.backButton.labelText = "Home"`. An item draws nothing by itself: its parts are hidden until a bar shows them, 5 from the bar's edges and centered on its height.
+
+**Styles.** The NavBar style has a `background` child, a rectangle unless its `type` says otherwise. The NavItem style has `title`, `backButton`, `leftButton` and `rightButton`; the item gives its left and right buttons these styles (blue text, no background) in place of their own.
 
 Most apps use the [Navigation Control](controls.md) instead, which makes the NavBar and switches the screens with it.
 
