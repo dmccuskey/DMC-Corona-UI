@@ -9,7 +9,7 @@ New here? The [Quick Start](../README.md#quick-start) makes a text and a button,
 ## Use
 
 - [Using Styles](styles.md): a style for each widget, inline, shared and named styles, what the widget holds, child styles, inheritance, themes
-- [Widgets](widgets.md): Background, Text, TextField, Button, NavBar and NavItem, ScrollView, TableView and TableViewCell
+- [Widgets](widgets.md): Background, Text, TextField, Button, NavBar and NavItem, ScrollView, SlideView, TableView and TableViewCell
 - [Controls](controls.md): the Navigation Control and its views, and presenting a control as a page over the app or as a popover
 - [API reference](api.md): the module's functions, themes, keyboard, constants, configuration, known issues
 - [Examples](../examples/): an app for each widget and control

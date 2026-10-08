@@ -304,6 +304,16 @@ module_config = {
 				}
 			},
 			{
+				"exp_dir": "slideview-widget/slideview-simple",
+				"requires": [],
+				"mod_dir_map": {
+					"default_dir": "",
+					"libs": {
+						"dmc-corona-boot":""
+					}
+				}
+			},
+			{
 				"exp_dir": "tableview-widget/tableview-modify",
 				"requires": [],
 				"mod_dir_map": {

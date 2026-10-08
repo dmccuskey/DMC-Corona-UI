@@ -281,6 +281,8 @@ Options and properties: `width`, `height`, `scrollWidth`, `scrollHeight` (never 
 
 Methods: `getContentPosition()` returns the content's x and y, 0 at the top left and negative as it scrolls; `setContentPosition{ x=, y= [, time=, onComplete=] }` scrolls there, in 500 ms unless `time` says otherwise (0 for at once); `takeFocus( event )` takes over a touch from a child.
 
+**Paging:** with `isPagingEnabled=true` (option or property) the content stops on pages, each the size of the widget: a drag ends on the nearest page, and a flick on the next one in its direction, one page for each touch. The last page ends at the edge of the content. A [SlideView](#slideview) is built on it.
+
 **Scroll indicators**, thin bars at the right and bottom edges, show while the content moves and fade when it stops; each is as long as the share of the content in view, and is squeezed against its end during a bounce. An axis that is turned off or whose content fits has none. `showVerticalScrollIndicator=false` or `showHorizontalScrollIndicator=false` (options or properties) turns one off; `flashScrollIndicators()` shows them for a moment, to say that a view scrolls. Their color is the style's `indicatorColor` (translucent black by default; set a light one over dark content: `style={ indicatorColor={ 1, 1, 1, 0.6 } }`). The upper and lower offsets shorten an indicator's track, so it stays clear of a bar which covers part of the widget.
 
 **Zoom** needs a delegate whose `getViewForZoom( self, event )` returns the object to scale (something in the scroller), and `minimumZoom` and `maximumZoom` (options or properties). Then a pinch zooms, and so does `setZoomScale( scale [, { time=, onComplete= } ] )`; `zoomScale` reads the scale (there is no `zoomScale` option: zoom once the content is in). The delegate's optional `willBeginZooming`, `didZoom` and `didEndZooming` get `self, event` with `event.view` and `event.scale`.
@@ -318,6 +320,68 @@ delegate={
 A ScrollView sends no events: it reports through its delegate.
 
 See `examples/scrollview-widget/` for content, locking, zoom and the indicator color.
+
+## SlideView
+
+Slides side by side, one showing at a time, each the size of the widget: an introduction, a photo gallery, a banner which changes by itself. A drag of more than half a slide, or a flick, brings the next one; the first and the last bounce at their edge. A delegate supplies the slides:
+
+```lua
+local slides = dUI.newSlideView{
+	width=300, height=200,
+	autoMask=true,   -- clip the slides to the widget
+	delegate={
+		numberOfSlides=function( self, slideView ) return 5 end,
+		onSlideRender=function( self, event )
+			-- event.view is the slide's group, with its origin at the slide's top left
+			local photo = display.newImageRect( "photo-" .. event.index .. ".jpg", event.width, event.height )
+			photo.anchorX, photo.anchorY = 0, 0
+			event.view:insert( photo )
+		end,
+		didShowSlide=function( self, event )
+			print( "now showing", event.index )
+		end,
+	},
+}
+slides:reloadData()
+```
+
+`numberOfSlides` and `onSlideRender` are required. A slide exists only while it is near the view: at rest, the one showing and the one on each side. Its view is removed, with everything in it, when it leaves.
+
+| Delegate method | |
+|---|---|
+| `numberOfSlides( self, slideView )` | return how many slides there are |
+| `onSlideRender( self, event )` | fill `event.view`; `event.width` and `event.height` are the slide's size |
+| `onSlideUnrender( self, event )` | optional: the view is about to be removed |
+| `didShowSlide( self, event )` | optional: a slide has come to rest in the view; once for each change |
+| `didSelectSlide( self, event )` | optional: a tap on the slide which nothing in it took |
+
+Each event has `index`, `view`, `data` (a table which stays with the slide until the next `reloadData()`) and `target`, the slide view.
+
+| Method or property | |
+|---|---|
+| `reloadData()` | ask the delegate again for the number of slides, and make the ones in view again; the slide showing stays if it still exists |
+| `gotoSlide( index [, { animate=, time=, onComplete= } ] )` | slide to that one, over `transitionTime` unless `time` (ms) is given; `animate=false` or `time=0` moves at once |
+| `nextSlide( [params] )`, `previousSlide( [params] )` | one slide on or back, with the same parameters; nothing happens at the ends |
+| `index` | the slide showing (read only), 0 without slides; after `gotoSlide()` it is the slide asked for, also while the move is under way |
+| `numberOfSlides` | how many slides the delegate gave (read only) |
+| `getSlideAt( index )` | the slide's view, or `nil` while it doesn't exist |
+| `transitionTime` | how long a move from code takes: 400 ms (option and property) |
+
+**Auto-advance** shows the next slide by itself every `autoAdvanceTime` milliseconds, and the first after the last. It waits while a finger is on the widget, and starts its wait again when the finger lifts.
+
+```lua
+local banner = dUI.newSlideView{ width=320, height=120, delegate=delegate, autoAdvanceTime=3000 }
+
+banner:stopAutoAdvance()
+banner:startAutoAdvance()        -- or startAutoAdvance( 5000 ), with a new time
+print( banner.isAutoAdvancing )
+```
+
+As an option, `autoAdvanceTime` starts the advance; setting the property to 0 stops it.
+
+A SlideView is a ScrollView which scrolls sideways and stops on pages (`isPagingEnabled`): its options, properties and style apply (`autoMask`, `bounceIsActive`, `horizontalScrollEnabled` to lock it, a new `width` or `height` later, for which the slides are made again), and its delegate gets `willBeginScrolling`, `didScroll` and `didEndScrolling` too ([ScrollView](#scrollview)). Its scroll indicator is off unless `showHorizontalScrollIndicator=true`. A swipe which starts on a widget inside a slide (a Button, a TextField) goes to that widget, as in a ScrollView. A SlideView sends no events: it reports through its delegate.
+
+See `examples/slideview-widget/slideview-simple`.
 
 ## TableView and TableViewCell
 

@@ -551,3 +551,118 @@ function test_tapIsKept()
 	local o = w._rectBg
 	assert_true( o:dispatchEvent{ name='tap', target=o, x=0, y=0, numTaps=1 } )
 end
+
+
+--======================================================--
+-- Paging
+
+-- a scroll view of four pages side by side (200 wide each)
+local function newPagedView( params )
+	params = params or {}
+	params.scrollWidth = 800
+	params.scrollHeight = 300
+	if params.isPagingEnabled==nil then params.isPagingEnabled = true end
+	return newScrollView( params )
+end
+
+-- drag the x axis through 'values' (the first is where the touch begins).
+-- a flick ends at once, with its speed; otherwise the touch is held
+-- still until the speed is gone. then run frames until the axis is at rest
+local function drag( w, values, isFlick )
+	local axis = w._axisX
+	local t = system.getTimer()
+	local start = values[1]
+	local ms = 0
+
+	axis:touch{ phase='began', time=t, value=start, start=start }
+	for i = 2, #values do
+		ms = ms + 16
+		axis:touch{ phase='moved', time=t+ms, value=values[i], start=start }
+	end
+	if not isFlick then
+		for i = 1, 6 do
+			ms = ms + 33
+			frame( w, ms )
+		end
+	end
+	ms = ms + 1
+	axis:touch{ phase='ended', time=t+ms, value=values[#values], start=start }
+	for i = 1, 20 do
+		frame( w, ms + i*50 )
+	end
+	return ( w:getContentPosition() )
+end
+
+
+--[[
+with paging, a drag ends on the nearest page
+--]]
+function test_pagingDrag()
+	local w = newPagedView()
+	assert_true( w.isPagingEnabled )
+
+	-- less than half a page: back
+	assert_equal( 0, drag( w, { 150, 120, 90 } ) )
+	-- more than half: the next page
+	assert_equal( -200, drag( w, { 190, 130, 70 } ) )
+	-- and back again
+	assert_equal( 0, drag( w, { 10, 70, 130 } ) )
+end
+
+
+--[[
+with paging, a flick goes to the next page in its direction,
+however short it is, and one page only, however long
+--]]
+function test_pagingFlick()
+	local w = newPagedView()
+
+	assert_equal( -200, drag( w, { 150, 130, 110 }, true ) )
+	assert_equal( -400, drag( w, { 150, 130, 110 }, true ) )
+	assert_equal( -200, drag( w, { 50, 70, 90 }, true ) )
+	-- longer than a page
+	assert_equal( -400, drag( w, { 190, 90, -10, -110 }, true ) )
+
+	-- a drag one way which ends in a flick back stays on its page
+	assert_equal( -400, drag( w, { 150, 110, 70, 85, 100, 115, 130 }, true ) )
+end
+
+
+--[[
+with paging, the first and the last page are the scroll limits
+--]]
+function test_pagingLimits()
+	local w = newPagedView()
+
+	-- before the first
+	assert_equal( 0, drag( w, { 50, 70, 90 }, true ) )
+	assert_equal( 0, drag( w, { 50, 90, 130 } ) )
+
+	w:setContentPosition{ x=-600, time=0 }
+	frame( w )
+	-- after the last
+	assert_equal( -600, drag( w, { 150, 130, 110 }, true ) )
+	assert_equal( -600, drag( w, { 150, 110, 70 } ) )
+
+	-- a last page which is shorter than the view ends at the scroll limit
+	w.scrollWidth = 700
+	frame( w )
+	frame( w )
+	assert_equal( -500, drag( w, { 150, 130, 110 }, true ) )
+	assert_equal( -400, drag( w, { 50, 70, 90 }, true ) )
+end
+
+
+--[[
+paging is off unless asked for, and can be changed later
+--]]
+function test_pagingOff()
+	local w = newPagedView{ isPagingEnabled=false }
+	assert_false( w.isPagingEnabled )
+
+	assert_equal( -60, drag( w, { 150, 120, 90 } ) )
+
+	w.isPagingEnabled = true
+	assert_equal( -200, drag( w, { 150, 110, 70 } ) )
+	assert_error( function() w.isPagingEnabled = 'yes' end )
+end
