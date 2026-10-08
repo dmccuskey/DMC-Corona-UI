@@ -195,3 +195,30 @@ local VERSION = "0.1.0"
 -- @object event.view the row's Display Group, for visual items
 -- @tab event.data a table for general data storage for the row.
 
+
+--- (optional) informs delegate that the list starts to scroll.
+-- by touch or from code (`scrollToRowAt`, `setContentPosition`).
+--
+-- @within Methods
+-- @function :willBeginScrolling
+-- @param event the event table
+-- @object event.target the TableView
+-- @tparam number event.x always 0
+-- @tparam number event.y the position of the list: 0 at the top, negative as it scrolls
+-- @tparam string event.verticalLimit `HIT_TOP_LIMIT` or `HIT_BOTTOM_LIMIT` when the list is at or past that end, otherwise nil
+
+
+--- (optional) informs delegate that the list has moved.
+-- called for each move, about once a frame while scrolling.
+--
+-- @within Methods
+-- @function :didScroll
+-- @param event the event table, as in @{willBeginScrolling}
+
+
+--- (optional) informs delegate that the list has come to rest.
+--
+-- @within Methods
+-- @function :didEndScrolling
+-- @param event the event table, as in @{willBeginScrolling}
+

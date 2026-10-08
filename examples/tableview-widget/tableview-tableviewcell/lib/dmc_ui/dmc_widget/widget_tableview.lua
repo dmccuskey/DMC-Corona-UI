@@ -134,7 +134,6 @@ end
 --
 local function removeRecords( list, idx2, idx1, tremove )
 	-- print( "removeRecords", idx2, idx1, #list )
-	assert( idx2>=idx1 )
 	for i=idx2,idx1,-1 do
 		tremove( list, i )
 	end
@@ -310,7 +309,9 @@ end
 function TableView:__undoInitComplete__()
 	-- print( "TableView:__undoInitComplete__" )
 
-	self:removeAllRows()
+	self:_stopHighlightTimer()
+	-- not removeAllRows(): no size change on the way out
+	self:_unrenderAllTableCells( self._renderedTableCells )
 
 	self._rowItemRecords = nil
 	self._renderedTableCells = nil
@@ -362,6 +363,7 @@ TableView.__setters.delegate = WidgetHelp.__setters.delegate
 --== .estimatedRowHeight
 
 --- set/get the estimated height for each row.
+-- the rows take a new value at the next reloadData().
 --
 -- @within Properties
 -- @function .estimatedRowHeight
@@ -416,8 +418,8 @@ end
 -- @usage widget.marginX = 18
 -- @usage print( widget.marginX )
 
-ScrollView.__getters.marginX = WidgetHelp.__getters.marginX
-ScrollView.__setters.marginX = WidgetHelp.__setters.marginX
+TableView.__getters.marginX = WidgetHelp.__getters.marginX
+TableView.__setters.marginX = WidgetHelp.__setters.marginX
 
 --== .marginY
 
@@ -429,8 +431,8 @@ ScrollView.__setters.marginX = WidgetHelp.__setters.marginX
 -- @usage widget.marginX = 18
 -- @usage print( widget.marginX )
 
-ScrollView.__getters.marginY = WidgetHelp.__getters.marginY
-ScrollView.__setters.marginY = WidgetHelp.__setters.marginY
+TableView.__getters.marginY = WidgetHelp.__getters.marginY
+TableView.__setters.marginY = WidgetHelp.__setters.marginY
 
 --== .renderMargin
 
@@ -439,9 +441,15 @@ ScrollView.__setters.marginY = WidgetHelp.__setters.marginY
 -- @within Properties
 -- @function .renderMargin
 -- @usage widget.renderMargin = 100
+-- @usage print( widget.renderMargin )
 
+function TableView.__getters:renderMargin()
+	return self._renderMargin
+end
 function TableView.__setters:renderMargin( value )
 	-- print( "TableView.__setters:renderMargin", value )
+	assert( type(value)=='number' and value>=0, "TableView.renderMargin must be a number, zero or more" )
+	--==--
 	self._renderMargin = value
 end
 
@@ -455,12 +463,12 @@ end
 -- @usage widget.scrollEnabled = true
 -- @usage print( widget.scrollEnabled )
 
-function ScrollView.__getters:scrollEnabled()
-	-- print( "ScrollView.__getters:scrollEnabled" )
+function TableView.__getters:scrollEnabled()
+	-- print( "TableView.__getters:scrollEnabled" )
 	return ScrollView.__getters.verticalScrollEnabled( self )
 end
-function ScrollView.__setters:scrollEnabled( value )
-	-- print( "ScrollView.__setters:scrollEnabled", value )
+function TableView.__setters:scrollEnabled( value )
+	-- print( "TableView.__setters:scrollEnabled", value )
 	ScrollView.__setters.verticalScrollEnabled( self, value )
 end
 
@@ -539,11 +547,13 @@ end
 function TableView:insertRowAt( idx )
 	-- print( "TableView:insertRowAt", idx )
 	assert( type(idx)=='number', "TableView:insertRowAt arg must be a number" )
-	assert( idx>=1, "TableView:insertRowAt index must be greater than 1" )
+	assert( self._delegate, "TableView:insertRowAt missing delegate" )
 	--==--
 	local records = self._rowItemRecords
-	local rec = records[idx]
-	local yMin = rec and rec._yMin or 0
+	assert( idx>=1 and idx<=#records+1, "TableView:insertRowAt index must be from 1 to the number of rows plus 1" )
+	-- a row at the end goes below the last one
+	local rec, prev = records[idx], records[idx-1]
+	local yMin = rec and rec._yMin or ( prev and prev._yMax or 0 )
 	local eRH = self._estimatedRowHeight
 
 	self.scrollHeight = self.scrollHeight + eRH
@@ -590,6 +600,8 @@ function TableView:removeAllRows()
 	local records = self._rowItemRecords
 	self:_unrenderAllTableCells( self._renderedTableCells )
 	removeRecords( records, #records, 1, tremove )
+	-- nothing left to scroll (the setter keeps it at the view's height)
+	self.scrollHeight = 0
 end
 
 --== :removeRowAt
@@ -615,12 +627,12 @@ function TableView:removeRowAt( idx )
 	local eRH = self._estimatedRowHeight
 
 	self.scrollHeight = self.scrollHeight - eRH
-	local removed = self:_unrenderTableCell( rec )
+	self:_unrenderTableCell( rec )
 	removeRecords( records, idx, idx, tremove )
 	indexItems( records, idx, yMin, eRH )
-	if removed then
-		self:_renderDisplay{ clearAll=true }
-	end
+	-- always: the rows below moved up, also when the row removed
+	-- was above the ones rendered
+	self:_renderDisplay{ clearAll=true }
 end
 
 --== :scrollToRowAt
@@ -633,7 +645,7 @@ end
 -- @int index index for row to scroll to
 -- @tab[opt] params table of method parameters
 -- @string[opt='none'] params.position The location reference for scroll action – 'none', 'top', 'middle', 'bottom'.
--- @int[opt=500] params.time the duration for scroll animation, in milliseconds. set to 0 for immediate transition
+-- @int[opt=0] params.time the duration for scroll animation, in milliseconds. 0, the default, moves at once
 -- @func[opt] params.onComplete a function to call when the animation is complete
 --
 -- @usage widget:scrollToRowAt( 5, { position='top' } )
@@ -647,19 +659,12 @@ function TableView:scrollToRowAt( idx, params )
 	if params.limitIsActive==nil then params.limitIsActive=false end
 	--==--
 	local record = self._rowItemRecords[ idx ]
-	assert( record )
+	assert( record, "TableView:scrollToRowAt no row at that index" )
 
 	local pos = self:_calculateScrollPosition( record, params.position )
 
-	if params.time then
-		-- set scroll in motion
-		self._axisY:scrollToPosition( pos, params )
-	else
-		self:_unrenderAllTableCells()
-		self._axisY:scrollToPosition( pos, params )
-		self:_renderDisplay{ clearAll=false }
-	end
-
+	-- the rows are rendered as the axis reports its positions
+	self._axisY:scrollToPosition( pos, params )
 end
 
 --== :setContentPosition
@@ -757,9 +762,10 @@ function TableView:_findVisibleItem( records, min, max )
 
 	while( low <= high ) do
 		mid = _mfloor( low + ( (high-low)*0.5 ) )
+		-- any row which overlaps the bounds will do
 		if records[mid]._yMin > max then
 			high = mid - 1
-		elseif records[mid]._yMin < min then
+		elseif records[mid]._yMax < min then
 			low = mid + 1
 		else
 			return mid  -- found
@@ -780,7 +786,6 @@ function TableView:_renderUp( records, index, bounds )
 
 	local isBounded_f = self._isWithinBounds
 	local renderCell_f = self._renderTableCell
-	local cut = TableView._BOUND_CUT
 	local record, isBounded, bType
 
 	repeat
@@ -788,7 +793,9 @@ function TableView:_renderUp( records, index, bounds )
 		if not record then break end
 		isBounded, bType = isBounded_f( self, bounds, record )
 		-- print( "rU", index, bType, record, record._yMin, isBounded )
-		if not isBounded or bType==cut then
+		-- a row cut by the bounds is rendered too: with a small
+		-- render margin it is partly in view
+		if not isBounded then
 			break
 		else
 			renderCell_f( self, record, { putAtHead=true } )
@@ -808,7 +815,6 @@ function TableView:_renderDown( records, index, bounds )
 
 	local isBounded_f = self._isWithinBounds
 	local renderCell_f = self._renderTableCell
-	local cut = TableView._BOUND_CUT
 	local record, isBounded, bType
 
 	repeat
@@ -816,7 +822,9 @@ function TableView:_renderDown( records, index, bounds )
 		if not record then break end
 		isBounded, bType = isBounded_f( self, bounds, record )
 		-- print( "rD", index, bType, record, record._yMax, isBounded )
-		if not isBounded or bType==cut then
+		-- a row cut by the bounds is rendered too: with a small
+		-- render margin it is partly in view
+		if not isBounded then
 			break
 		else
 			renderCell_f( self, record, { putAtHead=false } )
@@ -893,7 +901,6 @@ function TableView:_renderDisplay( params )
 	end
 
 	local isBounded_f = self._isWithinBounds
-	local full = TableView._BOUND_FULL
 	local renderedCells = self._renderedTableCells
 
 	local bounds = self:_viewportBounds()
@@ -919,7 +926,7 @@ function TableView:_renderDisplay( params )
 		if not isBounded then
 			-- this item scrolled off screen so check others below
 			self:_unrenderDownFromTop( bounds )
-		elseif bType==full then
+		else
 			self:_renderUp( records, record._index-1, bounds )
 		end
 	end
@@ -934,7 +941,7 @@ function TableView:_renderDisplay( params )
 		if not isBounded then
 			-- this item scrolled off screen so check others above
 			self:_unrenderUpFromBottom( bounds )
-		elseif bType==full then
+		else
 			self:_renderDown( records, record._index+1, bounds )
 		end
 	end
@@ -1015,11 +1022,13 @@ function TableView:_tableCellTouch_handler( event )
 			self._tmpTouchEvt = nil
 		end
 
-	elseif phase == 'ended' then
+	elseif phase == 'ended' or phase == 'cancelled' then
 		TouchMgr.unsetFocus( target, event.id )
 		self:_stopHighlightTimer( record )
 		self:_dispatchUnhighlightRow( record )
-		self:_dispatchSelectedRow( record )
+		if phase == 'ended' then
+			self:_dispatchSelectedRow( record )
+		end
 		self._tmpTouchEvt = nil
 	end
 
@@ -1148,11 +1157,16 @@ function TableView:_unrenderTableCell( record, options )
 		type = TableView.UNRENDER_ROW,
 
 		target=self,
+		row=record,
 		view=view,
 		data=record._user,
 		index=record._index,
 	}
-	self._delegate:onRowUnrender( e )
+	-- optional: a row's view is removed with everything in it
+	local delegate = self._delegate
+	if delegate and delegate.onRowUnrender then
+		delegate:onRowUnrender( e )
+	end
 
 	view.__bg:removeSelf()
 	view.__bg= nil
@@ -1279,6 +1293,17 @@ function TableView:_calculateScrollPosition( record, position )
 		value = offset-record._yMin
 	end
 
+	-- stay inside the scroll limits: the first rows can't be
+	-- in the middle, nor the last ones at the top
+	local upper = self.upperVerticalOffset
+	local lower = self.height - self.scrollHeight - self.lowerVerticalOffset
+	if lower > upper then lower = upper end
+	if value > upper then
+		value = upper
+	elseif value < lower then
+		value = lower
+	end
+
 	return value
 end
 
@@ -1289,6 +1314,8 @@ end
 
 function TableView:_dispatchHighlightRow( record )
 	-- print( "TableView:_dispatchHighlightRow" )
+	-- the row can be gone by now (scrolled away, removed)
+	if not record._view then return end
 	local delegate = self._delegate
 	local cell = record._view.cell
 	local f, evt
@@ -1322,6 +1349,7 @@ end
 function TableView:_dispatchUnhighlightRow( record )
 	-- print( "TableView:_dispatchUnhighlightRow" )
 	-- if highlight then tell
+	if not record._view then return end
 	local delegate = self._delegate
 	local cell = record._view.cell
 	local f, evt
@@ -1384,6 +1412,25 @@ end
 
 
 
+--======================================================--
+-- DMC Lifecycle Methods
+
+function TableView:__commitProperties__()
+	-- print( "TableView:__commitProperties__" )
+	local widthChanged = self._width_dirty
+	local sizeChanged = widthChanged or self._height_dirty or self._scrollHeight_dirty
+
+	self:superCall( '__commitProperties__' )
+	--==--
+	-- rows are made as wide as the view: make them again for a new
+	-- width; a new height or scroll height changes which are in view
+	if sizeChanged and self._renderedTableCells then
+		self:_renderDisplay{ clearAll=widthChanged }
+	end
+end
+
+
+
 --====================================================================--
 --== Event Handlers
 
@@ -1395,6 +1442,8 @@ function TableView:_axisEvent_handler( event )
 	end
 	self:_scrollIndicatorEvent( event )
 	self:_renderDisplay()
+	-- after the rows for this position are made
+	self:_scrollDelegateEvent( event )
 end
 
 

@@ -46,7 +46,7 @@ SOFTWARE.
 
 -- Semantic Versioning Specification: http://semver.org/
 
-local VERSION = "1.8.0"
+local VERSION = "1.9.0"
 
 
 

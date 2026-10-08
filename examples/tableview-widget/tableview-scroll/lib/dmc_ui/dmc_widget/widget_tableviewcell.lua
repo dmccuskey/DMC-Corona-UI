@@ -225,6 +225,9 @@ function TableViewCell:__init__( params )
 
 	-- properties in this class
 
+	-- save params for later
+	self._tvc_tmp_params = params -- tmp
+
 	self._textLabel = params.labelText
 	self._textLabel_dirty=true
 	self._textDetail = params.detailText
@@ -313,10 +316,20 @@ function TableViewCell:__initComplete__()
 	-- print( "TableViewCell:__initComplete__" )
 	self:superCall( '__initComplete__' )
 	--==--
+	local tmp = self._tvc_tmp_params
+
 	self:_createTextLabel()
 	self:_createTextDetail()
 
 	self:setAnchor( self.TopLeftReferencePoint )
+
+	--== Use Setters
+	if tmp.width~=nil then self.width = tmp.width end
+	if tmp.height~=nil then self.height = tmp.height end
+	self._wgtTextLabel.text = self._textLabel
+	self._wgtTextDetail.text = self._textDetail
+
+	self._tvc_tmp_params = nil
 end
 
 function TableViewCell:__undoInitComplete__()
@@ -751,7 +764,7 @@ function TableViewCell:__commitProperties__()
 	end
 
 	if self._contentMargin_dirty then
-		self._contentMargin_dirty=true
+		self._contentMargin_dirty=false
 
 		self._imageViewX_dirty=true
 		self._textLabelX_dirty=true
@@ -821,7 +834,6 @@ function TableViewCell:__commitProperties__()
 		local offset = height/2
 		imageView.x = cellMargin
 		imageView.y = offset
-		imageView.height=30
 		self._dgViews:insert( imageView )
 		imageView.isVisible=true
 		imageView.anchorX, imageView.anchorY = 0, 0.5
@@ -931,12 +943,15 @@ function TableViewCell:stylePropertyChangeHandler( event )
 		property = etype
 
 	else
-		if property=='debugActive' then
+		if property=='debugOn' then
 			self._debugOn_dirty=true
 		elseif property=='width' then
 			self._width_dirty=true
+			self._accessoryX_dirty=true
 		elseif property=='height' then
 			self._height_dirty=true
+			self._accessoryX_dirty=true
+			self._imageViewX_dirty=true
 			elseif property=='anchorX' then
 				self._anchorX_dirty=true
 			elseif property=='anchorY' then

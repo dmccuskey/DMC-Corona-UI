@@ -275,6 +275,11 @@ function TableViewCell:__init__( params )
 	self._active = nil
 	self._inactive = nil
 
+	self._accessory = nil
+	self._cellLayout = nil
+	self._cellMargin = nil
+	self._contentMargin = nil
+
 end
 
 -- END: Setup DMC Objects
@@ -469,6 +474,79 @@ function TableViewCell.__setters:inactive( data )
 	}
 end
 
+
+--======================================================--
+-- Access to style properties
+
+-- the states ('inactive', 'active') take these when they change here
+
+--== .accessory
+
+function TableViewCell.__getters:accessory()
+	local value = self._accessory
+	if value==nil and self._inherit then
+		value = self._inherit.accessory
+	end
+	return value
+end
+function TableViewCell.__setters:accessory( value )
+	assert( (type(value)=='string') or (value==nil and (self:_hasInherit() or self._isClearing)) )
+	--==--
+	if value==self._accessory then return end
+	self._accessory = value
+	self:_dispatchChangeEvent( 'accessory', value )
+end
+
+--== .cellLayout
+
+function TableViewCell.__getters:cellLayout()
+	local value = self._cellLayout
+	if value==nil and self._inherit then
+		value = self._inherit.cellLayout
+	end
+	return value
+end
+function TableViewCell.__setters:cellLayout( value )
+	assert( (type(value)=='string') or (value==nil and (self:_hasInherit() or self._isClearing)) )
+	--==--
+	if value==self._cellLayout then return end
+	self._cellLayout = value
+	self:_dispatchChangeEvent( 'cellLayout', value )
+end
+
+--== .cellMargin
+
+function TableViewCell.__getters:cellMargin()
+	local value = self._cellMargin
+	if value==nil and self._inherit then
+		value = self._inherit.cellMargin
+	end
+	return value
+end
+function TableViewCell.__setters:cellMargin( value )
+	assert( (type(value)=='number' and value>=0) or (value==nil and (self:_hasInherit() or self._isClearing)) )
+	--==--
+	if value==self._cellMargin then return end
+	self._cellMargin = value
+	self:_dispatchChangeEvent( 'cellMargin', value )
+end
+
+--== .contentMargin
+
+function TableViewCell.__getters:contentMargin()
+	local value = self._contentMargin
+	if value==nil and self._inherit then
+		value = self._inherit.contentMargin
+	end
+	return value
+end
+function TableViewCell.__setters:contentMargin( value )
+	assert( (type(value)=='number' and value>=0) or (value==nil and (self:_hasInherit() or self._isClearing)) )
+	--==--
+	if value==self._contentMargin then return end
+	self._contentMargin = value
+	self:_dispatchChangeEvent( 'contentMargin', value )
+end
 
 --== verifyProperties
 

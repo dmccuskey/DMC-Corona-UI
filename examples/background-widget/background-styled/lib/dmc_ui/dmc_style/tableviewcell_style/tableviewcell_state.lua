@@ -116,9 +116,16 @@ TableViewCellStateStyle.__base_style__ = nil
 
 TableViewCellStateStyle._VALID_PROPERTIES = {
 	debugOn=true,
+	width=true,
 	height=true,
 	anchorX=true,
 	anchorY=true,
+
+	-- taken from the TableViewCell Style when they change there
+	accessory=true,
+	cellLayout=true,
+	cellMargin=true,
+	contentMargin=true,
 
 	-- Copyable properties
 	font=native.systemFont
@@ -252,6 +259,17 @@ end
 --== Static Methods
 
 
+-- a Background structure without Background's default type ('rounded'):
+-- a background with no type then inherits its type (the rectangle)
+local function createBackgroundStructure( src )
+	src = src or {}
+	return {
+		type=src.type,
+		view={}
+	}
+end
+
+
 function TableViewCellStateStyle.initialize( manager, params )
 	-- print( "TableViewCellStateStyle.initialize", manager )
 	params = params or {}
@@ -276,7 +294,7 @@ function TableViewCellStateStyle.createStyleStructure( src )
 	return {
 		detail=Style.Text.createStyleStructure( src.detail ),
 		label=Style.Text.createStyleStructure( src.label ),
-		background=Style.Background.createStyleStructure( src.background )
+		background=createBackgroundStructure( src.background )
 	}
 end
 
@@ -716,7 +734,7 @@ function TableViewCellStateStyle:_prepareData( data, dataSrc, params )
 	StyleClass = Style.Background
 	if not src.background then
 		tmp = dataSrc and dataSrc.background
-		src.background = StyleClass.createStyleStructure( tmp )
+		src.background = createBackgroundStructure( tmp )
 	end
 
 	--== process children
