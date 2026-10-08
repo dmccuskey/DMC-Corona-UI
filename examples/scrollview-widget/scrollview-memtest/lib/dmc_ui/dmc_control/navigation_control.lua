@@ -39,7 +39,7 @@ SOFTWARE.
 
 -- Semantic Versioning Specification: http://semver.org/
 
-local VERSION = "0.1.0"
+local VERSION = "0.2.0"
 
 
 
@@ -81,6 +81,12 @@ local tinsert = table.insert
 local tremove = table.remove
 
 local LOCAL_DEBUG = false
+
+-- a touch or a tap on the control stays with it (Solar2D sends 'tap' apart
+-- from 'touch'): what a view doesn't take doesn't reach what lies behind
+local function eventBlock_handler( event )
+	return true
+end
 
 --== To be set in initialize()
 local dUI = nil
@@ -127,9 +133,15 @@ function NavControl:__init__( params )
 
 	self._enterFrame_f = nil
 
+	-- the transition which is waiting or running: { func=, final= }
+	self._transition = nil
+
 	self._trans_time = params.transitionTime
 
 	self._views = {} -- slide list, in order
+
+	-- pushes and pops which wait for the transition to end, in order
+	self._pending = {}
 
 	--== Display Groups ==--
 
@@ -139,11 +151,9 @@ function NavControl:__init__( params )
 
 	--== Object References ==--
 
-	self._root_view = nil
 	self._back_view = nil
 	self._top_view = nil
 	self._new_view = nil
-	self._visible_view = nil
 
 	self._primer = nil
 	self._navBar = nil
@@ -152,11 +162,9 @@ end
 
 function NavControl:__undoInit__()
 	--print( "NavControl:__undoInit__" )
-	self._root_view = nil
 	self._back_view = nil
 	self._top_view = nil
 	self._new_view = nil
-	self._visible_view = nil
 
 	--==--
 	self:superCall( '__undoInit__' )
@@ -194,6 +202,7 @@ function NavControl:__createView__()
 	if LOCAL_DEBUG then
 		o:setFillColor(1,0,0,0.2)
 	end
+	o.isHitTestable = true
 	o.anchorX, o.anchorY = ANCHOR.x, ANCHOR.y
 
 	self._dgBg:insert( o )
@@ -214,6 +223,9 @@ end
 function NavControl:__undoCreateView__()
 	-- print( "NavControl:__undoCreateView__" )
 
+	self._navBar:removeSelf()
+	self._navBar = nil
+
 	self._primer:removeSelf()
 	self._primer = nil
 
@@ -233,17 +245,20 @@ end
 
 --== initComplete
 
---[[
 function NavControl:__initComplete__()
 	-- print( "NavControl:__initComplete__" )
 	self:superCall( '__initComplete__' )
 	--==--
+	self._primer:addEventListener( 'touch', eventBlock_handler )
+	self._primer:addEventListener( 'tap', eventBlock_handler )
 end
---]]
 
 function NavControl:__undoInitComplete__()
 	-- print( "NavControl:__undoInitComplete__" )
 	self:_cleanUp()
+
+	self._primer:removeEventListener( 'tap', eventBlock_handler )
+	self._primer:removeEventListener( 'touch', eventBlock_handler )
 	--==--
 	self:superCall( '__undoInitComplete__' )
 end
@@ -268,24 +283,67 @@ end
 --== Public Methods
 
 
+--== .navBar
+
+-- the control's NavBar (read only), eg for its height or its style
+--
+function NavControl.__getters:navBar()
+	return self._navBar
+end
+
+
+--== .isViewInMotion
+
+-- if a push or pop is under way (read only): true from the call until
+-- its slide, and each one which waits in line, has ended
+--
+function NavControl.__getters:isViewInMotion()
+	return ( self._transition~=nil )
+end
+
+
+-- a push or pop during a slide waits for the slide to end,
+-- then does its own; several wait in line, in the order of the calls.
+-- with params.wait=false it doesn't wait: the slide, and whatever
+-- waits behind it, is put at its end at once, then this one starts
+--
 function NavControl:pushView( view, params )
 	-- print( "NavControl:pushView" )
 	params = params or {}
 	assert( view, "[ERROR] NavControl:pushView requires a view object" )
-	-- assert( type(item)=='table' and item.isa and item:isa( NavItem ), "pushNavItem: item must be a NavItem" )
 	--==--
-	if self._enterFrame_f then
-		error("[ERROR] Animation already in progress !!!")
+	local animate = params.animate
+	if animate==nil then animate=true end
+
+	assert( not self:_isOnItsWay( view ), "[ERROR] NavControl:pushView view is already on the stack" )
+
+	-- the view is hidden from now on, also while it waits in line
+	self:_prepareView( view )
+
+	if params.wait==false then self:_finishAll() end
+	if self._transition then
+		tinsert( self._pending, { view=view, animate=animate } )
+	else
+		self:_pushView( view, animate )
 	end
-	self:_setNextView( view, params ) -- params.animate set here
-	self:_gotoNextView( params.animate )
 end
 
-function NavControl:popViewAnimated()
-	if self._enterFrame_f then
-		error("[ERROR] Animation already in progress !!!")
+-- returns false, and does nothing, when the root view is
+-- on top, or will be once the pushes and pops in line are done
+--
+function NavControl:popViewAnimated( params )
+	-- print( "NavControl:popViewAnimated" )
+	params = params or {}
+	--==--
+	if self:_getFutureDepth()<2 then return false end
+
+	if params.wait==false then self:_finishAll() end
+	if self._transition then
+		tinsert( self._pending, { pop=true } )
+	else
+		self:_popView()
 	end
-	self:_gotoPrevView( true )
+	return true
 end
 
 
@@ -300,7 +358,7 @@ function NavControl:_widthChanged()
 	self._primer.width = w
 	self._navBar.width = w
 	self:_modifyViews( function( i, v )
-		v.__obj.width = w
+		self:_sizeView( v )
 	end)
 end
 
@@ -309,21 +367,111 @@ function NavControl:_heightChanged()
 	local h = self._height
 	self._primer.height = h
 	self:_modifyViews( function( i, v )
-		v.__obj.height = h
+		self:_sizeView( v )
 	end)
 end
 
 
+-- the views on the stack, and the one on its way there
+--
 function NavControl:_modifyViews( func )
 	local views = self._views
+	if self._new_view then func( #views+1, self._new_view ) end
 	for i=#views, 1, -1 do func( i, views[i] ) end
 end
 
 
 function NavControl:_cleanUp()
 	-- print( "NavControl:_cleanUp" )
-	self:_stopEnterFrame()
+	-- the views in line never got in: they stay hidden, and their owner's
+	for _, op in ipairs( self._pending ) do
+		if op.view then
+			op.view.__obj = nil
+			op.view.__view = nil
+		end
+	end
+	self._pending = {}
+	self:_finishTransition()
 	self:_removeAllViews()
+	self._back_view = nil
+	self._top_view = nil
+	self._new_view = nil
+end
+
+
+--======================================================--
+-- Push/Pop Methods
+
+function NavControl:_pushView( view, animate )
+	-- print( "NavControl:_pushView", view, animate )
+	if #self._views==0 then
+		-- the first (root) view appears at once
+		self._back_view = nil
+		self._top_view = nil
+		animate = false
+	end
+	self:_setNextView( view )
+	self:_gotoNextView( animate )
+end
+
+function NavControl:_popView()
+	-- print( "NavControl:_popView" )
+	-- the root view stays
+	if #self._views<2 then return self:_runPending() end
+	self:_gotoPrevView( true )
+end
+
+-- start the push or pop which is first in line, if nothing runs
+--
+function NavControl:_runPending()
+	-- print( "NavControl:_runPending" )
+	if self._transition then return end
+	local op = tremove( self._pending, 1 )
+	if not op then return end
+	if op.pop then
+		self:_popView()
+	else
+		self:_pushView( op.view, op.animate )
+	end
+end
+
+-- take the transition, and each push and pop in line, to its end
+--
+function NavControl:_finishAll()
+	-- print( "NavControl:_finishAll" )
+	self:_finishTransition()
+	while #self._pending>0 do
+		self:_runPending()
+		self:_finishTransition()
+	end
+end
+
+-- how many views the stack will hold once the
+-- transition and what is in line are done
+--
+function NavControl:_getFutureDepth()
+	local depth = #self._views
+	local trans = self._transition
+	if trans then
+		if trans.final==100 then depth = depth+1 else depth = depth-1 end
+	end
+	for _, op in ipairs( self._pending ) do
+		if op.pop then depth = depth-1 else depth = depth+1 end
+	end
+	return depth
+end
+
+-- if a view is on the stack, on its way there, or in line
+--
+function NavControl:_isOnItsWay( view )
+	if view==self._new_view then return true end
+	for _, v in ipairs( self._views ) do
+		if v==view then return true end
+	end
+	for _, op in ipairs( self._pending ) do
+		if op.view==view then return true end
+	end
+	return false
 end
 
 
@@ -343,26 +491,27 @@ function NavControl:_getPreviousView()
 end
 
 function NavControl:_removeAllViews()
-	for i=1, #self._views do
+	for i=#self._views, 1, -1 do
 		local view = self:_popStackView()
 		self:_removeViewFromNavControl( view )
 	end
 end
 
 
-function NavControl:_setNextView( view, params )
-	params = params or {}
-	if params.animate==nil then params.animate=true end
-	--==--
-	if not self._root_view then
-		-- first view
-		self._root_view = view
-		self._top_view = nil
-		self._visible_view = nil
-		params.animate = false
-	end
+function NavControl:_setNextView( view )
+	-- print( "NavControl:_setNextView", view )
 	view.parent = self
 	self._new_view = view
+
+	self:_sizeView( view )
+end
+
+-- find what to show and who to talk with, and hide the view:
+-- done when the view is pushed, so one which waits in line
+-- doesn't show where it was made
+--
+function NavControl:_prepareView( view )
+	-- print( "NavControl:_prepareView", view )
 
 	-- support various types of objects
 	-- looking around for the View
@@ -382,9 +531,25 @@ function NavControl:_setNextView( view, params )
 		view.__obj = view.__view
 	end
 	view.__obj.isVisible=false
+end
 
-	self._newViewSet_dirty=true
-	self:__invalidateProperties__()
+-- put a view below the bar, top center, the size of what is left.
+-- a display group has no size of its own (a width or height
+-- would scale what it holds), so it is only placed
+--
+function NavControl:_sizeView( view )
+	-- print( "NavControl:_sizeView", view )
+	local ANCHOR = NavControl.ANCHOR
+	local nb_height = self._navBar.height
+	local obj = view.__obj
+	local isGroup = ( obj==view.__view and obj.numChildren~=nil )
+
+	if not isGroup then
+		obj.height = self._height - nb_height
+		obj.width = self._width
+	end
+	obj.y = nb_height
+	obj.anchorX, obj.anchorY = ANCHOR.x, ANCHOR.y
 end
 
 
@@ -398,9 +563,14 @@ end
 
 function NavControl:_removeViewFromNavControl( view )
 	-- print( "NavControl:_removeViewFromNavControl", view )
+	local obj = view.__obj
+	if obj then obj.isVisible=false end
 	view.__obj = nil
 	view.__view = nil
-	view.isVisible=false
+	-- the bar removed the view's nav item with the pop:
+	-- the view gets a new one if it is pushed again
+	view.navItem = nil
+
 	local f = view.willBeRemoved
 	if f then f( view ) end
 
@@ -422,6 +592,19 @@ function NavControl:_stopEnterFrame()
 	self._enterFrame_f = nil
 end
 
+-- take the transition which is waiting or running to its end
+--
+function NavControl:_finishTransition()
+	-- print( "NavControl:_finishTransition" )
+	local trans = self._transition
+	if not trans then return end
+	self:_stopEnterFrame()
+	self._transition = nil
+	self._animation = nil
+	self._animation_dirty=false
+	trans.func( trans.final, false )
+end
+
 
 function NavControl:_startForward( func )
 	local start_time = system.getTimer()
@@ -434,8 +617,10 @@ function NavControl:_startForward( func )
 		if perc >= 100 then
 			perc = 100
 			self:_stopEnterFrame()
+			self._transition = nil
 		end
 		func( perc, true )
+		if perc==100 then self:_runPending() end
 	end
 	self:_startEnterFrame( frw_f )
 end
@@ -443,7 +628,7 @@ end
 function NavControl:_startReverse( func )
 	local start_time = system.getTimer()
 	local duration = self._trans_time
-	local rev_f -- forward
+	local rev_f -- reverse
 
 	rev_f = function(e)
 		local delta_t = e.time-start_time
@@ -451,8 +636,10 @@ function NavControl:_startReverse( func )
 		if perc <= 0 then
 			perc = 0
 			self:_stopEnterFrame()
+			self._transition = nil
 		end
 		func( perc, true )
+		if perc==0 then self:_runPending() end
 	end
 	self:_startEnterFrame( rev_f )
 end
@@ -461,10 +648,13 @@ end
 function NavControl:_gotoNextView( animate )
 	-- print( "NavControl:_gotoNextView", animate )
 	local func = self:_getNextTrans()
+	self._transition = { func=func, final=100 }
 
 	local animFunc = function()
 		if not animate then
+			self._transition = nil
 			func( 100, animate )
+			self:_runPending()
 		else
 			self:_startForward( func )
 		end
@@ -478,10 +668,13 @@ end
 function NavControl:_gotoPrevView( animate )
 	-- print( "NavControl:_gotoPrevView" )
 	local func = self:_getPrevTrans()
+	self._transition = { func=func, final=0 }
 
 	local animFunc = function()
 		if not animate then
+			self._transition = nil
 			func( 0, animate )
+			self:_runPending()
 		else
 			self:_startReverse( func )
 		end
@@ -496,10 +689,8 @@ end
 --======================================================--
 -- Transition Methods
 
-function NavControl:_getNavBarNextTransition( view, params )
+function NavControl:_getNavBarNextTransition( view )
 	-- print( "NavControl:_getNavBarNextTransition", view )
-	params = params or {}
-	--==--
 	local o = view.navItem
 	if not o then
 		o = dUI.newNavItem{
@@ -524,9 +715,7 @@ end
 
 function NavControl:_getNavBarPrevTransition()
 	-- print( "NavControl:_getNavBarPrevTransition" )
-	params = params or {}
-	--==--
-	return self._navBar:popNavItemGetTransition( params )
+	return self._navBar:popNavItemGetTransition()
 end
 
 function NavControl:_getPrevTrans()
@@ -543,15 +732,8 @@ end
 
 function NavControl:_getTransition( from_view, to_view, direction )
 	-- print( "NavControl:_getTransition", from_view, to_view, direction )
-	local W, H = self._width, self._height
-	local H_CENTER, V_CENTER = W*0.5, H*0.5
-	local MARGINS = self.MARGINS
-
 	local animationFunc, notifyInMotion
-	local animationHasStarted = false
-	local animationIsFinished = false
-
-	local stack = self._views
+	local inMotion = false -- if the views have been told they are moving
 
 	if direction==self.FORWARD then
 		self:_addViewToNavControl( to_view )
@@ -559,17 +741,13 @@ function NavControl:_getTransition( from_view, to_view, direction )
 
 	animationFunc = function( percent, animate )
 		-- print( "animationFunc", percent )
+		-- read at each call: the control's size can change during a slide
+		local W = self._width
 		local dec_p = percent/100
-		local FROM_X_OFF = H_CENTER/2*dec_p
+		local FROM_X_OFF = W*0.25*dec_p
 		local TO_X_OFF = W*dec_p
 		local obj = nil
-
-		-- notify views motion has started
-
-		if animate and not animationHasStarted then
-			notifyInMotion( true )
-			animationHasStarted = true
-		end
+		local f
 
 		if percent==0 then
 			--== edge of transition ==--
@@ -585,21 +763,22 @@ function NavControl:_getTransition( from_view, to_view, direction )
 				obj.isVisible = false
 			end
 
-			--== Finish up
-
-			if animate and animationHasStarted then
-				animationIsFinished = true
+			if inMotion then
+				inMotion = false
 				notifyInMotion( false )
 			end
-			--[[
-			if not animate then
-				-- we jumped here without going through middle of trans
-			end
-			--]]
+
+			--== Finish up
 
 			if direction==self.REVERSE then
 
-				local f
+				-- the stack first: a view's function can push or pop
+				self:_popStackView()
+
+				self._top_view = from_view
+				self._new_view = nil
+				self._back_view = self:_getPreviousView()
+
 				if from_view then
 					f = from_view.viewDidAppear
 					if f then f( from_view ) end
@@ -609,27 +788,12 @@ function NavControl:_getTransition( from_view, to_view, direction )
 					if f then f( to_view ) end
 				end
 
-				local view = self:_popStackView()
-				self:_removeViewFromNavControl( view )
-
-				self._top_view = from_view
-				self._new_view = nil
-				self._back_view = self:_getPreviousView()
+				self:_removeViewFromNavControl( to_view )
 			end
 
 
 		elseif percent==100 then
 			--== edge of transition ==--
-
-			if animate and animationHasStarted then
-				animationIsFinished = true
-				notifyInMotion( false )
-			end
-			--[[
-			if not animate then
-				-- we jumped here without going through middle of trans
-			end
-			--]]
 
 			if to_view then
 				obj = to_view.__obj
@@ -643,15 +807,22 @@ function NavControl:_getTransition( from_view, to_view, direction )
 				obj.x = 0-FROM_X_OFF
 			end
 
+			if inMotion then
+				inMotion = false
+				notifyInMotion( false )
+			end
+
 			--== Finish up
 
 			if direction==self.FORWARD then
+
+				-- the stack first: a view's function can push or pop
+				self:_pushStackView( to_view )
 
 				self._back_view = from_view
 				self._new_view = nil
 				self._top_view = to_view
 
-				local f
 				if from_view then
 					f = from_view.viewDidDisappear
 					if f then f( from_view ) end
@@ -660,13 +831,18 @@ function NavControl:_getTransition( from_view, to_view, direction )
 					f = to_view.viewDidAppear
 					if f then f( to_view ) end
 				end
-
-				self:_pushStackView( to_view )
 			end
 
 
 		else
 			--== middle of transition ==--
+
+			-- notify views motion has started
+
+			if animate and not inMotion then
+				inMotion = true
+				notifyInMotion( true )
+			end
 
 			if to_view then
 				obj = to_view.__obj
@@ -685,6 +861,7 @@ function NavControl:_getTransition( from_view, to_view, direction )
 	end
 
 	notifyInMotion = function( value )
+		local f
 		if from_view then
 			f = from_view.viewInMotion
 			if f then f( from_view, value ) end
@@ -705,28 +882,11 @@ end
 function NavControl:__commitProperties__()
 	-- print( 'NavControl:__commitProperties__' )
 
-	--== Update Widget Components ==--
-
-	if self._newViewSet_dirty then
-		local w, h = self._width, self._height
-		local ANCHOR = NavControl.ANCHOR
-		local nb_height = self._navBar.height
-		local view_height = h - nb_height
-		local view1 = self._new_view
-		local obj
-		if view1 then
-			obj = view1.__obj
-			obj.height = view_height
-			obj.width = w
-			obj.y = nb_height
-			obj.anchorX, obj.anchorY = ANCHOR.x, ANCHOR.y
-		end
-		self._newViewSet_dirty=true
-	end
-
 	if self._animation_dirty then
-		self._animation()
+		local animFunc = self._animation
+		self._animation = nil
 		self._animation_dirty=false
+		if animFunc then animFunc() end
 	end
 end
 
@@ -734,23 +894,14 @@ end
 --======================================================--
 -- NavBar Delegate Methods
 
-function NavControl:shouldPushItem( navBar, navItem )
-	-- print( "NavControl:shouldPushItem" )
-	return true
-end
-
-function NavControl:didPushItem( navBar, navItem )
-	-- print( "NavControl:didPushItem" )
-end
-
+-- the Back button: the control pops its view and the bar's item
+-- together, so the bar is told not to pop on its own.
+-- a press during a slide is ignored, as the bar does by itself
+--
 function NavControl:shouldPopItem( navBar, navItem )
 	-- print( "NavControl:shouldPopItem" )
-	self:popViewAnimated()
+	if not self._transition then self:_popView() end
 	return false
-end
-
-function NavControl:didPopItem( navBar, navItem )
-	-- print( "NavControl:didPopItem" )
 end
 
 
