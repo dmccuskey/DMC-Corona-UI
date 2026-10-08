@@ -149,6 +149,7 @@ function Style.initialize( manager, params )
 	dUI.newButtonStyle = Style.newButtonStyle
 	dUI.newNavBarStyle = Style.newNavBarStyle
 	dUI.newNavItemStyle = Style.newNavItemStyle
+	dUI.newPageIndicatorStyle = Style.newPageIndicatorStyle
 	dUI.newScrollViewStyle = Style.newScrollViewStyle
 	dUI.newTableViewStyle = Style.newTableViewStyle
 	dUI.newTableViewCellStyle = Style.newTableViewCellStyle
@@ -375,6 +376,49 @@ function Style.newNavItemStyle( style_info, params )
 	params.data = style_info
 	if not Style.NavItem then Style._loadNavBarStyleSupport() end
 	return Style.NavItem:createStyleFrom( params )
+end
+
+
+--======================================================--
+-- newPageIndicatorStyle Support
+
+function Style.loadPageIndicatorStyleSupport( params )
+	-- print( "Style.loadPageIndicatorStyleSupport" )
+	if Style.PageIndicator then return end
+	params = params or {}
+	if params.mode==nil then params.mode=Style._mode or uiConst.RUN_MODE end
+	--==--
+	local kmode
+	if params.mode==uiConst.TEST_MODE then
+		kmode = Kolor.hRGBA
+	end
+
+	--== Dependencies
+
+	Style.loadBaseStyleSupport( params )
+
+	--== Components
+
+	local PageIndicatorStyle = require( ui_find( 'dmc_style.pageindicator_style' ) )
+
+	Style.PageIndicator=PageIndicatorStyle
+
+	initKolors(
+		function()
+			PageIndicatorStyle.initialize( Style, params )
+		end,
+		kmode
+	)
+end
+
+function Style.newPageIndicatorStyle( style_info, params )
+	-- print( "Style.newPageIndicatorStyle" )
+	style_info = style_info or {}
+	params = params or {}
+	--==--
+	params.data = style_info
+	if not Style.PageIndicator then Style.loadPageIndicatorStyleSupport() end
+	return Style.PageIndicator:createStyleFrom( params )
 end
 
 
