@@ -1,7 +1,12 @@
 --====================================================================--
 -- TableView Scroll
 --
--- Shows basic automated scrolling with the DMC TableView widget
+-- Scrolling to a row with scrollToRowAt(), in a table view which fills the
+-- screen below the status bar over NUM_ROWS (250,000) rows. After a second
+-- and a half it scrolls for three seconds, until row TARGET_ROW is in the
+-- middle of the view; that row is marked. On the way the rows pass too
+-- fast to read: the table view only makes the ones near the screen. The
+-- scroll indicator on the right is at its shortest, with so many rows.
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
@@ -10,11 +15,11 @@
 
 
 
-print( "\n\n#########################################################\n\n" )
+print( '\n\n##############################################\n\n' )
 
 
 
---===================================================================--
+--====================================================================--
 --== Imports
 
 
@@ -22,19 +27,22 @@ local dUI = require 'lib.dmc_ui'
 
 
 
---===================================================================--
+--====================================================================--
 --== Setup, Constants
 
 
 local W, H = dUI.WIDTH, dUI.HEIGHT
-local H_CENTER, V_CENTER = W*0.5, H*0.5
 
 local tinsert = table.insert
-local tremove = table.remove
+local tdelay = timer.performWithDelay
 
-local OFFSET = 100
-local DIMS = {w=280,h=30} -- dimensions of a row item
-local SHOW = 14 -- how many items to display (for masking)
+-- the screen, as the device reports it
+local STATUS_BAR_H = display.topStatusBarContentHeight
+
+-- the content
+local NUM_ROWS = 250000
+local ROW_HEIGHT = 44
+local TARGET_ROW = 179431
 
 local tableData = nil -- later
 
@@ -60,7 +68,7 @@ end
 --
 local function createDataArray()
 	local list = {}
-	for i = 1, 250000 do
+	for i = 1, NUM_ROWS do
 		local row_template = createRowStructure( i )
 		tinsert( list, row_template )
 	end
@@ -74,7 +82,7 @@ end
 --- return number of data rows.
 -- called by table view when figuring data
 --
-local function getRows( self, section )
+local function getRows( self, tableview, section )
 	-- print( "Main:getRows" )
 	return #tableData
 end
@@ -84,18 +92,25 @@ end
 -- called when table view needs to display a row
 --
 local function onRender( self, event )
-		-- print( "Main:onRender" )
-		local view = event.view
-		local index = event.index
-		local o
+	-- print( "Main:onRender" )
+	local row = event.row
+	local view = event.view
+	local index = event.index
+	local o
 
-		o = display.newText( "row : "..index, 0, 0, native.systemFont, 16 )
-		o.anchorX, o.anchorY = 0,0
-		o:setFillColor( 0,0,0 )
+	o = display.newText( "row : "..index, 0, 0, native.systemFont, 18 )
+	o.anchorX, o.anchorY = 0, 0.5
+	o.x, o.y = 15, ROW_HEIGHT/2
+	o:setFillColor( 0,0,0 )
 
-		view:insert( o )
-		view._txt = o
+	row:setLineColor( 0.8,0.8,0.8 )
+	if index==TARGET_ROW then
+		row:setBackgroundColor( 1,0.9,0.5 )
 	end
+
+	view:insert( o )
+	view._txt = o
+end
 
 
 --- onUnrender()
@@ -130,34 +145,18 @@ local delegate = {
 -- create Table View
 
 local tV = dUI.newTableView{
-	width=DIMS.w,
-	height=DIMS.h*SHOW,
+	width=W,
+	height=H-STATUS_BAR_H,
 	delegate=delegate,
-	estimatedRowHeight=DIMS.h,
-	autoMask=true
+	estimatedRowHeight=ROW_HEIGHT,
+	autoMask=true -- clip the rows to the table view
 }
-tV.x, tV.y = H_CENTER-DIMS.w*0.5, V_CENTER-(DIMS.h*SHOW)*0.5
+tV.x, tV.y = 0, STATUS_BAR_H
 
 tV:reloadData()
 
--- timer.performWithDelay( 1000, function()
--- 	-- add table row
--- 	local pos = 5
--- 	tinsert( tableData, pos, createRowTemplate( pos ) )
--- 	tV:insertRowAt( pos )
--- end)
 
--- timer.performWithDelay( 2000, function()
--- 	-- delete table row
--- 	local pos = 5
--- 	tremove( tableData, pos )
--- 	tV:removeRowAt( pos )
--- end)
-
-
-timer.performWithDelay( 1500, function()
-	-- delete table row
-	local index = 179431
-	tV:scrollToRowAt( index, {position='middle', time=3000} )
+tdelay( 1500, function()
+	-- scroll to a row
+	tV:scrollToRowAt( TARGET_ROW, {position='middle', time=3000} )
 end)
-

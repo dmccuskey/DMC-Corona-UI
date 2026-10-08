@@ -105,4 +105,6 @@ Checked in the Solar2D Simulator (2026.3731) in September 2026.
 
 - **Some functions fail or are missing.** `dUI.newFormatter()` and `dUI.newSlideView()` raise an error; `dUI.newPopover()` and `newPopoverControl()` are `nil`.
 - **A button's label keeps its alignment and margins** when `align`, `marginX` or `marginY` change on the button style or a state style after the button is made: they reach the state, not its `label`. Change them on the label itself (`button.inactiveStyle.label.align = 'left'`). `offsetX` and `offsetY` do follow.
+- **A TableView's rows all have one height** (`estimatedRowHeight`): the common case, and cheap to compute. Rows of different heights (section headers, separate row types) are planned.
+- **A TableViewCell's two lines of text sit where its style says** (`labelY`, `detailY`), whatever its height.
 - The Navigation Control expects each view to be anchored top center, and hides popped views instead of removing them ([Views](controls.md#views)).

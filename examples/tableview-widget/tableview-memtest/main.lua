@@ -1,7 +1,11 @@
 --====================================================================--
--- TableViewCell
+-- TableView Memtest
 --
--- Stress Test tableview/ tableviewcell
+-- Stress test for TableView and TableViewCell: creates a table view which
+-- fills the screen below the status bar, with TableViewCell rows, and
+-- removes it DELAY (100) ms later, over and over, and prints memory use
+-- with dmc-performance. run_example1() to 3() do the same with a
+-- TableView style, a TableViewCell style and a single TableViewCell.
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
@@ -10,11 +14,11 @@
 
 
 
-print( "\n\n#########################################################\n\n" )
+print( '\n\n##############################################\n\n' )
 
 
 
---===================================================================--
+--====================================================================--
 --== Imports
 
 
@@ -24,29 +28,27 @@ local Perf = require 'lib.dmc_corona.dmc_performance'
 
 
 
---===================================================================--
+--====================================================================--
 --== Setup, Constants
 
 
-display.setStatusBar( display.HiddenStatusBar )
-
-math.randomseed( os.time() )
-
 local W, H = dUI.WIDTH, dUI.HEIGHT
-local H_CENTER, V_CENTER = W*0.5, H*0.5
 
 local mrandom = math.random
-local mfloor = math.floor
 local tinsert, tremove = table.insert, table.remove
 local tstr = tostring
 local tdelay = timer.performWithDelay
+math.randomseed( os.time() )
 
-local OFFSET = 100
-local DIMS = {w=280,h=30} -- dimensions of a row item
-local SHOW = 14 -- how many items to display (for masking)
+-- the screen, as the device reports it
+local STATUS_BAR_H = display.topStatusBarContentHeight
+
+-- the content
+local NUM_ROWS = 50
+local ROW_HEIGHT = 50
 
 local tableData = nil -- later
-local tableStyle = nil
+local cellStyle = nil
 
 local cellCache = {}
 
@@ -89,6 +91,7 @@ local images = {
 
 
 
+
 --===================================================================--
 --== Support Functions
 
@@ -107,7 +110,7 @@ local function createRowStructure( idx )
 		index=idx,
 		title = "Row title for "..tstr( idx ),
 		image = getRandomImage(),
-		detail = "some detail explaination",
+		detail = "some detail explanation",
 		type='row-data', -- this is our template type
 		data=system.getTimer()
 	}
@@ -118,7 +121,7 @@ end
 --
 local function createDataArray()
 	local list = {}
-	for i = 1, 50 do
+	for i = 1, NUM_ROWS do
 		local row_template = createRowStructure( i )
 		tinsert( list, row_template )
 	end
@@ -142,33 +145,27 @@ end
 --- create view for table row.
 -- called when table view needs to display a row
 --
---
 local function onRender( self, event )
 	-- print( "Main:onRender" )
-	-- local target = event.target -- the delegate
-	-- local data = event.data -- user data area
 	local view = event.view
 	local index = event.index
 	local tc
 
 	local rowData = tableData[ index ] -- our data source
 
-	local w, h = view.width, view.height
-
+	-- a cell from a row which left the screen, or a new one
 	if #cellCache>0 then
 		tc = tremove( cellCache, 1 )
 		tc.isVisible = true
 	else
-		tc = dUI.newTableViewCell{ width=w, height=h, style=tableStyle }
+		tc = dUI.newTableViewCell{ width=W, height=ROW_HEIGHT, style=cellStyle }
 	end
 
 	tc.textLabel.text = rowData.title
 	tc.textDetail.text = rowData.detail
 
-	-- tc.imageView = display.newImageRect( rowData.image, 26, 26 )
-
 	view:insert( tc.view )
-	view.cell = tc
+	view.cell = tc -- the table view highlights a row's 'cell'
 
 end
 
@@ -178,28 +175,21 @@ end
 --
 local function onUnrender( self, event )
 	-- print( "Main:onUnrender" )
-	-- local target = event.target -- the delegate
-	-- local data = event.data -- user data area
-	-- local index = event.index
 	local view = event.view
-	local tc, img
+	local tc
 
+	-- keep the cell for another row
 	tc = view.cell
 	display.getCurrentStage():insert( tc.view )
 	tc.isVisible = false
 	tinsert( cellCache, tc )
-
-	-- img = tc.imageView
-	-- assert( img )
-	-- img:removeSelf()
-	-- tc.imageView=nil
 
 	view.cell = nil
 end
 
 
 --- onEvent()
--- called when table view needs to send an event to a row
+-- called when table view tells about a row
 --
 local function onEvent( self, event )
 	-- print( "Main:onEvent", event.type )
@@ -213,13 +203,11 @@ local function onEvent( self, event )
 		-- print( "row did highlight" )
 	elseif etype == tv.UNHIGHLIGHT_ROW then
 		-- print( "row did UNhighlight" )
-		elseif etype == tv.WILL_SELECT_ROW then
-			-- print( "Will Select ", event.index )
-			return event.index
-		elseif etype == tv.SELECTED_ROW then
-			print( "Selected ", event.index )
-		elseif etype == tv.SCROLLED then
-			print( "View Scrolled", event.x, event.y, event.velocity )
+	elseif etype == tv.WILL_SELECT_ROW then
+		-- print( "Will Select ", event.index )
+		return event.index -- << this row, another, or nil for none
+	elseif etype == tv.SELECTED_ROW then
+		print( "Selected ", event.index )
 	else
 		print( 'onEvent', event.type )
 	end
@@ -248,7 +236,6 @@ local delegate = {
 }
 
 
-
 --======================================================--
 --== stress test TableView Style
 
@@ -261,7 +248,7 @@ function run_example1()
 
 	createItem = function()
 		count=count+1
-		-- o = dUI.newTableViewStyle()
+		o = dUI.newTableViewStyle()
 
 		tdelay( DELAY, function()
 			destroyItem()
@@ -269,7 +256,7 @@ function run_example1()
 	end
 
 	destroyItem = function()
-		-- o:removeSelf()
+		o:removeSelf()
 		o = nil
 		if count%10==0 then
 			print( "cycles completed: ", count )
@@ -339,8 +326,8 @@ function run_example3()
 
 	createItem = function()
 		count=count+1
-		o = dUI.newTableViewCell{}
-		o.x, o.y = H_CENTER, V_CENTER
+		o = dUI.newTableViewCell{ width=W, height=ROW_HEIGHT, labelText="cell "..count }
+		o.x, o.y = 0, STATUS_BAR_H
 
 		tdelay( DELAY, function()
 			destroyItem()
@@ -380,14 +367,13 @@ function run_example4()
 	createItem = function()
 		count=count+1
 		o = dUI.newTableView{
-			width=DIMS.w,
-			height=DIMS.h*SHOW,
+			width=W,
+			height=H-STATUS_BAR_H,
 			delegate=delegate,
-			estimatedRowHeight=DIMS.h,
+			estimatedRowHeight=ROW_HEIGHT,
 			autoMask=false
 		}
-		o.x, o.y = H_CENTER-DIMS.w*0.5, V_CENTER-(DIMS.h*SHOW)*0.5
-		o:addEventListener( o.EVENT, onEvent )
+		o.x, o.y = 0, STATUS_BAR_H
 		o:reloadData()
 
 		tdelay( DELAY, function()
@@ -396,8 +382,11 @@ function run_example4()
 	end
 
 	destroyItem = function()
-		o:removeEventListener( o.EVENT, onEvent )
 		o:removeSelf()
+		-- the cells its rows left in the cache
+		for i=#cellCache, 1, -1 do
+			tremove( cellCache, i ):removeSelf()
+		end
 		o = nil
 		if count%10==0 then
 			print( "cycles completed: ", count )
@@ -414,5 +403,3 @@ function run_example4()
 end
 
 run_example4()
-
-
