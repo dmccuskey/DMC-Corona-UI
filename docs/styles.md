@@ -19,7 +19,8 @@ Each widget type has its own style type, and takes only that type:
 | `newButton()`, `newPushButton()`, `newRadioButton()`, `newToggleButton()` | `newButtonStyle()` |
 | `newBackground()` and its variants | `newBackgroundStyle()` and its variants |
 | `newNavBar()`, `newNavItem()` | `newNavBarStyle()`, `newNavItemStyle()` |
-| `newScrollView()` | `newScrollViewStyle()` |
+| `newScrollView()`, `newSlideView()` | `newScrollViewStyle()` |
+| `newPageIndicator()` | `newPageIndicatorStyle()` |
 | `newTableView()` | `newTableViewStyle()` |
 | `newTableViewCell()` | `newTableViewCellStyle()` |
 

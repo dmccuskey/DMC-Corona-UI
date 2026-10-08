@@ -37,6 +37,7 @@ module_config = {
 			"dmc_ui/dmc_style/button_style.lua",
 			"dmc_ui/dmc_style/navbar_style.lua",
 			"dmc_ui/dmc_style/navitem_style.lua",
+			"dmc_ui/dmc_style/pageindicator_style.lua",
 			"dmc_ui/dmc_style/scrollview_style.lua",
 			"dmc_ui/dmc_style/style_manager.lua",
 			"dmc_ui/dmc_style/style_mix.lua",
@@ -64,6 +65,7 @@ module_config = {
 			"dmc_ui/dmc_widget/widget_navbar.lua",
 			"dmc_ui/dmc_widget/widget_navbar/delegate_navbar.lua",
 			"dmc_ui/dmc_widget/widget_navitem.lua",
+			"dmc_ui/dmc_widget/widget_pageindicator.lua",
 			"dmc_ui/dmc_widget/widget_scrollview.lua",
 			"dmc_ui/dmc_widget/widget_scrollview/axis_motion.lua",
 			"dmc_ui/dmc_widget/widget_scrollview/scale_motion.lua",
@@ -78,7 +80,6 @@ module_config = {
 			"dmc_ui/dmc_widget/widget_text.lua",
 			"dmc_ui/dmc_widget/widget_textfield.lua",
 			"dmc_ui/dmc_widget/widget_textfield/delegate_textfield.lua",
-			"dmc_ui/dmc_widget/widget_viewpager.lua",
 
 			"dmc_ui/manager/keyboard_mgr.lua",
 
@@ -295,6 +296,16 @@ module_config = {
 			},
 			{
 				"exp_dir": "scrollview-widget/scrollview-zoom",
+				"requires": [],
+				"mod_dir_map": {
+					"default_dir": "",
+					"libs": {
+						"dmc-corona-boot":""
+					}
+				}
+			},
+			{
+				"exp_dir": "slideview-widget/slideview-simple",
 				"requires": [],
 				"mod_dir_map": {
 					"default_dir": "",

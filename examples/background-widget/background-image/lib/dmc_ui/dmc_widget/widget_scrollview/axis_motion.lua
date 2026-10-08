@@ -81,6 +81,7 @@ local newClass = Objects.newClass
 local ObjectBase = Objects.ObjectBase
 
 local mabs = math.abs
+local mceil = math.ceil
 local mfloor = math.floor
 local sfmt = string.format
 local tinsert = table.insert
@@ -108,6 +109,10 @@ AxisMotion.SCROLLBACK_FACTOR = 1/3
 
 AxisMotion.VELOCITY_STACK_LENGTH = uiConst.AXIS_VELOCITY_STACK_LENGTH
 AxisMotion.VELOCITY_LIMIT = uiConst.AXIS_VELOCITY_LIMIT
+
+-- with paging, the speed (pixels per millisecond) at the end of
+-- a touch from which it is a flick, which goes to the next page
+AxisMotion.PAGE_FLICK_VELOCITY = uiConst.AXIS_PAGE_FLICK_VELOCITY
 
 AxisMotion.UPPER = 'upper-alignment'
 AxisMotion.MIDDLE = 'middle-aligment'
@@ -147,6 +152,7 @@ function AxisMotion:__init__( params )
 	if params.scrollToTransitionTime==nil then params.scrollToTransitionTime=uiConst.AXIS_SCROLLTO_TIME end
 	if params.length==nil then params.length=0 end
 	if params.lowerOffset==nil then params.lowerOffset=0 end
+	if params.pagingIsEnabled==nil then params.pagingIsEnabled=false end
 	if params.scrollbackFactor==nil then params.scrollbackFactor=AxisMotion.SCROLLBACK_FACTOR end
 	if params.scrollIsEnabled==nil then params.scrollIsEnabled=true end
 	if params.scrollLength==nil then params.scrollLength=0 end
@@ -218,6 +224,11 @@ function AxisMotion:__init__( params )
 	self._alwaysBounce = false
 	self._scrollEnabled = false
 
+	-- paging: a touch ends on a page, each as long as the view
+	self._pagingEnabled = false
+	-- the page showing when the touch began (0 is the first)
+	self._touchPage = 0
+
 	self:setState( AxisMotion.STATE_CREATE )
 end
 
@@ -237,6 +248,7 @@ function AxisMotion:__initComplete__()
 	self.decelerateTransitionTime = tmp.decelerateTransitionTime
 	self.length = tmp.length
 	self.lowerOffset = tmp.lowerOffset
+	self.pagingIsEnabled = tmp.pagingIsEnabled
 	self.restoreTransitionTime = tmp.restoreTransitionTime
 	self.restraintTransitionTime = tmp.restraintTransitionTime
 	self.scrollbackFactor = tmp.scrollbackFactor
@@ -335,6 +347,18 @@ function AxisMotion.__setters:lowerOffset( value )
 	--==--
 	self._lowerOffset = value
 	self:_checkScaledPosition()
+end
+
+
+-- whether a touch ends on a page. a page is as long as the view,
+-- and the first one starts at the upper offset
+function AxisMotion.__getters:pagingIsEnabled()
+	return self._pagingEnabled
+end
+function AxisMotion.__setters:pagingIsEnabled( value )
+	assert( type(value)=='boolean' )
+	--==--
+	self._pagingEnabled = value
 end
 
 
@@ -539,6 +563,62 @@ function AxisMotion:_getRestPosition( value )
 	end
 	return value
 end
+
+-- the number of the page nearest to a position (0 is the first),
+-- and the number of the last page. nil if there is nothing to page
+--
+function AxisMotion:_getPage( value )
+	local length = self._length
+	local upper = self._upperOffset
+	local lower = (length-self._scaledScrollLength) - self._lowerOffset
+	if not self._scrollEnabled or length<=0 or lower>=upper then return nil end
+
+	-- a last page shorter than the view counts, if it is more than a pixel
+	local last = mceil( (upper-lower-1)/length )
+	local page = mfloor( (upper-value)/length + 0.5 )
+	if page < 0 then page = 0 elseif page > last then page = last end
+	return page, last
+end
+
+-- the position of a page: the last one stops at the scroll limit
+--
+function AxisMotion:_getPagePosition( page )
+	local upper = self._upperOffset
+	local lower = (self._length-self._scaledScrollLength) - self._lowerOffset
+	local pos = upper - page*self._length
+	if pos < lower then pos = lower end
+	return pos
+end
+
+-- with paging, where a touch which just ended comes to rest: the page
+-- next to the one it began on for a flick, otherwise the nearest one.
+-- nil if there is nothing to page
+--
+function AxisMotion:_getPageRestPosition()
+	local value = self._value
+	local page, last = self:_getPage( value )
+	if page==nil then return nil end
+
+	local vel = self._velocity
+	if vel.value >= AxisMotion.PAGE_FLICK_VELOCITY and vel.vector~=0 then
+		-- the first page boundary in the direction of the flick: a drag
+		-- one way which ends in a flick back stays on its page
+		local pages = (self._upperOffset-value)/self._length
+		if vel.vector < 0 then
+			page = mceil( pages )
+		else
+			page = mfloor( pages )
+		end
+	end
+
+	-- one page for each touch
+	local first = self._touchPage
+	if page > first+1 then page = first+1 elseif page < first-1 then page = first-1 end
+	if page < 0 then page = 0 elseif page > last then page = last end
+
+	return self:_getPagePosition( page )
+end
+
 
 -- after a change in size or scale while at rest,
 -- bring the position back inside the scroll limits
@@ -762,17 +842,16 @@ function AxisMotion:touch( event )
 
 	if phase=='began' then
 		local vel = self._velocity
-		local velStack = self._velocityStack
 
 		-- @TODO, probably check to see state we're in
 		vel.value, vel.vector = 0, 0
+		-- a new touch starts without the speeds of the last one
+		self._velocityStack = { 0 }
 
 		-- get our initial reference point
 		self._refPoint = (evt.value - self._value)/self._scale
 
-		if #velStack==0 then
-			tinsert( velStack, 1, 0 )
-		end
+		self._touchPage = self:_getPage( self._value ) or 0
 
 		self._tmpTouchEvt = evt
 		self._didBegin = true
@@ -832,7 +911,22 @@ function AxisMotion:_getNextState( params )
 
 	-- print( "gNS>>", velocity.value, scrollLimit, isBounceActive )
 
-	if velocity.value > 0 and not scrollLimit then
+	local pagePos
+	if self._pagingEnabled then
+		pagePos = self:_getPageRestPosition()
+	end
+
+	if pagePos~=nil then
+		if pagePos==self._value then
+			s = AxisMotion.STATE_AT_REST
+			p = { event=params.event }
+		else
+			-- slide to the page, as to a scroll limit
+			s = AxisMotion.STATE_RESTORE
+			p = { event=params.event, offset=pagePos }
+		end
+
+	elseif velocity.value > 0 and not scrollLimit then
 		s = AxisMotion.STATE_DECELERATE
 		p = { event=params.event }
 
@@ -1054,7 +1148,11 @@ function AxisMotion:do_state_restore( params )
 
 	-- calculate restore distance
 	local scrollLimit = self._scrollLimit
-	if scrollLimit == AxisMotion.HIT_SIZE_LIMIT then
+	if params.offset~=nil then
+		-- paging: the position of a page
+		offset = params.offset
+		vel.value, vel.vector = 0, 0
+	elseif scrollLimit == AxisMotion.HIT_SIZE_LIMIT then
 		offset = constrain( self, val, 0 )
 	elseif scrollLimit == AxisMotion.HIT_UPPER_LIMIT then
 		offset = self._upperOffset

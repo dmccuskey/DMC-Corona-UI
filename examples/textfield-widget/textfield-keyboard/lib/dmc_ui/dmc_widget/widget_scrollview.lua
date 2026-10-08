@@ -178,6 +178,7 @@ function ScrollView:__init__( params )
 	if params.bounceIsActive==nil then params.bounceIsActive=true end
 	if params.decelerateTransitionTime==nil then params.decelerateTransitionTime=uiConst.SCROLLVIEW_DECELERATE_TIME end
 	if params.horizontalScrollEnabled==nil then params.horizontalScrollEnabled=true end
+	if params.isPagingEnabled==nil then params.isPagingEnabled=false end
 	if params.lowerHorizontalOffset==nil then params.lowerHorizontalOffset = 0 end
 	if params.lowerVerticalOffset==nil then params.lowerVerticalOffset = 0 end
 	if params.width==nil then params.width=dUI.WIDTH end
@@ -374,6 +375,7 @@ function ScrollView:__initComplete__()
 	-- use setZoomScale() then
 
 	self.decelerateTransitionTime = tmp.decelerateTransitionTime
+	self.isPagingEnabled = tmp.isPagingEnabled
 
 	self.horizontalScrollEnabled = tmp.horizontalScrollEnabled
 	self.upperHorizontalOffset = tmp.upperHorizontalOffset
@@ -652,6 +654,28 @@ function ScrollView.__setters:horizontalScrollEnabled( value )
 	-- print( "ScrollView.__setters:horizontalScrollEnabled", value )
 	self._axisX.scrollIsEnabled = value
 	self:_updateScrollIndicator( 'x' )
+end
+
+--== .isPagingEnabled
+
+--- set/get whether the ScrollView stops on pages.
+-- a page is the size of the view. a drag ends on the nearest page, and a flick on the next one in its direction, one page for each touch. defaults to false.
+--
+-- @within Properties
+-- @function .isPagingEnabled
+-- @usage widget.isPagingEnabled = true
+-- @usage print( widget.isPagingEnabled )
+
+function ScrollView.__getters:isPagingEnabled()
+	-- print( "ScrollView.__getters:isPagingEnabled" )
+	return self._axisX.pagingIsEnabled
+end
+function ScrollView.__setters:isPagingEnabled( value )
+	-- print( "ScrollView.__setters:isPagingEnabled", value )
+	assert( type(value)=='boolean', "ScrollView.isPagingEnabled expected a boolean" )
+	--==--
+	self._axisX.pagingIsEnabled = value
+	self._axisY.pagingIsEnabled = value
 end
 
 --== .horizontalAxisAutoAlign

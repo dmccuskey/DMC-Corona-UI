@@ -107,6 +107,64 @@ function StyleHelp.__setters:align( value )
 end
 
 
+--== .currentDotColor
+
+--- [**style**] set/get Style value for the color of a Widget's dot for the current page.
+--
+-- @within Properties
+-- @function .currentDotColor
+-- @usage style.currentDotColor = { 1, 1, 1, 1 }
+-- @usage print( style.currentDotColor )
+
+-- CLASS.__getters.currentDotColor = StyleHelp.__getters.currentDotColor
+-- CLASS.__setters.currentDotColor = StyleHelp.__setters.currentDotColor
+
+function StyleHelp.__getters:currentDotColor()
+	-- print( "StyleHelp.__getters:currentDotColor", self, self._currentDotColor )
+	local value = self._currentDotColor
+	if value==nil and self._inherit then
+		value = self._inherit.currentDotColor
+	end
+	return value
+end
+function StyleHelp.__setters:currentDotColor( value )
+	-- print( "StyleHelp.__setters:currentDotColor", self._currentDotColor, value, self._isClearing )
+	assert( value or (value==nil and (self:_hasInherit() or self._isClearing)) )
+	--==--
+	self._currentDotColor = translateColor( value )
+	self:_dispatchChangeEvent( 'currentDotColor', self._currentDotColor )
+end
+
+
+--== .dotColor
+
+--- [**style**] set/get Style value for the color of a Widget's page dots.
+--
+-- @within Properties
+-- @function .dotColor
+-- @usage style.dotColor = { 1, 1, 1, 0.4 }
+-- @usage print( style.dotColor )
+
+-- CLASS.__getters.dotColor = StyleHelp.__getters.dotColor
+-- CLASS.__setters.dotColor = StyleHelp.__setters.dotColor
+
+function StyleHelp.__getters:dotColor()
+	-- print( "StyleHelp.__getters:dotColor", self, self._dotColor )
+	local value = self._dotColor
+	if value==nil and self._inherit then
+		value = self._inherit.dotColor
+	end
+	return value
+end
+function StyleHelp.__setters:dotColor( value )
+	-- print( "StyleHelp.__setters:dotColor", self._dotColor, value, self._isClearing )
+	assert( value or (value==nil and (self:_hasInherit() or self._isClearing)) )
+	--==--
+	self._dotColor = translateColor( value )
+	self:_dispatchChangeEvent( 'dotColor', self._dotColor )
+end
+
+
 --== .fillColor
 
 --- [**style**] set/get Style value for Widget fill color.

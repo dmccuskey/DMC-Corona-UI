@@ -136,6 +136,7 @@ function Widget.initialize( manager, params )
 	dUI.newFormatter = Widget.newFormatter
 	dUI.newNavBar = Widget.newNavBar
 	dUI.newNavItem = Widget.newNavItem
+	dUI.newPageIndicator = Widget.newPageIndicator
 	dUI.newScrollView = Widget.newScrollView
 	dUI.newSlideView = Widget.newSlideView
 	dUI.newTableView = Widget.newTableView
@@ -532,6 +533,47 @@ end
 
 
 --======================================================--
+-- newPageIndicator Support
+
+function Widget.loadPageIndicatorSupport( params )
+	-- print( "Widget.loadPageIndicatorSupport" )
+	if Widget.PageIndicator then return end
+	params = params or {}
+	if params.mode==nil then params.mode=uiConst.RUN_MODE end
+	--==--
+
+	--== Dependencies
+
+	Style.loadPageIndicatorStyleSupport( params )
+
+	Widget.loadViewSupport( params )
+
+	--== Components
+
+	local PageIndicator = require( ui_find( 'dmc_widget.widget_pageindicator' ) )
+
+	Widget.PageIndicator=PageIndicator
+
+	initKolors( function()
+		PageIndicator.initialize( dUI, params )
+	end)
+end
+
+--- constructor for a Page Indicator widget.
+--
+-- @function newPageIndicator
+-- @tab[opt] options parameters used to create a Page Indicator
+-- @treturn object @{Widget.PageIndicator}
+-- @usage local widget = dUI.newPageIndicator{ numberOfPages=5 }
+--
+function Widget.newPageIndicator( options )
+	-- print( "Widget.newPageIndicator" )
+	if not Widget.PageIndicator then Widget.loadPageIndicatorSupport() end
+	return Widget.PageIndicator:new( options )
+end
+
+
+--======================================================--
 -- newScrollView Support
 
 function Widget.loadScrollViewSupport( params )
@@ -575,10 +617,39 @@ end
 --======================================================--
 -- newSlideView Support
 
+function Widget.loadSlideViewSupport( params )
+	-- print( "Widget.loadSlideViewSupport" )
+	if Widget.SlideView then return end
+	params = params or {}
+	if params.mode==nil then params.mode=uiConst.RUN_MODE end
+	--==--
+
+	--== Dependencies
+
+	Widget.loadScrollViewSupport( params )
+
+	--== Components
+
+	local SlideView = require( ui_find( 'dmc_widget.widget_slideview' ) )
+
+	Widget.SlideView=SlideView
+
+	initKolors( function()
+		SlideView.initialize( dUI, params )
+	end)
+end
+
+--- constructor for a Slide View widget.
+--
+-- @function newSlideView
+-- @tab[opt] options parameters used to create a Slide View
+-- @treturn object @{Widget.SlideView}
+-- @usage local uiBg = dUI.newSlideView()
+--
 function Widget.newSlideView( options )
-	local theme = nil
-	local _library = require( PATH .. '.' .. 'widget_slideview' )
-	return _library:new( options, theme )
+	-- print( "Widget.newSlideView" )
+	if not Widget.SlideView then Widget.loadSlideViewSupport() end
+	return Widget.SlideView:new( options )
 end
 
 
@@ -746,16 +817,6 @@ function Widget.newTextField( options )
 	if not Widget.TextField then Widget._loadTextFieldSupport() end
 	return Widget.TextField:new( options )
 end
-
-
---======================================================--
--- newViewPager Support
-
--- function Widget.newViewPager( options )
--- 	local theme = nil
--- 	local _library = require( PATH .. '.' .. 'widget_viewpager' )
--- 	return _library:new( options, theme )
--- end
 
 
 

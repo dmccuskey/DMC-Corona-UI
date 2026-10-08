@@ -281,6 +281,8 @@ Options and properties: `width`, `height`, `scrollWidth`, `scrollHeight` (never 
 
 Methods: `getContentPosition()` returns the content's x and y, 0 at the top left and negative as it scrolls; `setContentPosition{ x=, y= [, time=, onComplete=] }` scrolls there, in 500 ms unless `time` says otherwise (0 for at once); `takeFocus( event )` takes over a touch from a child.
 
+**Paging:** with `isPagingEnabled=true` (option or property) the content stops on pages, each the size of the widget: a drag ends on the nearest page, and a flick on the next one in its direction, one page for each touch. The last page ends at the edge of the content. A [SlideView](#slideview) is built on it.
+
 **Scroll indicators**, thin bars at the right and bottom edges, show while the content moves and fade when it stops; each is as long as the share of the content in view, and is squeezed against its end during a bounce. An axis that is turned off or whose content fits has none. `showVerticalScrollIndicator=false` or `showHorizontalScrollIndicator=false` (options or properties) turns one off; `flashScrollIndicators()` shows them for a moment, to say that a view scrolls. Their color is the style's `indicatorColor` (translucent black by default; set a light one over dark content: `style={ indicatorColor={ 1, 1, 1, 0.6 } }`). The upper and lower offsets shorten an indicator's track, so it stays clear of a bar which covers part of the widget.
 
 **Zoom** needs a delegate whose `getViewForZoom( self, event )` returns the object to scale (something in the scroller), and `minimumZoom` and `maximumZoom` (options or properties). Then a pinch zooms, and so does `setZoomScale( scale [, { time=, onComplete= } ] )`; `zoomScale` reads the scale (there is no `zoomScale` option: zoom once the content is in). The delegate's optional `willBeginZooming`, `didZoom` and `didEndZooming` get `self, event` with `event.view` and `event.scale`.
@@ -318,6 +320,143 @@ delegate={
 A ScrollView sends no events: it reports through its delegate.
 
 See `examples/scrollview-widget/` for content, locking, zoom and the indicator color.
+
+## SlideView
+
+Slides side by side, one showing at a time, each the size of the widget: an introduction, a photo gallery, a banner which changes by itself. A drag of more than half a slide, or a flick, brings the next one; the first and the last bounce at their edge. A delegate supplies the slides:
+
+```lua
+local slides = dUI.newSlideView{
+	width=300, height=200,
+	autoMask=true,   -- clip the slides to the widget
+	delegate={
+		numberOfSlides=function( self, slideView ) return 5 end,
+		onSlideRender=function( self, event )
+			-- event.view is the slide's group, with its origin at the slide's top left
+			local photo = display.newImageRect( "photo-" .. event.index .. ".jpg", event.width, event.height )
+			photo.anchorX, photo.anchorY = 0, 0
+			event.view:insert( photo )
+		end,
+		didShowSlide=function( self, event )
+			print( "now showing", event.index )
+		end,
+	},
+}
+slides:reloadData()
+```
+
+`numberOfSlides` and `onSlideRender` are required. A slide exists only while it is near the view: at rest, the one showing and the one on each side. Its view is removed, with everything in it, when it leaves.
+
+| Delegate method | |
+|---|---|
+| `numberOfSlides( self, slideView )` | return how many slides there are |
+| `onSlideRender( self, event )` | fill `event.view`; `event.width` and `event.height` are the slide's size |
+| `onSlideUnrender( self, event )` | optional: the view is about to be removed |
+| `didShowSlide( self, event )` | optional: a slide has come to rest in the view; once for each change |
+| `didSelectSlide( self, event )` | optional: a tap on the slide which nothing in it took |
+
+Each event has `index`, `view`, `data` (a table which stays with the slide until the next `reloadData()`) and `target`, the slide view.
+
+| Method or property | |
+|---|---|
+| `reloadData()` | ask the delegate again for the number of slides, and make the ones in view again; the slide showing stays if it still exists |
+| `gotoSlide( index [, { animate=, time=, onComplete= } ] )` | slide to that one, over `transitionTime` unless `time` (ms) is given; `animate=false` or `time=0` moves at once |
+| `nextSlide( [params] )`, `previousSlide( [params] )` | one slide on or back, with the same parameters; nothing happens at the ends |
+| `index` | the slide showing (read only), 0 without slides; after `gotoSlide()` it is the slide asked for, also while the move is under way |
+| `numberOfSlides` | how many slides the delegate gave (read only) |
+| `getSlideAt( index )` | the slide's view, or `nil` while it doesn't exist |
+| `transitionTime` | how long a move from code takes: 400 ms (option and property) |
+
+**Auto-advance** shows the next slide by itself every `autoAdvanceTime` milliseconds, and the first after the last. It waits while a finger is on the widget, and starts its wait again when the finger lifts.
+
+```lua
+local banner = dUI.newSlideView{ width=320, height=120, delegate=delegate, autoAdvanceTime=3000 }
+
+banner:stopAutoAdvance()
+banner:startAutoAdvance()        -- or startAutoAdvance( 5000 ), with a new time
+print( banner.isAutoAdvancing )
+```
+
+As an option, `autoAdvanceTime` starts the advance; setting the property to 0 stops it.
+
+A SlideView is a ScrollView which scrolls sideways and stops on pages (`isPagingEnabled`): its options, properties and style apply (`autoMask`, `bounceIsActive`, `horizontalScrollEnabled` to lock it, a new `width` or `height` later, for which the slides are made again), and its delegate gets `willBeginScrolling`, `didScroll` and `didEndScrolling` too ([ScrollView](#scrollview)). Its scroll indicator is off unless `showHorizontalScrollIndicator=true`. A swipe which starts on a widget inside a slide (a Button, a TextField) goes to that widget, as in a ScrollView. A SlideView sends no events: it reports through its delegate.
+
+For the row of dots under the slides, see [PageIndicator](#pageindicator). See `examples/slideview-widget/slideview-simple`.
+
+## PageIndicator
+
+A row of dots, one for each page, with the dot of the current page in another color: the dots under a set of slides. A tap left or right of the current dot moves one page.
+
+```lua
+local dots = dUI.newPageIndicator{
+	numberOfPages=5,
+	currentPage=1,
+	delegate={
+		didChangePage=function( self, event )
+			print( "from", event.previousPage, "to", event.page )
+		end,
+	},
+}
+dots.x, dots.y = 160, 440   -- its middle: the anchors are 0.5, 0.5
+```
+
+| Option or property | |
+|---|---|
+| `numberOfPages` | how many dots: 0 at first. With fewer pages, the current page stays inside them |
+| `currentPage` | the page whose dot has the other color, from 1. A number outside the pages becomes the first or the last. Setting it doesn't call the delegate |
+| `hidesForSinglePage` | `true` hides the dots, and the touch area, while there is one page or none: `false` at first |
+| `isHidden` | whether that is the case now (read only) |
+| `width`, `height` | the size of the widget, which is its touch area. 0, the default, is the size of the row of dots and its margins |
+| `delegate` | a table or object with `didChangePage` |
+
+`didChangePage( self, event )` is called after a tap has moved the current page: `event.page` is the new page, `event.previousPage` the one before, `event.target` the page indicator. A tap moves one page however far from the dot it lands. A tap on the current dot, left of the first page or right of the last does nothing. The widget keeps the touches and taps in its area, so nothing behind it gets them.
+
+Its style, from `dUI.newPageIndicatorStyle()` or a `style` table:
+
+| Style property | |
+|---|---|
+| `dotColor` | the dots: `{ 0, 0, 0, 0.25 }` |
+| `currentDotColor` | the dot of the current page: `{ 0, 0, 0, 0.8 }` |
+| `dotSize` | the diameter of a dot: 7 |
+| `dotSpacing` | the space between two dots: 9 |
+| `marginX`, `marginY` | the space around the row of dots when the width or the height is 0: 12, which makes a touch area 31 high |
+| `width`, `height`, `anchorX`, `anchorY`, `debugOn` | as for every widget; `debugOn` shows the touch area |
+
+`dotColor` and `currentDotColor` are properties of the widget too.
+
+**With a SlideView.** A page indicator knows nothing of what shows the pages. Two lines tie it to a [SlideView](#slideview), one in each delegate:
+
+```lua
+local slides, dots
+
+slides = dUI.newSlideView{
+	width=320, height=200,
+	delegate={
+		numberOfSlides=function( self, slideView ) return 5 end,
+		onSlideRender=function( self, event ) --[[ fill event.view ]] end,
+		didShowSlide=function( self, event )
+			dots.currentPage = event.index          -- the slides moved: set the dot
+		end,
+	},
+}
+
+dots = dUI.newPageIndicator{
+	numberOfPages=5,
+	width=320, height=44,                           -- a touch area as wide as the slides
+	style={ dotColor={ 1, 1, 1, 0.4 }, currentDotColor={ 1, 1, 1, 1 } },
+	delegate={
+		didChangePage=function( self, event )
+			slides:gotoSlide( event.page )          -- a tap on the dots: move the slides
+		end,
+	},
+}
+dots.x, dots.y = 160, 180
+
+slides:reloadData()
+dots:toFront()
+```
+
+See `examples/slideview-widget/slideview-simple`.
 
 ## TableView and TableViewCell
 
