@@ -1,7 +1,14 @@
 --====================================================================--
 -- TableViewCell
 --
--- Shows basic use of TableViewCell with TableView, with Cell cache
+-- TableViewCell rows in a table view which fills the screen below the
+-- status bar: each has a flag (imageView), a title and a detail line (the
+-- 'subtitle' layout) and a disclosure indicator on the right (the default
+-- accessory). One TableViewCell style, made once, sizes the text for rows
+-- of ROW_HEIGHT. The cells are reused: a row which leaves the screen puts
+-- its cell in a cache, and the next row to appear takes it. Touch a row
+-- and it is highlighted (the style's 'active' state); tap it and the app
+-- prints its number (the delegate's didSelectRow).
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
@@ -10,11 +17,11 @@
 
 
 
-print( "\n\n#########################################################\n\n" )
+print( '\n\n##############################################\n\n' )
 
 
 
---===================================================================--
+--====================================================================--
 --== Imports
 
 
@@ -22,29 +29,27 @@ local dUI = require 'lib.dmc_ui'
 
 
 
---===================================================================--
+--====================================================================--
 --== Setup, Constants
 
 
-display.setStatusBar( display.HiddenStatusBar )
+local W, H = dUI.WIDTH, dUI.HEIGHT
+
+local mrandom = math.random
+local tinsert, tremove = table.insert, table.remove
+local tstr = tostring
 
 math.randomseed( os.time() )
 
-local W, H = dUI.WIDTH, dUI.HEIGHT
-local H_CENTER, V_CENTER = W*0.5, H*0.5
+-- the screen, as the device reports it
+local STATUS_BAR_H = display.topStatusBarContentHeight
 
-local mrandom = math.random
-local mfloor = math.floor
-local tinsert = table.insert
-local tremove = table.remove
-local tstr = tostring
-
-local OFFSET = 100
-local DIMS = {w=280,h=30} -- dimensions of a row item
-local SHOW = 14 -- how many items to display (for masking)
+-- the content
+local NUM_ROWS = 50
+local ROW_HEIGHT = 50
 
 local tableData = nil -- later
-local tableStyle = nil
+local cellStyle = nil
 
 local cellCache = {}
 
@@ -87,6 +92,7 @@ local images = {
 
 
 
+
 --===================================================================--
 --== Support Functions
 
@@ -105,7 +111,7 @@ local function createRowStructure( idx )
 		index=idx,
 		title = "Row title for "..tstr( idx ),
 		image = getRandomImage(),
-		detail = "some detail explaination",
+		detail = "some detail explanation",
 		type='row-data', -- this is our template type
 		data=system.getTimer()
 	}
@@ -116,7 +122,7 @@ end
 --
 local function createDataArray()
 	local list = {}
-	for i = 1, 50 do
+	for i = 1, NUM_ROWS do
 		local row_template = createRowStructure( i )
 		tinsert( list, row_template )
 	end
@@ -140,33 +146,29 @@ end
 --- create view for table row.
 -- called when table view needs to display a row
 --
---
 local function onRender( self, event )
 	-- print( "Main:onRender" )
-	-- local target = event.target -- the delegate
-	-- local data = event.data -- user data area
 	local view = event.view
 	local index = event.index
 	local tc
 
 	local rowData = tableData[ index ] -- our data source
 
-	local w, h = view.width, view.height
-
+	-- a cell from a row which left the screen, or a new one
 	if #cellCache>0 then
 		tc = tremove( cellCache, 1 )
 		tc.isVisible = true
 	else
-		tc = dUI.newTableViewCell{ width=w, height=h, style=tableStyle }
+		tc = dUI.newTableViewCell{ width=W, height=ROW_HEIGHT, style=cellStyle }
 	end
 
 	tc.textLabel.text = rowData.title
 	tc.textDetail.text = rowData.detail
 
-	tc.imageView = display.newImageRect( rowData.image, 26, 26 )
+	tc.imageView = display.newImageRect( rowData.image, 30, 30 )
 
 	view:insert( tc.view )
-	view.cell = tc
+	view.cell = tc -- the table view highlights a row's 'cell'
 
 end
 
@@ -176,12 +178,10 @@ end
 --
 local function onUnrender( self, event )
 	-- print( "Main:onUnrender" )
-	-- local target = event.target -- the delegate
-	-- local data = event.data -- user data area
-	-- local index = event.index
 	local view = event.view
 	local tc, img
 
+	-- keep the cell for another row
 	tc = view.cell
 	display.getCurrentStage():insert( tc.view )
 	tc.isVisible = false
@@ -197,7 +197,7 @@ end
 
 
 --- onEvent()
--- called when table view needs to send an event to a row
+-- called when table view tells about a row
 --
 local function onEvent( self, event )
 	-- print( "Main:onEvent", event.type )
@@ -211,13 +211,11 @@ local function onEvent( self, event )
 		-- print( "row did highlight" )
 	elseif etype == tv.UNHIGHLIGHT_ROW then
 		-- print( "row did UNhighlight" )
-		elseif etype == tv.WILL_SELECT_ROW then
-			-- print( "Will Select ", event.index )
-			return event.index
-		elseif etype == tv.SELECTED_ROW then
-			print( "Selected ", event.index )
-		elseif etype == tv.SCROLLED then
-			print( "View Scrolled", event.x, event.y, event.velocity )
+	elseif etype == tv.WILL_SELECT_ROW then
+		-- print( "Will Select ", event.index )
+		return event.index -- << this row, another, or nil for none
+	elseif etype == tv.SELECTED_ROW then
+		print( "Selected ", event.index )
 	else
 		print( 'onEvent', event.type )
 	end
@@ -235,17 +233,21 @@ end
 
 tableData = createDataArray()
 
-tableStyle = dUI.newTableViewCellStyle{
-	width=DIMS.w,
+-- one style for every cell: taller rows than the default style is laid
+-- out for, so the two lines of text are placed and sized here
+
+cellStyle = dUI.newTableViewCellStyle{
 	inactive={
-		background={
-			type='rectangle'
-		}
+		labelY=14,
+		detailY=31,
+		label={ fontSize=15 },
+		detail={ fontSize=11 },
 	},
 	active={
-		background={
-			type='rectangle'
-		}
+		labelY=14,
+		detailY=31,
+		label={ fontSize=15 },
+		detail={ fontSize=11 },
 	}
 }
 
@@ -267,23 +269,12 @@ local delegate = {
 -- create Table View
 
 local tV = dUI.newTableView{
-	width=DIMS.w,
-	height=DIMS.h*SHOW,
+	width=W,
+	height=H-STATUS_BAR_H,
 	delegate=delegate,
-	estimatedRowHeight=DIMS.h,
-	autoMask=true
+	estimatedRowHeight=ROW_HEIGHT,
+	autoMask=true -- clip the rows to the table view
 }
-tV.x, tV.y = H_CENTER-DIMS.w*0.5, V_CENTER-(DIMS.h*SHOW)*0.5
-
-tV:addEventListener( tV.EVENT, onEvent )
+tV.x, tV.y = 0, STATUS_BAR_H
 
 tV:reloadData()
-
-
-
-timer.performWithDelay( 10000, function()
-	print( "Main: removing table" )
-	tV:removeSelf()
-end)
-
-

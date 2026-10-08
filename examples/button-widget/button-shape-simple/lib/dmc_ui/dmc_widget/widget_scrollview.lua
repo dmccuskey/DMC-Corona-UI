@@ -209,6 +209,9 @@ function ScrollView:__init__( params )
 	self._hasMoved = false
 	self._isMoving = false
 
+	-- which axes are scrolling, for the delegate's scroll methods
+	self._scrollingAxes = { x=false, y=false }
+
 	-- smallest scale to fit current scroll dimensions
 	self._minScale = 1.0
 	self.__zoomScale = 1.0
@@ -1352,6 +1355,69 @@ function ScrollView:_scrollIndicatorEvent( event )
 end
 
 
+-- the scroll limit the content is at or past on an axis, if any
+-- (none when the axis is off or its content fits)
+--
+function ScrollView:_scrollLimitFor( id )
+	local axis, upperLimit, lowerLimit
+	if id=='x' then
+		axis = self._axisX
+		upperLimit, lowerLimit = ScrollView.HIT_LEFT_LIMIT, ScrollView.HIT_RIGHT_LIMIT
+	else
+		axis = self._axisY
+		upperLimit, lowerLimit = ScrollView.HIT_TOP_LIMIT, ScrollView.HIT_BOTTOM_LIMIT
+	end
+	local length, scrollLength = axis.length, axis.scaledScrollLength
+	if not axis.scrollIsEnabled or scrollLength<=length then return nil end
+
+	local value = axis.value
+	if value >= axis.upperOffset then
+		return upperLimit
+	elseif value <= (length-scrollLength) - axis.lowerOffset then
+		return lowerLimit
+	end
+	return nil
+end
+
+
+-- tell the delegate about scrolling, from the events of the axes:
+-- willBeginScrolling, didScroll (for each move), didEndScrolling
+-- once every axis is at rest
+--
+function ScrollView:_scrollDelegateEvent( event )
+	local delegate = self._delegate
+	local scrolling = self._scrollingAxes
+	local id = event.id
+	local isScrolling = ( event.state==AxisMotion.SCROLLING )
+	local wasAtRest = not ( scrolling.x or scrolling.y )
+
+	scrolling[ id ] = isScrolling
+	if not delegate then return end
+
+	local f
+	local e = {
+		target=self,
+		x=self._axisX.value,
+		y=self._axisY.value,
+		horizontalLimit=self:_scrollLimitFor( 'x' ),
+		verticalLimit=self:_scrollLimitFor( 'y' ),
+	}
+
+	if wasAtRest then
+		f = delegate.willBeginScrolling
+		if f then f( delegate, e ) end
+	end
+
+	f = delegate.didScroll
+	if f then f( delegate, e ) end
+
+	if not ( scrolling.x or scrolling.y ) then
+		f = delegate.didEndScrolling
+		if f then f( delegate, e ) end
+	end
+end
+
+
 function ScrollView:_loadViews()
 	self:_createScroller()
 end
@@ -1741,6 +1807,7 @@ function ScrollView:_axisEvent_handler( event )
 		self._scroller.y = event.value -- *self.__zoomScale
 	end
 	self:_scrollIndicatorEvent( event )
+	self:_scrollDelegateEvent( event )
 end
 
 

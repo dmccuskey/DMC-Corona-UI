@@ -274,7 +274,27 @@ sv.scroller:insert( photo )
 sv:setZoomScale( 0.5 )
 ```
 
-A ScrollView sends no events of its own.
+**Scrolling** is reported to the delegate, by touch or from code. Each method is optional and gets `self, event`:
+
+| Delegate method | |
+|---|---|
+| `willBeginScrolling` | the content starts to move |
+| `didScroll` | it moved: once per axis that moved, each frame |
+| `didEndScrolling` | it came to rest on both axes |
+
+`event.x` and `event.y` are the content's position, as `getContentPosition()` returns it. `event.verticalLimit` is `sv.HIT_TOP_LIMIT` or `sv.HIT_BOTTOM_LIMIT` while the content is at or past that edge (past it in a bounce), `event.horizontalLimit` is `sv.HIT_LEFT_LIMIT` or `sv.HIT_RIGHT_LIMIT`; each is `nil` in between, and on an axis that is off or whose content fits. `event.target` is the scroll view.
+
+```lua
+delegate={
+	didEndScrolling=function( self, event )
+		if event.verticalLimit==event.target.HIT_BOTTOM_LIMIT then
+			-- at the end: load more
+		end
+	end,
+}
+```
+
+A ScrollView sends no events: it reports through its delegate.
 
 See `examples/scrollview-widget/` for content, locking, zoom and the indicator color.
 
@@ -303,8 +323,72 @@ local list = dUI.newTableView{
 list:reloadData()
 ```
 
-Optional delegate methods: `shouldHighlightRow`, `didHighlightRow`, `didUnhighlightRow`, `willSelectRow`, `didSelectRow` (each gets `self, event`). Methods: `reloadData()`, `insertRowAt()`, `removeRowAt()`, `removeAllRows()`, `getRowAt()`, `scrollToRowAt()`, `getContentPosition()`, `setContentPosition()`. A TableView is a ScrollView, with its options.
+`numberOfRows` and `onRowRender` are required; `onRowUnrender` is optional, for what a row made outside its view, or wants to keep (a row's view is removed with everything in it). Both row events carry `view`, `index`, `row` and `data`, a table that stays with the row. A row is as wide as the table view and `estimatedRowHeight` high (20 unless given; every row has that height); `event.row:setBackgroundColor( r, g, b, a )` and `event.row:setLineColor( ... )` color it and the line at its bottom (white, and no line, by default). Rows exist for the part of the list in view plus `renderMargin` (100) above and below.
 
-`newTableViewCell()` is a ready-made row, made in `onRowRender`: a label (`labelText`), a detail line (`detailText`), an image and an accessory (checkmark, disclosure indicator or detail button), styled with `newTableViewCellStyle()` (children `inactive` and `active`).
+The list belongs to the app: change it, then tell the table view.
 
-See `examples/tableview-widget/` for simple lists, inserting and removing rows, scrolling to a row, and cells.
+| Method | |
+|---|---|
+| `reloadData()` | ask the delegate again for the number of rows, and make the rows in view again |
+| `insertRowAt( index )` | a row was added at `index` (1 to the number of rows plus 1, which adds it at the end) |
+| `removeRowAt( index )` | the row at `index` was removed |
+| `removeAllRows()` | no rows are left |
+| `getRowAt( index )` | the row's view, or `nil` while the row is out of view |
+| `scrollToRowAt( index [, { position=, time=, onComplete= } ] )` | scroll until the row is at the `'top'`, `'middle'` (the default) or `'bottom'` of the view, as far as the list can scroll: the first row stays at the top. At once unless `time` (ms) is given |
+| `getContentPosition()` | the list's y: 0 at the top, negative as it scrolls |
+| `setContentPosition{ y= [, time=, onComplete=] }` | scroll there, as in a ScrollView |
+
+A TableView is a ScrollView which scrolls up and down only: its options and properties apply (`autoMask`, `bounceIsActive`, `upperVerticalOffset`, `lowerVerticalOffset`, `showVerticalScrollIndicator`, a new `width` or `height` later), and `scrollEnabled` turns its scrolling on and off. Its style adds a `fillColor`, which shows where the rows don't cover the view (transparent by default).
+
+**Touching a row** highlights it, and a tap selects it. The delegate's optional methods follow that, each with `self, event` (`event.index`, `event.view`, `event.data`):
+
+| Delegate method | |
+|---|---|
+| `shouldHighlightRow` | return `false` to leave the row as it is |
+| `didHighlightRow`, `didUnhighlightRow` | the row was highlighted, and no longer is (the touch ended, or became a scroll) |
+| `willSelectRow` | return the index of the row to select: `event.index`, another row's, or `nil` for none |
+| `didSelectRow` | the row was selected |
+
+The delegate also gets the ScrollView's `willBeginScrolling`, `didScroll` and `didEndScrolling` ([ScrollView](#scrollview)); in `didScroll` the rows for the new position already exist. A TableView sends no events: it reports through its delegate.
+
+### TableViewCell
+
+`newTableViewCell()` is a ready-made row: a label, a detail line below it, an image on the left and an accessory on the right. Make it in `onRowRender`, and put it in the row's view as `cell`: the table view then highlights it when the row is touched (the cell style's `active` state).
+
+```lua
+onRowRender=function( self, event )
+	local cell = dUI.newTableViewCell{
+		width=300, height=40,
+		labelText="Row " .. event.index,
+		detailText="the line below",
+	}
+	cell.imageView = display.newImageRect( 'flag.png', 26, 26 )
+	event.view:insert( cell.view )
+	event.view.cell = cell
+end,
+onRowUnrender=function( self, event )
+	event.view.cell:removeSelf()
+end,
+```
+
+Options: `width`, `height`, `labelText`, `detailText`, `style`. Properties: `width`, `height`, `textLabel` and `textDetail` (the two [Text](#text) widgets: `cell.textLabel.text = "..."`), `imageView` (a display object of your size, which the cell places), `highlight`, and from its style:
+
+| Property | Values |
+|---|---|
+| `accessory` | `cell.DISCLOSURE_INDICATOR` (the default), `cell.CHECKMARK`, `cell.DETAIL_BUTTON`, `cell.NONE` |
+| `cellLayout` | `cell.SUBTITLE` (the default: label and detail line), `cell.DEFAULT` (the label only) |
+| `cellMargin` | the space at the left and right edges (5) |
+| `contentMargin` | the space between the image, the text and the accessory (5) |
+
+The default style is laid out for a row of 30: for a taller one, give the states' `labelY` and `detailY` (the middle of each line, from the top) and font sizes in a style from `newTableViewCellStyle()`, shared by all the cells:
+
+```lua
+local cellStyle = dUI.newTableViewCellStyle{
+	inactive={ labelY=14, detailY=31, label={ fontSize=15 }, detail={ fontSize=11 } },
+	active={ labelY=14, detailY=31, label={ fontSize=15 }, detail={ fontSize=11 } },
+}
+```
+
+A long list makes and removes many cells as it scrolls; `examples/tableview-widget/tableview-tableviewcell` keeps the cells of the rows that leave the screen and gives them to the rows that appear.
+
+See `examples/tableview-widget/` for a simple list, inserting and removing rows, scrolling to a row, and cells.

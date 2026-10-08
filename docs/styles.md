@@ -117,7 +117,7 @@ Some styles contain other styles, each for a part of the widget:
 | Text Field | `background`, `hint` (text style for the hint), `display` (text style for the text) |
 | Nav Bar | `background` |
 | Nav Item | `title`, `backButton`, `leftButton`, `rightButton` |
-| Table View Cell | `inactive`, `active` |
+| Table View Cell | `inactive`, `active`: one for each state (`active` while the row is touched), each with a `label` and a `detail` (text styles), a `background`, and `labelY` and `detailY`, where the two lines of text sit |
 
 Give children as nested tables, and reach them through the parent:
 
