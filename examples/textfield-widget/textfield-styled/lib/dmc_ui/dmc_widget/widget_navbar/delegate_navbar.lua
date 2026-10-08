@@ -66,7 +66,7 @@ local VERSION = "0.1.0"
 -- @treturn bool
 
 --- (optional) informs delegate that Nav Item was popped off stack.
--- tells delegate that this Nav Item was popped off of the navigation stack. the delegate can respond appropriately.
+-- tells delegate that this Nav Item was popped off of the navigation stack. the delegate can respond appropriately. it is called once the Nav Item has slid off, before the Nav Bar removes it; not when shouldPopItem refused the pop.
 --
 -- @within Methods
 -- @function :didPopItem
