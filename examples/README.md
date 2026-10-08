@@ -6,6 +6,7 @@ Each app folder is a complete Solar2D project with its own copy of the library: 
 |---|---|---|
 | `background-widget/` | `background-9slice`, `background-image`, `background-rectangle`, `background-rounded`, `background-styled`, `background-themed`, `background-memtest` | [Background](../docs/widgets.md#background); [below](#background) |
 | `button-widget/` | `button-shape-simple`, `button-9slice-simple`, `button-image-simple`, `button-text-simple`, `button-radio-group` | [Button](../docs/widgets.md#button); [below](#button) |
+| `modal-control/` | `modal-simple` | [Presenting a Control](../docs/controls.md#presenting-a-control); [below](#modal-control) |
 | `navbar-widget/` | `navbar-simple` | [NavBar](../docs/widgets.md#navbar-and-navitem); [below](#navbar) |
 | `navigation-control/` | `navigation-control-simple`, `navigation-intermediate` | [Navigation Control](../docs/controls.md#navigation-control); [below](#navigation-control) |
 | `popover-control/` | `popover-control-simple` | [Popover Control](../docs/controls.md#popover-control) |
@@ -47,6 +48,12 @@ The bar is as wide as the screen and sits below the status bar, and the page beh
 | | |
 |---|---|
 | <img src="screenshots/navbar-simple.png" width="240" alt="navbar-simple: a light bar across the top with a blue Back button, the title Photo and a blue Edit button, over a gray page which reads Home > Albums > Photo"> | **navbar-simple**: a nav bar and its stack of items. The app pushes three by itself (`pushNavItem()`): "Home", the first one, with a left button (`leftButton`) and no Back; after a second "Albums" slides in with its "< Back" button; then "Photo", with a right button (`rightButton`; the screenshot). From there, tap the page to push another item, and "< Back" to pop the top one. A tap on the bar or its buttons stays with them, so "< Back" doesn't push. The page shows the stack; a delegate hears of each pop (`shouldPopItem`, `didPopItem`), and the left and right buttons print when released (`onRelease`). |
+
+## Modal Control
+
+| | |
+|---|---|
+| <img src="screenshots/modal-simple.png" width="240" alt="modal-simple: a panel with a light bar titled Panel and a blue Close button over a brown view, in the middle of the dimmed app, whose title shows above it and whose two buttons show below it"> | **modal-simple**: a control shown as a page over the app (`modalStyle = dUI.MODAL`, `presentControl()`, `dismissControl()`). The app is a screen with two buttons, each of which presents a Navigation Control whose bar has a "Close" button. "Open Page" shows a control the size of the screen below the status bar: it slides up from the bottom, and back down on "Close"; the app opens it by itself after a second. "Open Panel" shows a control with a `preferredContentSize` of 260x300 in the middle of the dimmed app (the screenshot): it fades in (`transition = dUI.FADE`), and a tap outside it closes it too (`dismissOnTapOutside`). While either shows, the app's buttons get no touches. A delegate prints each step of the presentation (`presentationWillBegin`, `presentationEnded`, `shouldDismiss`, `dismissalWillBegin`, `dismissalEnded`). |
 
 ## Navigation Control
 

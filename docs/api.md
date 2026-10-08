@@ -24,7 +24,7 @@ The path follows where `dmc_ui.lua` is: `lib.dmc_ui` for the layout in the [Quic
 | `dUI.newNavBar( [options] )`, `newNavItem()` | a [NavBar](widgets.md#navbar-and-navitem) and its items |
 | `dUI.newScrollView( [options] )` | a [ScrollView](widgets.md#scrollview) |
 | `dUI.newTableView( [options] )`, `newTableViewCell()` | a [TableView](widgets.md#tableview-and-tableviewcell) and its rows |
-| `dUI.newNavigationControl( [options] )` | a [Navigation Control](controls.md#navigation-control) |
+| `dUI.newNavigationControl( [options] )` | a [Navigation Control](controls.md#navigation-control); with `modalStyle=dUI.MODAL`, [a page over the app](controls.md#presenting-a-control) |
 
 `options` is a table: the widget's own options, plus `x`, `y`, `id`, `style` and `autoMask` ([What All Widgets Share](widgets.md#what-all-widgets-share)).
 
@@ -89,7 +89,8 @@ From `examples/textfield-widget/textfield-keyboard`.
 | `dUI.WIDTH`, `dUI.HEIGHT` | `display.contentWidth`, `display.contentHeight` when the module was loaded |
 | `dUI.RECTANGLE`, `dUI.ROUNDED`, `dUI.NINE_SLICE`, `dUI.IMAGE` | `'rectangle'`, `'rounded'`, `'9-slice'`, `'image'`: Background types |
 | `dUI.EVENT` | `'dmc-ui-event'`, the name of the module's events |
-| `dUI.POPOVER` | a modal style for the unfinished Popover Control |
+| `dUI.MODAL`, `dUI.POPOVER` | a control's `modalStyle`: [a page over the app](controls.md#presenting-a-control), or a [popover](controls.md#popover-control) |
+| `dUI.SLIDE_UP`, `dUI.FADE`, `dUI.NO_TRANSITION` | the [transitions](controls.md#transitions) of a presented control |
 
 `dUI.setOS( platform [, version] )` picks the look for `'iOS'` or `'android'`; the module calls it at load for the device it runs on (iOS in the Simulator).
 
@@ -103,7 +104,8 @@ The `dmc_corona.cfg` in this repository has further sections, `[DMC_KOLOR]`, `[D
 
 Checked in the Solar2D Simulator (2026.3731) in September 2026.
 
-- **Some functions fail or are missing.** `dUI.newFormatter()` and `dUI.newSlideView()` raise an error; `dUI.newPopover()` and `newPopoverControl()` are `nil`.
+- **Some functions fail or are missing.** `dUI.newFormatter()` and `dUI.newSlideView()` raise an error.
+- **A popover has no arrow** and always opens below its button ([Popover Control](controls.md#popover-control)); `arrowDirections` is stored but not used.
 - **A button's label keeps its alignment and margins** when `align`, `marginX` or `marginY` change on the button style or a state style after the button is made: they reach the state, not its `label`. Change them on the label itself (`button.inactiveStyle.label.align = 'left'`). `offsetX` and `offsetY` do follow.
 - **A TableView's rows all have one height** (`estimatedRowHeight`): the common case, and cheap to compute. Rows of different heights (section headers, separate row types) are planned.
 - **A TableViewCell's two lines of text sit where its style says** (`labelY`, `detailY`), whatever its height.

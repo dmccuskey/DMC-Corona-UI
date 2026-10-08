@@ -97,6 +97,7 @@ lunatest.suite( 'tests.navbar_widget_spec' )
 -- controls
 
 lunatest.suite( 'tests.navigation_control_spec' )
+lunatest.suite( 'tests.presentation_control_spec' )
 
 
 lunatest.run({
