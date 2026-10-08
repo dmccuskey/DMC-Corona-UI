@@ -1,36 +1,24 @@
+--====================================================================--
+-- gallery_data.lua
+--
+-- the galleries; each image is a colored square
+--====================================================================--
+
 local data = {
 
 	{
-		type='-gallery-',
 		title='Summer Trip',
 		images = {
-			{
-				type='-image-',
-				title='My Image 1',
-				file='assets/one.jpg'
-			},
-			{
-				type='-image-',
-				title='My Image 2',
-				file='assets/two.jpg'
-			}
+			{ title='Beach', color={ 0.95, 0.85, 0.5 } },
+			{ title='Sea', color={ 0.2, 0.55, 0.85 } },
 		}
 	},
 
 	{
-		type='-gallery-',
 		title='Winter Outing',
 		images = {
-			{
-				type='-image-',
-				title='My Image 1',
-				file='assets/three.jpg'
-			},
-			{
-				type='-image-',
-				title='My Image 2',
-				file='assets/four.jpg'
-			}
+			{ title='Snow', color={ 0.9, 0.95, 1 } },
+			{ title='Forest', color={ 0.15, 0.45, 0.25 } },
 		}
 	}
 

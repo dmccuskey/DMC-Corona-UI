@@ -1,6 +1,7 @@
 --====================================================================--
--- Image View
+-- view/image.lua
 --
+-- the third view: one image, a colored square
 --====================================================================--
 
 
@@ -11,13 +12,7 @@
 
 local dUI = require 'lib.dmc_ui'
 
-
-
---====================================================================--
---== Setup, Constants
-
-
-local W, H = dUI.WIDTH, dUI.HEIGHT
+local Common = require 'view.common'
 
 
 
@@ -26,75 +21,63 @@ local W, H = dUI.WIDTH, dUI.HEIGHT
 --===================================================================--
 
 
-local function willBeRemoved_handler( view )
-	print( "View Will Be Removed" )
+local function infoHandler( event )
+	print( "Image: Info released:", event.data.title )
 end
 
 
-local function createImageView( image )
+local function createImageView( image, navCtrl )
+	-- print( "createImageView", image )
 
 	--[[
-	this is our view that the Nav Control
-	is going to show for us
-
-	it's just a very simple object/table
+	the view which the Navigation Control shows for us:
+	a plain table
 	--]]
 
 	local navView = {
 
 		_data = image,
 
-		-- title will show up in nav bar automatically
+		-- our place in the nav bar. without it the control makes
+		-- one from 'title'; with our own we can add buttons
+		navItem = dUI.newNavItem{
+			titleText=image.title,
+			rightButton=dUI.newButton{
+				labelText="Info",
+				data=image,
+				onRelease=infoHandler,
+			},
+		},
+
+		-- used by the functions below
 		title = image.title,
 
-		-- navItem is our "marker" in the navigation stack
-		--[[
-		navItem = dUI.newNavItem{
-			title=image.title
-		},
-		--]]
-
-		-- this display group is our content
-		-- the Nav Control will modify view area as necessary
-		-- by default, will be full-screen less the Nav Bar
-		-- and anchor Top Center
-
+		-- our content: the control puts this display group
+		-- below its bar, anchored top center
 		view = display.newGroup(),
 
-
-		-- the Nav Control will put a reference to itself
-		-- inside of your view so that you can send messages
-
+		-- set by the control when the view is pushed:
+		-- the Navigation Control itself
 		parent = nil,
-
-
-		--== Some function callbacks
-
-		willBeAdded=nil,
-		viewInMotion=nil,
-		viewDidAppear=nil,
-		viewDidDisappear=nil,
-		willBeRemoved=willBeRemoved_handler,
 
 	}
 
+	Common.addViewFunctions( navView )
+
 	--== Setup the components of the view
 
-	local dg = navView.view -- reference to our 'view'
+	local dg = navView.view
+	local w, h = Common.viewSize( navCtrl )
 	local o
 
-	-- background
+	Common.newBackground( dg, navCtrl, { 0.15, 0.15, 0.18 } )
 
-	o = display.newRect(0, 0, W, H)
-	o:setFillColor(0.5,0.2,0.2)
-	o.anchorX, o.anchorY = 0.5, 0
+	-- the image
+
+	o = display.newRect( 0, 40, w-80, w-80 )
+	o:setFillColor( unpack( image.color ) )
+	o.anchorY = 0
 	dg:insert( o )
-
-	-- image
-
-	-- o.x, o.y = 0, 50
-	-- dg:insert( o.view )
-
 
 	return navView
 end
