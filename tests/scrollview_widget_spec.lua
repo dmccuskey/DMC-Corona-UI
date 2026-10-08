@@ -453,3 +453,90 @@ function test_indicatorOffsetsAndColor()
 	assert_equal( 1, fill.r )
 	assert_equal( 0, fill.g )
 end
+
+
+--[[
+the delegate hears about scrolling: willBeginScrolling, didScroll for
+each move, didEndScrolling once both axes are at rest, each with the
+position and the limit the content is at
+--]]
+function test_scrollDelegate()
+	local calls, last = {}, nil
+	local function note( name )
+		return function( self, e ) calls[#calls+1] = name ; last = e end
+	end
+	local w = newScrollView{ delegate={
+		willBeginScrolling=note( 'begin' ),
+		didScroll=note( 'scroll' ),
+		didEndScrolling=note( 'end' ),
+	} }
+
+	-- at once: one of each
+	w:setContentPosition{ y=-100, time=0 }
+	frame( w )
+	assert_equal( 'begin,scroll,end', table.concat( calls, ',' ) )
+	assert_equal( w, last.target )
+	assert_equal( 0, last.x )
+	assert_equal( -100, last.y )
+	assert_equal( w.HIT_LEFT_LIMIT, last.horizontalLimit )
+	assert_nil( last.verticalLimit )
+
+	-- animated, on both axes: begins once, ends once
+	calls = {}
+	w:setContentPosition{ x=-100, y=-500, time=300 }
+	frame( w, 100 )
+	frame( w, 200 )
+	assert_equal( 'begin', calls[1] )
+	assert_equal( 'scroll', calls[#calls] )
+	frame( w, 400 )
+	assert_equal( 'end', calls[#calls] )
+	local n = { begin=0, scroll=0, ['end']=0 }
+	for _, name in ipairs( calls ) do n[name] = n[name] + 1 end
+	assert_equal( 1, n.begin )
+	assert_equal( 1, n['end'] )
+	assert_gt( 3, n.scroll )
+	assert_equal( -100, last.x )
+	assert_equal( -500, last.y )
+	assert_equal( w.HIT_RIGHT_LIMIT, last.horizontalLimit )
+	assert_equal( w.HIT_BOTTOM_LIMIT, last.verticalLimit )
+
+	-- back at the top
+	w:setContentPosition{ x=-50, y=0, time=0 }
+	frame( w )
+	assert_nil( last.horizontalLimit )
+	assert_equal( w.HIT_TOP_LIMIT, last.verticalLimit )
+
+	-- a drag: begins with the first move, ends when the touch does
+	calls = {}
+	local axis = w._axisY
+	local t = system.getTimer()
+	axis:touch{ phase='began', time=t, value=200, start=200 }
+	frame( w, 10 )
+	axis:touch{ phase='moved', time=t+50, value=150, start=200 }
+	frame( w, 60 )
+	axis:touch{ phase='moved', time=t+100, value=120, start=200 }
+	frame( w, 110 )
+	assert_equal( 'begin', calls[1] )
+	axis:touch{ phase='ended', time=t+600, value=120, start=200 }
+	-- it may coast for a moment: run frames until it is at rest
+	for ms=700, 4000, 100 do
+		frame( w, ms )
+		if calls[#calls]=='end' then break end
+	end
+	n = { begin=0, scroll=0, ['end']=0 }
+	for _, name in ipairs( calls ) do n[name] = n[name] + 1 end
+	assert_equal( 1, n.begin )
+	assert_equal( 1, n['end'] )
+	assert_equal( 'end', calls[#calls] )
+	assert_gt( -200, last.y )
+
+	-- a delegate without the methods, and none
+	w.delegate = {}
+	w:setContentPosition{ y=-100, time=0 }
+	frame( w )
+	w.delegate = nil
+	w:setContentPosition{ y=-200, time=0 }
+	frame( w )
+	local _, y = w:getContentPosition()
+	assert_equal( -200, y )
+end

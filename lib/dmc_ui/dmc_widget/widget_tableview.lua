@@ -1442,6 +1442,8 @@ function TableView:_axisEvent_handler( event )
 	end
 	self:_scrollIndicatorEvent( event )
 	self:_renderDisplay()
+	-- after the rows for this position are made
+	self:_scrollDelegateEvent( event )
 end
 
 

@@ -7,7 +7,8 @@
 -- indicator shows on the right while it moves. A delegate supplies the
 -- rows: how many there are, and what a row shows when the table view
 -- asks for it (only the rows near the screen exist). Tap a row and the
--- app prints its number.
+-- app prints its number; when the list comes to rest it prints where
+-- (the delegate's didEndScrolling), and whether that is an end of the list.
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
@@ -128,6 +129,20 @@ local function onSelect( self, event )
 end
 
 
+--- the list came to rest.
+-- willBeginScrolling and didScroll (each move) get the same event
+--
+local function onEndScrolling( self, event )
+	local tv = event.target -- our table view
+	local where = ""
+	if event.verticalLimit==tv.HIT_TOP_LIMIT then
+		where = "(the top)"
+	elseif event.verticalLimit==tv.HIT_BOTTOM_LIMIT then
+		where = "(the bottom)"
+	end
+	print( "Scrolled to", event.y, where )
+end
+
 
 
 
@@ -147,6 +162,7 @@ local delegate = {
 	onRowRender=onRender,
 	onRowUnrender=onUnrender,
 	didSelectRow=onSelect,
+	didEndScrolling=onEndScrolling,
 }
 
 -- create Table View

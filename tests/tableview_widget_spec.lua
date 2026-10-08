@@ -432,6 +432,34 @@ end
 
 
 --[[
+the delegate's scroll methods: the rows for a position exist when
+didScroll is called for it
+--]]
+function test_scrollDelegate()
+	local w, d = newTableView( 50 )
+	local calls, last, rowSeen = {}, nil, nil
+	d.willBeginScrolling=function( self, e ) calls[#calls+1] = 'begin' end
+	d.didScroll=function( self, e )
+		calls[#calls+1] = 'scroll'
+		rowSeen = e.target:getRowAt( 30 )
+	end
+	d.didEndScrolling=function( self, e ) calls[#calls+1] = 'end' ; last = e end
+
+	w:scrollToRowAt( 30, { position='top' } )
+	frame( w )
+	assert_equal( 'begin,scroll,end', table.concat( calls, ',' ) )
+	assert_not_nil( rowSeen )
+	assert_equal( -29*ROW, last.y )
+	assert_nil( last.verticalLimit )
+
+	w:scrollToRowAt( 50 )
+	frame( w )
+	assert_equal( w.HIT_BOTTOM_LIMIT, last.verticalLimit )
+	assert_nil( last.horizontalLimit )
+end
+
+
+--[[
 TableView's own properties stay off ScrollView
 (the file defined them on its parent class)
 --]]

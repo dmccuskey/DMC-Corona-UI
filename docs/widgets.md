@@ -274,7 +274,27 @@ sv.scroller:insert( photo )
 sv:setZoomScale( 0.5 )
 ```
 
-A ScrollView sends no events of its own.
+**Scrolling** is reported to the delegate, by touch or from code. Each method is optional and gets `self, event`:
+
+| Delegate method | |
+|---|---|
+| `willBeginScrolling` | the content starts to move |
+| `didScroll` | it moved: once per axis that moved, each frame |
+| `didEndScrolling` | it came to rest on both axes |
+
+`event.x` and `event.y` are the content's position, as `getContentPosition()` returns it. `event.verticalLimit` is `sv.HIT_TOP_LIMIT` or `sv.HIT_BOTTOM_LIMIT` while the content is at or past that edge (past it in a bounce), `event.horizontalLimit` is `sv.HIT_LEFT_LIMIT` or `sv.HIT_RIGHT_LIMIT`; each is `nil` in between, and on an axis that is off or whose content fits. `event.target` is the scroll view.
+
+```lua
+delegate={
+	didEndScrolling=function( self, event )
+		if event.verticalLimit==event.target.HIT_BOTTOM_LIMIT then
+			-- at the end: load more
+		end
+	end,
+}
+```
+
+A ScrollView sends no events: it reports through its delegate.
 
 See `examples/scrollview-widget/` for content, locking, zoom and the indicator color.
 
@@ -329,7 +349,7 @@ A TableView is a ScrollView which scrolls up and down only: its options and prop
 | `willSelectRow` | return the index of the row to select: `event.index`, another row's, or `nil` for none |
 | `didSelectRow` | the row was selected |
 
-A TableView sends no events of its own.
+The delegate also gets the ScrollView's `willBeginScrolling`, `didScroll` and `didEndScrolling` ([ScrollView](#scrollview)); in `didScroll` the rows for the new position already exist. A TableView sends no events: it reports through its delegate.
 
 ### TableViewCell
 
