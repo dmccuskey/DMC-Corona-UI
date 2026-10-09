@@ -17,6 +17,7 @@ module_config = {
 			"dmc_ui/core/widget.lua",
 			"dmc_ui/core/widget_helper.lua",
 			"dmc_ui/ui_constants.lua",
+			"dmc_ui/ui_palette.lua",
 			"dmc_ui/ui_utils.lua",
 
 			"dmc_ui/dmc_control.lua",

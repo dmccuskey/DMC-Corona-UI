@@ -4,7 +4,8 @@
 -- Creates a scroll view (with a zoom delegate) and removes it 200 ms later,
 -- over and over, and prints memory use every 2.5 seconds with
 -- dmc-performance. run_example1() (not called) does the same with a
--- scroll view style.
+-- scroll view style. The line at the bottom counts the cycles. The
+-- backdrop fills the screen on any device.
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
@@ -30,10 +31,17 @@ local Perf = require 'lib.dmc_corona.dmc_performance'
 --== Setup, Constants
 
 
-local W, H = dUI.WIDTH, dUI.HEIGHT
-local H_CENTER, V_CENTER = W*0.5, H*0.5
-
 local tdelay = timer.performWithDelay
+
+-- the screen, as the device reports it: config.lua asks for 320x480
+-- 'letterbox', so a taller or a wider screen has room around the content
+local SCREEN_W, SCREEN_H = display.actualContentWidth, display.actualContentHeight
+local SCREEN_Y = display.screenOriginY
+local H_CENTER, V_CENTER = display.contentCenterX, display.contentCenterY
+local STATUS_BAR_H = display.topStatusBarContentHeight
+
+-- the line at the bottom, later
+local status = nil
 
 local view, viewPos
 
@@ -41,6 +49,28 @@ local view, viewPos
 
 --===================================================================--
 --== Support Functions
+
+
+--======================================================--
+-- Setup Visual Screen Items
+
+-- a backdrop the size of the screen, the example's name at the top
+-- and a line at the bottom which counts the cycles (setStatus())
+--
+local function setupBackground()
+	local o
+
+	o = display.newRect( H_CENTER, V_CENTER, SCREEN_W, SCREEN_H )
+	o:setFillColor( 0.17, 0.24, 0.31 )
+
+	o = display.newText( "ScrollView Memtest", H_CENTER, SCREEN_Y+STATUS_BAR_H+30, native.systemFontBold, 20 )
+
+	status = display.newText( "", H_CENTER, SCREEN_Y+SCREEN_H-30, native.systemFont, 16 )
+end
+
+local function setStatus( text )
+	status.text = text
+end
 
 
 --======================================================--
@@ -97,6 +127,8 @@ end
 --===================================================================--
 
 
+setupBackground()
+
 viewPos = { x=0, y=0 }
 
 --== Create ScrollView delgate
@@ -135,6 +167,7 @@ function run_example1()
 		o = nil
 		if count%10==0 then
 			print( "cycles completed: ", count )
+			setStatus( "cycles completed: "..count )
 		end
 		tdelay( DELAY, function()
 			createItem()
@@ -142,6 +175,7 @@ function run_example1()
 	end
 
 	print( "Main: Starting" )
+	setStatus( "running" )
 	createItem()
 	Perf.watchMemory( 2500 )
 
@@ -184,6 +218,7 @@ function run_example2()
 		o = nil
 		if count%10==0 then
 			print( "cycles completed: ", count )
+			setStatus( "cycles completed: "..count )
 		end
 
 
@@ -193,6 +228,7 @@ function run_example2()
 	end
 
 	print( "Main: Starting" )
+	setStatus( "running" )
 	createItem()
 	Perf.watchMemory( 2500 )
 

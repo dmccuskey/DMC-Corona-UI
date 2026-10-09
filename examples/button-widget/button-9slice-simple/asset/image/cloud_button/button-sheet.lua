@@ -1,11 +1,5 @@
 --
--- created with TexturePacker (http://www.codeandweb.com/texturepacker)
---
--- $TexturePacker:SmartUpdate:c043502ae2b0e89ca3b8fc4fcb0f4581:0853e3dffa716350f89af9e6d10f8024:243421fb25b42f5c40ab37573b9874cc$
---
--- local sheetInfo = require("mysheet")
--- local myImageSheet = graphics.newImageSheet( "mysheet.png", sheetInfo:getSheet() )
--- local sprite = display.newSprite( myImageSheet , {frames={sheetInfo:getFrameIndex("sprite")}} )
+-- drawn by tools/example-art.py: a rounded rectangle over its shadow, cut into nine frames
 --
 
 local SheetInfo = {}
@@ -13,82 +7,82 @@ local SheetInfo = {}
 SheetInfo.sheet =
 {
     frames = {
-    
+
         {
             -- 01-TL
-            x=26,
-            y=107,
+            x=2,
+            y=2,
             width=18,
-            height=15,
+            height=14,
 
         },
         {
             -- 02-TM
-            x=48,
-            y=107,
+            x=20,
+            y=2,
             width=8,
-            height=15,
+            height=14,
 
         },
         {
             -- 03-TR
-            x=3,
-            y=107,
-            width=19,
-            height=15,
+            x=28,
+            y=2,
+            width=17,
+            height=14,
 
         },
         {
             -- 04-ML
-            x=26,
-            y=3,
+            x=2,
+            y=16,
             width=18,
-            height=100,
+            height=40,
 
         },
         {
             -- 05-MM
-            x=48,
-            y=3,
+            x=20,
+            y=16,
             width=8,
-            height=100,
+            height=40,
 
         },
         {
             -- 06-MR
-            x=3,
-            y=3,
-            width=19,
-            height=100,
+            x=28,
+            y=16,
+            width=17,
+            height=40,
 
         },
         {
             -- 07-BL
-            x=83,
-            y=3,
+            x=2,
+            y=56,
             width=18,
-            height=21,
+            height=22,
 
         },
         {
             -- 08-BM
-            x=105,
-            y=3,
+            x=20,
+            y=56,
             width=8,
-            height=21,
+            height=22,
 
         },
         {
             -- 09-BR
-            x=60,
-            y=3,
-            width=19,
-            height=21,
+            x=28,
+            y=56,
+            width=17,
+            height=22,
 
         },
     },
-    
-    sheetContentWidth = 128,
+
+    sheetContentWidth = 64,
     sheetContentHeight = 128
 }
 

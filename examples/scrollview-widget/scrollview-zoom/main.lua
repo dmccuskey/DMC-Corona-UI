@@ -35,14 +35,14 @@ local dUI = require 'lib.dmc_ui'
 --== Setup, Constants
 
 
-local W, H = dUI.WIDTH, dUI.HEIGHT
-local H_CENTER, V_CENTER = W*0.5, H*0.5
-
 local tdelay = timer.performWithDelay
 
 local view, viewPos
 
--- the screen, as the device reports it
+-- the screen, as the device reports it: config.lua asks for 320x480
+-- 'letterbox', so a taller or a wider screen has room around the content
+local SCREEN_W, SCREEN_H = display.actualContentWidth, display.actualContentHeight
+local SCREEN_X, SCREEN_Y = display.screenOriginX, display.screenOriginY
 local STATUS_BAR_H = display.topStatusBarContentHeight
 
 -- the photo
@@ -123,7 +123,7 @@ local delegate = {
 
 --== Create ScrollView
 
-local w, h = W, H-STATUS_BAR_H
+local w, h = SCREEN_W, SCREEN_H-STATUS_BAR_H
 
 -- the scale at which the whole photo fits in the scroll view
 local fitScale = math.min( w/PHOTO_W, h/PHOTO_H )
@@ -142,7 +142,7 @@ local widget = dUI.newScrollView{
 		indicatorColor={1,1,1,0.6}, -- light scroll indicators, for a dark photo
 	}
 }
-widget.x, widget.y = 0, STATUS_BAR_H
+widget.x, widget.y = SCREEN_X, SCREEN_Y+STATUS_BAR_H
 
 
 --== Create our object to display

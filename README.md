@@ -71,11 +71,11 @@ local button = dUI.newPushButton{
 		width=160, height=50,
 		inactive={
 			label={ textColor={ 1, 1, 1 } },
-			background={ type='rounded', view={ fillColor={ 0.2, 0.5, 0.9 } } },
+			background={ type='rounded', view={ fillColor=dUI.Palette.blue } },
 		},
 		active={
 			label={ textColor={ 1, 1, 1 } },
-			background={ type='rounded', view={ fillColor={ 0.1, 0.3, 0.6 } } },
+			background={ type='rounded', view={ fillColor=dUI.Palette.blueDark } },
 		},
 	},
 	onRelease=function( event )
@@ -108,11 +108,11 @@ local bigButton = dUI.newButtonStyle{
 	width=240, height=70,
 	inactive={
 		label={ fontSize=26, textColor={ 1, 1, 1 } },
-		background={ type='rounded', view={ cornerRadius=10, fillColor={ 0.2, 0.5, 0.9 } } },
+		background={ type='rounded', view={ cornerRadius=10, fillColor=dUI.Palette.blue } },
 	},
 	active={
 		label={ fontSize=26, textColor={ 1, 1, 1 } },
-		background={ type='rounded', view={ cornerRadius=10, fillColor={ 0.1, 0.3, 0.6 } } },
+		background={ type='rounded', view={ cornerRadius=10, fillColor=dUI.Palette.slate } },
 	},
 }
 
@@ -136,9 +136,9 @@ local function newColorButton( label, color, y )
 	return button
 end
 
-newColorButton( "Orange", { 0.9, 0.4, 0.1 }, 260 )
-newColorButton( "Green", { 0.2, 0.6, 0.3 }, 360 )
-newColorButton( "Blue", { 0.2, 0.5, 0.9 }, 460 )
+newColorButton( "Orange", dUI.Palette.orange, 260 )
+newColorButton( "Green", dUI.Palette.green, 360 )
+newColorButton( "Blue", dUI.Palette.blue, 460 )
 ```
 
 The Simulator restarts the app when the file is saved. Three blue buttons share the style `big-button`. Click Green: all three turn green, and the text says which one you picked.
@@ -153,7 +153,7 @@ To update, copy `dmc_corona_boot.lua` and `lib/` again from the newer version. K
 
 ## Documentation
 
-- [Using Styles](docs/styles.md): styles and widgets, inline, shared and named styles, child styles, inheritance, themes
+- [Using Styles](docs/styles.md): styles and widgets, inline, shared and named styles, child styles, inheritance, themes, the palette
 - [Widgets](docs/widgets.md): each widget's options, properties, methods and events
 - [Controls](docs/controls.md): the Navigation Control, and a control shown as a page over the app or as a popover
 - [API reference](docs/api.md): the module's functions, constants, configuration, known issues

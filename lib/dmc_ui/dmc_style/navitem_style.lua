@@ -219,20 +219,20 @@ NavItemStyle._STYLE_DEFAULTS = {
 
 		disabled={
 			label={
-				textColor={0,0,0},
+				textColor={0.17,0.24,0.31},
 			},
 			background={
 				type='rounded',
 				view={
-					cornerRadius=9,
+					cornerRadius=8,
 					fillColor={
 						type='gradient',
-						color1={ 0.9,0.9,0.9 },
-						color2={ 0.5,0.5,0.5 },
+						color1={ 0.99,0.99,0.99 },
+						color2={ 0.88,0.89,0.91 },
 						direction='down'
 					},
-					strokeWidth=2,
-					strokeColor={0.2,0.2,0.2,1},
+					strokeWidth=1,
+					strokeColor={0.62,0.66,0.70,1},
 				}
 			}
 		}

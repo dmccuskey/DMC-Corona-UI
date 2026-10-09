@@ -33,15 +33,16 @@ local dUI = require 'lib.dmc_ui'
 --== Setup, Constants
 
 
-local W, H = dUI.WIDTH, dUI.HEIGHT
-
 local mrandom = math.random
 local tinsert, tremove = table.insert, table.remove
 local tstr = tostring
 
 math.randomseed( os.time() )
 
--- the screen, as the device reports it
+-- the screen, as the device reports it: config.lua asks for 320x480
+-- 'letterbox', so a taller or a wider screen has room around the content
+local SCREEN_W, SCREEN_H = display.actualContentWidth, display.actualContentHeight
+local SCREEN_X, SCREEN_Y = display.screenOriginX, display.screenOriginY
 local STATUS_BAR_H = display.topStatusBarContentHeight
 
 -- the content
@@ -159,7 +160,7 @@ local function onRender( self, event )
 		tc = tremove( cellCache, 1 )
 		tc.isVisible = true
 	else
-		tc = dUI.newTableViewCell{ width=W, height=ROW_HEIGHT, style=cellStyle }
+		tc = dUI.newTableViewCell{ width=SCREEN_W, height=ROW_HEIGHT, style=cellStyle }
 	end
 
 	tc.textLabel.text = rowData.title
@@ -269,12 +270,12 @@ local delegate = {
 -- create Table View
 
 local tV = dUI.newTableView{
-	width=W,
-	height=H-STATUS_BAR_H,
+	width=SCREEN_W,
+	height=SCREEN_H-STATUS_BAR_H,
 	delegate=delegate,
 	estimatedRowHeight=ROW_HEIGHT,
 	autoMask=true -- clip the rows to the table view
 }
-tV.x, tV.y = 0, STATUS_BAR_H
+tV.x, tV.y = SCREEN_X, SCREEN_Y+STATUS_BAR_H
 
 tV:reloadData()

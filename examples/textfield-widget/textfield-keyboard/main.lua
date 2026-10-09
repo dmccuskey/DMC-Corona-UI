@@ -5,7 +5,9 @@
 -- the screen; the dark gray bar at the bottom stands in for the keyboard.
 -- When a field takes the focus, dUI's KEYBOARD_SHOWING event slides the panel
 -- up (dUI.adjustForKeyboard) until "Password" is above the keyboard, with 10
--- to spare; KEYBOARD_HIDING slides it back when editing ends.
+-- to spare; KEYBOARD_HIDING slides it back when editing ends. The line under
+-- the name says which of the two happened. The backdrop fills the screen on
+-- any device.
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
@@ -31,8 +33,15 @@ local Utils = require 'dmc_utils'
 --== Setup, Constants
 
 
-local W, H = display.contentWidth, display.contentHeight
-local H_CENTER, V_CENTER = W*0.5, H*0.5
+-- the screen, as the device reports it: config.lua asks for 320x480
+-- 'letterbox', so a taller or a wider screen has room around the content
+local SCREEN_W, SCREEN_H = display.actualContentWidth, display.actualContentHeight
+local SCREEN_Y = display.screenOriginY
+local H_CENTER, V_CENTER = display.contentCenterX, display.contentCenterY
+local STATUS_BAR_H = display.topStatusBarContentHeight
+
+-- the line at the bottom, later
+local status = nil
 
 
 
@@ -43,22 +52,29 @@ local H_CENTER, V_CENTER = W*0.5, H*0.5
 --======================================================--
 -- Setup Visual Screen Items
 
+-- a backdrop the size of the screen, the example's name at the top,
+-- a line under it which says what the widget shows (setStatus(); the
+-- keyboard would cover a line at the bottom), and a marker at the
+-- screen's center, a white box with a red dot
+--
 local function setupBackground()
-	local width, height = 100, 50
 	local o
 
-	o = display.newRect(0,0,W,H)
-	o:setFillColor(1,1,1)
-	o.x, o.y = H_CENTER, V_CENTER
+	o = display.newRect( H_CENTER, V_CENTER, SCREEN_W, SCREEN_H )
+	o:setFillColor( 0.17, 0.24, 0.31 )
 
-	o = display.newRect(0,0,width+4,height+4)
-	o:setStrokeColor(0,0,0)
-	o.strokeWidth=2
-	o.x, o.y = H_CENTER, V_CENTER
+	o = display.newText( "Keyboard TextField", H_CENTER, SCREEN_Y+STATUS_BAR_H+30, native.systemFontBold, 20 )
 
-	o = display.newRect( 0,0,10,10)
-	o:setFillColor(1,0,0)
-	o.x, o.y = H_CENTER, V_CENTER
+	status = display.newText( "", H_CENTER, SCREEN_Y+STATUS_BAR_H+60, native.systemFont, 16 )
+
+	o = display.newRect( H_CENTER, V_CENTER, 104, 54 )
+
+	o = display.newRect( H_CENTER, V_CENTER, 10, 10 )
+	o:setFillColor( 1, 0, 0 )
+end
+
+local function setStatus( text )
+	status.text = text
 end
 
 
@@ -98,9 +114,11 @@ function run_example1()
 				proxy=tf2,
 				offset=-10
 			})
+			setStatus( "keyboard showing: the panel moves up" )
 
 		elseif event.type==dUI.KEYBOARD_HIDING then
 			dUI.adjustForKeyboard( dg )
+			setStatus( "keyboard hiding: the panel moves back" )
 
 		end
 
@@ -111,12 +129,14 @@ function run_example1()
 
 	-- setup display group, to be repositioned with keyboard
 
+	-- (below the marker, its lower field behind the keyboard)
+
 	dg = display.newGroup()
-	dg.x, dg.y = H_CENTER, V_CENTER+100
+	dg.x, dg.y = H_CENTER, V_CENTER+115
 
 	-- background
 
-	bg = display.newRoundedRect( 0, 0, 250, 200, 5 )
+	bg = display.newRoundedRect( 0, 0, 250, 170, 5 )
 	bg:setFillColor( 0.2, 0.5, 0.9 )
 	bg:setStrokeColor( 1, 0.3, 0.3 )
 	bg.strokeWidth = 3
@@ -143,6 +163,8 @@ function run_example1()
 	tf2.isSecure=true
 	tf2.width=200
 	dg:insert( tf2.view )
+
+	setStatus( "tap a field to edit it" )
 
 end
 

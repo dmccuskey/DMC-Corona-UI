@@ -57,7 +57,7 @@ bg.x, bg.y = 160, 120
 
 The offsets are the image's margins, in pixels, that lie outside the background's size, such as a drop shadow: a 9-slice or image background of 100x50 draws its body at 100x50 and its shadow around it. A 9-slice background smaller than its corners draws only the corners. An image background is scaled to fit; with a `width` and `height` of 0 it's drawn at the image's own size.
 
-The constants `dUI.RECTANGLE`, `dUI.ROUNDED`, `dUI.NINE_SLICE` and `dUI.IMAGE` hold the type names. The default 9-slice image is in `lib/dmc_ui/theme/default/background/`; the default offsets (1, 0, 0, 0) draw its shadow inside the size, and offsets of 6, 7, 4 and 12 draw it outside. `debugOn=true` covers the background in translucent red.
+The constants `dUI.RECTANGLE`, `dUI.ROUNDED`, `dUI.NINE_SLICE` and `dUI.IMAGE` hold the type names. The default 9-slice image is in `lib/dmc_ui/theme/default/background/`: the default button's look, with no shadow, so the default offsets are 0. `debugOn=true` covers the background in translucent red.
 
 **Widget properties**: `type` (the style's `type`: setting it changes the drawing), `viewStyle` (the `view` child style).
 
@@ -143,7 +143,7 @@ end )
 | `returnKey` | the return key's label: `'done'`, `'go'`, `'next'`, `'search'`, `'send'`, ... (constants `RETURN_DONE` and so on) |
 | `isHitActive` | `false` ignores taps |
 | `backgroundStyle` | background type, as a Background's `type` |
-| `background` | child style: a Background style; with no `type`, the default 9-slice skin (drawn for a white page) |
+| `background` | child style: a Background style; with no `type`, the default 9-slice skin (a white field with a thin gray border, clear around it) |
 | `hint`, `display` | child styles: Text styles for the hint and for the text |
 
 **Widget properties**: `text`, `hintText`, `inputType`, `isSecure`, `isHitActive`, `isEditing` (read only), `delegate` (below). Child styles: `backgroundStyle`, `hintStyle`, `displayStyle`. Helpers: `align`, `marginX`, `marginY`, `hintFont`, `hintFontSize`, `displayFont`, `displayFontSize` (set only), `setHintTextColor()`, `setDisplayTextColor()`.

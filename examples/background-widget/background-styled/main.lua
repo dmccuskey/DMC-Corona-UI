@@ -1,10 +1,10 @@
 --====================================================================--
--- Background Styled
+-- Styled Background
 --
 -- Styles on backgrounds: default styles changed through viewStyle, a shared
 -- style made with newBackgroundStyle(), and a moving widget whose style is
 -- swapped (rounded, rectangle, then rounded again). debugOn=true covers a
--- widget in translucent red.
+-- widget in translucent red. The backdrop fills the screen on any device.
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
@@ -29,8 +29,15 @@ local dUI = require 'lib.dmc_ui'
 --== Setup, Constants
 
 
-local W, H = display.contentWidth, display.contentHeight
-local H_CENTER, V_CENTER = W*0.5, H*0.5
+-- the screen, as the device reports it: config.lua asks for 320x480
+-- 'letterbox', so a taller or a wider screen has room around the content
+local SCREEN_W, SCREEN_H = display.actualContentWidth, display.actualContentHeight
+local SCREEN_Y = display.screenOriginY
+local H_CENTER, V_CENTER = display.contentCenterX, display.contentCenterY
+local STATUS_BAR_H = display.topStatusBarContentHeight
+
+-- the line at the bottom, later
+local status = nil
 
 
 
@@ -41,22 +48,29 @@ local H_CENTER, V_CENTER = W*0.5, H*0.5
 --======================================================--
 -- Setup Visual Screen Items
 
+-- a backdrop the size of the screen, the example's name at the top,
+-- a line at the bottom which says what the widget shows (setStatus()),
+-- and a marker at the screen's center, a white box with a red dot,
+-- which makes a change of the widget's anchor easy to see
+--
 local function setupBackground()
-	local width, height = 100, 50
 	local o
 
-	o = display.newRect(0,0,W,H)
-	o:setFillColor(0.5,0.5,0.5)
-	o.x, o.y = H_CENTER, V_CENTER
+	o = display.newRect( H_CENTER, V_CENTER, SCREEN_W, SCREEN_H )
+	o:setFillColor( 0.17, 0.24, 0.31 )
 
-	o = display.newRect(0,0,width+4,height+4)
-	o:setStrokeColor(0,0,0)
-	o.strokeWidth=2
-	o.x, o.y = H_CENTER, V_CENTER
+	o = display.newText( "Styled Background", H_CENTER, SCREEN_Y+STATUS_BAR_H+30, native.systemFontBold, 20 )
 
-	o = display.newRect( 0,0,10,10)
-	o:setFillColor(1,0,0)
-	o.x, o.y = H_CENTER, V_CENTER
+	status = display.newText( "", H_CENTER, SCREEN_Y+SCREEN_H-30, native.systemFont, 16 )
+
+	o = display.newRect( H_CENTER, V_CENTER, 104, 54 )
+
+	o = display.newRect( H_CENTER, V_CENTER, 10, 10 )
+	o:setFillColor( 1, 0, 0 )
+end
+
+local function setStatus( text )
+	status.text = text
 end
 
 
@@ -84,7 +98,7 @@ function run_example1a()
 	bw1.viewStyle.strokeWidth = 5
 
 	timer.performWithDelay( 1000, function()
-		bw1.y=100
+		bw1.y = V_CENTER-140
 	end)
 
 end
@@ -235,7 +249,7 @@ function run_example3()
 	-- bw3:setAnchor( {1,1})
 	-- bw3.width=124
 
-	transition.to( bw3, {time=5000, y=50})
+	transition.to( bw3, {time=5000, y=V_CENTER-120})
 
 	timer.performWithDelay( 1000, function()
 		bw3:setAnchor( {0,0})
@@ -266,6 +280,8 @@ function run_example3()
 end
 
 run_example3()
+
+setStatus( "default, shared and swapped styles" )
 
 
 --======================================================--
