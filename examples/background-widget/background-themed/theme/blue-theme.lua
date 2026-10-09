@@ -1,7 +1,7 @@
 --====================================================================--
 -- Blue Theme
 --
--- background-themed's blue theme: the default 9-slice background
+-- background-themed's blue theme: a 9-slice background from an image sheet
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
@@ -19,6 +19,14 @@ local function initializeTheme( Style )
 	Theme.addStyle( 'home-background', Style.newBackgroundStyle{
 		width=140, height=60,
 		type='9-slice',
+		view={
+			sheetInfo='asset.background.background-sheet',
+			sheetImage='asset/background/background-sheet.png',
+			offsetLeft=6,
+			offsetRight=7,
+			offsetTop=4,
+			offsetBottom=12,
+		}
 	} )
 
 end

@@ -23,8 +23,8 @@ local function initializeTheme( Style )
 	-- https://color.adobe.com/The-Color-of-Traffic-color-theme-2589902
 
 	Theme.addStyle( 'home-text', Style.newTextStyle{
-		fillColor='#63aca6',
-		textColor='#d93240',
+		fillColor='#2b9157',
+		textColor='#ffffff',
 		font='Optima-Bold',
 		fontSize=20
 	})
