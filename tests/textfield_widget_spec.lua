@@ -252,6 +252,33 @@ end
 
 
 --[[
+when an edit ends, the display text is drawn with the new text in the
+same update which shows it again: no frame with the old text (the hint)
+--]]
+function test_endShowsNewTextAtOnce()
+	stubFocus()
+	local w = newTextField{ hintText='Hint' }
+	w:setKeyboardFocus()
+	commit( w )
+	input( w, 'began' )
+	input( w, 'editing', 'ab' )
+	assert_false( w._wgtText.isVisible, "hidden while editing" )
+
+	input( w, 'ended', 'ab' )
+	assert_true( w._wgtText.isVisible, "shown again" )
+	assert_equal( 'ab', w._wgtText._txtText.text, "drawn with the new text" )
+
+	-- and back to the hint, when the field is emptied
+	w:setKeyboardFocus()
+	commit( w )
+	input( w, 'began' )
+	input( w, 'editing', '' )
+	input( w, 'ended', '' )
+	assert_equal( 'Hint', w._wgtText._txtText.text, "drawn with the hint" )
+end
+
+
+--[[
 a delegate can refuse the end: editing goes on, the field takes back the
 focus it lost; on 'submitted' it still has it
 --]]

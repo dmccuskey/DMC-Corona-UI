@@ -142,11 +142,11 @@ RectangleStyle._STYLE_DEFAULTS = {
 	fillColor={
 		type='gradient',
 		color1={ 1, 1, 1 },
-		color2={ 0.6, 0.6, 0.6 },
+		color2={ 0.90, 0.91, 0.93 },
 		direction='down'
 	},
-	strokeColor={0.1,0.1,0.1,1},
-	strokeWidth=2
+	strokeColor={0.62,0.66,0.70,1},
+	strokeWidth=1
 }
 
 RectangleStyle._TEST_DEFAULTS = {

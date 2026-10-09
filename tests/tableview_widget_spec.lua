@@ -569,3 +569,21 @@ function test_cellInlineStyle()
 	assert_equal( plain.style.active.background.type, c.style.active.background.type )
 	assert_equal( 12, c.cellMargin )
 end
+
+
+--[[
+a new position moves the view at once, not at the next commit
+(a table view made in a timer callback was drawn for a frame
+where it was before)
+--]]
+function test_positionSetAtOnce()
+	local w = newTableView( 5 )
+
+	w.x, w.y = 100, 200
+	assert_equal( 100, w.view.x )
+	assert_equal( 200, w.view.y )
+
+	commit( w )
+	assert_equal( 100, w.view.x )
+	assert_equal( 200, w.view.y )
+end

@@ -139,6 +139,48 @@ end
 
 
 --[[
+a touch which leaves a toggle or radio button before it ends changes
+nothing: the button looks as it did, and no release is sent
+--]]
+function test_toggleReleasedOutside()
+	for _, action in ipairs{ 'toggle', 'radio' } do
+		local released = 0
+		local w = newButton{ action=action, onRelease=function() released = released+1 end }
+		local hit = w._rctHit
+		local b = hit.contentBounds
+		local x, y = ( b.xMin+b.xMax )/2, ( b.yMin+b.yMax )/2
+		local function touch( phase, tx )
+			hit:dispatchEvent{ name='touch', phase=phase, target=hit, x=tx, y=y }
+		end
+
+		touch( 'began', x )
+		assert_equal( w.STATE_ACTIVE, w._widgetViewState, action..": looks active while pressed" )
+		touch( 'moved', b.xMax+50 )
+		assert_equal( w.STATE_INACTIVE, w._widgetViewState, action..": looks inactive once outside" )
+		touch( 'moved', x )
+		assert_equal( w.STATE_ACTIVE, w._widgetViewState, action..": looks active again inside" )
+		touch( 'moved', b.xMax+50 )
+		touch( 'ended', b.xMax+50 )
+		assert_equal( w.STATE_INACTIVE, w._widgetViewState, action..": looks inactive after the release" )
+		assert_false( w.isActive, action..": still inactive" )
+		assert_equal( 0, released, action..": no release sent" )
+
+		-- an active toggle button stays active the same way
+		if action=='toggle' then
+			w:press()
+			assert_true( w.isActive )
+			touch( 'began', x )
+			assert_equal( w.STATE_INACTIVE, w._widgetViewState, "looks inactive while pressed" )
+			touch( 'moved', b.xMax+50 )
+			touch( 'ended', b.xMax+50 )
+			assert_equal( w.STATE_ACTIVE, w._widgetViewState, "looks active after the release" )
+			assert_true( w.isActive, "still active" )
+		end
+	end
+end
+
+
+--[[
 isEnabled leaves a shared style alone: the other buttons still work
 --]]
 function test_isEnabledKeepsSharedStyle()
@@ -210,6 +252,38 @@ function test_labelOffset()
 	commit( w )
 	assert_equal( -2, w._wgtText.x, "active state's offset" )
 	assert_equal( 0, w._wgtText.y )
+end
+
+
+--[[
+a state with another type of background is drawn in the same update which
+switches to it: no frame without a background
+--]]
+function test_stateBackgroundDrawnAtOnce()
+	local w = newButton{ action='toggle', style={
+		active={
+			label={ fontSize=12, textColor={ 0, 0, 0, 1 } },
+			background={ type='rounded', view={
+				fillColor={ 0, 1, 0, 1 }, cornerRadius=4,
+				strokeWidth=1, strokeColor={ 0, 0, 0, 1 },
+			} },
+		},
+	} }
+	assert_equal( 'rectangle', w._wgtBg._wgtView.TYPE )
+
+	w:press()
+	commit( w )
+	local view = w._wgtBg._wgtView
+	assert_equal( 'rounded', view.TYPE, "the active state's view" )
+	-- (the shape's size counts its stroke)
+	assert_true( view._rndBg.width>=100, "drawn at the button's size" )
+	assert_true( view._rndBg.height>=40 )
+
+	w:press()
+	commit( w )
+	view = w._wgtBg._wgtView
+	assert_equal( 'rectangle', view.TYPE, "back to the inactive state's view" )
+	assert_true( view.view.contentWidth>=100, "drawn at the button's size" )
 end
 
 

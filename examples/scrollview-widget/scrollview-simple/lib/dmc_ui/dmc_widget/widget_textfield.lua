@@ -1143,6 +1143,10 @@ function TextField:__commitProperties__()
 			text.text=self:_makeTextSecure( self._displayText )
 			text:setActiveStyle( style.display, {copy=false} )
 		end
+		-- draw it now, not on the next frame: at the end of an edit
+		-- this update also shows the text again, and for a frame it
+		-- would show what it held before (the hint)
+		text:__validate__()
 
 		self._wgtTextText_dirty=false
 		self._wgtTextStyle_dirty=false

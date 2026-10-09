@@ -3,7 +3,8 @@
 --
 -- Three themes in theme/ (red, green, blue), each with a text style named
 -- 'home-text'. Both Texts use the style by name, so they change with the
--- active theme, every second (dUI.loadThemes(), dUI.activateTheme()).
+-- active theme, every second (dUI.loadThemes(), dUI.activateTheme()); the
+-- line at the bottom names it. The backdrop fills the screen on any device.
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
@@ -30,8 +31,15 @@ local Path = require 'dmc_path'
 --== Setup, Constants
 
 
-local W, H = display.contentWidth, display.contentHeight
-local H_CENTER, V_CENTER = W*0.5, H*0.5
+-- the screen, as the device reports it: config.lua asks for 320x480
+-- 'letterbox', so a taller or a wider screen has room around the content
+local SCREEN_W, SCREEN_H = display.actualContentWidth, display.actualContentHeight
+local SCREEN_Y = display.screenOriginY
+local H_CENTER, V_CENTER = display.contentCenterX, display.contentCenterY
+local STATUS_BAR_H = display.topStatusBarContentHeight
+
+-- the line at the bottom, later
+local status = nil
 
 
 
@@ -42,22 +50,29 @@ local H_CENTER, V_CENTER = W*0.5, H*0.5
 --======================================================--
 -- Setup Visual Screen Items
 
+-- a backdrop the size of the screen, the example's name at the top,
+-- a line at the bottom which says what the widget shows (setStatus()),
+-- and a marker at the screen's center, a white box with a red dot,
+-- which makes a change of the widget's anchor easy to see
+--
 local function setupBackground()
-	local width, height = 100, 50
 	local o
 
-	o = display.newRect(0,0,W,H)
-	o:setFillColor(0.5,0.5,0.5)
-	o.x, o.y = H_CENTER, V_CENTER
+	o = display.newRect( H_CENTER, V_CENTER, SCREEN_W, SCREEN_H )
+	o:setFillColor( 0.17, 0.24, 0.31 )
 
-	o = display.newRect(0,0,width+4,height+4)
-	o:setStrokeColor(0,0,0)
-	o.strokeWidth=2
-	o.x, o.y = H_CENTER, V_CENTER
+	o = display.newText( "Themed Text", H_CENTER, SCREEN_Y+STATUS_BAR_H+30, native.systemFontBold, 20 )
 
-	o = display.newRect( 0,0,10,10)
-	o:setFillColor(1,0,0)
-	o.x, o.y = H_CENTER, V_CENTER
+	status = display.newText( "", H_CENTER, SCREEN_Y+SCREEN_H-30, native.systemFont, 16 )
+
+	o = display.newRect( H_CENTER, V_CENTER, 104, 54 )
+
+	o = display.newRect( H_CENTER, V_CENTER, 10, 10 )
+	o:setFillColor( 1, 0, 0 )
+end
+
+local function setStatus( text )
+	status.text = text
 end
 
 
@@ -71,20 +86,18 @@ setupBackground()
 
 
 --======================================================--
---== create widget, default style
+--== texts styled by name, from the active theme
 
 function run_example1()
 
-	-- load theme file(s)
-	-- either one at a time
-	-- or read from a directory
-
-	-- dUI.loadTheme( 'theme/red-theme.lua' )
-	-- dUI.loadTheme( 'theme/green-theme.lua' )
-	-- dUI.loadTheme( 'theme/blue-theme.lua' )
-
+	-- load the theme files: every .lua file in theme/
+	-- (or one at a time: dUI.loadTheme( 'theme/red-theme.lua' ))
 	dUI.loadThemes( 'theme' )
 
+	local order = { 'red-theme', 'green-theme', 'blue-theme' }
+	local idx = 1
+	dUI.activateTheme( order[idx] )
+	setStatus( "theme: "..order[idx] )
 
 	local txt1, txt2
 
@@ -101,19 +114,13 @@ function run_example1()
 	txt2.x, txt2.y = H_CENTER, V_CENTER+100
 
 
+	-- next theme every second
 	timer.performWithDelay( 1000, function()
-		local id = dUI.getActiveThemeId()
-		local tList = dUI.getAvailableThemeIds()
-		for i=#tList, 1, -1 do
-			local tId = tList[i]
-			if id==tId then
-				table.remove( tList, i )
-			end
-		end
-		local nextTheme = tList[ math.random( #tList ) ]
-		-- print("Main:activating", nextTheme )
-		dUI.activateTheme( nextTheme )
-	end, 0)
+		idx = idx % #order + 1
+		print( "Main: activating", order[idx] )
+		dUI.activateTheme( order[idx] )
+		setStatus( "theme: "..order[idx] )
+	end, 0 )
 
 end
 

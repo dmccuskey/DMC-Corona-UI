@@ -155,6 +155,45 @@ local note = dUI.newTextStyle{ inherit=body, fontSize=14 }   -- or: inherit='bod
 
 Setting `note.inherit` later changes only where the missing properties come from: the properties `note` sets itself stay, and its widgets redraw. `note:clearProperties()` drops them, back to everything inherited. Setting `inherit` to `nil` inherits from the default style again, and so does a style whose `inherit` is removed (`removeSelf()`). A background style keeps its own `type` too; when the change gives it another view type, its `view` starts over, as view properties belong to a type.
 
+## Palette
+
+`dUI.Palette` is a small set of colors which go together, for an app's own styles. The library's default styles are drawn from its `slate`, `gray` and `cloud`.
+
+<img src="images/palette.png" width="320" alt="The ten palette colors as swatches, each with its darker partner, above three buttons in blue, green and red">
+
+| Color | Partner | Meant for |
+|---|---|---|
+| `red`, `orange`, `yellow`, `green`, `teal`, `blue`, `purple` | `redDark`, `orangeDark`, ... `purpleDark` | a button, a panel, a slide; white text reads on them (dark text on `yellow`) |
+| `slate` | `slateDark` | dark surfaces: a page's backdrop, a pressed button |
+| `gray` | `grayDark` | borders, disabled text |
+| `cloud` | `cloudDark` | light surfaces, text on a dark one |
+
+Each is a table `{ r, g, b }` of 0 to 1 values, so it goes wherever a style takes a color, and `unpack()` hands it to a plain display object. The `Dark` partner is the same hue a step darker, for a pressed state or a border:
+
+```lua
+local Palette = dUI.Palette
+
+local button = dUI.newPushButton{
+	labelText="Save",
+	style={
+		inactive={
+			label={ textColor={ 1, 1, 1 } },
+			background={ view={ fillColor=Palette.blue, strokeWidth=0 } },
+		},
+		active={
+			label={ textColor={ 1, 1, 1 } },
+			background={ view={ fillColor=Palette.blueDark, strokeWidth=0 } },
+		},
+	},
+}
+
+local backdrop = display.newRect( display.contentCenterX, display.contentCenterY, display.actualContentWidth, display.actualContentHeight )
+backdrop:setFillColor( unpack( Palette.slateDark ) )
+backdrop:toBack()
+```
+
+For a translucent color, copy the values and add the alpha: `{ 0.22, 0.56, 0.80, 0.5 }`. The tables are shared: don't change one in place. The palette is apart from dmc-kolor's color names (`'blue'` in a style is still the CSS blue, when the app loads a named-color file).
+
 ## Themes
 
 A theme is a set of named styles, kept apart from the other named styles, that can be swapped for another set while the app runs. While a theme is active, a style name is looked up in the theme first, then among the other named styles. Widgets that use a style by name redraw when the active theme changes.

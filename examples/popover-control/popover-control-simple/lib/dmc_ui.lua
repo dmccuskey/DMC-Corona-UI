@@ -46,7 +46,7 @@ SOFTWARE.
 
 -- Semantic Versioning Specification: http://semver.org/
 
-local VERSION = "1.15.0"
+local VERSION = "1.16.0"
 
 
 
@@ -117,6 +117,7 @@ end
 
 
 local uiConst = require( PATH .. '.' .. 'ui_constants' )
+local uiPalette = require( PATH .. '.' .. 'ui_palette' )
 local UIUtils = require( PATH .. '.' .. 'ui_utils' )
 local EventsMixin = require 'dmc_events_mix'
 local Utils = require 'dmc_utils'
@@ -236,6 +237,10 @@ UI._VALID_OS_VERSION = {
 	},
 	-- [uiConst.WINDOWS]=true
 }
+
+-- colors for an app's styles, see ui_palette.lua
+
+UI.Palette = uiPalette
 
 UI.RUN_MODE = uiConst.RUN_MODE
 UI.TEST_MODE = uiConst.TEST_MODE

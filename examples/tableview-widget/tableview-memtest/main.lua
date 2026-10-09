@@ -1,11 +1,13 @@
 --====================================================================--
 -- TableView Memtest
 --
--- Stress test for TableView and TableViewCell: creates a table view which
--- fills the screen below the status bar, with TableViewCell rows, and
--- removes it DELAY (100) ms later, over and over, and prints memory use
--- with dmc-performance. run_example1() to 3() do the same with a
--- TableView style, a TableViewCell style and a single TableViewCell.
+-- Stress test for TableView and TableViewCell: creates a table view as
+-- wide as the screen, between the name and the line at the bottom, with
+-- TableViewCell rows, and removes it DELAY (100) ms later, over and over,
+-- and prints memory use with dmc-performance. run_example1() to 3() do
+-- the same with a TableView style, a TableViewCell style and a single
+-- TableViewCell. The line at the bottom counts the cycles. The backdrop
+-- fills the screen on any device.
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
@@ -32,16 +34,22 @@ local Perf = require 'lib.dmc_corona.dmc_performance'
 --== Setup, Constants
 
 
-local W, H = dUI.WIDTH, dUI.HEIGHT
-
 local mrandom = math.random
 local tinsert, tremove = table.insert, table.remove
 local tstr = tostring
 local tdelay = timer.performWithDelay
 math.randomseed( os.time() )
 
--- the screen, as the device reports it
+-- the screen, as the device reports it: config.lua asks for 320x480
+-- 'letterbox', so a taller or a wider screen has room around the content
+local SCREEN_W, SCREEN_H = display.actualContentWidth, display.actualContentHeight
+local SCREEN_X, SCREEN_Y = display.screenOriginX, display.screenOriginY
+local H_CENTER, V_CENTER = display.contentCenterX, display.contentCenterY
 local STATUS_BAR_H = display.topStatusBarContentHeight
+
+-- the name at the top and the line at the bottom (later) each take a band
+local BAND_H = 60
+local status = nil
 
 -- the content
 local NUM_ROWS = 50
@@ -94,6 +102,28 @@ local images = {
 
 --===================================================================--
 --== Support Functions
+
+
+--======================================================--
+-- Setup Visual Screen Items
+
+-- a backdrop the size of the screen, the example's name at the top
+-- and a line at the bottom which counts the cycles (setStatus())
+--
+local function setupBackground()
+	local o
+
+	o = display.newRect( H_CENTER, V_CENTER, SCREEN_W, SCREEN_H )
+	o:setFillColor( 0.17, 0.24, 0.31 )
+
+	o = display.newText( "TableView Memtest", H_CENTER, SCREEN_Y+STATUS_BAR_H+30, native.systemFontBold, 20 )
+
+	status = display.newText( "", H_CENTER, SCREEN_Y+SCREEN_H-30, native.systemFont, 16 )
+end
+
+local function setStatus( text )
+	status.text = text
+end
 
 
 local function getRandomImage()
@@ -158,7 +188,7 @@ local function onRender( self, event )
 		tc = tremove( cellCache, 1 )
 		tc.isVisible = true
 	else
-		tc = dUI.newTableViewCell{ width=W, height=ROW_HEIGHT, style=cellStyle }
+		tc = dUI.newTableViewCell{ width=SCREEN_W, height=ROW_HEIGHT, style=cellStyle }
 	end
 
 	tc.textLabel.text = rowData.title
@@ -221,6 +251,8 @@ end
 --===================================================================--
 
 
+setupBackground()
+
 tableData = createDataArray()
 
 local delegate = {
@@ -260,6 +292,7 @@ function run_example1()
 		o = nil
 		if count%10==0 then
 			print( "cycles completed: ", count )
+			setStatus( "cycles completed: "..count )
 		end
 		tdelay( DELAY, function()
 			createItem()
@@ -267,6 +300,7 @@ function run_example1()
 	end
 
 	print( "Main: Starting" )
+	setStatus( "running" )
 	createItem()
 	Perf.watchMemory( 2500 )
 
@@ -299,6 +333,7 @@ function run_example2()
 		o = nil
 		if count%10==0 then
 			print( "cycles completed: ", count )
+			setStatus( "cycles completed: "..count )
 		end
 		tdelay( DELAY, function()
 			createItem()
@@ -306,6 +341,7 @@ function run_example2()
 	end
 
 	print( "Main: Starting" )
+	setStatus( "running" )
 	createItem()
 	Perf.watchMemory( 2500 )
 
@@ -326,8 +362,8 @@ function run_example3()
 
 	createItem = function()
 		count=count+1
-		o = dUI.newTableViewCell{ width=W, height=ROW_HEIGHT, labelText="cell "..count }
-		o.x, o.y = 0, STATUS_BAR_H
+		o = dUI.newTableViewCell{ width=SCREEN_W, height=ROW_HEIGHT, labelText="cell "..count }
+		o.x, o.y = SCREEN_X, SCREEN_Y+STATUS_BAR_H+BAND_H
 
 		tdelay( DELAY, function()
 			destroyItem()
@@ -339,6 +375,7 @@ function run_example3()
 		o = nil
 		if count%10==0 then
 			print( "cycles completed: ", count )
+			setStatus( "cycles completed: "..count )
 		end
 		tdelay( DELAY, function()
 			createItem()
@@ -346,6 +383,7 @@ function run_example3()
 	end
 
 	print( "Main: Starting" )
+	setStatus( "running" )
 	createItem()
 	Perf.watchMemory( 2500 )
 
@@ -367,13 +405,13 @@ function run_example4()
 	createItem = function()
 		count=count+1
 		o = dUI.newTableView{
-			width=W,
-			height=H-STATUS_BAR_H,
+			width=SCREEN_W,
+			height=SCREEN_H-STATUS_BAR_H-2*BAND_H,
 			delegate=delegate,
 			estimatedRowHeight=ROW_HEIGHT,
-			autoMask=false
+			autoMask=true -- clip the rows to the table view
 		}
-		o.x, o.y = 0, STATUS_BAR_H
+		o.x, o.y = SCREEN_X, SCREEN_Y+STATUS_BAR_H+BAND_H
 		o:reloadData()
 
 		tdelay( DELAY, function()
@@ -390,6 +428,7 @@ function run_example4()
 		o = nil
 		if count%10==0 then
 			print( "cycles completed: ", count )
+			setStatus( "cycles completed: "..count )
 		end
 		tdelay( DELAY, function()
 			createItem()
@@ -397,6 +436,7 @@ function run_example4()
 	end
 
 	print( "Main: Starting" )
+	setStatus( "running" )
 	createItem()
 	Perf.watchMemory( 2500 )
 

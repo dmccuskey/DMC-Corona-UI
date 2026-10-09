@@ -1,12 +1,14 @@
 --====================================================================--
 -- Shape Button Simple
 --
--- A "Press" button drawn with shapes: a grey rectangle with a yellow
--- stroke, a green rounded rectangle while pressed. The outlined frame marks
--- its position: after 1 second its anchor becomes (1,0) and its hit margin
--- grows, after 2 seconds the anchor is (1,1), so the button moves to the
--- frame's top left. run_example1() shows the four button types with the
--- default style; run_example3() a shared style and clearStyle().
+-- A "Press" button drawn with shapes: a light rectangle with a yellow
+-- stroke, a green rounded rectangle while pressed (colors from dUI.Palette).
+-- The red dot marks its position, at the center of the screen: after two
+-- seconds its anchor becomes (1,0) and its hit margin grows, after four the
+-- anchor is (1,1), so the button moves to the top left of the dot. The line
+-- at the bottom names each step. run_example1() shows the four button types,
+-- one with a style object; run_example3() a shared style and clearStyle().
+-- The backdrop fills the screen on any device.
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
@@ -31,8 +33,15 @@ local dUI = require 'lib.dmc_ui'
 --== Setup, Constants
 
 
-local W, H = display.contentWidth, display.contentHeight
-local H_CENTER, V_CENTER = W*0.5, H*0.5
+-- the screen, as the device reports it: config.lua asks for 320x480
+-- 'letterbox', so a taller or a wider screen has room around the content
+local SCREEN_W, SCREEN_H = display.actualContentWidth, display.actualContentHeight
+local SCREEN_Y = display.screenOriginY
+local H_CENTER, V_CENTER = display.contentCenterX, display.contentCenterY
+local STATUS_BAR_H = display.topStatusBarContentHeight
+
+-- the line at the bottom, later
+local status = nil
 
 
 
@@ -42,22 +51,29 @@ local H_CENTER, V_CENTER = W*0.5, H*0.5
 
 -- Setup Visual Screen Items
 --
+-- a backdrop the size of the screen, the example's name at the top,
+-- a line at the bottom which says what the widget shows (setStatus()),
+-- and a marker at the screen's center, a white box with a red dot,
+-- which makes a change of the widget's anchor easy to see
+--
 local function setupBackground()
-	local width, height = 100, 50
 	local o
 
-	o = display.newRect(0,0,W,H)
-	o:setFillColor(0.5,0.5,0.5)
-	o.x, o.y = H_CENTER, V_CENTER
+	o = display.newRect( H_CENTER, V_CENTER, SCREEN_W, SCREEN_H )
+	o:setFillColor( 0.17, 0.24, 0.31 )
 
-	o = display.newRect(0,0,width+4,height+4)
-	o:setStrokeColor(0,0,0)
-	o.strokeWidth=2
-	o.x, o.y = H_CENTER, V_CENTER
+	o = display.newText( "Shape Button Simple", H_CENTER, SCREEN_Y+STATUS_BAR_H+30, native.systemFontBold, 20 )
 
-	o = display.newRect( 0,0,10,10)
-	o:setFillColor(1,0,0)
-	o.x, o.y = H_CENTER, V_CENTER
+	status = display.newText( "", H_CENTER, SCREEN_Y+SCREEN_H-30, native.systemFont, 16 )
+
+	o = display.newRect( H_CENTER, V_CENTER, 104, 54 )
+
+	o = display.newRect( H_CENTER, V_CENTER, 10, 10 )
+	o:setFillColor( 1, 0, 0 )
+end
+
+local function setStatus( text )
+	status.text = text
 end
 
 
@@ -108,7 +124,7 @@ function run_example1()
 				-- height=200,
 				type='rounded',
 				view={
-				fillColor={1,0,0},
+				fillColor=dUI.Palette.red,
 					-- width=200,
 					-- height=200
 				}
@@ -130,6 +146,7 @@ function run_example1()
 	bn2.x, bn2.y = H_CENTER+offsetX, V_CENTER-offsetY
 	bn3.x, bn3.y = H_CENTER-offsetX, V_CENTER+offsetY
 	bn4.x, bn4.y = H_CENTER+offsetX, V_CENTER+offsetY
+	setStatus( "plain, push, radio, toggle" )
 
 	timer.performWithDelay( 100000, function()
 		-- bn1:removeSelf()
@@ -192,13 +209,13 @@ function run_example2()
 				width=100,
 				label = {
 					align='center',
-					textColor={0,0,0},
+					textColor=dUI.Palette.slateDark,
 				},
 				background={
 					type='rectangle',
 					view={
-						fillColor={0.7,0.7,0.7,1},
-						strokeColor={1,1,0,1},
+						fillColor=dUI.Palette.cloud,
+						strokeColor=dUI.Palette.yellow,
 						strokeWidth=6
 					}
 				}
@@ -208,12 +225,12 @@ function run_example2()
 			active = {
 				label = {
 					align='center',
-					textColor={0.4,0.2,1,},
+					textColor=dUI.Palette.cloud,
 				},
 				background={
 					type='rounded',
 					view={
-						fillColor={0,1,0}
+						fillColor=dUI.Palette.green
 					}
 				}
 			},
@@ -221,12 +238,12 @@ function run_example2()
 			disabled = {
 				label = {
 					align='center',
-					textColor={0,0,0},
+					textColor=dUI.Palette.gray,
 				},
 				background={
 					type='rounded',
 					view={
-						fillColor={0,1,0}
+						fillColor=dUI.Palette.cloudDark
 					}
 				}
 			},
@@ -240,9 +257,10 @@ function run_example2()
 
 	}
 	btn1.x, btn1.y = H_CENTER, V_CENTER
+	setStatus( "anchor (0.5,0.5)" )
 
 
-	timer.performWithDelay( 1000, function()
+	timer.performWithDelay( 2000, function()
 		print( "\n\n\n Properties Updated")
 		-- btn1:setLabelColor( 1,1,1)
 		-- btn1.strokeWidth=6
@@ -259,14 +277,16 @@ function run_example2()
 		-- btn1:setAnchor({1,1})
 		-- btn1.width=200
 		-- btn1.height=100
+		setStatus( "anchor (1,0), hitMarginY 20" )
 
 	end)
 
-	timer.performWithDelay( 2000, function()
+	timer.performWithDelay( 4000, function()
 		btn1:setAnchor( {0,0} )
 		btn1:setAnchor( {0.5,0.5} )
 		btn1:setAnchor( {1,1} )
 		btn1.hitMarginY=5
+		setStatus( "anchor (1,1), hitMarginY 5" )
 	end)
 
 -- timer.performWithDelay( 2000, function()
@@ -288,7 +308,7 @@ run_example2()
 
 function run_example3()
 
-	local st1, bw1
+	local st1, bw1, bw2
 
 	st1 = dUI.newButtonStyle{
 		debugOn=false,
@@ -309,13 +329,13 @@ function run_example3()
 				font=native.systemFont,
 				fontSize=14,
 				align='center',
-				textColor={0.5,0.2,0, 1},
+				textColor=dUI.Palette.slateDark,
 			},
 			background={
 				type='rectangle',
 				view={
-					fillColor={0.5,1,0.7,1},
-					strokeColor={0.5,0,0,1},
+					fillColor=dUI.Palette.teal,
+					strokeColor=dUI.Palette.tealDark,
 					strokeWidth=6
 				}
 			}
@@ -326,12 +346,12 @@ function run_example3()
 				align='left',
 				font=native.systemFontBold,
 				fontSize=10,
-				textColor={0.4,0.2,1,},
+				textColor=dUI.Palette.cloud,
 			},
 			background={
 				type='rounded',
 				view={
-					fillColor={0,1,0}
+					fillColor=dUI.Palette.green
 				}
 			}
 		},
@@ -340,12 +360,12 @@ function run_example3()
 			label = {
 				align='center',
 				fontSize=12,
-				textColor={1,1,0.5},
+				textColor=dUI.Palette.gray,
 			},
 			background={
 				type='rectangle',
 				view={
-					fillColor={0,1,0}
+					fillColor=dUI.Palette.cloudDark
 				}
 			}
 		},
@@ -372,9 +392,10 @@ function run_example3()
 		onRelease = onRelease_handler,
 		onEvent = onEvent_handler,
 	}
-	bw2.style.inactive.background.fillColor={ 0.4, 0.5, 0.6 }
+	bw2.style.inactive.background.fillColor=dUI.Palette.gray
 
 	bw2.x, bw2.y = H_CENTER+40, V_CENTER-50
+	setStatus( "default style, and a style object" )
 
 	-- bw1.isEnabled = false
 
@@ -386,7 +407,8 @@ function run_example3()
 	timer.performWithDelay( 10000, function()
 		print("\n\n Update Widget")
 		-- bw1.isEnabled = true
-		st1.inactive.background.fillColor = {1,1,0}
+		st1.inactive.background.fillColor = dUI.Palette.yellow
+		setStatus( "the style's fill set to yellow" )
 
 	end)
 
@@ -400,6 +422,7 @@ function run_example3()
 		-- st1:clearProperties()
 
 		bw2:clearStyle()
+		setStatus( "clearStyle(): the style's values are gone" )
 
 	end)
 

@@ -359,3 +359,55 @@ function test_addStyleToTheme()
 
 end
 
+
+
+--[[
+dUI.Palette: ten colors, each with a darker partner
+--]]
+function test_palette()
+	-- print( "test_palette" )
+	local Palette = dUI.Palette
+	local names = {
+		'red', 'orange', 'yellow', 'green', 'teal',
+		'blue', 'purple', 'slate', 'gray', 'cloud',
+	}
+
+	assert_equal( type(Palette), 'table', "missing dUI.Palette" )
+
+	for _, name in ipairs( names ) do
+		for _, key in ipairs( { name, name..'Dark' } ) do
+			local c = Palette[ key ]
+			assert_equal( type(c), 'table', "missing color "..key )
+			assert_equal( #c, 3, "color should have three values "..key )
+			for i=1,3 do
+				assert_true( c[i]>=0 and c[i]<=1, "color value out of range "..key )
+			end
+		end
+		-- the partner is the darker one
+		local c, d = Palette[ name ], Palette[ name..'Dark' ]
+		assert_true( d[1]+d[2]+d[3] < c[1]+c[2]+c[3], "partner isn't darker "..name )
+	end
+
+end
+
+
+--[[
+a palette color is a style's color as given
+--]]
+function test_paletteColorInStyle()
+	-- print( "test_paletteColorInStyle" )
+	local Palette = dUI.Palette
+	local s1
+
+	s1 = dUI.newRoundedBackgroundStyle{
+		view={
+			fillColor=Palette.blue,
+			strokeColor=Palette.blueDark,
+		}
+	}
+
+	assert_equal( s1.view.fillColor[1], Palette.blue[1], "incorrect fill color" )
+	assert_equal( s1.view.fillColor[3], Palette.blue[3], "incorrect fill color" )
+	assert_equal( s1.view.strokeColor[2], Palette.blueDark[2], "incorrect stroke color" )
+
+end

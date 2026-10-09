@@ -189,7 +189,7 @@ TextFieldStyle._STYLE_DEFAULTS = {
 		fontSize=18,
 		fontSizeMinimum=0,
 		marginX=15,
-		textColor={0.3,0.3,0.3,1},
+		textColor={0.47,0.51,0.55,1},
 	},
 	display={
 		--[[

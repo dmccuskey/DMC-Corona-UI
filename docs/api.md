@@ -48,6 +48,10 @@ The path follows where `dmc_ui.lua` is: `lib.dmc_ui` for the layout in the [Quic
 | `dUI.addStyle( style )` | registers a style under its `name` (a style with a `name` is registered when it is made) |
 | `dUI.purgeStyles()` | unregisters every named style outside themes |
 
+## Palette
+
+`dUI.Palette` is a table of colors for an app's styles: `red`, `orange`, `yellow`, `green`, `teal`, `blue`, `purple`, `slate`, `gray` and `cloud`, each `{ r, g, b }`, and each with a darker partner (`redDark`, ...). See [Palette](styles.md#palette).
+
 ## Themes
 
 | Function | Does |

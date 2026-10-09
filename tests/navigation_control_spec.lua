@@ -449,6 +449,18 @@ end
 
 
 --[[
+the bar is as wide as the control from the start (it kept its
+own default, the content width, until the control's width changed)
+--]]
+function test_barWidthAtCreation()
+	local ctrl = dUI.newNavigationControl{ width=200, height=300 }
+	controls[ #controls+1 ] = ctrl
+
+	assert_equal( 200, ctrl._navBar.width )
+end
+
+
+--[[
 a change of size reaches the bar and every view (a view got the
 control's whole height, bar included)
 --]]
