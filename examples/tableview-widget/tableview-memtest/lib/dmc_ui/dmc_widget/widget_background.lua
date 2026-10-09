@@ -354,6 +354,9 @@ function Background:__commitProperties__()
 
 	if self._wgtView_dirty or self._wgtViewStyle_dirty then
 		self:_createBackgroundView()
+		-- draw it now, not on the next frame: a view of another
+		-- type is a new one, and for a frame it would be empty
+		self._wgtView:__validate__()
 		self._wgtView_dirty=false
 		self._wgtViewStyle_dirty=false
 	end

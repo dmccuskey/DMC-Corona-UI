@@ -610,6 +610,17 @@ function ButtonBase:_dropFocus()
 end
 
 
+-- show a state's look without entering the state, eg while a touch
+-- is down: the button's own state changes when the touch ends on it
+--
+function ButtonBase:_showState( state )
+	if self._widgetViewState==state then return end
+	self._widgetViewState = state
+	self._widgetViewState_dirty = true
+	self:__invalidateProperties__()
+end
+
+
 -- dispatch 'press' events
 --
 -- TODO: use create event
@@ -809,6 +820,10 @@ function ButtonBase:__commitProperties__()
 	if self._widgetStyle_dirty or self._widgetViewState_dirty then
 		text:setActiveStyle( stateStyle.label, {copy=false} )
 		bg:setActiveStyle( stateStyle.background, {copy=false} )
+		-- draw them now, not on the next frame: a state with another
+		-- type of background would show no background for a frame
+		text:__validate__()
+		bg:__validate__()
 		self._widgetStyle_dirty=false
 		self._widgetViewState_dirty=false
 		self._offsetX_dirty=true

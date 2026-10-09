@@ -214,6 +214,7 @@ function NavControl:__createView__()
 		delegate = self
 	}
 	o.anchorX, o.anchorY = ANCHOR.x, ANCHOR.y
+	o.width = W -- the bar's own default is the content width
 
 	self._dgUI:insert( o.view )
 	self._navBar = o

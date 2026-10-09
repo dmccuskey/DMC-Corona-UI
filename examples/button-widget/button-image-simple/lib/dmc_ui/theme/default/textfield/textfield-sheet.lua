@@ -1,11 +1,5 @@
 --
--- created with TexturePacker (http://www.codeandweb.com/texturepacker)
---
--- $TexturePacker:SmartUpdate:1a4722186156b7bf54b022eb038f8467:2ee196dff9edac5af19f0b1bfac7163b:243421fb25b42f5c40ab37573b9874cc$
---
--- local sheetInfo = require("mysheet")
--- local myImageSheet = graphics.newImageSheet( "mysheet.png", sheetInfo:getSheet() )
--- local sprite = display.newSprite( myImageSheet , {frames={sheetInfo:getFrameIndex("sprite")}} )
+-- drawn by tools/default-art.py: one rounded rectangle, cut into nine frames
 --
 
 local SheetInfo = {}
@@ -13,83 +7,83 @@ local SheetInfo = {}
 SheetInfo.sheet =
 {
     frames = {
-    
+
         {
             -- 01-TL
-            x=20,
-            y=41,
-            width=13,
-            height=10,
+            x=2,
+            y=2,
+            width=8,
+            height=8,
 
         },
         {
             -- 02-TM
-            x=48,
-            y=17,
-            width=10,
-            height=10,
+            x=10,
+            y=2,
+            width=4,
+            height=8,
 
         },
         {
             -- 03-TR
-            x=37,
-            y=3,
-            width=13,
-            height=10,
+            x=14,
+            y=2,
+            width=8,
+            height=8,
 
         },
         {
             -- 04-ML
-            x=3,
-            y=27,
-            width=13,
-            height=20,
+            x=2,
+            y=10,
+            width=8,
+            height=4,
 
         },
         {
             -- 05-MM
-            x=20,
-            y=17,
-            width=10,
-            height=20,
+            x=10,
+            y=10,
+            width=4,
+            height=4,
 
         },
         {
             -- 06-MR
-            x=3,
-            y=3,
-            width=13,
-            height=20,
+            x=14,
+            y=10,
+            width=8,
+            height=4,
 
         },
         {
             -- 07-BL
-            x=20,
-            y=3,
-            width=13,
-            height=10,
+            x=2,
+            y=14,
+            width=8,
+            height=8,
 
         },
         {
             -- 08-BM
-            x=34,
-            y=17,
-            width=10,
-            height=10,
+            x=10,
+            y=14,
+            width=4,
+            height=8,
 
         },
         {
             -- 09-BR
-            x=3,
-            y=51,
-            width=13,
-            height=10,
+            x=14,
+            y=14,
+            width=8,
+            height=8,
 
         },
     },
-    
-    sheetContentWidth = 64,
-    sheetContentHeight = 64
+
+    sheetContentWidth = 32,
+    sheetContentHeight = 32
 }
 
 SheetInfo.frameIndex =

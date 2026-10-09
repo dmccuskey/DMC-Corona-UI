@@ -155,12 +155,11 @@ NineSliceStyle._STYLE_DEFAULTS = {
 		bottomMiddle=8,
 		bottomRight=9,
 	},
-	offsetLeft=1,
+	offsetLeft=0,
 	offsetRight=0,
 	offsetTop=0,
 	offsetBottom=0,
 
-	-- @TODO: make sprite sheet
 	sheetInfo=ui_find('theme.default.background.nine-slice-sheet'),
 	sheetImage=ui_file('theme/default/background/nine-slice-sheet.png'),
 }

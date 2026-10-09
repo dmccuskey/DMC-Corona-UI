@@ -329,7 +329,7 @@ function ToggleButton:_hitAreaTouch_handler( event )
 	if event.phase == 'began' then
 		display.getCurrentStage():setFocus( target )
 		self._has_focus = true
-		self:gotoState( next_state, { set_state=false } )
+		self:_showState( next_state )
 		self:_doPressEventDispatch()
 
 		return true
@@ -338,20 +338,23 @@ function ToggleButton:_hitAreaTouch_handler( event )
 	if not self._has_focus then return end
 
 	if event.phase == 'moved' then
+		-- only the look follows the touch: the state is still curr_state
+		-- (gotoState() to the state the button is in does nothing)
 		if is_bounded then
-			self:gotoState( next_state, { set_state=false } )
+			self:_showState( next_state )
 		else
-			self:gotoState( curr_state, { set_state=false } )
+			self:_showState( curr_state )
 		end
 
 	elseif event.phase == 'ended' or event.phase == 'canceled' then
 		display.getCurrentStage():setFocus( nil )
 		self._has_focus = false
 		if is_bounded then
+			self:_showState( next_state )
 			self:gotoState( next_state )
 			self:_doReleaseEventDispatch()
 		else
-			self:gotoState( curr_state )
+			self:_showState( curr_state )
 		end
 
 	end
