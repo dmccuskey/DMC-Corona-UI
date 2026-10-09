@@ -143,9 +143,7 @@ module_config = {
 			},
 			{
 				"exp_dir": "background-widget/background-memtest",
-				"requires": [
-					"dmc-performance"
-				],
+				"requires": [],
 				"mod_dir_map": {
 					"default_dir": "",
 					"libs": {
@@ -285,9 +283,7 @@ module_config = {
 			},
 			{
 				"exp_dir": "scrollview-widget/scrollview-memtest",
-				"requires": [
-					"dmc-performance"
-				],
+				"requires": [],
 				"mod_dir_map": {
 					"default_dir": "",
 					"libs": {
@@ -357,9 +353,7 @@ module_config = {
 			},
 			{
 				"exp_dir": "tableview-widget/tableview-memtest",
-				"requires": [
-					"dmc-performance"
-				],
+				"requires": [],
 				"mod_dir_map": {
 					"default_dir": "",
 					"libs": {
@@ -379,9 +373,7 @@ module_config = {
 			},
 			{
 				"exp_dir": "text-widget/text-memtest",
-				"requires": [
-					"dmc-performance"
-				],
+				"requires": [],
 				"mod_dir_map": {
 					"default_dir": "",
 					"libs": {
