@@ -324,6 +324,9 @@ function View.__setters:x( value )
 	--==--
 	if self._x == value then return end
 	self._x = value
+	-- move the view at once: a widget placed after this frame's
+	-- validation would be drawn at its old position until the next
+	self.view.x = value
 	self._x_dirty=true
 	self:__invalidateProperties__()
 end
@@ -346,6 +349,9 @@ function View.__setters:y( value )
 	--==--
 	if self._y == value then return end
 	self._y = value
+	-- move the view at once: a widget placed after this frame's
+	-- validation would be drawn at its old position until the next
+	self.view.y = value
 	self._y_dirty=true
 	self:__invalidateProperties__()
 end
