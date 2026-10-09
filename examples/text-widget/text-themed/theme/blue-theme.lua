@@ -23,8 +23,8 @@ local function initializeTheme( Style )
 	-- https://color.adobe.com/Vintage-Romantic-color-theme-2646522
 
 	Theme.addStyle( 'home-text', Style.newTextStyle{
-		fillColor='#bfaf80',
-		textColor='#260126',
+		fillColor='#2670ab',
+		textColor='#ffffff',
 		font='Times-BoldItalic',
 		fontSize=30
 	})

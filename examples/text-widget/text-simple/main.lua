@@ -358,8 +358,8 @@ function run_example4()
 			fontSizeMinimum=10,
 			marginX=0,
 			marginY=5,
-			fillColor={0.5,0,1},
-			textColor={0,0,0},
+			fillColor=dUI.Palette.purple,
+			textColor={1,1,1},
 		}
 	}
 	txt1.anchorX, txt1.anchorY = 0.5,0.5

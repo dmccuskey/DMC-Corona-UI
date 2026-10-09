@@ -485,8 +485,8 @@ function run_example7()
 			align='right',
 			fontSize=26,
 			marginX=5,
-			fillColor={0.5,0,0.25},
-			textColor={1,0,0},
+			fillColor=dUI.Palette.blueDark,
+			textColor={1,1,1},
 		}
 	}
 
@@ -503,7 +503,11 @@ function run_example7()
 
 	timer.performWithDelay( 2000, function()
 		txt2.style=nil -- clear style, to default
-		setStatus( "style=nil: the default style" )
+		-- the default is small black text without a fill: make it easy to see
+		-- (it lies on the white marker, so a color which reads on white)
+		txt2:setTextColor( unpack( dUI.Palette.purple ) )
+		txt2.fontSize = 22
+		setStatus( "style=nil: the default, in purple at 22" )
 	end)
 
 
@@ -520,7 +524,7 @@ function run_example7()
 		txt2:setAnchor( {1,1} )
 
 		txt2:setFillColor( 1,0,0,0.5 )
-		txt2:setTextColor( 1,0,0,0.5 )
+		txt2:setTextColor( 1,1,1 )
 
 		txt2.font = native.systemFontBold
 
@@ -558,7 +562,7 @@ function run_example7()
 		txt2.fontSize = 30
 
 		txt2:setFillColor( 0,0,0.5,0.8 )
-		txt2:setTextColor( 1,0,1,0.5 )
+		txt2:setTextColor( unpack( dUI.Palette.yellow ) )
 		setStatus( "sized to its text, anchored at its top left" )
 
 	end)
