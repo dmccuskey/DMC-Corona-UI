@@ -562,6 +562,7 @@ function ButtonBase:press()
 
 	evt.phase = 'began'
 	self:_hitAreaTouch_handler( evt )
+	if not self.view then return end -- removed in a callback
 	evt.phase = 'ended'
 	self:_hitAreaTouch_handler( evt )
 end
@@ -623,6 +624,9 @@ end
 
 -- dispatch 'press' events
 --
+-- a callback may remove the button (eg, one which closes its dialog):
+-- the view is then gone, the rest isn't called and the focus is released
+--
 -- TODO: use create event
 function ButtonBase:_doPressEventDispatch()
 	-- print( "ButtonBase:_doPressEventDispatch" )
@@ -640,7 +644,9 @@ function ButtonBase:_doPressEventDispatch()
 	}
 
 	if cb.onPress then cb.onPress( event ) end
+	if not self.view then return self:_dropFocus() end
 	if cb.onEvent then cb.onEvent( event ) end
+	if not self.view then return self:_dropFocus() end
 	self:dispatchEvent( event )
 end
 
@@ -662,7 +668,9 @@ function ButtonBase:_doReleaseEventDispatch()
 	}
 
 	if cb.onRelease then cb.onRelease( event ) end
+	if not self.view then return self:_dropFocus() end
 	if cb.onEvent then cb.onEvent( event ) end
+	if not self.view then return self:_dropFocus() end
 	self:dispatchEvent( event )
 end
 
