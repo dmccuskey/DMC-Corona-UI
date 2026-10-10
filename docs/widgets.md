@@ -197,7 +197,7 @@ local ok = dUI.newPushButton{
 
 **Methods**: `press()` presses and releases the button from code.
 
-**Events**: each press calls `onPress` then `onEvent`, each release `onRelease` then `onEvent`, and dispatches `button.EVENT` (`'button-event'`) to listeners. The event has `phase` (`button.PRESSED` or `button.RELEASED`), `target` (the button), `id`, `data` and `state`.
+**Events**: each press calls `onPress` then `onEvent`, each release `onRelease` then `onEvent`, and dispatches `button.EVENT` (`'button-event'`) to listeners. The event has `phase` (`button.PRESSED` or `button.RELEASED`), `target` (the button), `id`, `data` and `state`. A callback may remove the button, such as one which closes its own dialog: what would have been called after it isn't.
 
 ### Button Group
 

@@ -126,6 +126,29 @@ end
 
 
 --[[
+a button can be removed in its own callback, eg one which closes
+its dialog: the callbacks and listeners after it aren't called
+--]]
+function test_removedInCallback()
+	for _, action in ipairs{ 'push', 'toggle' } do
+		for _, name in ipairs{ 'onPress', 'onRelease' } do
+			local calls = 0
+			local w
+			w = newButton{ action=action, onEvent=function() calls = calls+1 end }
+			widgets[ #widgets ] = nil -- it removes itself
+			w[ name ] = function() w:removeSelf() end
+			w:addEventListener( w.EVENT, function() calls = calls+1 end )
+
+			w:press()
+			assert_nil( w.view, action..' '..name )
+			assert_equal( name=='onPress' and 0 or 2, calls, action..' '..name )
+			assert_false( w._has_focus, action..' '..name )
+		end
+	end
+end
+
+
+--[[
 a toggle button switches state on each press
 --]]
 function test_toggle()
