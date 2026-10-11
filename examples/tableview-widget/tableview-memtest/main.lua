@@ -408,7 +408,7 @@ function run_example4()
 			width=SCREEN_W,
 			height=SCREEN_H-STATUS_BAR_H-2*BAND_H,
 			delegate=delegate,
-			estimatedRowHeight=ROW_HEIGHT,
+			rowHeight=ROW_HEIGHT,
 			autoMask=true -- clip the rows to the table view
 		}
 		o.x, o.y = SCREEN_X, SCREEN_Y+STATUS_BAR_H+BAND_H

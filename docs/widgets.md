@@ -467,7 +467,7 @@ A scrolling list that creates the display objects of a row only while the row is
 ```lua
 local list = dUI.newTableView{
 	width=300, height=400,
-	estimatedRowHeight=40,
+	rowHeight=40,
 	delegate={
 		numberOfRows=function( self, tableview, section ) return 50 end,
 		onRowRender=function( self, event )
@@ -485,7 +485,7 @@ local list = dUI.newTableView{
 list:reloadData()
 ```
 
-`numberOfRows` and `onRowRender` are required; `onRowUnrender` is optional, for what a row made outside its view, or wants to keep (a row's view is removed with everything in it). Both row events carry `view`, `index`, `row` and `data`, a table that stays with the row. A row is as wide as the table view and `estimatedRowHeight` high (20 unless given; every row has that height); `event.row:setBackgroundColor( r, g, b, a )` and `event.row:setLineColor( ... )` color it and the line at its bottom (white, and no line, by default). Rows exist for the part of the list in view plus `renderMargin` (100) above and below.
+`numberOfRows` and `onRowRender` are required; `onRowUnrender` is optional, for what a row made outside its view, or wants to keep (a row's view is removed with everything in it). Both row events carry `view`, `index`, `row` and `data`, a table that stays with the row: it is made when the row is first shown, kept while the row is out of view, and follows the row to its new index when rows are added or removed above it, until the next `reloadData()`. A row is as wide as the table view and `rowHeight` high (20 unless given; `estimatedRowHeight` is its older name, and still works); `event.row:setBackgroundColor( r, g, b, a )` and `event.row:setLineColor( ... )` color it and the line at its bottom (white, and no line, by default). Rows exist for the part of the list in view plus `renderMargin` (100) above and below.
 
 The list belongs to the app: change it, then tell the table view.
 
@@ -493,6 +493,7 @@ The list belongs to the app: change it, then tell the table view.
 |---|---|
 | `reloadData()` | ask the delegate again for the number of rows, and make the rows in view again |
 | `insertRowAt( index )` | a row was added at `index` (1 to the number of rows plus 1, which adds it at the end) |
+| `reloadRowAt( index )` | the row at `index` changed: make it again, with the height it has now. It keeps its `data` |
 | `removeRowAt( index )` | the row at `index` was removed |
 | `removeAllRows()` | no rows are left |
 | `getRowAt( index )` | the row's view, or `nil` while the row is out of view |
@@ -512,6 +513,29 @@ A TableView is a ScrollView which scrolls up and down only: its options and prop
 | `didSelectRow` | the row was selected |
 
 The delegate also gets the ScrollView's `willBeginScrolling`, `didScroll` and `didEndScrolling` ([ScrollView](#scrollview)); in `didScroll` the rows for the new position already exist. A TableView sends no events: it reports through its delegate.
+
+### Rows of Different Heights
+
+Give the delegate a `heightForRow` and each row has its own height: a list with headers, rows of several kinds, a row which opens when tapped.
+
+```lua
+delegate={
+	numberOfRows=function( self, tableview, section ) return #items end,
+	heightForRow=function( self, event )
+		-- event.index is the row. nothing: the table view's rowHeight
+		if items[ event.index ].isHeader then return 24 end
+	end,
+	onRowRender=function( self, event )
+		-- draw a header or a row, as items[ event.index ] says
+	end,
+},
+```
+
+The table view asks once for every row at `reloadData()`, so it knows where each row is and how long the list is from the start: the scroll indicator and `scrollToRowAt()` are exact. After that it asks only for the one row of an `insertRowAt()` or a `reloadRowAt()`. So when a row's height changes, change the list and call `reloadRowAt( index )`: the row is made again and the rows below move. A height is a number above zero.
+
+A header is a row like any other: draw it differently in `onRowRender`, and return `false` from `shouldHighlightRow` if a touch shouldn't highlight it. There are no sections, and a header scrolls away with its rows. The [tableview-sections](../examples/README.md#tableview) example has headers and rows which open.
+
+Without `heightForRow` every row has the one `rowHeight`, and the table view keeps nothing for a row which is out of view: where a row is, and which rows are in view, is arithmetic. A list of a million rows costs no more than one of a hundred. With `heightForRow` it keeps two numbers for each row, and adding or removing a row moves the ones below it.
 
 ### TableViewCell
 

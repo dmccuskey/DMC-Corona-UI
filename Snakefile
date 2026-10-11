@@ -74,6 +74,7 @@ module_config = {
 			"dmc_ui/dmc_widget/widget_slideview.lua",
 			"dmc_ui/dmc_widget/widget_tableview.lua",
 			"dmc_ui/dmc_widget/widget_tableview/delegate_tableview.lua",
+			"dmc_ui/dmc_widget/widget_tableview/row_layout.lua",
 			"dmc_ui/dmc_widget/widget_tableviewcell.lua",
 			"dmc_ui/dmc_widget/assets/tableviewcell/accessory-checkmark.png",
 			"dmc_ui/dmc_widget/assets/tableviewcell/accessory-detail-button.png",
@@ -333,6 +334,16 @@ module_config = {
 			},
 			{
 				"exp_dir": "tableview-widget/tableview-simple",
+				"requires": [],
+				"mod_dir_map": {
+					"default_dir": "",
+					"libs": {
+						"dmc-corona-boot":""
+					}
+				}
+			},
+			{
+				"exp_dir": "tableview-widget/tableview-sections",
 				"requires": [],
 				"mod_dir_map": {
 					"default_dir": "",
