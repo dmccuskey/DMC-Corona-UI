@@ -273,7 +273,7 @@ local tV = dUI.newTableView{
 	width=SCREEN_W,
 	height=SCREEN_H-STATUS_BAR_H,
 	delegate=delegate,
-	estimatedRowHeight=ROW_HEIGHT,
+	rowHeight=ROW_HEIGHT,
 	autoMask=true -- clip the rows to the table view
 }
 tV.x, tV.y = SCREEN_X, SCREEN_Y+STATUS_BAR_H

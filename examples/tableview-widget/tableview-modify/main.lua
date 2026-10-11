@@ -148,7 +148,7 @@ local tV = dUI.newTableView{
 	width=SCREEN_W,
 	height=SCREEN_H-STATUS_BAR_H,
 	delegate=delegate,
-	estimatedRowHeight=ROW_HEIGHT,
+	rowHeight=ROW_HEIGHT,
 	autoMask=true, -- clip the rows to the table view
 	style={ fillColor={ 0.2, 0.2, 0.25, 1 } } -- behind the rows
 }
