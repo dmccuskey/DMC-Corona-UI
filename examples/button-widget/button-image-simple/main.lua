@@ -111,6 +111,7 @@ function run_example1()
 	local offsetX, offsetY = 70, 100
 
 	local bn2 = dUI.newPushButton{
+		labelText="OK",
 		onPress = onPress_handler,
 		onRelease = onRelease_handler,
 		onEvent = onEvent_handler,

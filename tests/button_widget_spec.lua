@@ -343,6 +343,16 @@ end
 
 
 --[[
+a button given no labelText has an empty label
+--]]
+function test_labelText_default()
+	local w = newButton()
+	assert_equal( '', w.labelText )
+	assert_equal( '', w._wgtText.text )
+end
+
+
+--[[
 labelText changes show in the label
 --]]
 function test_labelText()
