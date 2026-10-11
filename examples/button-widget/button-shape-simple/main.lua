@@ -132,15 +132,15 @@ function run_example1()
 		}
 	}
 
-	local bn1 = dUI.newButton()
+	local bn1 = dUI.newButton{ labelText="Plain" }
 	bn1.style = s1
 
-	local bn2 = dUI.newPushButton()
+	local bn2 = dUI.newPushButton{ labelText="Push" }
 	bn2.style=nil
 	bn2.style=nil
 
-	local bn3 = dUI.newRadioButton()
-	local bn4 = dUI.newToggleButton()
+	local bn3 = dUI.newRadioButton{ labelText="Radio" }
+	local bn4 = dUI.newToggleButton{ labelText="Toggle" }
 
 	bn1.x, bn1.y = H_CENTER-offsetX, V_CENTER-offsetY
 	bn2.x, bn2.y = H_CENTER+offsetX, V_CENTER-offsetY

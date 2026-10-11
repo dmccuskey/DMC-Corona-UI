@@ -182,7 +182,7 @@ local ok = dUI.newPushButton{
 }
 ```
 
-**Options**: `labelText` (default `"OK"`), `id`, `data` (any value, passed in events), `onPress`, `onRelease`, `onEvent` (functions), `style`.
+**Options**: `labelText` (default `""`, no label: a button made only of images needs nothing more), `id`, `data` (any value, passed in events), `onPress`, `onRelease`, `onEvent` (functions), `style`.
 
 **Style**:
 
