@@ -554,6 +554,267 @@ end
 
 
 --======================================================--
+-- Scroll Motion
+
+-- run one frame of the widget's motion objects, at 'time'
+local function frameAt( w, time )
+	local e = { name='enterFrame', time=time }
+	w._axisX:enterFrame( e )
+	w._axisY:enterFrame( e )
+	w._scaleMotion:enterFrame( e )
+	commit( w )
+end
+
+-- drag an axis from 'from' to 'to' in three moves 16 ms apart and let go
+-- 1 ms later, with the speed it has. returns the time the touch ended
+local function flick( axis, t, from, to )
+	axis:touch{ phase='began', time=t, value=from, start=from }
+	for i = 1, 3 do
+		axis:touch{ phase='moved', time=t+i*16, value=from+(to-from)*i/3, start=from }
+	end
+	axis:touch{ phase='ended', time=t+49, value=to, start=from }
+	return t+49
+end
+
+-- run frames every 16 ms from 'from' for 'ms', and return the position
+-- of the axis at each, and how long it took to come to rest
+local function run( w, axis, from, ms )
+	local list, rest = {}, nil
+	for i = 16, ms, 16 do
+		frameAt( w, from+i )
+		list[ #list+1 ] = axis.value
+		if rest==nil and axis:getState()==axis.STATE_AT_REST then rest = i end
+	end
+	return list, rest
+end
+
+-- the largest of a list, and where it is
+local function peak( list )
+	local max, index = list[1], 1
+	for i, v in ipairs( list ) do
+		if v > max then max, index = v, i end
+	end
+	return max, index
+end
+
+
+--[[
+a drag past an edge: the content follows the finger by a little over
+half at the edge and by less the further it goes, never further than
+a third of the view, the same whichever way the finger got there;
+back inside it follows the finger again
+--]]
+function test_dragPastEdge()
+	local w = newScrollView()
+	local axis = w._axisY
+	local t = system.getTimer()
+	-- 100 past the top of a view 300 high, which gives way by 100 at most
+	local expected = 100*0.55*100 / ( 100*0.55 + 100 )
+
+	axis:touch{ phase='began', time=t, value=100, start=100 }
+	axis:touch{ phase='moved', time=t+50, value=200, start=100 }
+	assert_equal( expected, axis.value, 0.01 )
+	assert_lt( 50, axis.value, "less than half of the finger's travel" )
+
+	-- there and back in steps, the first far past the view
+	axis:touch{ phase='moved', time=t+60, value=5200, start=100 }
+	assert_lt( 100, axis.value, "a third of the view at most" )
+	assert_gt( 90, axis.value )
+	axis:touch{ phase='moved', time=t+70, value=230, start=100 }
+	axis:touch{ phase='moved', time=t+80, value=200, start=100 }
+	assert_equal( expected, axis.value, 0.01 )
+	axis:touch{ phase='moved', time=t+90, value=100, start=100 }
+	assert_equal( 0, axis.value, 0.01 )
+	axis:touch{ phase='moved', time=t+100, value=60, start=100 }
+	assert_equal( -40, axis.value, 0.01 )
+	axis:touch{ phase='cancelled', time=t+500, value=60, start=100 }
+
+	-- the bottom, the same
+	local w2 = newScrollView()
+	axis = w2._axisY
+	w2:setContentPosition{ y=-500, time=0 }
+	frameAt( w2, t )
+	axis:touch{ phase='began', time=t, value=200, start=200 }
+	axis:touch{ phase='moved', time=t+50, value=100, start=200 }
+	assert_equal( -500-expected, axis.value, 0.01 )
+	axis:touch{ phase='cancelled', time=t+500, value=100, start=200 }
+
+	-- without bounce the content stops at the edge
+	local w3 = newScrollView{ bounceIsActive=false }
+	axis = w3._axisY
+	axis:touch{ phase='began', time=t, value=100, start=100 }
+	axis:touch{ phase='moved', time=t+50, value=200, start=100 }
+	assert_equal( 0, axis.value )
+	axis:touch{ phase='moved', time=t+60, value=150, start=100 }
+	assert_equal( -50, axis.value )
+end
+
+
+--[[
+a flick which reaches an edge: one motion past it and back, without
+a halt, which ends exactly on the edge. a faster one overruns it by
+more and takes about as long
+--]]
+function test_bounceSpring()
+	local function bounce( distance )
+		local w = newScrollView()
+		local axis = w._axisY
+		local t = system.getTimer()
+		w:setContentPosition{ y=-200, time=0 }
+		frameAt( w, t )
+		local ended = flick( axis, t, 100, 100+distance )
+		local list, rest = run( w, axis, ended, 4000 )
+		local max, index = peak( list )
+
+		assert_gt( 0, max, "past the top" )
+		assert_equal( 0, list[#list], 0, "ends on the edge" )
+		assert_equal( axis.STATE_AT_REST, axis:getState() )
+		for i = 2, #list do
+			if i <= index then
+				assert_gt( list[i-1], list[i], "on its way out, moving: frame "..i )
+			elseif i*16 < rest then
+				assert_lt( list[i-1], list[i], "on its way back, moving: frame "..i )
+			else
+				assert_equal( 0, list[i] )
+			end
+		end
+		-- the time from the edge to rest
+		local crossed
+		for i, v in ipairs( list ) do
+			if v > 0 then crossed = i*16 ; break end
+		end
+		return max, rest-crossed
+	end
+
+	local slow, slowTime = bounce( 30 )
+	local fast, fastTime = bounce( 90 )
+	assert_gt( slow+20, fast, "a faster flick goes further past the edge" )
+	assert_gt( 400, slowTime )
+	assert_lt( 1100, fastTime )
+	assert_lt( 400, fastTime-slowTime, "about as long" )
+end
+
+
+--[[
+let go of past an edge without speed, the content only comes back
+--]]
+function test_releasePastEdge()
+	local w = newScrollView()
+	local axis = w._axisY
+	local t = system.getTimer()
+
+	axis:touch{ phase='began', time=t, value=100, start=100 }
+	axis:touch{ phase='moved', time=t+50, value=200, start=100 }
+	-- held still, until the speed is gone
+	for i = 1, 8 do frameAt( w, t+50+i*33 ) end
+	local from = axis.value
+	axis:touch{ phase='ended', time=t+320, value=200, start=100 }
+	assert_equal( axis.STATE_RESTORE, axis:getState() )
+
+	local list, rest = run( w, axis, t+320, 2000 )
+	local last = from
+	for i, v in ipairs( list ) do
+		assert_gte( 0, v, "never past the edge on the way back: frame "..i )
+		assert_lte( last, v, "always towards the edge: frame "..i )
+		last = v
+	end
+	assert_equal( 0, list[#list] )
+	assert_lt( 1000, rest )
+end
+
+
+--[[
+without bounce a flick stops at the edge
+--]]
+function test_flickWithoutBounce()
+	local w = newScrollView{ bounceIsActive=false }
+	local axis = w._axisY
+	local t = system.getTimer()
+	w:setContentPosition{ y=-200, time=0 }
+	frameAt( w, t )
+	local ended = flick( axis, t, 100, 190 )
+	local list = run( w, axis, ended, 2000 )
+	assert_equal( 0, ( peak( list ) ) )
+	assert_equal( 0, list[#list] )
+	assert_equal( axis.STATE_AT_REST, axis:getState() )
+end
+
+
+--[[
+a glide after a flick loses a constant part of its speed with each
+millisecond (decelerationRate): its length depends on the speed of the
+flick, and half of it is done after ln(2)/-ln(rate) milliseconds
+--]]
+function test_glide()
+	local function glide( rate )
+		local w = newScrollView{ scrollHeight=20000, decelerationRate=rate }
+		local axis = w._axisY
+		local t = system.getTimer()
+		w:setContentPosition{ y=-10000, time=0 }
+		frameAt( w, t )
+		local ended = flick( axis, t, 200, 140 )
+		local from, speed = axis.value, axis._velocity.value
+		assert_equal( 60/49, speed, 0.001, "the speed of the touch" )
+		assert_equal( axis.STATE_DECELERATE, axis:getState() )
+
+		local k = -math.log( w.decelerationRate )
+		frameAt( w, ended + math.log( 2 )/k )
+		assert_equal( speed/k/2, from-axis.value, 1, "half way" )
+		run( w, axis, ended + 400, 8000 )
+		assert_equal( axis.STATE_AT_REST, axis:getState() )
+		-- it stops once it is too slow to see, a little short
+		assert_equal( speed/k, from-axis.value, 0.01/k + 1 )
+		return from-axis.value
+	end
+
+	local w = newScrollView()
+	assert_equal( 0.998, w.decelerationRate )
+	assert_error( function() w.decelerationRate = 2 end )
+
+	local normal = glide( nil )
+	local fast = glide( 0.99 )
+	assert_equal( 612, normal, 7 )
+	assert_equal( 122, fast, 3 )
+end
+
+
+--[[
+the speed of a touch: measured over its last moves, whatever the times
+of the events (two at the same time raised a division by zero), and
+limited
+--]]
+function test_touchSpeed()
+	local w = newScrollView{ scrollHeight=20000 }
+	local axis = w._axisY
+	local t = system.getTimer()
+	w:setContentPosition{ y=-10000, time=0 }
+	frameAt( w, t )
+
+	axis:touch{ phase='began', time=t, value=200, start=200 }
+	axis:touch{ phase='moved', time=t+16, value=180, start=200 }
+	axis:touch{ phase='moved', time=t+16, value=160, start=200 }
+	axis:touch{ phase='moved', time=t+32, value=140, start=200 }
+	axis:touch{ phase='ended', time=t+32, value=140, start=200 }
+	assert_equal( 60/32, axis._velocity.value, 0.001 )
+	assert_equal( -1, axis._velocity.vector )
+
+	-- a new touch stops the glide, and starts without its speed
+	frameAt( w, t+48 )
+	axis:touch{ phase='began', time=t+50, value=200, start=200 }
+	assert_equal( 0, axis._velocity.value )
+	axis:touch{ phase='moved', time=t+66, value=1200, start=200 }
+	assert_equal( axis.TOUCH_VELOCITY_LIMIT, axis._velocity.value )
+	assert_equal( 1, axis._velocity.vector )
+	-- a finger which rests loses its speed
+	frameAt( w, t+300 )
+	assert_equal( 0, axis._velocity.value )
+	frameAt( w, t+1066 )
+	axis:touch{ phase='ended', time=t+1100, value=1200, start=200 }
+	assert_equal( axis.STATE_AT_REST, axis:getState() )
+end
+
+
+--======================================================--
 -- Paging
 
 -- a scroll view of four pages side by side (200 wide each)
