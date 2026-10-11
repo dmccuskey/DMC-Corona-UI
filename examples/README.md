@@ -16,7 +16,7 @@ Each app folder is a complete Solar2D project with its own copy of the library: 
 | `text-widget/` | `text-simple`, `text-styled`, `text-themed`, `text-memtest` | [Text](../docs/widgets.md#text); [below](#text) |
 | `textfield-widget/` | `textfield-simple`, `textfield-styled`, `textfield-keyboard` | [TextField](../docs/widgets.md#textfield); [below](#textfield) |
 
-The sections below describe each app, with a screenshot. Each app fills the screen of any device. The Background, Button, Text and TextField apps and the memtests have their name at the top and a line at the bottom which says what the app shows at that moment; in many of them a white box with a red dot marks the widget's position.
+The sections below describe each app, with a screenshot. Each app fills the screen of any device and runs at 60 frames a second (`fps = 60` in its `config.lua`), for smooth scrolling. The Background, Button, Text and TextField apps and the memtests have their name at the top and a line at the bottom which says what the app shows at that moment; in many of them a white box with a red dot marks the widget's position.
 
 ## Background
 
